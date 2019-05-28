@@ -1,7 +1,5 @@
-# Ivie
-Image viewer Enhanced
+# Nonogram
+Nonogram game or smth like that idk.
 
-New and improved version of the old Ivi™ which was kinda crappy tbh.
-
-## Dependencies
-Ivie utilizes several external libraries. External-folder contains them and their compiled binaries.
+## Tessa
+Also making a game engine for it.
