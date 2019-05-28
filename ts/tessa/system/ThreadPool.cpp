@@ -31,7 +31,7 @@ ThreadPool::~ThreadPool()
 SizeType ThreadPool::numTasks() const
 {
 	std::unique_lock<std::mutex> lock(queueMutex);
-	return taskQueue.size();
+	return (SizeType)taskQueue.size();
 }
 
 bool ThreadPool::hasTasks() const

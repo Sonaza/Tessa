@@ -19,4 +19,3 @@ bool GameApplication::sceneInitialize()
 }
 
 TS_END_PACKAGE1()
-

@@ -34,12 +34,14 @@ void Application::launch()
 {
 	initialize();
 
-	if (!sceneInitialize())
+	if (sceneInitialize())
 	{
-
+		mainloop();
 	}
-
-	mainloop();
+	else
+	{
+		TS_PRINTF("Scene initialize failed!\n");
+	}
 
 	deinitialize();
 }

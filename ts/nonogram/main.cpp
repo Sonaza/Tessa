@@ -1,5 +1,5 @@
 #include "Precompiled.h"
-#include "ts/nonogram/GameApplication.h"
+#include "GameApplication.h"
 
 int main()
 {
