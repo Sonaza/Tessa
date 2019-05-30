@@ -21,5 +21,8 @@ extern void printf(const char* format, va_list args);
 extern void printf(const wchar_t* format, ...);
 extern void printf(const wchar_t* format, va_list args);
 
+extern const std::string getTimestampString();
+extern const std::wstring getTimestampStringWide();
+
 TS_END_PACKAGE1()
 

@@ -25,10 +25,14 @@ void NonogramScene::stop()
 
 }
 
-void NonogramScene::loadResources()
+void NonogramScene::loadResources(std::shared_ptr<resource::ResourceManager> rm)
 {
-	texture.loadFromFile("picture2.jpg");
+	texture.loadFromFile("test.jpg");
 	sprite.setTexture(texture);
+
+	rm->loadTexture("text", "test.jpg");
+
+	std::shared_ptr<resource::TextureResource> tex = rm->getResource<resource::TextureResource>("test");
 }
 
 bool NonogramScene::handleEvent(const sf::Event event)

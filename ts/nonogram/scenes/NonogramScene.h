@@ -15,7 +15,7 @@ public:
 	virtual bool start();
 	virtual void stop();
 
-	virtual void loadResources();
+	virtual void loadResources(std::shared_ptr<resource::ResourceManager> rm);
 
 	virtual bool handleEvent(const sf::Event event);
 	virtual void update(const sf::Time deltaTime);

@@ -5,6 +5,8 @@
 
 #include "ts/tessa/system/SceneBase.h"
 
+TS_DECLARE1(resource, ResourceManager);
+
 TS_PACKAGE1(system)
 
 class Application :	public std::enable_shared_from_this<Application>
@@ -44,6 +46,8 @@ private:
 
 	std::unique_ptr<SceneBase> pendingScene;
 	std::unique_ptr<SceneBase> currentScene;
+
+	std::shared_ptr<resource::ResourceManager> resourceManager;
 };
 
 template<class SceneType>

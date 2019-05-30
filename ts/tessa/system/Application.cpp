@@ -2,6 +2,7 @@
 #include "ts/tessa/system/Application.h"
 
 #include "ts/tessa/system/SceneBase.h"
+#include "ts/tessa/resource/ResourceManager.h"
 
 TS_PACKAGE1(system)
 
@@ -48,7 +49,7 @@ void Application::launch()
 
 void Application::initializeManagers()
 {
-
+	resourceManager = std::make_shared<resource::ResourceManager>();
 }
 
 void Application::initializeWindow()
@@ -88,7 +89,7 @@ void Application::mainloop()
 			}
 
 			currentScene = std::move(pendingScene);
-			currentScene->loadResources();
+			currentScene->loadResources(resourceManager);
 		}
 
 		renderWindow.clear();

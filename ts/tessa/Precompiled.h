@@ -12,5 +12,8 @@
 #include "ts/tessa/common/Common.h"
 #include "ts/tessa/common/Log.h"
 
+#include "ts/tessa/math/Vec2.h"
+#include "ts/tessa/math/Vec3.h"
+
 #include <map>
 #include <memory>

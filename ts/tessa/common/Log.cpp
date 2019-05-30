@@ -7,13 +7,15 @@
 #include <locale>
 #include <codecvt>
 #include <fstream>
-// #include <fcntl.h>
-// #include <io.h>
+#include <chrono>
+#include <ctime>
 
 #define PRINT_BUFFER_SIZE 4196
 
 #if TS_PLATFORM == TS_WINDOWS
 	#include "ts/tessa/common/IncludeWindows.h"
+	#define localtime_r(_a, _b) localtime_s(_b, _a)
+	#define sprintf sprintf_s
 	#define vsprintf vswprintf_s
 	#define vsnprintf vsnprintf_s
 #endif
@@ -59,13 +61,11 @@ void printf(const char* format, va_list args)
 	OutputDebugStringA(buffer);
 #endif
 
-// 	std::wcout << buffer;
-
-// 	if(logStream.is_open())
-// 	{
-// 		logStream << buffer;
-// 		logStream.flush();
-// 	}
+	if (logStream.is_open())
+	{
+		logStream << getTimestampStringWide() << " " << buffer;
+		logStream.flush();
+	}
 }
 
 void printf(const wchar_t* format, ...)
@@ -93,14 +93,43 @@ void printf(const wchar_t* format, va_list args)
 // 	DWORD n;
 // 	WriteConsoleW(stdhandle, buffer, 1, &n, NULL);
 
-// 	std::wcout << buffer;
-// 	::wprintf(buffer);
-
-	if(logStream.is_open())
+	if (logStream.is_open())
 	{
-		logStream << buffer;
+		logStream << getTimestampStringWide() << " " << buffer;
 		logStream.flush();
 	}
+}
+
+const std::string getTimestampString()
+{
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+
+	std::chrono::system_clock::duration epoch = now.time_since_epoch();
+	epoch -= std::chrono::duration_cast<std::chrono::seconds>(epoch);
+
+	std::time_t rawtime = std::chrono::system_clock::to_time_t(now);
+
+	std::tm time;
+	localtime_r(&rawtime, &time);
+
+	char buffer[26];
+	sprintf(buffer, "[%04u-%02u-%02u %02u:%02u:%02u.%03u]",
+		time.tm_year + 1900,
+		time.tm_mon + 1,
+		time.tm_mday,
+		time.tm_hour,
+		time.tm_min,
+		time.tm_sec,
+		std::chrono::duration_cast<std::chrono::milliseconds>(epoch).count()
+		);
+
+	return std::string(buffer);
+}
+
+const std::wstring getTimestampStringWide()
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return std::wstring(converter.from_bytes(getTimestampString().c_str()));
 }
 
 TS_END_PACKAGE1()

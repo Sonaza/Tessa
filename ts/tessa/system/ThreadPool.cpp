@@ -68,8 +68,6 @@ void ThreadPool::threadTaskRunnerImpl(SizeType threadIndex)
 
 			task = std::move(taskQueue.top());
 			taskQueue.pop();
-
-			TS_PRINTF("[Thread #%d] Task aqcuired, priority is %d\n", threadIndex, task.priority);
 		}
 		
 		task.task();
