@@ -1,16 +1,19 @@
 #include "Precompiled.h"
 #include "ts/tessa/resource/ResourceManager.h"
 
+#include "ts/tessa/system/Application.h"
+#include "ts/tessa/system/ThreadPool.h"
+
 #include "ts/tessa/resource/TextureResource.h"
-// #include "ts/tessa/resource/FontResource.h"
+#include "ts/tessa/resource/FontResource.h"
 // #include "ts/tessa/resource/ShaderResource.h"
 // #include "ts/tessa/resource/SoundResource.h"
 
 TS_PACKAGE1(resource)
 
-ResourceManager::ResourceManager()
+ResourceManager::ResourceManager(std::shared_ptr<system::Application> application)
+	: application(application)
 {
-
 }
 
 ResourceManager::~ResourceManager()
@@ -20,38 +23,18 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::unloadAll()
 {
-
+	resources.clear();
 }
 
-std::shared_ptr<TextureResource> ResourceManager::loadTexture(const std::string &resourceHandle, const std::string &filepath)
+void ResourceManager::addResourceToLoadQueue(std::shared_ptr<AbstractResourceBase> resource)
 {
-	GUID resourceGuid(resourceHandle);
-	
-	GUID fileGuid = findFileGuid(resourceGuid);
-	if (fileGuid != GUID::none)
-		return textureResources[fileGuid];
+	TS_VERIFY_POINTERS(application);
 
-// 	TextureResourceList::iterator iter = textureResources.find(fileGuid);
-// 	if (iter != textureResources.end())
-// 		return iter->second;
-
-	std::shared_ptr<TextureResource> res = std::make_shared<TextureResource>(filepath);
-	if (res == nullptr)
+	application->threadPool->push(system::ThreadPool::Normal, [resource]()
 	{
-		TS_PRINTF("Loading texture resource failed.");
-		return nullptr;
-	}
-
-	if (!res->loadResource())
-	{
-		TS_PRINTF("Loading texture resource failed.");
-		return nullptr;
-	}
-
-	resourceGuids.insert(std::make_pair(resourceGuid, res->getGuid()));
-	textureResources.insert(std::make_pair(res->getGuid(), res));
-
-	return res;
+		if (resource != nullptr)
+			resource->loadResource();
+	});
 }
 
 GUID ResourceManager::findFileGuid(const GUID &resourceGuid)

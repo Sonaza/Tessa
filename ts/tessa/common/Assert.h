@@ -4,15 +4,15 @@ namespace ts
 {
 
 void __cdecl breakpoint();
-void __cdecl assert_impl(const char* _assertion, const char* _file, const unsigned int _line);
+void __cdecl assert_impl(const char* message, const char* filepath, const unsigned int line);
 
 }
 
-#define __TS_STRING(str)	# str
-#define _TS_STRING(str)	__TS_STRING(str)
+#define __TS_STRINGIFY_(str) (# str)
+#define __TS_STRINGIFY(str)	__TS_STRINGIFY_(str)
 
-#define __TS_ASSERT_IMPL(_assertion)			(void)( (!!(_assertion)) || (::ts::assert_impl(_TS_STRING(#_assertion), _TS_STRING(__FILE__), __LINE__), 0) )
-#define __TS_ASSERTF_IMPL(_assertion, _message)	(void)( (!!(_assertion)) || (::ts::assert_impl(_TS_STRING(_message), _TS_STRING(__FILE__), __LINE__), 0) )
+#define __TS_ASSERT_IMPL(_assertion)			(void)( (!!(_assertion)) || (::ts::assert_impl(__TS_STRINGIFY(_assertion), __FILE__, __LINE__), 0) )
+#define __TS_ASSERTF_IMPL(_assertion, _message)	(void)( (!!(_assertion)) || (::ts::assert_impl(_message, __FILE__, __LINE__), 0) )
 
 #if TS_BUILD == TS_DEBUG
 

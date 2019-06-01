@@ -22,11 +22,15 @@ public:
 	virtual void render(sf::RenderWindow &renderWindow);
 
 protected:
+	math::VC2 velocity = math::VC2::zero;
+	math::VC2 gravity = math::VC2(0.f, 1000.f);
+	sf::Clock timer;
+
 	std::unique_ptr<gameplay::NonogramPuzzle> puzzle;
 
-	sf::Texture texture;
-	sf::Sprite sprite;
+	std::shared_ptr<resource::TextureResource> texture;
 
+	sf::Sprite sprite;
 };
 
 TS_END_PACKAGE2()

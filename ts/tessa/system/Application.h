@@ -5,6 +5,8 @@
 
 #include "ts/tessa/system/SceneBase.h"
 
+TS_DECLARE1(system, ThreadPool);
+TS_DECLARE1(system, Window);
 TS_DECLARE1(resource, ResourceManager);
 
 TS_PACKAGE1(system)
@@ -21,6 +23,11 @@ public:
 
 	template<class SceneType>
 	bool loadScene();
+
+	void setFramerateLimit(SizeType framerateLimit);
+	SizeType getCurrentFramerate() const;
+
+	std::shared_ptr<Window> getWindowPtr() { return window; }
 
 	std::shared_ptr<Application> getApplicationPtr() { return shared_from_this(); }
 
@@ -39,14 +46,17 @@ private:
 
 	bool applicationRunning = true;
 
-	sf::Clock updateClock;
-
-	sf::RenderWindow renderWindow;
-	sf::View activeView;
+	// Target frame time affects framerate, a single update per 16 milliseconds results in 60 fps
+	sf::Time targetFrameTime = sf::milliseconds(16);
+	SizeType currentFramerate = 0;
 
 	std::unique_ptr<SceneBase> pendingScene;
 	std::unique_ptr<SceneBase> currentScene;
+	std::unique_ptr<ThreadPool> threadPool;
 
+	std::shared_ptr<Window> window;
+
+	friend class resource::ResourceManager;
 	std::shared_ptr<resource::ResourceManager> resourceManager;
 };
 

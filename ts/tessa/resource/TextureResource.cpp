@@ -12,40 +12,24 @@ TextureResource::~TextureResource()
 {
 }
 
-bool TextureResource::loadResource()
-{
-	TS_ASSERT(!isLoaded() && "Texture resource has already been loaded.");
-	if (isLoaded())
-		return false;
-
-	resource = std::make_shared<sf::Texture>();
-	if (resource == nullptr)
-	{
-		TS_PRINTF("Failed to allocate texture.");
-		loadError = true;
-		return false;
-	}
-
-	if (!resource->loadFromFile(filepath))
-	{
-		TS_PRINTF("Failed to load texture from file: %s\n", filepath.c_str());
-		loadError = true;
-		return false;
-	}
-	
-	resource->setSmooth(true);
-
-	resourceLoaded = true;
-	loadError = false;
-	return true;
-}
-
 void TextureResource::setSmooth(const bool enabledParam)
 {
 	if (resource != nullptr)
 		return;
 
 	resource->setSmooth(enabledParam);
+}
+
+bool TextureResource::loadResourceImpl()
+{
+	if (!resource->loadFromFile(filepath))
+	{
+		TS_PRINTF("Failed to load texture from file: %s\n", filepath.c_str());
+		return false;
+	}
+
+	resource->setSmooth(true);
+	return true;
 }
 
 TS_END_PACKAGE1()

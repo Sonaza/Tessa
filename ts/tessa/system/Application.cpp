@@ -2,7 +2,11 @@
 #include "ts/tessa/system/Application.h"
 
 #include "ts/tessa/system/SceneBase.h"
+#include "ts/tessa/system/ThreadPool.h"
+#include "ts/tessa/system/Window.h"
+
 #include "ts/tessa/resource/ResourceManager.h"
+#include "ts/tessa/resource/FontResource.h"
 
 TS_PACKAGE1(system)
 
@@ -22,10 +26,14 @@ void Application::initialize()
 
 void Application::deinitialize()
 {
-	renderWindow.close();
-
 	if (currentScene != nullptr)
 		currentScene->internalStop();
+
+	if (window)
+	{
+		window->close();
+		window.reset();
+	}
 
 	pendingScene.reset();
 	currentScene.reset();
@@ -47,32 +55,55 @@ void Application::launch()
 	deinitialize();
 }
 
+void Application::setFramerateLimit(SizeType framerateLimit)
+{
+	if (framerateLimit == 0)
+	{
+		targetFrameTime = sf::milliseconds(16);
+		return;
+	}
+
+	targetFrameTime = sf::milliseconds(1000 / framerateLimit);
+}
+
+SizeType Application::getCurrentFramerate() const
+{
+	return currentFramerate;
+}
+
 void Application::initializeManagers()
 {
-	resourceManager = std::make_shared<resource::ResourceManager>();
+	threadPool = std::make_unique<ThreadPool>(ThreadPool::numHardwareThreads());
+
+	resourceManager = std::make_shared<resource::ResourceManager>(getApplicationPtr());
+
+	resourceManager->loadResource<resource::FontResource>("debugfont", "arial.ttf");
 }
 
 void Application::initializeWindow()
 {
-	std::string windowTitle = "Nonograms";
-
-	uint32_t style = sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close;
-
-	sf::ContextSettings settings;
-	settings.antialiasingLevel = 2;
-
-	renderWindow.create(sf::VideoMode(1600, 1000), windowTitle, style, settings);
-	activeView = renderWindow.getView();
+	window = std::make_unique<Window>(getApplicationPtr());
+	if (window != nullptr)
+	{
+		window->create(math::VC2U(1600, 1000), "Nonograms Testing");
+	}
 }
 
 void Application::mainloop()
 {
 	const sf::Time fixedDeltaTime = sf::milliseconds(16);
+
 	sf::Time deltaAccumulator;
 
+	SizeType frameCounter = 0;
+	sf::Clock framerateClock;
+
+	sf::Clock deltaClock;
 	sf::Clock loopTimer;
 	while (applicationRunning)
 	{
+		loopTimer.restart();
+
 		if (pendingScene != nullptr)
 		{
 			bool successfulStart = pendingScene->internalStart();
@@ -92,11 +123,9 @@ void Application::mainloop()
 			currentScene->loadResources(resourceManager);
 		}
 
-		renderWindow.clear();
-
 		handleEvents();
 
-		sf::Time deltaTime = updateClock.restart();
+		sf::Time deltaTime = deltaClock.restart();
 		deltaAccumulator += deltaTime;
 
 		while (deltaAccumulator >= fixedDeltaTime)
@@ -107,9 +136,15 @@ void Application::mainloop()
 
 		handleRendering();
 
-		renderWindow.display();
+		sf::sleep(targetFrameTime - loopTimer.getElapsedTime());
 
-		sf::sleep(fixedDeltaTime - loopTimer.restart());
+		frameCounter++;
+		if (framerateClock.getElapsedTime() > sf::milliseconds(500))
+		{
+			float elapsedTime = framerateClock.restart().asSeconds();
+			currentFramerate = (SizeType)(frameCounter / elapsedTime);
+			frameCounter = 0;
+		}
 	}
 
 	if (currentScene != nullptr)
@@ -120,8 +155,11 @@ void Application::mainloop()
 
 void Application::handleEvents()
 {
+	if (window == nullptr || !window->isOpen())
+		return;
+
 	sf::Event event;
-	while (renderWindow.pollEvent(event))
+	while (window->pollEvent(event))
 	{
 		if (currentScene != nullptr)
 		{
@@ -146,32 +184,54 @@ void Application::handleEvents()
 				}
 			}
 			break;
-
-			case sf::Event::Resized:
-			{
-				activeView = renderWindow.getView();
-				activeView.setSize((float)event.size.width, (float)event.size.height);
-				renderWindow.setView(activeView);
-			}
-			break;
 		}
 	}
 }
 
 void Application::handleUpdate(const sf::Time deltaTime)
 {
-	if (currentScene != nullptr)
-	{
-		currentScene->update(deltaTime);
-	}
+	if (currentScene == nullptr)
+		return;
+
+	currentScene->update(deltaTime);
 }
 
 void Application::handleRendering()
 {
-	if (currentScene != nullptr)
+	if (currentScene == nullptr)
+		return;
+	
+	if (window == nullptr || !window->isOpen())
+		return;
+
+	sf::RenderWindow &renderWindow = window->getRenderWindow();
+	renderWindow.clear();
+	
+	// Game view step
+	window->useGameView();
+
+	currentScene->render(renderWindow);
+
+	// Interface view step
+	window->useInterfaceView();
+
+	std::shared_ptr<resource::FontResource> font = resourceManager->getResource<resource::FontResource>("debugfont");
+	if (font)
 	{
-		currentScene->render(renderWindow);
+		char buffer[15];
+		sprintf_s(buffer, sizeof(buffer), "FPS %u", getCurrentFramerate());
+
+		sf::Text fps;
+		fps.setCharacterSize(20);
+		fps.setOutlineColor(sf::Color::Black);
+		fps.setOutlineThickness(1.f);
+		fps.setFont(*font->getResource());
+		fps.setString(buffer);
+
+		renderWindow.draw(fps);
 	}
+
+	renderWindow.display();
 }
 
 TS_END_PACKAGE1()

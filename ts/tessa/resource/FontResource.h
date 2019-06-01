@@ -7,10 +7,13 @@ TS_PACKAGE1(resource)
 class FontResource : public ResourceBase<sf::Font>
 {
 public:
+	static const SizeType TypeId = FOUR_CC('f','n','t','r');
+
 	FontResource(const std::string &filepath);
 	~FontResource();
 
-	bool loadResource();
+protected:
+	virtual bool loadResourceImpl() override;
 };
 
 TS_END_PACKAGE1()

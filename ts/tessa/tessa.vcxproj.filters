@@ -3,138 +3,167 @@
   <ItemGroup>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx;h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{c952f94a-5eaf-4e22-8177-fbd1d8c52f7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\resource">
+      <UniqueIdentifier>{84521009-17f8-4897-83e3-9dfdb3c5b598}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{c2d41fc0-579e-4e33-8dca-05806b58c34b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\system">
+      <UniqueIdentifier>{41a56686-d511-4bd2-9bfa-be90becd48ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="system\Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="system\SceneBase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="system\Timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Assert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="system\ThreadPool.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="common\Assert.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Log.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="math\Angle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="resource\GUID.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="resource\ResourceBase.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\math</Filter>
     </ClCompile>
     <ClCompile Include="resource\TextureResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="math\Hash.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\resource</Filter>
     </ClCompile>
     <ClCompile Include="resource\ResourceManager.cpp">
+      <Filter>Source Files\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="resource\ResourceBase.cpp">
+      <Filter>Source Files\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="math\Hash.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="resource\GUID.cpp">
+      <Filter>Source Files\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="system\Timer.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="system\SceneBase.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="system\ThreadPool.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="system\Application.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="system\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resource\FontResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="system\Application.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="system\SceneBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="system\Timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Assert.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Declare.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\IncludeWindows.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Log.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Package.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="math\Constants.h">
+      <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="common\Common.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Precompiled.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="common\Assert.h">
+      <Filter>Source Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="system\ThreadPool.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="common\IncludeWindows.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\Log.h">
+      <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="math\Vec2.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </ClInclude>
     <ClInclude Include="math\Vec3.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </ClInclude>
     <ClInclude Include="math\Vec4.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </ClInclude>
     <ClInclude Include="math\Mat4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="math\Angle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="math\Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource\GUID.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource\ResourceBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource\TextureResource.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </ClInclude>
     <ClInclude Include="math\Hash.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Angle.h">
+      <Filter>Source Files\math</Filter>
     </ClInclude>
     <ClInclude Include="resource\ResourceManager.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\ResourceBase.h">
+      <Filter>Source Files\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\TextureResource.h">
+      <Filter>Source Files\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Precompiled.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\GUID.h">
+      <Filter>Source Files\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="system\Application.h">
+      <Filter>Source Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="common\Declare.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\Package.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="system\SceneBase.h">
+      <Filter>Source Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="system\ThreadPool.h">
+      <Filter>Source Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="system\Timer.h">
+      <Filter>Source Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="common\FourCC.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\Window.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\FontResource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\Pointers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\MinMax.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="math\Vec4.inl">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </None>
     <None Include="math\Vec2.inl">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </None>
     <None Include="math\Vec3.inl">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </None>
     <None Include="math\Mat4.inl">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\math</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -5,8 +5,8 @@
 TS_PACKAGE1(log)
 
 #if TS_BUILD != TS_FINALRELEASE
-	#define TS_WPRINTF(format, ...) do { ts::log::printf(L ## format, __VA_ARGS__); } while(false)
-	#define TS_PRINTF(format, ...)  do { ts::log::printf(format, __VA_ARGS__); } while(false)
+	#define TS_WPRINTF(format, ...) do { ::ts::log::printf(L ## format, __VA_ARGS__); } while(false)
+	#define TS_PRINTF(format, ...)  do { ::ts::log::printf(format, __VA_ARGS__); } while(false)
 #else
 	#define TS_WPRINTF(...) ((void)0)
 	#define TS_PRINTF(...)  ((void)0)

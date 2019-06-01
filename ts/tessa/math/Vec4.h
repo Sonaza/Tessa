@@ -93,7 +93,8 @@ Vec4<T> cross(const Vec4<T>& a, const Vec4<T>& b);
 
 #include "Vec4.inl"
 
-typedef Vec4<float>			Vec4f;
-typedef Vec4<int>			Vec4i;
+typedef Vec4<float>		VC4;
+typedef Vec4<Int32>		VC4I;
+typedef Vec4<Uint32>	VC4U;
 
 TS_END_PACKAGE1()

@@ -1,11 +1,10 @@
 #include "Precompiled.h"
 #include "ts/tessa/resource/FontResource.h"
-#include <szen/System/ErrorStream.hpp>
 
 TS_PACKAGE1(resource)
 
-FontResource::FontResource(const std::string &filepath) :
-	ResourceBase(path)
+FontResource::FontResource(const std::string &filepath)
+	: ResourceBase(filepath)
 {
 	
 }
@@ -15,23 +14,13 @@ FontResource::~FontResource()
 	
 }
 
-bool FontResource::loadResource()
+bool FontResource::loadResourceImpl()
 {
-	TS_ASSERT(!m_loaded && "Shader has already been loaded");
-	TS_ASSERT(!m_filename.empty() && "Must have file name");
-
-	m_asset = new(std::nothrow) sf::Font();
-	TS_ASSERT(m_asset && "Allocation failed");
-
-	if(!m_asset->loadFromFile(m_filename))
+	if (!resource->loadFromFile(filepath))
 	{
-		szerr << "Unable to open shader file: " << m_filename << ErrorStream::error;
-
+		TS_PRINTF("Failed to load font from file: %s\n", filepath.c_str());
 		return false;
 	}
-
-	m_loaded = true;
-
 	return true;
 }
 

@@ -63,21 +63,24 @@
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
-    <IntDir>$(RootDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
     <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
+    <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
-    <IntDir>$(RootDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
     <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
+    <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
     <CustomBuildBeforeTargets />
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
-    <IntDir>$(RootDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
     <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
+    <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -151,6 +154,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
     <ClCompile Include="resource\ResourceBase.cpp" />
     <ClCompile Include="resource\ResourceManager.cpp" />
@@ -161,17 +165,22 @@
     <ClCompile Include="system\SceneBase.cpp" />
     <ClCompile Include="system\ThreadPool.cpp" />
     <ClCompile Include="system\Timer.cpp" />
+    <ClCompile Include="system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\Common.h" />
+    <ClInclude Include="common\FourCC.h" />
+    <ClInclude Include="common\Pointers.h" />
     <ClInclude Include="math\Angle.h" />
     <ClInclude Include="math\Constants.h" />
     <ClInclude Include="math\Hash.h" />
     <ClInclude Include="math\Mat4.h" />
+    <ClInclude Include="math\MinMax.h" />
     <ClInclude Include="math\Vec2.h" />
     <ClInclude Include="math\Vec3.h" />
     <ClInclude Include="math\Vec4.h" />
     <ClInclude Include="Precompiled.h" />
+    <ClInclude Include="resource\FontResource.h" />
     <ClInclude Include="resource\GUID.h" />
     <ClInclude Include="resource\ResourceBase.h" />
     <ClInclude Include="resource\ResourceManager.h" />
@@ -185,6 +194,7 @@
     <ClInclude Include="system\SceneBase.h" />
     <ClInclude Include="system\ThreadPool.h" />
     <ClInclude Include="system\Timer.h" />
+    <ClInclude Include="system\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="math\Mat4.inl" />

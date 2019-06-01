@@ -93,9 +93,9 @@ float dot(const Vec2<T>& a, const Vec2<T>& b);
 
 #include "Vec2.inl"
 
-typedef Vec2<float>			Vec2f;
-typedef Vec2<int>			Vec2i;
-typedef Vec2<unsigned int>	Vec2u;
+typedef Vec2<float>		VC2;
+typedef Vec2<Int32>		VC2I;
+typedef Vec2<Uint32>	VC2U;
 
 const Vec2<float> Vec2<float>::zero(0.f, 0.f);
 const Vec2<float> Vec2<float>::up(0.f, 1.f);
