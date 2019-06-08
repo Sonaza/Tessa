@@ -4,11 +4,9 @@
 
 TS_PACKAGE1(resource)
 
-class FontResource : public ResourceBase<sf::Font>
+class FontResource : public ResourceBase<sf::Font, TS_FOURCC('f','n','t','r')>
 {
 public:
-	static const SizeType TypeId = FOUR_CC('f','n','t','r');
-
 	FontResource(const std::string &filepath);
 	~FontResource();
 

@@ -1,16 +1,18 @@
 #include "Precompiled.h"
 #include "ts/tessa/system/Application.h"
 
+#include "ts/tessa/system/SystemManagerBase.h"
 #include "ts/tessa/system/SceneBase.h"
 #include "ts/tessa/system/ThreadPool.h"
-#include "ts/tessa/system/Window.h"
+#include "ts/tessa/system/WindowManager.h"
 
 #include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/resource/FontResource.h"
 
 TS_PACKAGE1(system)
 
-Application::Application()
+Application::Application(Int32 argc, const char **argv)
+	: commando(argc, argv)
 {
 }
 
@@ -18,10 +20,34 @@ Application::~Application()
 {
 }
 
-void Application::initialize()
+Int32 Application::start()
 {
-	initializeManagers();
-	initializeWindow();
+	if (!initialize())
+	{
+		TS_LOG_ERROR("Application::initialize() failed, cannot proceed.\n");
+		return 1;
+	}
+	
+	if (sceneInitialize())
+	{
+		mainloop();
+	}
+	else
+	{
+		TS_LOG_ERROR("Scene initialize failed!\n");
+	}
+
+	deinitialize();
+
+	return 0;
+}
+
+bool Application::initialize()
+{
+	if (!initializeManagers())
+		return false;
+
+	return true;
 }
 
 void Application::deinitialize()
@@ -29,30 +55,10 @@ void Application::deinitialize()
 	if (currentScene != nullptr)
 		currentScene->internalStop();
 
-	if (window)
-	{
-		window->close();
-		window.reset();
-	}
-
 	pendingScene.reset();
 	currentScene.reset();
-}
 
-void Application::launch()
-{
-	initialize();
-
-	if (sceneInitialize())
-	{
-		mainloop();
-	}
-	else
-	{
-		TS_PRINTF("Scene initialize failed!\n");
-	}
-
-	deinitialize();
+	deinitializeManagers();
 }
 
 void Application::setFramerateLimit(SizeType framerateLimit)
@@ -71,22 +77,33 @@ SizeType Application::getCurrentFramerate() const
 	return currentFramerate;
 }
 
-void Application::initializeManagers()
+bool Application::initializeManagers()
 {
-	threadPool = std::make_unique<ThreadPool>(ThreadPool::numHardwareThreads());
+	threadPool = std::make_unique<system::ThreadPool>(system::ThreadPool::numHardwareThreads());
+	if (threadPool == nullptr) return false;
+// 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, threadPool);
 
-	resourceManager = std::make_shared<resource::ResourceManager>(getApplicationPtr());
+	if (!createManagerInstance<resource::ResourceManager>())
+		return false;
 
-	resourceManager->loadResource<resource::FontResource>("debugfont", "arial.ttf");
+	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
+	rm.loadResource<resource::FontResource>("debugfont", "arial.ttf");
+
+	if (!createManagerInstance<system::WindowManager>())
+		return false;
+
+	system::WindowManager &wm = getManager<system::WindowManager>();
+	wm.create(math::VC2U(1600, 1000), "Nonograms Testing");
+
+	return true;
 }
 
-void Application::initializeWindow()
+void Application::deinitializeManagers()
 {
-	window = std::make_unique<Window>(getApplicationPtr());
-	if (window != nullptr)
-	{
-		window->create(math::VC2U(1600, 1000), "Nonograms Testing");
-	}
+	threadPool.reset();
+
+	destroyManagerInstance<system::WindowManager>();
+	destroyManagerInstance<resource::ResourceManager>();
 }
 
 void Application::mainloop()
@@ -109,7 +126,7 @@ void Application::mainloop()
 			bool successfulStart = pendingScene->internalStart();
 			if (!successfulStart)
 			{
-				TS_PRINTF("Pending scene start failed. Scene will not be loaded.");
+				TS_LOG_ERROR("Pending scene start failed. Scene will not be loaded.");
 				pendingScene.reset();
 			}
 
@@ -120,7 +137,7 @@ void Application::mainloop()
 			}
 
 			currentScene = std::move(pendingScene);
-			currentScene->loadResources(resourceManager);
+			currentScene->loadResources(getManager<resource::ResourceManager>());
 		}
 
 		handleEvents();
@@ -155,11 +172,12 @@ void Application::mainloop()
 
 void Application::handleEvents()
 {
-	if (window == nullptr || !window->isOpen())
+	system::WindowManager &windowManager = getManager<system::WindowManager>();
+	if (!windowManager.isOpen())
 		return;
 
 	sf::Event event;
-	while (window->pollEvent(event))
+	while (windowManager.pollEvent(event))
 	{
 		if (currentScene != nullptr)
 		{
@@ -201,32 +219,32 @@ void Application::handleRendering()
 	if (currentScene == nullptr)
 		return;
 	
-	if (window == nullptr || !window->isOpen())
+	system::WindowManager &windowManager = getManager<system::WindowManager>();
+	if (!windowManager.isOpen())
 		return;
 
-	sf::RenderWindow &renderWindow = window->getRenderWindow();
+	sf::RenderWindow &renderWindow = windowManager.getRenderWindow();
 	renderWindow.clear();
 	
 	// Game view step
-	window->useGameView();
+	windowManager.useGameView();
 
 	currentScene->render(renderWindow);
 
 	// Interface view step
-	window->useInterfaceView();
+	windowManager.useInterfaceView();
 
-	std::shared_ptr<resource::FontResource> font = resourceManager->getResource<resource::FontResource>("debugfont");
-	if (font)
+// 	resource::ResourceManager &resourceManager = getManager<resource::ResourceManager>();
+// 	resource::FontResource *font = resourceManager.getResource<resource::FontResource>("debugfont");
+// 	if (font != nullptr && font->isLoaded())
 	{
-		char buffer[15];
-		sprintf_s(buffer, sizeof(buffer), "FPS %u", getCurrentFramerate());
-
 		sf::Text fps;
 		fps.setCharacterSize(20);
+		fps.setFillColor(sf::Color::White);
 		fps.setOutlineColor(sf::Color::Black);
 		fps.setOutlineThickness(1.f);
-		fps.setFont(*font->getResource());
-		fps.setString(buffer);
+// 		fps.setFont(*font->getResource());
+		fps.setString(TS_FMT("FPS %u", getCurrentFramerate()));
 
 		renderWindow.draw(fps);
 	}

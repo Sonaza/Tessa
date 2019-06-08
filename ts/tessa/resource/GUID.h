@@ -12,6 +12,8 @@ public:
 	Uint32 getUint32() const;
 	const std::string getString() const;
 
+	void offset(Uint32 value);
+
 	static const GUID none;
 
 private:

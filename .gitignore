@@ -1,9 +1,11 @@
 builds/*
 obj/*
 package/*
+ext_build/*
 
 # Externals folder, exclude extracted libraries but include archives
 ext/*/*
+!ext/*/*.props
 !ext/*/*.7z
 
 # Prerequisites

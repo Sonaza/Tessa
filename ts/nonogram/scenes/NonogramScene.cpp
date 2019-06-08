@@ -5,8 +5,8 @@
 
 TS_PACKAGE2(game, scenes)
 
-NonogramScene::NonogramScene(std::shared_ptr<system::Application> application)
-: SceneBase(application)
+NonogramScene::NonogramScene(system::Application *application)
+	: SceneBase(application)
 {
 }
 
@@ -25,12 +25,39 @@ void NonogramScene::stop()
 
 }
 
-void NonogramScene::loadResources(std::shared_ptr<resource::ResourceManager> rm)
+void NonogramScene::loadResources(resource::ResourceManager &rm)
 {
-	rm->loadResource<resource::TextureResource>("nepnep", "test/stick.jpg");
-	rm->loadResource<resource::TextureResource>("picture", "test/stick.jpg");
+	rm.loadResource<resource::TextureResource>("nepnep", "test/nepnep.jpg");
+	rm.loadResource<resource::TextureResource>("2Gzjp1F", "test/2Gzjp1F.jpg");
+	rm.loadResource<resource::TextureResource>("33zyzuxd0d911", "test/33zyzuxd0d911.jpg");
+	rm.loadResource<resource::TextureResource>("47168900_p0_master1200", "test/47168900_p0_master1200.jpg");
+	rm.loadResource<resource::TextureResource>("47168900_p1_master1200", "test/47168900_p1_master1200.jpg");
+	rm.loadResource<resource::TextureResource>("47372029_p0", "test/47372029_p0.png");
+	rm.loadResource<resource::TextureResource>("49561770_p0", "test/49561770_p0.png");
+	rm.loadResource<resource::TextureResource>("4xvzjxz2hw211", "test/4xvzjxz2hw211.jpg");
+	rm.loadResource<resource::TextureResource>("54638899_p0", "test/54638899_p0.png");
+	rm.loadResource<resource::TextureResource>("55378833_p0", "test/55378833_p0.png");
+	rm.loadResource<resource::TextureResource>("59335804_p0", "test/59335804_p0.png");
+	rm.loadResource<resource::TextureResource>("61579330_p0", "test/61579330_p0.jpg");
+	rm.loadResource<resource::TextureResource>("61827137_p0", "test/61827137_p0.png");
+	rm.loadResource<resource::TextureResource>("656mwuonuh011", "test/656mwuonuh011.jpg");
+	rm.loadResource<resource::TextureResource>("nepzume", "test/nepzume.png");
+	rm.loadResource<resource::TextureResource>("67961452_p11", "test/67961452_p11.png");
+	rm.loadResource<resource::TextureResource>("68599620_p0", "test/68599620_p0.png");
+	rm.loadResource<resource::TextureResource>("68783222_p0", "test/68783222_p0.png");
+	rm.loadResource<resource::TextureResource>("68783222_p1", "test/68783222_p1.png");
+	rm.loadResource<resource::TextureResource>("69103464_p0", "test/69103464_p0.png");
+	rm.loadResource<resource::TextureResource>("a6wmhr23h3e11", "test/a6wmhr23h3e11.jpg");
+	rm.loadResource<resource::TextureResource>("abitiffy", "test/abitiffy.png");
+	rm.loadResource<resource::TextureResource>("compa", "test/compa.png");
+	rm.loadResource<resource::TextureResource>("iffy", "test/iffy.jpg");
+	rm.loadResource<resource::TextureResource>("stick", "test/stick.jpg");
+	rm.loadResource<resource::TextureResource>("adultnep", "test/nepnep.jpg");
+	rm.loadResource<resource::TextureResource>("uzume", "test/uzume.jpg");
 
-	texture = rm->getResource<resource::TextureResource>("picture");
+	rm.loadResource<resource::FontResource>("calibri", "calibri.ttf");
+
+	texture = rm.getResource<resource::TextureResource>("nepzume");
 	if (texture)
 	{
 		if (texture->isLoaded())
@@ -57,7 +84,8 @@ void NonogramScene::update(const sf::Time deltaTime)
 {
 	if (sprite.getTexture() != nullptr)
 	{
-		math::VC2U windowSize = application->getWindowPtr()->getSize();
+		system::WindowManager &wm = application->getManager<system::WindowManager>();
+		math::VC2U windowSize = wm.getSize();
 
 		sf::Vector2u size = sprite.getTexture()->getSize();
 
@@ -84,7 +112,7 @@ void NonogramScene::update(const sf::Time deltaTime)
 		}
 		sprite.setPosition(pos);
 
-		if (timer.getElapsedTime() > sf::milliseconds(5250))
+		if (timer.getElapsedTime() > sf::milliseconds(3000))
 		{
 			gravity *= -1.f;
 			timer.restart();
@@ -99,7 +127,10 @@ void NonogramScene::render(sf::RenderWindow &renderWindow)
 		TS_PRINTF("Texture is now set!\n");
 		sprite.setTexture(*texture->getResource());
 
-		math::VC2U windowSize = application->getWindowPtr()->getSize();
+		sprite.setScale(0.5f, 0.5f);
+
+		system::WindowManager &wm = application->getManager<system::WindowManager>();
+		math::VC2U windowSize = wm.getSize();
 		sprite.setPosition(windowSize.x / 2.f, windowSize.y / 2.f);
 
 		sf::Vector2u tsize = sprite.getTexture()->getSize();

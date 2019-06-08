@@ -43,6 +43,11 @@ const std::string GUID::getString() const
 	return std::string(buffer);
 }
 
+void GUID::offset(Uint32 value)
+{
+	guid += value;
+}
+
 bool operator==(const GUID &a, const GUID &b)
 {
 	return a.getUint32() == b.getUint32();

@@ -7,7 +7,7 @@ TS_PACKAGE1(game)
 class GameApplication : public system::Application
 {
 public:
-	GameApplication();
+	GameApplication(Int32 argc, const char **argv);
 	virtual ~GameApplication();
 
 	virtual bool sceneInitialize();

@@ -20,11 +20,17 @@ enum DialogAction
 	Abort,
 };
 
-DialogAction dialog(const char *message, const char *filepath, const unsigned int line)
+DialogAction dialog(const char *expression, const char *message, const char *filepath, const unsigned int line)
 {
 #if TS_PLATFORM == TS_WINDOWS
 	std::wstringstream msg;
-	msg << "Assertion failed in " << filepath << " on line " << line << "\n\n" << message;
+	
+	if (message)
+		msg << "Description: " << message << "\n\n";
+
+	msg << "Expression: " << expression << "\n"
+		<< "File: " << filepath << "\n"
+		<< "Line: " << line << "\n";
 
 	Int32 button = MessageBox(nullptr, msg.str().c_str(), L"Assertion failure", MB_ABORTRETRYIGNORE | MB_ICONERROR);
 	switch (button)
@@ -39,36 +45,21 @@ DialogAction dialog(const char *message, const char *filepath, const unsigned in
 
 }
 
-void __cdecl breakpoint()
+bool __cdecl assert_impl(const char *expression, const char *message, const char *filepath, const unsigned int line)
 {
-	#if TS_PLATFORM == TS_WINDOWS
-		DebugBreak();
-	#elif TS_PLATFORM == TS_LINUX
-		__builtin_trap();
-	#elif
-		#error "Unsupported platform."
-	#endif
-}
+	if (message == nullptr)
+		TS_PRINTF("Assertion failed: %s, %s in %s on line %u\n", message, expression, filepath, line);
+	else
+		TS_PRINTF("Assertion failed: %s in %s on line %u\n", expression, filepath, line);
 
-void __cdecl assert_impl(const char *message, const char *filepath, const unsigned int line)
-{
-	TS_PRINTF("Assertion failed: %s in %s on line %u\n", message, filepath, line);
-	
-	DialogAction action = dialog(message, filepath, line);
+	DialogAction action = dialog(expression, message, filepath, line);
 	switch (action)
 	{
-		case Debug:
-			breakpoint();
-			return;
-
-		case Ignore:
-			// ASDASD
-			return;
-
-		case Abort:
-			exit(1337);
-			return;
+	case Debug:  return true;
+	case Ignore: return false;
+	case Abort:  exit(1337);
 	}
+	return false;
 }
 
 TS_END_PACKAGE0()

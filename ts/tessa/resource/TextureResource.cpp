@@ -24,7 +24,7 @@ bool TextureResource::loadResourceImpl()
 {
 	if (!resource->loadFromFile(filepath))
 	{
-		TS_PRINTF("Failed to load texture from file: %s\n", filepath.c_str());
+		TS_LOG_ERROR("Failed to load texture from file: %s\n", filepath.c_str());
 		return false;
 	}
 

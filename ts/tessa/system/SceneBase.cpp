@@ -3,7 +3,7 @@
 
 TS_PACKAGE1(system)
 
-SceneBase::SceneBase(std::shared_ptr<Application> application)
+SceneBase::SceneBase(system::Application *application)
 	: application(application)
 {
 }

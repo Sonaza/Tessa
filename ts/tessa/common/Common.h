@@ -2,6 +2,10 @@
 
 #include <SFML/Config.hpp>
 
+#pragma warning( disable : 4100 ) // Unreferenced function parameter
+#pragma warning( disable : 4127 ) // Expression is constant
+#pragma warning( disable : 4313 ) // Format string conflicts with argument type (seems to be bogus warning or something)
+
 #define TS_VERSION_MAJOR 0
 #define TS_VERSION_MINOR 1
 #define TS_VERSION_PATCH 0
@@ -39,7 +43,19 @@
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")	
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+	#define TS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#elif defined(_MSC_VER)
+	#define TS_PRETTY_FUNCTION __FUNCTION__
+#else
+	#error "Pretty function macro undefined on this compiler."
+#endif
+
+#define __TS_STRINGIFY(str) (# str)
+#define TS_STRINGIFY(str)   __TS_STRINGIFY(str)
+
 #include <cstdint>
+#include <cinttypes>
 
 TS_PACKAGE0()
 
@@ -55,5 +71,16 @@ typedef std::uint64_t Uint64;
 
 typedef Uint32 SizeType;
 typedef Uint64 BigSizeType;
+
+// Template hack to get readable type names for classes
+template<typename T>
+struct TypeParseTraits;
+
+#define TS_REGISTER_PARSE_TYPE(__type_name) \
+	namespace ts { \
+	template <> struct TypeParseTraits<__type_name> \
+    { static const char* name; }; const char* TypeParseTraits<__type_name>::name = #__type_name; }
+
+#define TS_GET_PARSE_TYPE(__type_name) TypeParseTraits<__type_name>::name
 
 TS_END_PACKAGE0()

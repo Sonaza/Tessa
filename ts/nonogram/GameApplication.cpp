@@ -5,7 +5,8 @@
 
 TS_PACKAGE1(game)
 
-GameApplication::GameApplication()
+GameApplication::GameApplication(Int32 argc, const char **argv)
+	: Application(argc, argv)
 {
 }
 

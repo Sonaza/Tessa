@@ -4,11 +4,9 @@
 
 TS_PACKAGE1(resource)
 
-class TextureResource : public ResourceBase<sf::Texture>
+class TextureResource : public resource::ResourceBase<sf::Texture, TS_FOURCC('t','e','x','r')>
 {
 public:
-	static const SizeType TypeId = FOUR_CC('t','e','x','r');
-
 	TextureResource(const std::string &filepath);
 	~TextureResource();
 

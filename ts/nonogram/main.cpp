@@ -1,15 +1,13 @@
-#include "Precompiled.h"
+﻿#include "Precompiled.h"
 #include "GameApplication.h"
 
-int main(int argc, char **argv)
+#include "ts/tessa/common/Log.h"
+
+int main(int argc, const char **argv)
 {
-	ts::log::initialize();
+	TS_ASSERTF(false, "This is my custom text in the assertion message %d", 1337);
 
-	std::shared_ptr<ts::game::GameApplication> app = std::make_shared<ts::game::GameApplication>();
-	if (app != nullptr)
-		app->launch();
-
-	ts::log::finalize();
-
-	return 0;
+	ts::game::GameApplication app(argc, argv);
+	int returnCode = app.start();
+	return returnCode;
 }

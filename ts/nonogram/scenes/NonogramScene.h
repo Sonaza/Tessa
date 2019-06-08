@@ -9,13 +9,13 @@ TS_PACKAGE2(game, scenes)
 class NonogramScene : public system::SceneBase
 {
 public:
-	NonogramScene(std::shared_ptr<system::Application> application);
+	NonogramScene(system::Application *application);
 	virtual ~NonogramScene();
 
 	virtual bool start();
 	virtual void stop();
 
-	virtual void loadResources(std::shared_ptr<resource::ResourceManager> rm);
+	virtual void loadResources(resource::ResourceManager &rm);
 
 	virtual bool handleEvent(const sf::Event event);
 	virtual void update(const sf::Time deltaTime);
@@ -28,7 +28,7 @@ protected:
 
 	std::unique_ptr<gameplay::NonogramPuzzle> puzzle;
 
-	std::shared_ptr<resource::TextureResource> texture;
+	resource::TextureResource *texture = nullptr;
 
 	sf::Sprite sprite;
 };

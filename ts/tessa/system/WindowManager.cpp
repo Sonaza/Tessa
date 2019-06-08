@@ -1,18 +1,30 @@
 #include "Precompiled.h"
-#include "ts/tessa/system/Window.h"
+#include "ts/tessa/system/WindowManager.h"
+
+TS_DEFINE_SYSTEM_MANAGER_TYPE(system::WindowManager);
 
 TS_PACKAGE1(system)
 
-Window::Window(std::shared_ptr<system::Application> application)
-	: application(application)
+WindowManager::WindowManager(system::Application *application)
+	: SystemManagerBase(application)
 {
 }
 
-Window::~Window()
+WindowManager::~WindowManager()
 {
 }
 
-void Window::create(const math::VC2U &videomode, const std::string &windowTitle)
+bool WindowManager::initialize()
+{
+	return true;
+}
+
+void WindowManager::deinitialize()
+{
+	close();
+}
+
+void WindowManager::create(const math::VC2U &videomode, const std::string &windowTitle)
 {
 	uint32_t style = sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close;
 
@@ -27,12 +39,12 @@ void Window::create(const math::VC2U &videomode, const std::string &windowTitle)
 	renderWindow.display();
 }
 
-void Window::close()
+void WindowManager::close()
 {
 	renderWindow.close();
 }
 
-bool Window::pollEvent(sf::Event &eventParam)
+bool WindowManager::pollEvent(sf::Event &eventParam)
 {
 	bool hasEvent = renderWindow.pollEvent(eventParam);
 	if (hasEvent)
@@ -49,28 +61,28 @@ bool Window::pollEvent(sf::Event &eventParam)
 	return hasEvent;
 }
 
-bool Window::isOpen() const
+bool WindowManager::isOpen() const
 {
 	return renderWindow.isOpen();
 }
 
-math::VC2U Window::getSize() const
+math::VC2U WindowManager::getSize() const
 {
 	const sf::Vector2u s = renderWindow.getSize();
 	return math::VC2U(s.x, s.y);
 }
 
-void Window::useGameView()
+void WindowManager::useGameView()
 {
 	renderWindow.setView(activeGameView);
 }
 
-void Window::useInterfaceView()
+void WindowManager::useInterfaceView()
 {
 	renderWindow.setView(activeInterfaceView);
 }
 
-sf::RenderWindow &Window::getRenderWindow()
+sf::RenderWindow &WindowManager::getRenderWindow()
 {
 	return renderWindow;
 }

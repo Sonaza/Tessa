@@ -41,9 +41,6 @@
     <ClCompile Include="resource\ResourceManager.cpp">
       <Filter>Source Files\resource</Filter>
     </ClCompile>
-    <ClCompile Include="resource\ResourceBase.cpp">
-      <Filter>Source Files\resource</Filter>
-    </ClCompile>
     <ClCompile Include="math\Hash.cpp">
       <Filter>Source Files\math</Filter>
     </ClCompile>
@@ -62,10 +59,28 @@
     <ClCompile Include="system\Application.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="system\Window.cpp">
+    <ClCompile Include="resource\FontResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resource\FontResource.cpp">
+    <ClCompile Include="instance\ComponentBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="instance\Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="instance\InstanceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resource\AbstractResourceBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="system\Commando.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="system\WindowManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="system\SystemManagerBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -139,9 +154,6 @@
     <ClInclude Include="common\FourCC.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="system\Window.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource\FontResource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -150,6 +162,30 @@
     </ClInclude>
     <ClInclude Include="math\MinMax.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="instance\InstanceManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="instance\ComponentBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="instance\Entity.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\AbstractResourceBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\Commando.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\WindowManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\SystemManagerBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\ResourceBase.inl">
+      <Filter>Source Files\resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
