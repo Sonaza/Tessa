@@ -3,5 +3,6 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(ExternalsDir)SFML\SFML.props" />
     <Import Project="$(ExternalsDir)fmt\fmt.props" />
+    <Import Project="$(ExternalsDir)header_only_externals\header_only_externals.props" />
   </ImportGroup>
 </Project>

@@ -136,9 +136,6 @@
     <ClInclude Include="system\Application.h">
       <Filter>Source Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="common\Declare.h">
-      <Filter>Source Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="common\Package.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
@@ -187,6 +184,24 @@
     <ClInclude Include="resource\ResourceBase.inl">
       <Filter>Source Files\resource</Filter>
     </ClInclude>
+    <ClInclude Include="common\SharedPointer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\ScopedPointer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\UniquePointer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\SharedPointer.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\UniquePointer.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\ScopedPointer.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="math\Vec4.inl">
@@ -201,5 +216,8 @@
     <None Include="math\Mat4.inl">
       <Filter>Source Files\math</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Tessa.natvis" />
   </ItemGroup>
 </Project>

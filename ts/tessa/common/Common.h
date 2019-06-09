@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SFML/Config.hpp>
+#include "SFML/Config.hpp"
 
 #pragma warning( disable : 4100 ) // Unreferenced function parameter
 #pragma warning( disable : 4127 ) // Expression is constant
@@ -13,9 +13,9 @@
 #define TS_WINDOWS	0x00000001
 #define TS_LINUX	0x00000002
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(SFML_SYSTEM_WINDOWS)
 	#define TS_PLATFORM TS_WINDOWS
-#elif defined(__LINUX__)
+#elif defined(SFML_SYSTEM_LINUX)
 	#define TS_PLATFORM TS_LINUX
 #else
 	#error "Platform not supported."
@@ -46,7 +46,11 @@
 #if defined(__GNUC__) || defined(__clang__)
 	#define TS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif defined(_MSC_VER)
-	#define TS_PRETTY_FUNCTION __FUNCTION__
+	#if _MSC_VER >= 1900
+		#define TS_PRETTY_FUNCTION __func__
+	#else
+		#define TS_PRETTY_FUNCTION __FUNCTION__
+	#endif
 #else
 	#error "Pretty function macro undefined on this compiler."
 #endif
@@ -56,6 +60,8 @@
 
 #include <cstdint>
 #include <cinttypes>
+
+#include "ts/tessa/common/Package.h"
 
 TS_PACKAGE0()
 
@@ -81,6 +87,6 @@ struct TypeParseTraits;
 	template <> struct TypeParseTraits<__type_name> \
     { static const char* name; }; const char* TypeParseTraits<__type_name>::name = #__type_name; }
 
-#define TS_GET_PARSE_TYPE(__type_name) TypeParseTraits<__type_name>::name
+#define TS_GET_PARSE_TYPE(__type_name) ::ts::TypeParseTraits<__type_name>::name
 
 TS_END_PACKAGE0()

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+  
+  <Type Name="ts::math::Vec2&lt;*&gt;">
+    <DisplayString>{{x={x} y={y} }}</DisplayString>
+  </Type>
+  
+  <Type Name="ts::math::Vec3&lt;*&gt;">
+    <DisplayString>{{x={x} y={y} z={z}}}</DisplayString>
+  </Type>
+  
+  <Type Name="ts::math::Vec4&lt;*&gt;">
+    <DisplayString>{{x={x} y={y} z={z} w={w}}}</DisplayString>
+  </Type>
+  
+  <Type Name="ts::SharedPointer&lt;*&gt;">
+    <SmartPointer Usage="Minimal">pointer,na</SmartPointer>
+    <DisplayString Condition="pointer == 0">empty</DisplayString>
+    <DisplayString Condition="(pointer != 0) &amp;&amp; (*(int *)&amp;impl-&gt;refcount._My_val == 1)">SharedPointer {pointer,na} [{impl-&gt;refcount} ref]</DisplayString>
+    <DisplayString Condition="(pointer != 0) &amp;&amp; (*(int *)&amp;impl-&gt;refcount._My_val &gt; 1)">SharedPointer {pointer,na} [{impl-&gt;refcount} refs]</DisplayString>
+    <Expand>
+      <Item Condition="pointer != 0" Name="[ptr]">pointer</Item>
+      <Item Condition="pointer != 0" Name="[control block]">*impl</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="ts::UniquePointer&lt;*&gt;">
+    <SmartPointer Usage="Minimal">pointer,na</SmartPointer>
+    <DisplayString Condition="pointer == 0">empty</DisplayString>
+    <DisplayString Condition="(pointer != 0)">UniquePointer {pointer,na}</DisplayString>
+    <Expand>
+      <Item Condition="pointer != 0" Name="[ptr]">pointer</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="ts::ScopedPointer&lt;*&gt;">
+    <SmartPointer Usage="Minimal">pointer,na</SmartPointer>
+    <DisplayString Condition="pointer == 0">empty</DisplayString>
+    <DisplayString Condition="(pointer != 0)">ScopedPointer {pointer,na}</DisplayString>
+    <Expand>
+      <Item Condition="pointer != 0" Name="[ptr]">pointer</Item>
+    </Expand>
+  </Type>
+  
+</AutoVisualizer>

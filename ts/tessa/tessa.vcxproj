@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -23,20 +23,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -163,6 +163,9 @@
     <ClCompile Include="resource\AbstractResourceBase.cpp" />
     <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
+    <ClInclude Include="common\ScopedPointer.h" />
+    <ClInclude Include="common\SharedPointer.h" />
+    <ClInclude Include="common\UniquePointer.h" />
     <ClInclude Include="resource\ResourceBase.inl">
       <FileType>CppCode</FileType>
     </ClInclude>
@@ -202,7 +205,6 @@
     <ClInclude Include="resource\TextureResource.h" />
     <ClInclude Include="system\Application.h" />
     <ClInclude Include="common\Assert.h" />
-    <ClInclude Include="common\Declare.h" />
     <ClInclude Include="common\IncludeWindows.h" />
     <ClInclude Include="common\Log.h" />
     <ClInclude Include="common\Package.h" />
@@ -214,10 +216,22 @@
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common\SharedPointer.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="common\ScopedPointer.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="common\UniquePointer.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
     <None Include="math\Mat4.inl" />
     <None Include="math\Vec2.inl" />
     <None Include="math\Vec3.inl" />
     <None Include="math\Vec4.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Tessa.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

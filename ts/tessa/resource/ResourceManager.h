@@ -97,8 +97,6 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 		return nullptr;
 	}
 
-	TS_PRINTF("1 resource 0x%08X\n", (ptrdiff_t)resource);
-
 	AbstractResourceContainer *rc = new AbstractResourceContainer(resource, ResourceType::TypeId);
 	if (rc == nullptr)
 	{
@@ -106,14 +104,9 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 		return nullptr;
 	}
 
-	TS_PRINTF("2 resource 0x%08X\n", (ptrdiff_t)resource);
-
 	resourceGuids.emplace(resourceGuid, fileGuid);
 	resources.emplace(fileGuid, rc);
 
-	TS_PRINTF("3 resource 0x%08X\n", (ptrdiff_t)resource);
-
-	TS_LOG_DEBUG("Adding resource to threaded load queue.");
 	addResourceToLoadQueue(resource);
 
 	return resource;

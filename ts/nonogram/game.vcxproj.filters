@@ -48,5 +48,8 @@
     <ClInclude Include="GameApplication.h">
       <Filter>source Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameConfig.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

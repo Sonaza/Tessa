@@ -14,17 +14,31 @@ public:
 	template <class U>
 	explicit Vec3(const Vec3<U> &vector);
 
+	// SFML conversions if using the library
+#if defined(SFML_VERSION_MAJOR)
+
+	Vec3(const sf::Vector3<T> &vector);
+	operator sf::Vector3<T>();
+
+#endif
+
 	// Returns length of the Vector
 	float length() const;
 
-	// Normalizes Vector and returns current value
-	Vec3& normalize();
+	// Returns square length of the Vector
+	float squarelength() const;
+
+	// Normalizes vector and returns current value
+	Vec3 &normalize();
+
+	// Gets normalized value without modifying current vector
+	Vec3 &getNormalized();
 
 	// Vector dot product
-	float dot(const Vec3& right);
+	float dot(const Vec3 &right);
 
 	// Vector cross product
-	Vec3& cross(const Vec3& right);
+	Vec3 &cross(const Vec3 &right);
 
 	// Vector components
 	T x, y, z;
@@ -36,64 +50,64 @@ public:
 };
 
 template <class T>
-Vec3<T> operator*(const Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> operator*(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T> operator*(const Vec3<T>& lhs, T v);
+Vec3<T> operator*(const Vec3<T> &lhs, T v);
 
 template <class T>
-Vec3<T> operator*(T v, const Vec3<T>& rhs);
+Vec3<T> operator*(T v, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T>& operator*=(Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> &operator*=(Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T>& operator*=(Vec3<T>& lhs, T v);
+Vec3<T> &operator*=(Vec3<T> &lhs, T v);
 
 template <class T>
-Vec3<T> operator/(const Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> operator/(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T> operator/(const Vec3<T>& lhs, T v);
+Vec3<T> operator/(const Vec3<T> &lhs, T v);
 
 template <class T>
-Vec3<T>& operator/=(Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> &operator/=(Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T>& operator/=(Vec3<T>& lhs, T v);
+Vec3<T> &operator/=(Vec3<T> &lhs, T v);
 
 template <class T>
-Vec3<T> operator+(const Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T>& operator+=(Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> &operator+=(Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T> operator-(const Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> operator-(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T>& operator-=(Vec3<T>& lhs, const Vec3<T>& rhs);
+Vec3<T> &operator-=(Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T> operator-(const Vec3<T>& v);
+Vec3<T> operator-(const Vec3<T> &v);
 
 template <class T>
-bool operator==(const Vec3<T>& lhs, const Vec3<T>& rhs);
+bool operator==(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-bool operator!=(const Vec3<T>& lhs, const Vec3<T>& rhs);
+bool operator!=(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
-Vec3<T> normalize(const Vec3<T>& v);
+Vec3<T> normalize(const Vec3<T> &v);
 
 template <class T>
-float length(const Vec3<T>& v);
+float length(const Vec3<T> &v);
 
 template <class T>
-float dot(const Vec3<T>& a, const Vec3<T>& b);
+float dot(const Vec3<T> &a, const Vec3<T> &b);
 
 template <class T>
-Vec3<T> cross(const Vec3<T>& a, const Vec3<T>& b);
+Vec3<T> cross(const Vec3<T> &a, const Vec3<T> &b);
 
 #include "Vec3.inl"
 

@@ -18,78 +18,84 @@ public:
 	// Returns length of the Vector
 	float length() const;
 
+	// Returns length of the Vector
+	float squarelength() const;
+
 	// Normalizes Vector and returns current value
-	Vec4& normalize();
+	Vec4 &normalize();
+
+	// Gets normalized value without modifying current vector
+	Vec4 &getNormalized();
 
 	// Vector dot product
-	float dot(const Vec4& right);
+	float dot(const Vec4 &right);
 
 	// Vector cross product
-	Vec4& cross(const Vec4& right);
+	Vec4 &cross(const Vec4 &right);
 
 	// Vector components
 	T x, y, z, w;
 };
 
 template <class T>
-Vec4<T> operator*(const Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> operator*(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T> operator*(const Vec4<T>& lhs, T v);
+Vec4<T> operator*(const Vec4<T> &lhs, T v);
 
 template <class T>
-Vec4<T> operator*(T v, const Vec4<T>& rhs);
+Vec4<T> operator*(T v, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T>& operator*=(Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> &operator*=(Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T>& operator*=(Vec4<T>& lhs, T v);
+Vec4<T> &operator*=(Vec4<T> &lhs, T v);
 
 template <class T>
-Vec4<T> operator/(const Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> operator/(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T> operator/(const Vec4<T>& lhs, T v);
+Vec4<T> operator/(const Vec4<T> &lhs, T v);
 
 template <class T>
-Vec4<T>& operator/=(Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> &operator/=(Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T>& operator/=(Vec4<T>& lhs, T v);
+Vec4<T> &operator/=(Vec4<T> &lhs, T v);
 
 template <class T>
-Vec4<T> operator+(const Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> operator+(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T>& operator+=(Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> &operator+=(Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T> operator-(const Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> operator-(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T>& operator-=(Vec4<T>& lhs, const Vec4<T>& rhs);
+Vec4<T> &operator-=(Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T> operator-(const Vec4<T>& v);
+Vec4<T> operator-(const Vec4<T> &v);
 
 template <class T>
-bool operator==(const Vec4<T>& lhs, const Vec4<T>& rhs);
+bool operator==(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-bool operator!=(const Vec4<T>& lhs, const Vec4<T>& rhs);
+bool operator!=(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
-Vec4<T> normalize(const Vec4<T>& v);
+Vec4<T> normalize(const Vec4<T> &v);
 
 template <class T>
-float length(const Vec4<T>& v);
+float length(const Vec4<T> &v);
 
 template <class T>
-float dot(const Vec4<T>& a, const Vec4<T>& b);
+float dot(const Vec4<T> &a, const Vec4<T> &b);
 
 template <class T>
-Vec4<T> cross(const Vec4<T>& a, const Vec4<T>& b);
+Vec4<T> cross(const Vec4<T> &a, const Vec4<T> &b);
 
 #include "Vec4.inl"
 

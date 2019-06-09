@@ -45,6 +45,8 @@
 	#define TS_LOG_DEBUG(__message, ...) ((void)0)
 #endif
 
+#include "ts/tessa/common/Package.h"
+
 TS_PACKAGE1(log)
 
 class Log

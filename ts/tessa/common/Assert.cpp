@@ -24,6 +24,8 @@ DialogAction dialog(const char *expression, const char *message, const char *fil
 {
 #if TS_PLATFORM == TS_WINDOWS
 	std::wstringstream msg;
+
+	msg << "Assertion failure!\n\n";
 	
 	if (message)
 		msg << "Description: " << message << "\n\n";

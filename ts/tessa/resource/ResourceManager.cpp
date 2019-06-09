@@ -30,7 +30,7 @@ bool ResourceManager::initialize()
 
 void ResourceManager::deinitialize()
 {
-	
+	unloadAll();
 }
 
 void ResourceManager::unloadAll()
@@ -114,7 +114,7 @@ void ResourceManager::addResourceToLoadQueue(AbstractResourceBase *resource)
 	application->threadPool->push(system::ThreadPool::Normal, [resource]()
 	{
 		TS_ASSERT(resource != nullptr);
-		TS_LOG_DEBUG("Now loading resource 0x%08X\n", (ptrdiff_t)resource);
+		TS_LOG_DEBUG("Now loading resource 0x%08X", (ptrdiff_t)resource);
 		resource->loadResource();
 	});
 }
