@@ -27,15 +27,20 @@ public:
 
 	void clearTasks();
 
-	template<class TaskFunction, class... TaskArgs>
-	std::future<typename std::result_of<TaskFunction(TaskArgs...)>::type> push(TaskPriority priority, TaskFunction && f, TaskArgs&&... args);
+	// For passing in function pointers and lambda functions
+	template<class Function, class... Args>
+	std::future<typename std::result_of<Function(Args...)>::type> push(TaskPriority priority, Function &&f, Args&&... args);
+	
+	// For passing in instanced class methods
+	template<class ReturnType, class Class, class... Args>
+	std::future<ReturnType> push(TaskPriority priority, ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
 
-	static SizeType numHardwareThreads()
-	{
-		return std::thread::hardware_concurrency();
-	}
+	static SizeType numHardwareThreads();
 
 private:
+	template <class ReturnType>
+	std::future<ReturnType> pushImpl(TaskPriority priority, std::function<ReturnType()> &&f);
+
 	void threadTaskRunnerImpl(SizeType threadIndex);
 
 	bool running = true;
@@ -47,8 +52,15 @@ private:
 
 	struct TaskContainer
 	{
-		std::function<void()> task;
+		TaskContainer() = default;
+		TaskContainer(TaskPriority priority, std::function<void()> &&task)
+			: priority(priority)
+			, task(task)
+		{
+		}
+
 		TaskPriority priority;
+		std::function<void()> task;
 
 		bool operator()(const TaskContainer &a, const TaskContainer &b) const
 		{
@@ -59,26 +71,36 @@ private:
 	TaskQueueType taskQueue;
 };
 
-template<class TaskFunction, class... TaskArgs>
-std::future<typename std::result_of<TaskFunction(TaskArgs...)>::type> ThreadPool::push(TaskPriority priority, TaskFunction && taskFunction, TaskArgs&&... args)
+template<class Function, class... Args>
+std::future<typename std::result_of<Function(Args...)>::type> ThreadPool::push(TaskPriority priority, Function &&taskFunction, Args&&... args)
 {
-	typedef typename std::result_of<TaskFunction(TaskArgs...)>::type ReturnType;
+	typedef typename std::result_of<Function(Args...)>::type ReturnType;
 
-	std::function<void()> boundTaskFunction = std::bind(std::forward<TaskFunction>(taskFunction), std::forward<TaskArgs>(args)...);
-	std::shared_ptr<std::packaged_task<ReturnType()>> packagedTask = std::make_shared<std::packaged_task<ReturnType()>>(boundTaskFunction);
+	std::function<ReturnType()> bound = std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...);
+	return pushImpl<ReturnType>(priority, std::move(bound));
+}
+
+template<class ReturnType, class Class, class... Args>
+std::future<ReturnType> ThreadPool::push(TaskPriority priority, ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args)
+{
+	std::function<ReturnType()> bound = std::bind(taskFunction, instance, std::forward<Args>(args)...);
+	return pushImpl<ReturnType>(priority, std::move(bound));
+}
+
+template <class ReturnType>
+std::future<ReturnType> ThreadPool::pushImpl(TaskPriority priority, std::function<ReturnType()> &&bound)
+{
+	SharedPointer<std::packaged_task<ReturnType()>> packagedTask = makeShared<std::packaged_task<ReturnType()>>(bound);
 
 	std::future<ReturnType> result = packagedTask->get_future();
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
 		if (running)
 		{
-			TaskContainer task;
-			task.task = [packagedTask]()
+			taskQueue.emplace(priority, [packagedTask]()
 			{
 				(*packagedTask)();
-			};
-			task.priority = priority;
-			taskQueue.emplace(std::move(task));
+			});
 		}
 	}
 

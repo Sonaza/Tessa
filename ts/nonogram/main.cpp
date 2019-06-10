@@ -1,6 +1,8 @@
 ﻿#include "Precompiled.h"
 #include "GameApplication.h"
 
+#include "ts/tessa/system/ThreadPool.h"
+
 #include <thread>
 
 int test2()
@@ -69,28 +71,56 @@ public:
 	ts::Int32 number;
 };
 
+class CustomDeleter
+{
+public:
+	void operator()(void *ptr)
+	{
+		TS_PRINTF("Using custom deleter!\n");
+		free(ptr);
+	}
+};
+
 int test()
 {
-	std::shared_ptr<int> potato(new int(1234));
+	int *customRawPtr = (int*)malloc(sizeof(int));
+	*customRawPtr = 1234512345;
+	ts::UniquePointer<int, CustomDeleter> customAD(customRawPtr);
 
-	/*{
-		ts::SharedPointer<int> defptr;
-		defptr.reset(new int(42));
+	customAD.reset();
 
-		TS_PRINTF("default pointer 1 value %d\n", *defptr);
+// 	make_shared
+
+	// std::shared_ptr<int> potato(new int(1234));
+
+	ts::ScopedPointer<std::string> strptr(new std::string("Potato text"));
+
+	TS_PRINTF("String! %s\n", *strptr);
+
+	ts::SharedPointer<Base> basePtr(new Derived, CustomDeleter());
+	ts::SharedPointer<Derived> derivedPtr = ts::staticPointerCast<Derived>(basePtr);
+
+	std::unique_ptr<int> stdunique = std::make_unique<int>(1241325);
+	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(-1, stdunique);
+
+	if (basePtr == derivedPtr)
+	{
+		TS_PRINTF("They are pointing to the same thing!\n");
 	}
-
-	ts::SharedPointer<std::string> strptr(new std::string("Potato text"));*/
-
-	ts::SharedPointer<Base> basePtr(new Derived);
-	ts::SharedPointer<Poopoo> derivedPtr = ts::reinterpretPointerCast<Poopoo>(basePtr);
+	else
+	{
+		TS_PRINTF("They are not pointing to the same thing!\n");
+	}
 
 	basePtr.reset();
 
 	ts::UniquePointer<int> scp1 = ts::makeUnique<int>(1337);
+
 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(-1, scp1);
 
+	int *rawPtr = scp1.dismiss();
 
+	// TODO: potato
 	if (scp1)
 	{
 		TS_PRINTF("POINTER 1 IS A THING!\n");
@@ -99,6 +129,10 @@ int test()
 	{
 		TS_PRINTF("POINTER 1 IS NOT A THING!\n");
 	}
+
+	TS_PRINTF("rawPtr on the other hand has value %d\n", *rawPtr);
+	delete rawPtr;
+	rawPtr = nullptr;
 
 	ts::UniquePointer<int> scp2 = std::move(scp1);
 

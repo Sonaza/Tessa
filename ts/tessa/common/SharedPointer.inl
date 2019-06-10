@@ -70,13 +70,6 @@ SharedPointer<T> &SharedPointer<T>::operator=(SharedPointer<T> &&other)
 	return *this;
 }
 
-// template <class T> template<class T2>
-// SharedPointer<T>::SharedPointer(SharedPointer<T2> &other)
-// {
-// 	static_assert(std::is_convertible<T2, T>::value, "Type is not convertible.");
-// 	*this = other;
-// }
-
 template <class T>
 T *SharedPointer<T>::get() const
 {
@@ -86,7 +79,7 @@ T *SharedPointer<T>::get() const
 template <class T>
 void SharedPointer<T>::reset(T *ptrParam)
 {
-	reset(ptrParam, SharedPointerDefaultDeleter<T>());
+	reset(ptrParam, SharedPointerDefaultDeleter());
 }
 
 template <class T> template <class Deleter>
@@ -104,7 +97,7 @@ void SharedPointer<T>::reset(T *ptrParam, Deleter)
 		
 		struct DeleterImpl
 		{
-			static void destroy(T *pointer)
+			static void destroy(void *pointer)
 			{
 				Deleter()(pointer);
 			}
@@ -116,16 +109,16 @@ void SharedPointer<T>::reset(T *ptrParam, Deleter)
 }
 
 template <class T>
-T &SharedPointer<T>::operator*()
+typename std::add_lvalue_reference<T>::type SharedPointer<T>::operator*() const
 {
-	TS_ASSERTF(pointer != nullptr, "Attempting to dereference a null pointer.");
+	TS_ASSERTF(pointer != nullptr, "Attempting to dereference a null pointer");
 	return *pointer;
 }
 
 template <class T>
-T *SharedPointer<T>::operator->()
+T *SharedPointer<T>::operator->() const
 {
-	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer.");
+	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
 	return pointer;
 }
 
@@ -150,13 +143,13 @@ bool SharedPointer<T>::operator!() const
 template <class T>
 bool SharedPointer<T>::operator==(nullptr_t) const
 {
-	return other.pointer == nullptr;
+	return pointer == nullptr;
 }
 
 template <class T>
 bool SharedPointer<T>::operator!=(nullptr_t) const
 {
-	return other.pointer != nullptr;
+	return pointer != nullptr;
 }
 
 template <class T>
@@ -172,9 +165,23 @@ bool SharedPointer<T>::operator!=(const SharedPointer<T> &other) const
 }
 
 template <class T>
+template <class T2>
+bool SharedPointer<T>::operator==(const SharedPointer<T2> &other) const
+{
+	return pointer == other.pointer;
+}
+
+template <class T>
+template <class T2>
+bool SharedPointer<T>::operator!=(const SharedPointer<T2> &other) const
+{
+	return pointer != other.pointer;
+}
+
+template <class T>
 bool SharedPointer<T>::isUnique() const
 {
-	TS_ASSERTF(pointer != nullptr, "A null pointer has no references.");
+	TS_ASSERTF(pointer != nullptr, "A null pointer has no references");
 	return impl->refcount.load(std::memory_order_relaxed) == 1;
 }
 

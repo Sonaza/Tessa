@@ -66,10 +66,10 @@ private:
 	sf::Time targetFrameTime = sf::milliseconds(16);
 	SizeType currentFramerate = 0;
 
-	std::unique_ptr<system::SceneBase> pendingScene;
-	std::unique_ptr<system::SceneBase> currentScene;
+	UniquePointer<system::SceneBase> pendingScene;
+	UniquePointer<system::SceneBase> currentScene;
 
-	std::unique_ptr<system::ThreadPool> threadPool;
+	UniquePointer<system::ThreadPool> threadPool;
 
 	friend class system::WindowManager;
 	friend class resource::ResourceManager;

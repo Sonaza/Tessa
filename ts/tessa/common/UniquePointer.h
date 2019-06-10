@@ -2,21 +2,19 @@
 
 TS_PACKAGE0()
 
-// Shared pointer type intended for use cases where a thing may be shared between several 
-// different scopes and at the end when it is no longer needed the allocated memory is freed.
-
-template<class T>
 class UniquePointerDefaultDeleter
 {
 public:
-	void operator()(T *pointer)
+	void operator()(void *pointer)
 	{
-		TS_PRINTF("UniquePointerDefaultDeleter called\n");
+		TS_ASSERT(pointer != nullptr);
 		delete pointer;
 	}
 };
 
-template <class T>
+// Unique pointer type intended for use cases where a thing is only allowed to
+// exist in one place at a time but may be moved elsewhere through move semantics.
+template <class T, class Deleter = UniquePointerDefaultDeleter>
 class UniquePointer
 {
 public:
@@ -26,60 +24,52 @@ public:
 
 	explicit UniquePointer(T *pointer);
 
-	template <class Deleter>
-	explicit UniquePointer(T *pointer, Deleter);
+	virtual ~UniquePointer();
 
-	~UniquePointer();
+	// Copying is forbidden.
+	UniquePointer(const UniquePointer &other) = delete;
+	UniquePointer &operator=(const UniquePointer &other) = delete;
 
-	UniquePointer(UniquePointer<T> &other) = delete;
-	UniquePointer<T> &operator=(UniquePointer<T> &other) = delete;
-
-	UniquePointer(UniquePointer<T> &&other);
-	UniquePointer<T> &operator=(UniquePointer<T> &&other);
+	// Move is allowed.
+	UniquePointer(UniquePointer &&other);
+	UniquePointer &operator=(UniquePointer &&other);
 
 	T *get() const;
 
-	// Resets pointer without freeing the data
-	void dismiss();
+	// Resets pointer without freeing the data, returns the current raw pointer.
+	T *dismiss();
 
 	void reset(T *ptrParam = nullptr);
 
-	template<class Deleter>
-	void reset(T *ptrParam, Deleter);
-
-	T &operator*();
+	typename std::add_lvalue_reference<T>::type operator*() const;
 	T *operator->();
 
 	explicit operator bool();
-
-	// Implicit cast to void*, it's dirty but fixes pointer verification macro
-	operator void *();
+	explicit operator void *();
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;
 	bool operator!=(nullptr_t) const;
-	bool operator==(const UniquePointer<T> &other) const;
-	bool operator!=(const UniquePointer<T> &other) const;
+	bool operator==(const UniquePointer &other) const;
+	bool operator!=(const UniquePointer &other) const;
 	
 	void swap(UniquePointer &other);
 
 private:
 	void deletePointerDataIfNeeded();
-
-	void (*destructor)(T*) = nullptr;
 	T *pointer = nullptr;
 };
 
 #include "UniquePointer.inl"
 
-template <class T, class... Args>
-UniquePointer<T> makeUnique(Args&&... args)
+template <class T, class Deleter = UniquePointerDefaultDeleter, class... Args>
+UniquePointer<T, Deleter> makeUnique(Args&&... args)
 {
 	static_assert(std::is_array<T>::value == false, "UniquePointer does not support storing arrays.");
 
-	T *pointer = new T(args...);
+	T *pointer = new T(std::forward<Args>(args)...);
 	TS_ASSERT(pointer != nullptr);
-	return UniquePointer<T>(pointer);
+	return UniquePointer<T, Deleter>(pointer);
 }
 
 TS_END_PACKAGE0()

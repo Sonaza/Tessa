@@ -2,21 +2,19 @@
 
 TS_PACKAGE0()
 
-// Shared pointer type intended for use cases where a thing may be shared between several 
-// different scopes and at the end when it is no longer needed the allocated memory is freed.
-
-template<class T>
 class ScopedPointerDefaultDeleter
 {
 public:
-	void operator()(T *pointer)
+	void operator()(void *pointer)
 	{
-		TS_PRINTF("ScopedPointerDefaultDeleter called\n");
+		TS_ASSERT(pointer != nullptr);
 		delete pointer;
 	}
 };
 
-template <class T>
+// Scoped pointer type intended for use cases where a thing only
+// exists in a single scope and will never move outside of it.
+template <class T, class Deleter = ScopedPointerDefaultDeleter>
 class ScopedPointer
 {
 public:
@@ -26,47 +24,39 @@ public:
 
 	explicit ScopedPointer(T *pointer);
 
-	template <class Deleter>
-	explicit ScopedPointer(T *pointer, Deleter);
+	virtual ~ScopedPointer();
 
-	~ScopedPointer();
+	// Copying is forbidden.
+	ScopedPointer(const ScopedPointer &other) = delete;
+	ScopedPointer &operator=(const ScopedPointer &other) = delete;
 
-	ScopedPointer(ScopedPointer<T> &other) = delete;
-	ScopedPointer<T> &operator=(ScopedPointer<T> &other) = delete;
-
-	ScopedPointer(ScopedPointer<T> &&other) = delete;
-	ScopedPointer<T> &operator=(ScopedPointer<T> &&other) = delete;
+	// Move is forbidden.
+	ScopedPointer(ScopedPointer &&other) = delete;
+	ScopedPointer &operator=(ScopedPointer &&other) = delete;
 
 	T *get() const;
 
-	// Resets pointer without freeing the data
-	void dismiss();
+	// Resets pointer without freeing the data, returns the current raw pointer.
+	T *dismiss();
 
 	void reset(T *ptrParam = nullptr);
 
-	template<class Deleter>
-	void reset(T *ptrParam, Deleter);
-
-	T &operator*();
+	typename std::add_lvalue_reference<T>::type operator*() const;
 	T *operator->();
 
 	explicit operator bool();
-
-	// Implicit cast to void*, it's dirty but fixes pointer verification macro
-	operator void *();
+	explicit operator void *();
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;
 	bool operator!=(nullptr_t) const;
-	bool operator==(const ScopedPointer<T> &other) const;
-	bool operator!=(const ScopedPointer<T> &other) const;
-	
+	bool operator==(const ScopedPointer &other) const;
+	bool operator!=(const ScopedPointer &other) const;
+
 	void swap(ScopedPointer &other);
 
 private:
 	void deletePointerDataIfNeeded();
-
-	void (*destructor)(T*) = nullptr;
 	T *pointer = nullptr;
 };
 

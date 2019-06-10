@@ -50,12 +50,16 @@ void ThreadPool::clearTasks()
 	condition.notify_all();
 }
 
+SizeType ThreadPool::numHardwareThreads()
+{
+	return (SizeType)std::thread::hardware_concurrency();
+}
+
 void ThreadPool::threadTaskRunnerImpl(SizeType threadIndex)
 {
 	while (true)
 	{
 		TaskContainer task;
-
 		{
 			std::unique_lock<std::mutex> lock(queueMutex);
 			condition.wait(lock, [this]()

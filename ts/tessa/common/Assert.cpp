@@ -49,8 +49,8 @@ DialogAction dialog(const char *expression, const char *message, const char *fil
 
 bool __cdecl assert_impl(const char *expression, const char *message, const char *filepath, const unsigned int line)
 {
-	if (message == nullptr)
-		TS_PRINTF("Assertion failed: %s, %s in %s on line %u\n", message, expression, filepath, line);
+	if (message != nullptr)
+		TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n", message, expression, filepath, line);
 	else
 		TS_PRINTF("Assertion failed: %s in %s on line %u\n", expression, filepath, line);
 

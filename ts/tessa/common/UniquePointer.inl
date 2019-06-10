@@ -1,31 +1,24 @@
 
-template <class T>
-UniquePointer<T>::UniquePointer(T *pointer)
+template <class T, class Deleter>
+UniquePointer<T, Deleter>::UniquePointer(T *pointer)
 {
 	reset(pointer);
 }
 
-template <class T>
-template <class Deleter>
-UniquePointer<T>::UniquePointer(T *pointer, Deleter)
-{
-	reset(pointer, Deleter());
-}
-
-template <class T>
-UniquePointer<T>::~UniquePointer()
+template <class T, class Deleter>
+UniquePointer<T, Deleter>::~UniquePointer()
 {
 	reset();
 }
 
-template <class T>
-UniquePointer<T>::UniquePointer(UniquePointer<T> &&other)
+template <class T, class Deleter>
+UniquePointer<T, Deleter>::UniquePointer(UniquePointer &&other)
 {
 	*this = std::move(other);
 }
 
-template <class T>
-UniquePointer<T> &UniquePointer<T>::operator=(UniquePointer<T> &&other)
+template <class T, class Deleter>
+UniquePointer<T, Deleter> &UniquePointer<T, Deleter>::operator=(UniquePointer &&other)
 {
 	// Prevent self assignment
 	if (this != &other)
@@ -33,42 +26,99 @@ UniquePointer<T> &UniquePointer<T>::operator=(UniquePointer<T> &&other)
 		deletePointerDataIfNeeded();
 
 		pointer = other.pointer;
-		destructor = other.destructor;
-
 		other.pointer = nullptr;
-		other.destructor = nullptr;
 	}
 	return *this;
 }
 
-template <class T>
-T *UniquePointer<T>::get() const
+template <class T, class Deleter>
+T *UniquePointer<T, Deleter>::get() const
 {
 	return pointer;
 }
 
-template <class T>
-void UniquePointer<T>::dismiss()
+template <class T, class Deleter>
+T *UniquePointer<T, Deleter>::dismiss()
 {
+	T *ptr = pointer;
 	pointer = nullptr;
-	destructor = nullptr;
+	return ptr;
 }
 
-template <class T>
-void UniquePointer<T>::reset(T *ptrParam)
-{
-	reset(ptrParam, UniquePointerDefaultDeleter<T>());
-}
-
-template <class T> template <class Deleter>
-void UniquePointer<T>::reset(T *ptrParam, Deleter)
+template <class T, class Deleter>
+void UniquePointer<T, Deleter>::reset(T *ptrParam)
 {
 	static_assert(std::is_array<T>::value == false, "UniquePointer does not support storing arrays.");
 
 	deletePointerDataIfNeeded();
-
 	pointer = ptrParam;
+}
 
+template <class T, class Deleter>
+typename std::add_lvalue_reference<T>::type UniquePointer<T, Deleter>::operator*() const
+{
+	TS_ASSERTF(pointer != nullptr, "Attempting to dereference a null pointer");
+	return *pointer;
+}
+
+template <class T, class Deleter>
+T *UniquePointer<T, Deleter>::operator->()
+{
+	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
+	return pointer;
+}
+
+template <class T, class Deleter>
+UniquePointer<T, Deleter>::operator bool()
+{
+	return pointer != nullptr;
+}
+
+template <class T, class Deleter>
+UniquePointer<T, Deleter>::operator void *()
+{
+	return static_cast<void*>(pointer);
+}
+
+template <class T, class Deleter>
+bool UniquePointer<T, Deleter>::operator!() const
+{
+	return pointer == nullptr;
+}
+
+template <class T, class Deleter>
+bool UniquePointer<T, Deleter>::operator==(nullptr_t) const
+{
+	return pointer == nullptr;
+}
+
+template <class T, class Deleter>
+bool UniquePointer<T, Deleter>::operator!=(nullptr_t) const
+{
+	return pointer != nullptr;
+}
+
+template <class T, class Deleter>
+bool UniquePointer<T, Deleter>::operator==(const UniquePointer &other) const
+{
+	return pointer == other.pointer;
+}
+
+template <class T, class Deleter>
+bool UniquePointer<T, Deleter>::operator!=(const UniquePointer &other) const
+{
+	return pointer != other.pointer;
+}
+
+template <class T, class Deleter>
+void UniquePointer<T, Deleter>::swap(UniquePointer &other)
+{
+	std::swap(pointer, other.pointer);
+}
+
+template <class T, class Deleter>
+void UniquePointer<T, Deleter>::deletePointerDataIfNeeded()
+{
 	if (pointer != nullptr)
 	{
 		struct DeleterImpl
@@ -78,81 +128,10 @@ void UniquePointer<T>::reset(T *ptrParam, Deleter)
 				Deleter()(pointer);
 			}
 		};
-		destructor = &DeleterImpl::destroy;
-	}
-}
+		DeleterImpl::destroy(pointer);
 
-template <class T>
-T &UniquePointer<T>::operator*()
-{
-	TS_ASSERTF(pointer != nullptr, "Attempting to dereference a null pointer.");
-	return *pointer;
-}
-
-template <class T>
-T *UniquePointer<T>::operator->()
-{
-	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer.");
-	return pointer;
-}
-
-template <class T>
-UniquePointer<T>::operator bool()
-{
-	return pointer != nullptr;
-}
-
-template <class T>
-UniquePointer<T>::operator void *()
-{
-	return static_cast<void*>(pointer);
-}
-
-template <class T>
-bool UniquePointer<T>::operator!() const
-{
-	return pointer == nullptr;
-}
-
-template <class T>
-bool UniquePointer<T>::operator==(nullptr_t) const
-{
-	return other.pointer == nullptr;
-}
-
-template <class T>
-bool UniquePointer<T>::operator!=(nullptr_t) const
-{
-	return other.pointer != nullptr;
-}
-
-template <class T>
-bool UniquePointer<T>::operator==(const UniquePointer<T> &other) const
-{
-	return pointer == other.pointer;
-}
-
-template <class T>
-bool UniquePointer<T>::operator!=(const UniquePointer<T> &other) const
-{
-	return pointer != other.pointer;
-}
-
-template <class T>
-void UniquePointer<T>::swap(UniquePointer &other)
-{
-	std::swap(pointer, other.pointer);
-	std::swap(destructor, other.destructor);
-}
-
-template <class T>
-void UniquePointer<T>::deletePointerDataIfNeeded()
-{
-	if (pointer != nullptr)
-	{
 // 		delete pointer;
-		destructor(pointer);
+// 		destructor(pointer);
 		pointer = nullptr;
-		destructor = nullptr;
 	}
 }

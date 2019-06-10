@@ -5,20 +5,18 @@
 
 TS_PACKAGE0()
 
-// Shared pointer type intended for use cases where a thing may be shared between several 
-// different scopes and at the end when it is no longer needed the allocated memory is freed.
-
-template<class T>
 class SharedPointerDefaultDeleter
 {
 public:
-	void operator()(T *pointer)
+	void operator()(void *pointer)
 	{
-		TS_PRINTF("SharedPointerDefaultDeleter called\n");
+		TS_ASSERT(pointer != nullptr);
 		delete pointer;
 	}
 };
 
+// Shared pointer type intended for use cases where a thing may be shared between several 
+// different scopes and at the end when it is no longer needed the allocated memory is freed.
 template <class T>
 class SharedPointer
 {
@@ -29,24 +27,22 @@ public:
 
 	explicit SharedPointer(T *ptr);
 
-	template <class T2>
-	explicit SharedPointer(const SharedPointer<T2> &other, T *ptr);
-
 	template <class Deleter>
 	explicit SharedPointer(T *ptr, Deleter);
 
-// 	SharedPointer(T *pointer, void(*func(T *)));
+	// Casting constructor (from another pointer type). Handles copying pointer, refcounter, deleter and does ref increment.
+	template <class T2>
+	explicit SharedPointer(const SharedPointer<T2> &other, T *ptr);
 
-	~SharedPointer();
+	virtual ~SharedPointer();
 
-	SharedPointer(const SharedPointer<T> &other);
-	SharedPointer<T> &operator=(const SharedPointer<T> &other);
+	// Copying allowed, increases refcounter.
+	SharedPointer(const SharedPointer &other);
+	SharedPointer &operator=(const SharedPointer &other);
 
-	SharedPointer(SharedPointer<T> &&other);
-	SharedPointer<T> &operator=(SharedPointer<T> &&other);
-
-// 	template<class T2>
-// 	SharedPointer(SharedPointer<T2> &other);
+	// Moving allowed, doesn't increase refcounter, other pointer becomes invalid.
+	SharedPointer(SharedPointer &&other);
+	SharedPointer &operator=(SharedPointer &&other);
 
 	T *get() const;
 
@@ -55,19 +51,22 @@ public:
 	template<class Deleter>
 	void reset(T *ptrParam, Deleter);
 
-	T &operator*();
-	T *operator->();
+	typename std::add_lvalue_reference<T>::type operator*() const;
+	T *operator->() const;
 
 	explicit operator bool();
-
-	// Implicit cast to void*, it's dirty but fixes pointer verification macro
-	operator void *();
+	explicit operator void *();
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;
 	bool operator!=(nullptr_t) const;
-	bool operator==(const SharedPointer<T> &other) const;
-	bool operator!=(const SharedPointer<T> &other) const;
+	bool operator==(const SharedPointer &other) const;
+	bool operator!=(const SharedPointer &other) const;
+
+	template <class T2>
+	bool operator==(const SharedPointer<T2> &other) const;
+	template <class T2>
+	bool operator!=(const SharedPointer<T2> &other) const;
 	
 	bool isUnique() const;
 	void swap(SharedPointer &other);
@@ -80,13 +79,13 @@ private:
 	{
 	public:
 		std::atomic<Int32> refcount;
-		void (*destructor)(T*) = nullptr;
+		void (*destructor)(void *) = nullptr;
 	};
 
 	T *pointer = nullptr;
 	SharedPointerImpl *impl = nullptr;
 
-
+	// Needed to allow type casting in the cast constructor.
 	template <class T2>
 	friend class SharedPointer;
 };
@@ -98,7 +97,7 @@ SharedPointer<T> makeShared(Args&&... args)
 {
 	static_assert(std::is_array<T>::value == false, "SharedPointer does not support storing arrays.");
 
-	T *pointer = new T(args...);
+	T *pointer = new T(std::forward<Args>(args)...);
 	TS_ASSERT(pointer != nullptr);
 	return SharedPointer<T>(pointer);
 }

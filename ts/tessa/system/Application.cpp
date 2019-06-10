@@ -77,12 +77,39 @@ SizeType Application::getCurrentFramerate() const
 	return currentFramerate;
 }
 
+class Kakke
+{
+public:
+	int dokakke(int kakkeparam)
+	{
+		TS_PRINTF("Kakke %d\n", kakkeparam);
+		return kakkeparam / 2;
+	}
+};
+
+int kakkefunc(int kakkeparam)
+{
+	return kakkeparam / 2;
+}
+
 bool Application::initializeManagers()
 {
-	threadPool = std::make_unique<system::ThreadPool>(system::ThreadPool::numHardwareThreads());
-	if (threadPool == nullptr) return false;
-// 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, threadPool);
+	threadPool = makeUnique<system::ThreadPool>(system::ThreadPool::numHardwareThreads());
+	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, threadPool);
 
+	auto lft = threadPool->push(ThreadPool::High, [](int lambdakakke) -> int
+	{
+		return lambdakakke / 2;
+	}, 42);
+
+	TS_PRINTF("LambdaKakke future says %d\n", lft.get());
+
+	Kakke kakkeInstance;
+	auto ft = threadPool->push(ThreadPool::High, &Kakke::dokakke, &kakkeInstance, 1337);
+	auto ft2 = threadPool->push(ThreadPool::High, &kakkefunc, 6236);
+	
+	TS_PRINTF("Kakke futures say %d and %d\n", ft.get(), ft2.get());
+	
 	if (!createManagerInstance<resource::ResourceManager>())
 		return false;
 
