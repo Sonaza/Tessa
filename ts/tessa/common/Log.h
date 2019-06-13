@@ -22,13 +22,13 @@
 		::ts::log::Log::getSingleton().write(L ## __format, ## __VA_ARGS__); \
 	} while(false)
 
-#if TS_BUILD != TS_FINALRELEASE
+// #if TS_BUILD != TS_FINALRELEASE
 	#define TS_PRINTF(__format, ...)  __TS_PRINTF_IMPL(__format, ## __VA_ARGS__)
 	#define TS_WPRINTF(__format, ...) __TS_WPRINTF_IMPL(__format, ## __VA_ARGS__)
-#else
-	#define TS_PRINTF(...)  ((void)0)
-	#define TS_WPRINTF(...) ((void)0)
-#endif
+// #else
+// 	#define TS_PRINTF(...)  ((void)0)
+// 	#define TS_WPRINTF(...) ((void)0)
+// #endif
 
 #define __TS_LOG_WITH_SEVERITY_IMPL(__severity, __message, ...) \
 	do { \
@@ -54,6 +54,10 @@ class Log
 public:
 	static Log &getSingleton();
 
+	static bool setLogFile(const std::string &filepath);
+
+	bool isLogFileOpen() const;
+
 	void write(const std::string &str);
 	void write(const std::wstring &str);
 
@@ -75,8 +79,14 @@ private:
 
 	Log(Log const&) = delete;
 	void operator=(Log const&) = delete;
+
+	bool openLogfile();
+	void closeLogfile();
 	
-	std::wofstream logFileStream;
+	std::string currentFilepath;
+	std::wofstream fileStream;
+
+	static std::string filepath;
 };
 
 template<class FormatType, class... Args>

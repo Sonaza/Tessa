@@ -1,25 +1,25 @@
 
 template <class T>
-inline Vec3<T>::Vec3()
+Vec3<T>::Vec3()
 	: x(0), y(0), z(0)
 {
 }
 
 template <class T>
-inline Vec3<T>::Vec3(T v)
+Vec3<T>::Vec3(T v)
 	: x(v), y(v), z(v)
 {
 }
 
 template <class T>
-inline Vec3<T>::Vec3(T x, T y, T z)
+Vec3<T>::Vec3(T x, T y, T z)
 	: x(x), y(y), z(z)
 {
 }
 
 template <class T>
 template <class U>
-inline Vec3<T>::Vec3(const Vec3<U> &vector)
+Vec3<T>::Vec3(const Vec3<U> &vector)
 	: x(static_cast<T>(vector.x))
 	, y(static_cast<T>(vector.y))
 	, z(static_cast<T>(vector.z))

@@ -5,6 +5,11 @@
 
 #include <thread>
 
+#include "ts/tessa/system/ConfigReader.h"
+
+// #include <immintrin.h>
+#include <emmintrin.h>
+
 int test2()
 {
 	ts::SharedPointer<int> ptr(new int(100));
@@ -160,9 +165,69 @@ int test()
 	return 1337;
 }
 
+#pragma warning(disable : 4189)
+#define ALIGNED(alignment, type, variable) __declspec(align(alignment)) type variable
+#include <cstdlib>
+
+float randomfloat(float min, float max)
+{
+	return (rand() / (float)RAND_MAX) * (max - min) + min;
+}
+
+int sse()
+{
+	ALIGNED(16, float, div[4]) = { 2.f, 3.f, 4.f, 5.f };
+	__m128 *divsse = (__m128*)div;
+
+	{
+		std::vector<float> values;
+		values.resize(4 * 500000);
+		for (float &v : values)
+		{
+			v = randomfloat(50.f, 1337.f);
+		}
+
+		auto start = std::chrono::system_clock::now();
+
+		for (size_t i = 0; i < values.size(); i += 4)
+		{
+			__m128 *m = (__m128 *)&values[i];
+			_mm_store_ps((float*)&values[i], _mm_div_ps(*m, *divsse));
+		}
+
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+		TS_PRINTF("SSE elapsed: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+	}
+	
+	{
+		std::vector<float> values;
+		values.resize(4 * 500000);
+		for (float &v : values)
+		{
+			v = randomfloat(50.f, 1337.f);
+		}
+
+		auto start = std::chrono::system_clock::now();
+
+		for (size_t i = 0; i < values.size(); ++i)
+		{
+			values[i] = values[i] / div[i % 4];
+		}
+
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+		TS_PRINTF("Normal elapsed: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+	}
+
+	return 0;
+}
+
 int main(int argc, const char **argv)
 {
-// 	int v = test();
+// 	int v = sse();
 // 	TS_PRINTF("Test result %d\n", v);
 
 	ts::game::GameApplication app(argc, argv);

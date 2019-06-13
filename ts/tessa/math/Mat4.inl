@@ -1,9 +1,5 @@
-/* 
- * Written by Teemu 'Sonaza' Hörkkö
- * http://bluefoxgames.org
- */
 
-inline mat4::mat4()
+Mat4::Mat4()
 {
 	// Set matrix to identity
 	m_matrix[0] = 1.f; m_matrix[4] = 0.f; m_matrix[8]  = 0.f; m_matrix[12] = 0.f;
@@ -12,7 +8,8 @@ inline mat4::mat4()
 	m_matrix[3] = 0.f; m_matrix[7] = 0.f; m_matrix[11] = 0.f; m_matrix[15] = 1.f;
 }
 
-inline mat4::mat4(float m00, float m01, float m02, float m03,
+Mat4::Mat4(
+	float m00, float m01, float m02, float m03,
 	float m10, float m11, float m12, float m13,
 	float m20, float m21, float m22, float m23,
 	float m30, float m31, float m32, float m33)
@@ -23,12 +20,12 @@ inline mat4::mat4(float m00, float m01, float m02, float m03,
 	m_matrix[3] = m30; m_matrix[7] = m31; m_matrix[11] = m32; m_matrix[15] = m33;
 }
 
-inline const float* mat4::getMatrix() const
+inline const float *Mat4::getMatrix() const
 {
 	return m_matrix;
 }
 
-inline mat4 mat4::getInverse() const
+inline Mat4 Mat4::getInverse() const
 {
 	// Precalculate some 2x2 determinants
 	float s0 = m_matrix[0] * m_matrix[5] - m_matrix[4] * m_matrix[1];
@@ -54,7 +51,7 @@ inline mat4 mat4::getInverse() const
 		float invdet = 1.f / det;
 
 		// Calculate the inverse
-		return mat4(
+		return Mat4(
 			( m_matrix[5]  * c5	- m_matrix[6]  * c4	+ m_matrix[7]  * c3) * invdet,
 			(-m_matrix[1]  * c5	+ m_matrix[2]  * c4	- m_matrix[3]  * c3) * invdet,
 			( m_matrix[13] * s5 - m_matrix[14] * s4 + m_matrix[15] * s3) * invdet,
@@ -75,18 +72,18 @@ inline mat4 mat4::getInverse() const
 	}
 	else
 	{
-		return mat4();
+		return Mat4();
 	}
 }
 
-inline mat4& mat4::lookAt(const Vec3f& eye, const Vec3f& target, const Vec3f& up)
+inline Mat4 &Mat4::lookAt(const VC3 &eye, const VC3 &target, const VC3 &up)
 {
-	Vec3f f = normalize(target - eye);
-	Vec3f u = normalize(up);
-	Vec3f s = normalize(cross(f, u));
+	VC3 f = normalize(target - eye);
+	VC3 u = normalize(up);
+	VC3 s = normalize(cross(f, u));
 	u = cross(s, f);
 
-	*this = mat4(
+	*this = Mat4(
 		s.x,	 s.y,	 s.z,	-dot(s, eye),
 		u.x,	 u.y,	 u.z,	-dot(u, eye),
 		-f.x,	-f.y,	-f.z,	 dot(f, eye),
@@ -96,43 +93,41 @@ inline mat4& mat4::lookAt(const Vec3f& eye, const Vec3f& target, const Vec3f& up
 	return *this;
 }
 
-inline mat4& mat4::perspective(float fov, float aspect, float znear, float zfar)
+inline Mat4 &Mat4::perspective(float fov, float aspect, float znear, float zfar)
 {
-	float range = tan(fov * 0.5f * 3.141592653589f / 180.f);
+	float range = std::tan(fov * 0.5f * 3.141592653589f / 180.f);
 	float left = -range * aspect;
 	float right = range * aspect;
 	float bottom = -range;
 	float top = range;
 
-	*this = mat4(
+	*this = Mat4(
 		(2.f * znear) / (right - left),	0.f, 0.f, 0.f,
 		0.f, (2.f * znear) / (top - bottom), 0.f, 0.f,
 		0.f, 0.f, -(zfar + znear) / (zfar - znear), -(2.f * zfar * znear) / (zfar - znear),
 		0.f, 0.f, -1.f,	0.f
-		);
-
+	);
 	return *this;
 }
 
-inline mat4& mat4::ortho(float left, float right, float bottom, float top, float znear, float zfar)
+inline Mat4 &Mat4::ortho(float left, float right, float bottom, float top, float znear, float zfar)
 {
-	*this = mat4(
+	*this = Mat4(
 		2.f / (right - left), 0.f, 0.f,	-(right + left) / (right - left),
 		0.f, 2.f / (top - bottom), 0.f,	-(top + bottom) / (top - bottom),
 		0.f, 0.f, -2.f / (zfar - znear), -(zfar + znear) / (zfar - znear),
 		0.f, 0.f, 0.f, 1.f
 	);
-
 	return *this;
 }
 
-inline mat4& mat4::combine(const mat4& matrix)
+inline Mat4 &Mat4::combine(const Mat4 &matrix)
 {
-	const float* a = m_matrix;
-	const float* b = matrix.m_matrix;
+	const float *a = m_matrix;
+	const float *b = matrix.m_matrix;
 
 	// Calculate square 4x4 matrix multiplication
-	*this = mat4(
+	*this = Mat4(
 		a[0] * b[0]		+ a[4] * b[1]	+ a[8] * b[2]	+ a[12] * b[3],
 		a[0] * b[4]		+ a[4] * b[5]	+ a[8] * b[6]	+ a[12] * b[7],
 		a[0] * b[8]		+ a[4] * b[9]	+ a[8] * b[10]	+ a[12] * b[11],
@@ -153,13 +148,12 @@ inline mat4& mat4::combine(const mat4& matrix)
 		a[3] * b[8]		+ a[7] * b[9]	+ a[11] * b[10]	+ a[15] * b[11],
 		a[3] * b[12]	+ a[7] * b[13]	+ a[11] * b[14]	+ a[15] * b[15]
 	);
-
 	return *this;
 }
 
-inline mat4& mat4::translate(const Vec3f &a)
+inline Mat4 &Mat4::translate(const VC3 &a)
 {
-	mat4 translation(
+	Mat4 translation(
 		1.f, 0.f, 0.f, a.x,
 		0.f, 1.f, 0.f, a.y,
 		0.f, 0.f, 1.f, a.z,
@@ -169,17 +163,17 @@ inline mat4& mat4::translate(const Vec3f &a)
 	return combine(translation);
 }
 
-inline mat4& mat4::rotate(float amount, const Vec3f& axis)
+inline Mat4 &Mat4::rotate(float amount, const VC3 &axis)
 {
 	float rad = amount * 3.141592653589f / 180.f;
 	float cos = 1.f - std::cos(rad);
 	float sin = std::sin(rad);
 
 	// Normalize axis Vector
-	Vec3f u = normalize(axis);
+	VC3 u = normalize(axis);
 
 	// Rotate matrix around u-axis
-	mat4 rotation(
+	Mat4 rotation(
 		(1.f-cos) + u.x * u.x * cos,	u.x * u.y * cos - u.z * sin,	u.x * u.z * cos + u.y * sin,	0.f,
 		u.y * u.x * cos + u.z * sin,	(1.f-cos) + u.y * u.y * cos,	u.y * u.z * cos - u.x * sin,	0.f,
 		u.z * u.x * cos - u.y * sin,	u.z * u.y * cos + u.x * sin,	(1.f-cos) + u.z * u.z * cos,	0.f,
@@ -189,9 +183,9 @@ inline mat4& mat4::rotate(float amount, const Vec3f& axis)
 	return combine(rotation);
 }
 
-inline mat4& mat4::scale(const Vec3f &a)
+inline Mat4 &Mat4::scale(const VC3 &a)
 {
-	mat4 scaling(
+	Mat4 scaling(
 		a.x, 0.f, 0.f, 0.f,
 		0.f, a.y, 0.f, 0.f,
 		0.f, 0.f, a.z, 0.f,
@@ -201,9 +195,9 @@ inline mat4& mat4::scale(const Vec3f &a)
 	return combine(scaling);
 }
 
-inline mat4& mat4::transpose()
+inline Mat4 &Mat4::transpose()
 {
-	*this = mat4(
+	*this = Mat4(
 		m_matrix[0],  m_matrix[1],  m_matrix[2],  m_matrix[3],
 		m_matrix[4],  m_matrix[5],  m_matrix[6],  m_matrix[7],
 		m_matrix[8],  m_matrix[9],  m_matrix[10], m_matrix[11],
@@ -213,16 +207,16 @@ inline mat4& mat4::transpose()
 	return *this;
 }
 
-inline mat4 operator*(const mat4& lhs, const mat4& rhs)
+inline Mat4 operator*(const Mat4 &lhs, const Mat4 &rhs)
 {
-	return mat4(lhs).combine(rhs);
+	return Mat4(lhs).combine(rhs);
 }
 
-inline Vec4f operator*(const mat4& mat, const Vec4f& v)
+inline VC4 operator*(const Mat4 &mat, const VC4& v)
 {
-	const float* a = mat.getMatrix();
+	const float *a = mat.getMatrix();
 
-	return Vec4f(
+	return VC4(
 		v.x * a[0] + v.y * a[4] + v.z * a[8]  + v.w * a[12],
 		v.x * a[1] + v.y * a[5] + v.z * a[9]  + v.w * a[13],
 		v.x * a[2] + v.y * a[6] + v.z * a[10] + v.w * a[14],

@@ -9,6 +9,8 @@
 #include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/resource/FontResource.h"
 
+#include "ts/tessa/Config.h"
+
 TS_PACKAGE1(system)
 
 Application::Application(Int32 argc, const char **argv)
@@ -22,6 +24,13 @@ Application::~Application()
 
 Int32 Application::start()
 {
+	if (!config.parse(CONFIG_FILE_NAME))
+	{
+		TS_LOG_ERROR("Unable to open options file. File: %s", CONFIG_FILE_NAME);
+	}
+
+	log::Log::setLogFile(config.getString("General.LogFile", "output.log"));
+
 	if (!initialize())
 	{
 		TS_LOG_ERROR("Application::initialize() failed, cannot proceed.\n");
@@ -77,44 +86,16 @@ SizeType Application::getCurrentFramerate() const
 	return currentFramerate;
 }
 
-class Kakke
-{
-public:
-	int dokakke(int kakkeparam)
-	{
-		TS_PRINTF("Kakke %d\n", kakkeparam);
-		return kakkeparam / 2;
-	}
-};
-
-int kakkefunc(int kakkeparam)
-{
-	return kakkeparam / 2;
-}
-
 bool Application::initializeManagers()
 {
 	threadPool = makeUnique<system::ThreadPool>(system::ThreadPool::numHardwareThreads());
 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, threadPool);
-
-	auto lft = threadPool->push(ThreadPool::High, [](int lambdakakke) -> int
-	{
-		return lambdakakke / 2;
-	}, 42);
-
-	TS_PRINTF("LambdaKakke future says %d\n", lft.get());
-
-	Kakke kakkeInstance;
-	auto ft = threadPool->push(ThreadPool::High, &Kakke::dokakke, &kakkeInstance, 1337);
-	auto ft2 = threadPool->push(ThreadPool::High, &kakkefunc, 6236);
-	
-	TS_PRINTF("Kakke futures say %d and %d\n", ft.get(), ft2.get());
 	
 	if (!createManagerInstance<resource::ResourceManager>())
 		return false;
 
 	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
-	rm.loadResource<resource::FontResource>("debugfont", "arial.ttf");
+	debugFont = rm.loadResource<resource::FontResource>("debugfont", "arial.ttf");
 
 	if (!createManagerInstance<system::WindowManager>())
 		return false;
@@ -261,20 +242,18 @@ void Application::handleRendering()
 	// Interface view step
 	windowManager.useInterfaceView();
 
-// 	resource::ResourceManager &resourceManager = getManager<resource::ResourceManager>();
-// 	resource::FontResource *font = resourceManager.getResource<resource::FontResource>("debugfont");
-// 	if (font != nullptr && font->isLoaded())
-	{
-		sf::Text fps;
-		fps.setCharacterSize(20);
-		fps.setFillColor(sf::Color::White);
-		fps.setOutlineColor(sf::Color::Black);
-		fps.setOutlineThickness(1.f);
-// 		fps.setFont(*font->getResource());
-		fps.setString(TS_FMT("FPS %u", getCurrentFramerate()));
-
-		renderWindow.draw(fps);
-	}
+// 	if (debugFont != nullptr && debugFont->isLoaded())
+// 	{
+// 		sf::Text fps;
+// 		fps.setCharacterSize(20);
+// 		fps.setFillColor(sf::Color::White);
+// 		fps.setOutlineColor(sf::Color::Black);
+// 		fps.setOutlineThickness(1.f);
+// 		fps.setFont(*debugFont->getResource());
+// 		fps.setString(TS_FMT("FPS %u", getCurrentFramerate()));
+// 
+// 		renderWindow.draw(fps);
+// 	}
 
 	renderWindow.display();
 }

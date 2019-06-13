@@ -21,7 +21,7 @@ public:
 	Mat4 getInverse() const;
 
 	// Calculate a lookat matrix 
-	Mat4& lookAt(const Vec3f& eye, const Vec3f& target, const Vec3f& up);
+	Mat4& lookAt(const VC3& eye, const VC3& target, const VC3& up);
 
 	// Calculates 3D projection matrix
 	Mat4& perspective(float fov, float aspect, float znear, float zfar);
@@ -33,13 +33,13 @@ public:
 	Mat4& combine(const Mat4& matrix);
 
 	// Translate matrix by offset
-	Mat4& translate(const Vec3f& offset);
+	Mat4& translate(const VC3& offset);
 
 	// Rotate matrix by amount on specified axis
-	Mat4& rotate(float amount, const Vec3f& axis);
+	Mat4& rotate(float amount, const VC3& axis);
 
 	// Scale matrix by amount
-	Mat4& scale(const Vec3f &amount);
+	Mat4& scale(const VC3 &amount);
 
 	// Calculate matrix transpose
 	Mat4& transpose();
@@ -56,14 +56,22 @@ public:
 			m_row[3] = d;
 		}
 
-		float operator[](unsigned int i) const { TS_ASSERT(i >= 0 && i < 4); return m_row[i]; }
+		float operator[](unsigned int i) const
+		{
+			TS_ASSERT(i >= 0 && i < 4);
+			return m_row[i];
+		}
 
 	private:
 		float m_row[4];
 	};
 
 	// Overload brackets to retrieve a single row
-	const row operator[](unsigned int i) { TS_ASSERT(i >= 0 && i < 4); return row(m_matrix[i*4], m_matrix[i*4+1], m_matrix[i*4+2], m_matrix[i*4+3]); }
+	const row operator[](unsigned int i)
+	{
+		TS_ASSERT(i >= 0 && i < 4);
+		return row(m_matrix[i*4], m_matrix[i*4+1], m_matrix[i*4+2], m_matrix[i*4+3]);
+	}
 
 private:
 
@@ -74,7 +82,7 @@ private:
 Mat4 operator*(const Mat4& lhs, const Mat4& rhs);
 
 // Transform Vector by matrix
-Vec4f operator*(const Mat4& mat, const Vec4f& v);
+VC4 operator*(const Mat4& mat, const VC4& v);
 
 #include "Mat4.inl"
 

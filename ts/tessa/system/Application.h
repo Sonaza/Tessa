@@ -5,12 +5,14 @@
 #include <unordered_map>
 
 #include "ts/tessa/system/Commando.h"
+#include "ts/tessa/system/ConfigReader.h"
 #include "ts/tessa/system/SceneBase.h"
 
 TS_DECLARE1(system, AbstractSystemManagerBase);
 TS_DECLARE1(system, ThreadPool);
 TS_DECLARE1(system, WindowManager);
 TS_DECLARE1(resource, ResourceManager);
+TS_DECLARE1(resource, FontResource);
 
 TS_PACKAGE1(system)
 
@@ -61,6 +63,7 @@ private:
 	bool applicationRunning = true;
 
 	Commando commando;
+	ConfigReader config;
 
 	// Target frame time affects framerate, a single update per 16 milliseconds roughly results in 60 fps
 	sf::Time targetFrameTime = sf::milliseconds(16);
@@ -70,6 +73,8 @@ private:
 	UniquePointer<system::SceneBase> currentScene;
 
 	UniquePointer<system::ThreadPool> threadPool;
+
+	resource::FontResource *debugFont = nullptr;
 
 	friend class system::WindowManager;
 	friend class resource::ResourceManager;

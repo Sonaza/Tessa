@@ -1,31 +1,31 @@
 
 template <class T>
-inline Vec4<T>::Vec4()
+Vec4<T>::Vec4()
 	: x(0), y(0), z(0), w(1)
 {
 }
 
 template <class T>
-inline Vec4<T>::Vec4(T v)
+Vec4<T>::Vec4(T v)
 	: x(v), y(v), z(v), w(1)
 {
 }
 
 template <class T>
-inline Vec4<T>::Vec4(T x, T y, T z, T w)
+Vec4<T>::Vec4(T x, T y, T z, T w)
 	: x(x), y(y), z(z), w(w)
 {
 }
 
 template <class T>
-inline Vec4<T>::Vec4(Vec3<T> v, T w)
+Vec4<T>::Vec4(Vec3<T> v, T w)
 	: x(v.x), y(v.y), z(v.z), w(w)
 {
 }
 
 template <class T>
 template <class U>
-inline Vec4<T>::Vec4(const Vec4<U> &vector)
+Vec4<T>::Vec4(const Vec4<U> &vector)
 	: x(static_cast<T>(vector.x))
 	, y(static_cast<T>(vector.y))
 	, z(static_cast<T>(vector.z))
