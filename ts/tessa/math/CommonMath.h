@@ -32,4 +32,16 @@ T clamp(T value, T minimum, T maximum)
 	return min(maximum, max(minimum, value));
 }
 
+template<class T>
+T abs(T value)
+{
+	return value >= 0 ? value : -value;
+}
+
+template<class T>
+T greatestCommonDivisor(T a, T b)
+{
+	return (b == 0) ? a : greatestCommonDivisor(b, a % b);
+}
+
 TS_END_PACKAGE1()

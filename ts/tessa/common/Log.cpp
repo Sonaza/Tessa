@@ -13,7 +13,7 @@
 	#define localtime_r(_a, _b) localtime_s(_b, _a)
 #endif
 
-TS_PACKAGE1(log)
+TS_PACKAGE1(common)
 
 std::string Log::filepath = DEFAULT_LOG_FILE_NAME;
 

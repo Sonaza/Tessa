@@ -43,20 +43,28 @@
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")	
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
-	#define TS_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER)
 	#if _MSC_VER >= 1900
 		#define TS_PRETTY_FUNCTION __func__
 	#else
 		#define TS_PRETTY_FUNCTION __FUNCTION__
 	#endif
+#elif defined(__GNUC__) || defined(__clang__)
+	#define TS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #else
 	#error "Pretty function macro undefined on this compiler."
 #endif
 
 #define __TS_STRINGIFY(str) (# str)
 #define TS_STRINGIFY(str)   __TS_STRINGIFY(str)
+
+#if defined(_MSC_VER)
+	#define TS_FORCEINLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define TS_FORCEINLINE inline __attribute__((always_inline))
+#else
+	#define TS_FORCEINLINE inline
+#endif
 
 #include <cstdint>
 #include <cinttypes>

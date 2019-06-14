@@ -6,9 +6,10 @@
 
 #include "ts/tessa/system/Commando.h"
 #include "ts/tessa/system/ConfigReader.h"
-#include "ts/tessa/system/SceneBase.h"
 
-TS_DECLARE1(system, AbstractSystemManagerBase);
+#include "ts/tessa/system/SystemManagerBase.h"
+#include "ts/tessa/system/AbstractSceneBase.h"
+
 TS_DECLARE1(system, ThreadPool);
 TS_DECLARE1(system, WindowManager);
 TS_DECLARE1(resource, ResourceManager);
@@ -16,7 +17,7 @@ TS_DECLARE1(resource, FontResource);
 
 TS_PACKAGE1(system)
 
-class Application :	public std::enable_shared_from_this<Application>
+class Application
 {
 public:
 	Application(Int32 argc, const char **argv);
@@ -27,8 +28,6 @@ public:
 	void setFramerateLimit(SizeType framerateLimit);
 	SizeType getCurrentFramerate() const;
 
-	virtual bool sceneInitialize() = 0;
-
 	template<class SceneType>
 	bool loadScene();
 
@@ -37,6 +36,14 @@ public:
 
 	template<class ManagerType>
 	const ManagerType &getManager() const;
+
+	const system::Commando &getCommando() const;
+	const system::ConfigReader &getConfig() const;
+
+protected:
+	// Abstract methods for GameApplication to implement
+	virtual bool sceneInitialize() = 0;
+	virtual bool createWindow(system::WindowManager &windowManager) = 0;
 
 private:
 	bool initialize();
@@ -57,22 +64,20 @@ private:
 	template<class ManagerType>
 	void destroyManagerInstance();
 
-	typedef std::unordered_map<SizeType, system::AbstractSystemManagerBase *> SystemManagersList;
+	typedef std::map<SizeType, system::AbstractSystemManagerBase *> SystemManagersList;
 	SystemManagersList systemManagers;
 
 	bool applicationRunning = true;
 
-	Commando commando;
-	ConfigReader config;
+	Commando _commando;
+	ConfigReader _config;
 
 	// Target frame time affects framerate, a single update per 16 milliseconds roughly results in 60 fps
 	sf::Time targetFrameTime = sf::milliseconds(16);
 	SizeType currentFramerate = 0;
 
-	UniquePointer<system::SceneBase> pendingScene;
-	UniquePointer<system::SceneBase> currentScene;
-
-	UniquePointer<system::ThreadPool> threadPool;
+	UniquePointer<system::AbstractSceneBase> pendingScene;
+	UniquePointer<system::AbstractSceneBase> currentScene;
 
 	resource::FontResource *debugFont = nullptr;
 
@@ -83,7 +88,7 @@ private:
 template<class SceneType>
 bool Application::loadScene()
 {
-	static_assert(std::is_base_of<SceneBase, SceneType>::value, "Registered scene must inherit from SceneBase");
+	static_assert(std::is_base_of<AbstractSceneBase, SceneType>::value, "Registered scene must inherit from SceneBase");
 
 	TS_ASSERT(pendingScene == nullptr && "Another scene is still pending load");
 	if (pendingScene != nullptr)

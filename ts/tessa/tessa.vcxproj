@@ -49,14 +49,17 @@
   </PropertyGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)..\tessa\Windows.props" />
     <Import Project="$(ExternalsDir)Externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)..\tessa\Windows.props" />
     <Import Project="$(ExternalsDir)Externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)..\tessa\Windows.props" />
     <Import Project="$(ExternalsDir)Externals.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -87,7 +90,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;TS_BUILD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;TS_BUILD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -108,7 +111,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;TS_BUILD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TS_BUILD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -132,7 +135,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;TS_BUILD_FINALRELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TS_BUILD_FINALRELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -164,6 +167,7 @@
     <ClCompile Include="resource\AbstractResourceBase.cpp" />
     <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
+    <ClCompile Include="threading\ThreadUtils.cpp" />
     <ClInclude Include="common\ScopedPointer.h" />
     <ClInclude Include="common\SharedPointer.h" />
     <ClInclude Include="common\UniquePointer.h" />
@@ -178,11 +182,13 @@
     <ClCompile Include="common\Log.cpp" />
     <ClCompile Include="system\Commando.cpp" />
     <ClCompile Include="system\ConfigReader.cpp" />
-    <ClCompile Include="system\SceneBase.cpp" />
+    <ClCompile Include="system\Gigaton.cpp" />
+    <ClCompile Include="system\AbstractSceneBase.cpp" />
     <ClCompile Include="system\SystemManagerBase.cpp" />
-    <ClCompile Include="system\ThreadPool.cpp" />
+    <ClCompile Include="threading\ThreadManager.cpp" />
     <ClCompile Include="system\Timer.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
+    <ClInclude Include="threading\ThreadUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\Common.h" />
@@ -195,7 +201,7 @@
     <ClInclude Include="math\Constants.h" />
     <ClInclude Include="math\Hash.h" />
     <ClInclude Include="math\Mat4.h" />
-    <ClInclude Include="math\MinMax.h" />
+    <ClInclude Include="math\CommonMath.h" />
     <ClInclude Include="math\Vec2.h" />
     <ClInclude Include="math\Vec3.h" />
     <ClInclude Include="math\Vec4.h" />
@@ -213,9 +219,10 @@
     <ClInclude Include="common\Package.h" />
     <ClInclude Include="system\Commando.h" />
     <ClInclude Include="system\ConfigReader.h" />
-    <ClInclude Include="system\SceneBase.h" />
+    <ClInclude Include="system\Gigaton.h" />
+    <ClInclude Include="system\AbstractSceneBase.h" />
     <ClInclude Include="system\SystemManagerBase.h" />
-    <ClInclude Include="system\ThreadPool.h" />
+    <ClInclude Include="threading\ThreadManager.h" />
     <ClInclude Include="system\Timer.h" />
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>

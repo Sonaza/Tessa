@@ -2,7 +2,7 @@
 #include "ts/tessa/resource/ResourceManager.h"
 
 #include "ts/tessa/system/Application.h"
-#include "ts/tessa/system/ThreadPool.h"
+#include "ts/tessa/threading/ThreadManager.h"
 
 #include "ts/tessa/resource/TextureResource.h"
 #include "ts/tessa/resource/FontResource.h"
@@ -16,11 +16,12 @@ TS_PACKAGE1(resource)
 ResourceManager::ResourceManager(system::Application *application)
 	: SystemManagerBase(application)
 {
+	TS_GIGATON_REGISTER_CLASS(this);
 }
 
 ResourceManager::~ResourceManager()
 {
-	unloadAll();
+	TS_GIGATON_UNREGISTER_CLASS(this);
 }
 
 bool ResourceManager::initialize()
@@ -33,14 +34,13 @@ void ResourceManager::deinitialize()
 	unloadAll();
 }
 
+void ResourceManager::update(const sf::Time deltaTime)
+{
+
+}
+
 void ResourceManager::unloadAll()
 {
-	for (ResourceList::iterator it = resources.begin(); it != resources.end(); ++it)
-	{
-		AbstractResourceContainer *rc = it->second;
-		if (rc != nullptr)
-			delete it->second;
-	}
 	resources.clear();
 }
 
@@ -60,20 +60,8 @@ bool ResourceManager::unloadResource(const GUID &resourceGuid)
 		return false;
 
 	resourceGuids.erase(guidIter);
+	resources.erase(resourceIter);
 
-	AbstractResourceContainer *rc = resourceIter->second;
-	TS_ASSERT(rc != nullptr && "AbstractResourceContainer is nullptr.");
-
-	if (rc != nullptr && rc->numReferences > 1)
-	{
-		rc->numReferences--;
-	}
-	else
-	{
-		if (rc != nullptr)
-			delete rc;
-		resources.erase(resourceIter);
-	}
 	return true;
 }
 
@@ -96,14 +84,16 @@ bool ResourceManager::unloadResourceByFileGuid(const GUID &fileGuid)
 			++guidIter;
 	}
 
-	AbstractResourceContainer *rc = resourceIter->second;
-	TS_ASSERT(rc != nullptr && "AbstractResourceContainer is nullptr.");
-
-	if (rc != nullptr)
-		delete rc;
 	resources.erase(resourceIter);
 
 	return true;
+}
+
+void ResourceManager::loadResourceTask(AbstractResourceBase *resource)
+{
+	TS_ASSERT(resource != nullptr);
+	TS_LOG_DEBUG("Now loading resource 0x%08X", (ptrdiff_t)resource);
+	resource->loadResource();
 }
 
 void ResourceManager::addResourceToLoadQueue(AbstractResourceBase *resource)
@@ -111,12 +101,8 @@ void ResourceManager::addResourceToLoadQueue(AbstractResourceBase *resource)
 	TS_ASSERT(resource != nullptr);
 	TS_VERIFY_POINTERS(application, resource);
 
-	application->threadPool->push(system::ThreadPool::Normal, [resource]()
-	{
-		TS_ASSERT(resource != nullptr);
-		TS_LOG_DEBUG("Now loading resource 0x%08X", (ptrdiff_t)resource);
-		resource->loadResource();
-	});
+	threading::ThreadManager &tm = getGigaton<threading::ThreadManager>();
+	tm.push(threading::TaskPriorityNormal, &ResourceManager::loadResourceTask, resource);
 }
 
 GUID ResourceManager::findFileGuid(const GUID &resourceGuid)
@@ -130,7 +116,6 @@ GUID ResourceManager::findFileGuid(const GUID &resourceGuid)
 ResourceManager::AbstractResourceContainer::AbstractResourceContainer(AbstractResourceBase *resource, SizeType typeId)
 	: resource(resource)
 	, typeId(typeId)
-	, numReferences(1)
 {
 }
 
@@ -138,17 +123,15 @@ ResourceManager::AbstractResourceContainer::~AbstractResourceContainer()
 {
 	if (resource != nullptr)
 	{
-		TS_PRINTF("Unloading resource 0x%" PRIXPTR " with typeid %u\n", (ptrdiff_t)resource, typeId);
-
+		TS_PRINTF("Unloading resource 0x%" PRIXPTR " with typeid %u\n", (ptrdiff_t)resource.get(), typeId);
 		resource->unloadResource();
-		delete resource;
 	}
-	resource = nullptr;
+	resource.reset();
 }
 
 bool ResourceManager::AbstractResourceContainer::isValid() const
 {
-	return resource != nullptr && typeId != ~0U && numReferences > 0;
+	return resource != nullptr && typeId != ~0U;
 }
 
 TS_END_PACKAGE1()

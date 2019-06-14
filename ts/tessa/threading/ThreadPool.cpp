@@ -1,13 +1,13 @@
 #include "Precompiled.h"
-#include "ts/tessa/system/ThreadPool.h"
+#include "ts/tessa/threading/ThreadPool.h"
 
-TS_PACKAGE1(system)
+TS_PACKAGE1(threading)
 
 ThreadPool::ThreadPool(SizeType poolNumThreads)
 {
 	for (SizeType i = 0; i < poolNumThreads; ++i)
 	{
-		workerThreads.push_back(std::make_unique<std::thread>(
+		workerThreads.push_back(makeUnique<std::thread>(
 			&ThreadPool::threadTaskRunnerImpl, this, i
 		));
 	}

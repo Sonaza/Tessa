@@ -40,9 +40,9 @@ public:
 	// Vector components
 	T x, y;
 	
-	static const Vec2<float> zero;
-	static const Vec2<float> up;
-	static const Vec2<float> right;
+	static const Vec2<T> zero;
+	static const Vec2<T> up;
+	static const Vec2<T> right;
 };
 
 template <class T>
@@ -111,5 +111,13 @@ typedef Vec2<Uint32>	VC2U;
 const Vec2<float> Vec2<float>::zero(0.f, 0.f);
 const Vec2<float> Vec2<float>::up(0.f, 1.f);
 const Vec2<float> Vec2<float>::right(1.f, 0.f);
+
+const Vec2<Int32> Vec2<Int32>::zero(0, 0);
+const Vec2<Int32> Vec2<Int32>::up(0, 1);
+const Vec2<Int32> Vec2<Int32>::right(1, 0);
+
+const Vec2<Uint32> Vec2<Uint32>::zero(0, 0);
+const Vec2<Uint32> Vec2<Uint32>::up(0, 1);
+const Vec2<Uint32> Vec2<Uint32>::right(1, 0);
 
 TS_END_PACKAGE1()

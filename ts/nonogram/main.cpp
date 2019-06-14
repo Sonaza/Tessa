@@ -1,54 +1,7 @@
 ﻿#include "Precompiled.h"
 #include "GameApplication.h"
 
-#include "ts/tessa/system/ThreadPool.h"
-
-#include <thread>
-
 #include "ts/tessa/system/ConfigReader.h"
-
-// #include <immintrin.h>
-#include <emmintrin.h>
-
-int test2()
-{
-	ts::SharedPointer<int> ptr(new int(100));
-
-	std::vector<std::thread> threads;
-	for (int i = 0; i < 10; ++i)
-	{
-		threads.push_back(std::thread([i](ts::SharedPointer<int> ptr)
-		{
-			TS_PRINTF("[#%d] Thread online\n", i);
-			while (true)
-			{
-				if (*ptr > 0)
-				{
-					(*ptr)--;
-					TS_PRINTF("[#%d] Value is now %d\n", i, *ptr);
-				}
-				else
-				{
-					TS_PRINTF("[#%d] Oh time to leave\n", i);
-					break;
-				}
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			}
-		}, ptr));
-	}
-
-	for (std::thread &t : threads)
-	{
-		t.join();
-	}
-
-	TS_PRINTF("Finished! Value is now %d\n", *ptr);
-
-	ptr.reset();
-
-	return 0;
-}
 
 class Base
 {
@@ -168,6 +121,7 @@ int test()
 #pragma warning(disable : 4189)
 #define ALIGNED(alignment, type, variable) __declspec(align(alignment)) type variable
 #include <cstdlib>
+#include <emmintrin.h>
 
 float randomfloat(float min, float max)
 {

@@ -18,7 +18,9 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
-	void create(const math::VC2U &videomode, const std::string &windowTitle);
+	virtual void update(const sf::Time deltaTime);
+
+	void create(const math::VC2U &videomode, const std::string &windowTitle, const bool resizable, const bool fullscreen);
 	void close();
 
 	bool pollEvent(sf::Event &eventParam);
@@ -34,7 +36,11 @@ public:
 	void setCustomView(sf::View customView);
 	void resetView();
 
+	bool setWindowIcon(const std::string &filepath);
+
 	sf::RenderWindow &getRenderWindow();
+
+	std::vector<math::VC2U> getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize = math::VC2U::zero);
 
 private:
 // 	struct Settings

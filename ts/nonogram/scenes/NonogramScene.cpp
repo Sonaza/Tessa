@@ -6,7 +6,7 @@
 TS_PACKAGE2(game, scenes)
 
 NonogramScene::NonogramScene(system::Application *application)
-	: SceneBase(application)
+	: AbstractSceneBase(application)
 {
 }
 
@@ -41,7 +41,7 @@ void NonogramScene::loadResources(resource::ResourceManager &rm)
 	rm.loadResource<resource::TextureResource>("61579330_p0", "test/61579330_p0.jpg");
 	rm.loadResource<resource::TextureResource>("61827137_p0", "test/61827137_p0.png");
 	rm.loadResource<resource::TextureResource>("656mwuonuh011", "test/656mwuonuh011.jpg");
-	rm.loadResource<resource::TextureResource>("nepzume", "test/nepzume.png");
+	rm.loadResource<resource::TextureResource>("nepzume", "test/nepzume.png", true);
 	rm.loadResource<resource::TextureResource>("67961452_p11", "test/67961452_p11.png");
 	rm.loadResource<resource::TextureResource>("68599620_p0", "test/68599620_p0.png");
 	rm.loadResource<resource::TextureResource>("68783222_p0", "test/68783222_p0.png");
@@ -52,7 +52,6 @@ void NonogramScene::loadResources(resource::ResourceManager &rm)
 	rm.loadResource<resource::TextureResource>("compa", "test/compa.png");
 	rm.loadResource<resource::TextureResource>("iffy", "test/iffy.jpg");
 	rm.loadResource<resource::TextureResource>("stick", "test/stick.jpg");
-	rm.loadResource<resource::TextureResource>("adultnep", "test/nepnep.jpg");
 	rm.loadResource<resource::TextureResource>("uzume", "test/uzume.jpg");
 
 	rm.loadResource<resource::FontResource>("calibri", "calibri.ttf");

@@ -50,12 +50,6 @@
     <ClCompile Include="system\Timer.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="system\SceneBase.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="system\ThreadPool.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="system\Application.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
@@ -87,6 +81,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="system\ConfigReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="system\Gigaton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="system\AbstractSceneBase.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\ThreadManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\ThreadUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -145,12 +151,6 @@
     <ClInclude Include="common\Package.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="system\SceneBase.h">
-      <Filter>Source Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="system\ThreadPool.h">
-      <Filter>Source Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="system\Timer.h">
       <Filter>Source Files\system</Filter>
     </ClInclude>
@@ -161,9 +161,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="common\Pointers.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="math\MinMax.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="instance\InstanceManager.h">
@@ -212,6 +209,21 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\Gigaton.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\AbstractSceneBase.h">
+      <Filter>Source Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="math\CommonMath.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threading\ThreadManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threading\ThreadUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

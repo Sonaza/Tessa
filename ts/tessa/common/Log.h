@@ -9,26 +9,22 @@
 #include <memory>
 #include <fstream>
 
-#define __TS_FMT_IMPL(__format, ...) ::ts::log::Log::getSingleton().format(__format, ## __VA_ARGS__)
-#define TS_FMT(__format, ...) __TS_FMT_IMPL(__format, ## __VA_ARGS__)
+#define TS_FMT(__format, ...) \
+	::ts::common::Log::getSingleton().format(__format, ## __VA_ARGS__)
 
 #define __TS_PRINTF_IMPL(__format, ...) \
-	do { \
-		::ts::log::Log::getSingleton().write(__format, ## __VA_ARGS__); \
-	} while(false)
+	::ts::common::Log::getSingleton().write(__format, ## __VA_ARGS__)
 
 #define __TS_WPRINTF_IMPL(__format, ...) \
-	do { \
-		::ts::log::Log::getSingleton().write(L ## __format, ## __VA_ARGS__); \
-	} while(false)
+	::ts::common::Log::getSingleton().write(L ## __format, ## __VA_ARGS__)
 
-// #if TS_BUILD != TS_FINALRELEASE
+#if TS_BUILD != TS_FINALRELEASE
 	#define TS_PRINTF(__format, ...)  __TS_PRINTF_IMPL(__format, ## __VA_ARGS__)
 	#define TS_WPRINTF(__format, ...) __TS_WPRINTF_IMPL(__format, ## __VA_ARGS__)
-// #else
-// 	#define TS_PRINTF(...)  ((void)0)
-// 	#define TS_WPRINTF(...) ((void)0)
-// #endif
+#else
+	#define TS_PRINTF(...)  ((void)0)
+	#define TS_WPRINTF(...) ((void)0)
+#endif
 
 #define __TS_LOG_WITH_SEVERITY_IMPL(__severity, __message, ...) \
 	do { \
@@ -47,7 +43,7 @@
 
 #include "ts/tessa/common/Package.h"
 
-TS_PACKAGE1(log)
+TS_PACKAGE1(common)
 
 class Log
 {

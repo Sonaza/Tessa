@@ -72,7 +72,7 @@ const std::set<std::string> &ConfigReader::getSections() const
 
 const std::set<std::string> &ConfigReader::getFields(const std::string &section)
 {
-	auto it = sectionFields.find(section);
+	auto it = sectionFields.find(makeHash(section));
 	if (it != sectionFields.end())
 		return it->second;
 	return ConfigReader::emptySet;
@@ -177,7 +177,9 @@ int ConfigReader::parserHandler(void *userdata, const char *sectionParam, const 
 	const std::string value(valueParam);
 
 	cfg.sections.emplace(section);
-	cfg.sectionFields[section].emplace(key);
+
+	const Uint32 sectionHash = makeHash(section);
+	cfg.sectionFields[sectionHash].emplace(key);
 
 	const std::string section_dot_key = section + "." + key;
 	const Uint32 hash = makeHash(section_dot_key);

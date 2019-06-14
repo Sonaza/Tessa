@@ -1,35 +1,37 @@
 #include "Precompiled.h"
 #include "ts/tessa/system/Application.h"
 
-#include "ts/tessa/system/SystemManagerBase.h"
-#include "ts/tessa/system/SceneBase.h"
-#include "ts/tessa/system/ThreadPool.h"
 #include "ts/tessa/system/WindowManager.h"
-
 #include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/resource/FontResource.h"
 
+#include "ts/tessa/threading/ThreadManager.h"
+
 #include "ts/tessa/Config.h"
+
+#include "ts/tessa/system/Gigaton.h"
 
 TS_PACKAGE1(system)
 
 Application::Application(Int32 argc, const char **argv)
-	: commando(argc, argv)
+	: _commando(argc, argv)
 {
+	TS_GIGATON_REGISTER_CLASS(this);
 }
 
 Application::~Application()
 {
+	TS_GIGATON_UNREGISTER_CLASS(this);
 }
 
 Int32 Application::start()
 {
-	if (!config.parse(CONFIG_FILE_NAME))
+	if (!_config.parse(CONFIG_FILE_NAME))
 	{
 		TS_LOG_ERROR("Unable to open options file. File: %s", CONFIG_FILE_NAME);
 	}
 
-	log::Log::setLogFile(config.getString("General.LogFile", "output.log"));
+	common::Log::setLogFile(_config.getString("General.LogFile", DEFAULT_LOG_FILE_NAME));
 
 	if (!initialize())
 	{
@@ -86,32 +88,46 @@ SizeType Application::getCurrentFramerate() const
 	return currentFramerate;
 }
 
+const Commando &Application::getCommando() const
+{
+	return _commando;
+}
+
+const ConfigReader &Application::getConfig() const
+{
+	return _config;
+}
+
 bool Application::initializeManagers()
 {
-	threadPool = makeUnique<system::ThreadPool>(system::ThreadPool::numHardwareThreads());
-	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, threadPool);
-	
+	if (!createManagerInstance<threading::ThreadManager>())
+		return false;
+
 	if (!createManagerInstance<resource::ResourceManager>())
 		return false;
 
 	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
-	debugFont = rm.loadResource<resource::FontResource>("debugfont", "arial.ttf");
+	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "arial.ttf", true);
+	TS_ASSERT(debugFont != nullptr && debugFont->isLoaded() && "Loading debug font failed.");
 
 	if (!createManagerInstance<system::WindowManager>())
 		return false;
 
 	system::WindowManager &wm = getManager<system::WindowManager>();
-	wm.create(math::VC2U(1600, 1000), "Nonograms Testing");
+	if (!createWindow(wm))
+	{
+		TS_LOG_ERROR("Window creation failed.");
+		return false;
+	}
 
 	return true;
 }
 
 void Application::deinitializeManagers()
 {
-	threadPool.reset();
-
 	destroyManagerInstance<system::WindowManager>();
 	destroyManagerInstance<resource::ResourceManager>();
+	destroyManagerInstance<threading::ThreadManager>();
 }
 
 void Application::mainloop()
@@ -148,11 +164,16 @@ void Application::mainloop()
 			currentScene->loadResources(getManager<resource::ResourceManager>());
 		}
 
+		sf::Time deltaTime = deltaClock.restart();
+
+		for (SystemManagersList::iterator it = systemManagers.begin(); it != systemManagers.end(); ++it)
+		{
+			it->second->update(deltaTime);
+		}
+
 		handleEvents();
 
-		sf::Time deltaTime = deltaClock.restart();
 		deltaAccumulator += deltaTime;
-
 		while (deltaAccumulator >= fixedDeltaTime)
 		{
 			handleUpdate(fixedDeltaTime);
@@ -242,18 +263,18 @@ void Application::handleRendering()
 	// Interface view step
 	windowManager.useInterfaceView();
 
-// 	if (debugFont != nullptr && debugFont->isLoaded())
-// 	{
-// 		sf::Text fps;
-// 		fps.setCharacterSize(20);
-// 		fps.setFillColor(sf::Color::White);
-// 		fps.setOutlineColor(sf::Color::Black);
-// 		fps.setOutlineThickness(1.f);
-// 		fps.setFont(*debugFont->getResource());
-// 		fps.setString(TS_FMT("FPS %u", getCurrentFramerate()));
-// 
-// 		renderWindow.draw(fps);
-// 	}
+	if (debugFont != nullptr && debugFont->isLoaded())
+	{
+		sf::Text fps;
+		fps.setCharacterSize(20);
+		fps.setFillColor(sf::Color::White);
+		fps.setOutlineColor(sf::Color::Black);
+		fps.setOutlineThickness(1.f);
+		fps.setFont(*debugFont->getResource());
+		fps.setString(TS_FMT("FPS %u", getCurrentFramerate()));
+
+		renderWindow.draw(fps);
+	}
 
 	renderWindow.display();
 }

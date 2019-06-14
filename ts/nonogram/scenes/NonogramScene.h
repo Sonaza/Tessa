@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ts/tessa/system/SceneBase.h"
+#include "ts/tessa/system/AbstractSceneBase.h"
 
 TS_DECLARE2(game, gameplay, NonogramPuzzle)
 
 TS_PACKAGE2(game, scenes)
 
-class NonogramScene : public system::SceneBase
+class NonogramScene : public system::AbstractSceneBase
 {
 public:
 	NonogramScene(system::Application *application);

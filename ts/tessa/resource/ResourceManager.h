@@ -27,8 +27,10 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
+	virtual void update(const sf::Time deltaTime);
+
 	template<class ResourceType>
-	ResourceType *loadResource(const std::string &uniqueResourceHandle, const std::string &filepath);
+	ResourceType *loadResource(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
 
 	template<class ResourceType>
 	ResourceType *getResource(const std::string &uniqueResourceHandle);
@@ -47,6 +49,7 @@ public:
 	bool unloadResourceByFileGuid(const GUID &fileGuid);
 
 private:
+	static void loadResourceTask(AbstractResourceBase *resource);
 	void addResourceToLoadQueue(AbstractResourceBase *resource);
 
 	GUID findFileGuid(const GUID &resourceGuid);
@@ -62,16 +65,15 @@ private:
 		~AbstractResourceContainer();
 		bool isValid() const;
 
-		AbstractResourceBase *resource = nullptr;
+		UniquePointer<AbstractResourceBase> resource;
 		SizeType typeId = ~0U;
-		SizeType numReferences = 0;
 	};
-	typedef std::unordered_map<const GUID, AbstractResourceContainer*, GuidHash> ResourceList;
+	typedef std::unordered_map<const GUID, UniquePointer<AbstractResourceContainer>, GuidHash> ResourceList;
 	ResourceList resources;
 };
 
 template<class ResourceType>
-ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHandle, const std::string &filepath)
+ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
 {
 	ResourceType *resource = nullptr;
 
@@ -84,10 +86,8 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 	resource = getResourceByFileGuid<ResourceType>(fileGuid);
 	if (resource != nullptr)
 	{
-		TS_LOG_WARNING("Duplicate loading of resource '%s' detected, same file has been loaded with another GUID.", filepath.c_str());
-		resourceGuids.emplace(resourceGuid, fileGuid);
-		resources[fileGuid]->numReferences++;
-		return resource;
+		TS_ASSERTF(false, "Duplicate loading of resource '%s' detected, same file has been loaded with another GUID.", filepath);
+		return nullptr;
 	}
 
 	resource = new(std::nothrow) ResourceType(filepath);
@@ -97,7 +97,7 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 		return nullptr;
 	}
 
-	AbstractResourceContainer *rc = new AbstractResourceContainer(resource, ResourceType::TypeId);
+	UniquePointer<AbstractResourceContainer> rc = makeUnique<AbstractResourceContainer>(resource, ResourceType::TypeId);
 	if (rc == nullptr)
 	{
 		TS_LOG_ERROR("Allocating AbstractResourceContainer failed.");
@@ -105,9 +105,17 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 	}
 
 	resourceGuids.emplace(resourceGuid, fileGuid);
-	resources.emplace(fileGuid, rc);
+	resources.emplace(fileGuid, std::move(rc));
 
-	addResourceToLoadQueue(resource);
+	// Add to threaded load queue or load immediately based on user flag
+	if (immediate == false)
+	{
+		addResourceToLoadQueue(resource);
+	}
+	else
+	{
+		loadResourceTask(resource);
+	}
 
 	return resource;
 }
@@ -134,12 +142,11 @@ ResourceType *ResourceManager::getResourceByFileGuid(const GUID &fileGuid)
 	ResourceList::iterator iter = resources.find(fileGuid);
 	if (iter != resources.end())
 	{
-		AbstractResourceContainer *rc = iter->second;
-		TS_ASSERT(rc != nullptr && "AbstractResourceContainer is nullptr.");
-		TS_ASSERT(rc->isValid() && "AbstractResourceContainer is not valid. Resource might not have been set.");
-		TS_ASSERT(rc->typeId == ResourceType::TypeId && "Resource types don't match, same resource handle is already being used by different resource type.");
-		if (rc != nullptr && rc->isValid() && rc->typeId == ResourceType::TypeId)
-			return static_cast<ResourceType*>(rc->resource);
+		TS_ASSERT(iter->second != nullptr && "AbstractResourceContainer is nullptr.");
+		TS_ASSERT(iter->second->isValid() && "AbstractResourceContainer is not valid. Resource might not have been set.");
+		TS_ASSERT(iter->second->typeId == ResourceType::TypeId && "Resource types don't match, requested resource handle is used by a different resource type.");
+		if (iter->second != nullptr && iter->second->isValid() && iter->second->typeId == ResourceType::TypeId)
+			return static_cast<ResourceType*>(iter->second->resource.get());
 	}
 	return nullptr;
 }
