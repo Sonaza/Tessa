@@ -114,7 +114,7 @@ bool Application::initializeManagers()
 		return false;
 
 	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
-	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "arial.ttf", true);
+	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "selawk.ttf", true);
 	TS_ASSERT(debugFont != nullptr && debugFont->isLoaded() && "Loading debug font failed.");
 
 	if (!createManagerInstance<system::WindowManager>())
