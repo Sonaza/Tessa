@@ -6,12 +6,6 @@ Vec2<T>::Vec2() :
 }
 
 template <class T>
-Vec2<T>::Vec2(T v) :
-	x(v), y(v)
-{
-}
-
-template <class T>
 Vec2<T>::Vec2(T x, T y) :
 	x(x), y(y)
 {

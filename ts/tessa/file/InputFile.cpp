@@ -103,18 +103,21 @@ PosType InputFile::read(char *outBuffer, BigSizeType size)
 	return 0;
 }
 
-void InputFile::seek(PosType pos)
+PosType InputFile::seek(PosType pos)
 {
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
-		return;
+		return -1;
 
 	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
 	if (!file->seekg(pos))
+	{
 		_bad = true;
-
+		return -1;
+	}
 	_eof = file->eof();
+	return pos;
 }
 
 PosType InputFile::tell() const
@@ -122,22 +125,24 @@ PosType InputFile::tell() const
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
-		return 0;
+		return -1;
 
 	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
 	PosType pos = file->tellg();
 	if (!(*file))
+	{
 		_bad = true;
-
+		return -1;
+	}
 	return pos;
 }
 
-BigSizeType InputFile::getFileSize()
+PosType InputFile::getFileSize()
 {
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
-		return 0;
+		return -1;
 
 	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
 	
@@ -148,14 +153,16 @@ BigSizeType InputFile::getFileSize()
 		if (*file)
 		{
 			if (!file->seekg(pos))
+			{
 				_bad = true;
-
+				return -1;
+			}
 			return size;
 		}
 	}
 
 	_bad = true;
-	return 0;
+	return -1;
 }
 
 bool InputFile::isOpen() const

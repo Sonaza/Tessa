@@ -44,21 +44,50 @@ public:
 	// Move constructor and assignment
 	OutputFile(OutputFile &&other);
 	OutputFile &operator=(OutputFile &&other);
-
+	
+	/* Opens file for writing, according to mode.
+	 * Returns: full file size in bytes, or -1 if failure or bad.
+	 */
 	bool open(const std::string &filepath, OutputFileMode mode);
-	void close();
 
+	/* Closes opened file, flushing the write buffer and also clearing flags. 
+	*/
+	void close();
+	
+	/* Writes size bytes on the inBuffer.
+	 * Buffer must be allocated and have at least size bytes of space.
+	 * Returns: true if buffering the write succeeded (does not guarantee successful write on disk, use flush and check its return value if required).
+	 */
 	bool write(const char *inBuffer, BigSizeType size);
 	
-	void seek(PosType pos);
+	/* Sets file position to given position.
+	 * Returns: new position, or -1 if failure or bad.
+	 */
+	PosType seek(PosType pos);
+	
+	/* Returns: current file position, or -1 if failure or bad.
+	 */
 	PosType tell() const;
-
-	void flush();
-
+	
+	/* Flushes the internal stream, writing current buffer on the disk.
+	 * Returns: true if flush was successful, false if failure or bad.
+	 */
+	bool flush();
+	
+	/* Returns: true if file is open and writable.
+	 */
 	bool isOpen() const;
+	
+	/* Returns: true if a failure has been encountered and the internal stream is bad.
+	 */
 	bool isBad() const;
-
+	
+	/* Returns: true if file is open and writable.
+	 */
 	operator bool() const;
+	
+	/* Returns: true if file is not open or unwritable.
+	*/
 	bool operator!() const;
 
 private:

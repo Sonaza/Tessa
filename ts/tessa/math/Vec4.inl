@@ -6,12 +6,6 @@ Vec4<T>::Vec4()
 }
 
 template <class T>
-Vec4<T>::Vec4(T v)
-	: x(v), y(v), z(v), w(1)
-{
-}
-
-template <class T>
 Vec4<T>::Vec4(T x, T y, T z, T w)
 	: x(x), y(y), z(z), w(w)
 {

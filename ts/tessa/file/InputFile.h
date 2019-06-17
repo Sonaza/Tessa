@@ -34,22 +34,53 @@ public:
 	// Move constructor and assignment
 	InputFile(InputFile &&other);
 	InputFile &operator=(InputFile &&other);
-
+	
+	/* Opens file for reading, according to mode.
+	 * Returns: true if file open succeeded. In case of failure the reason is output to the log.
+	 */
 	bool open(const std::string &filepath, InputFileMode mode);
+	
+	/* Closes opened file, also clearing flags.
+	 */
 	void close();
 
+	/* Reads size bytes to the outBuffer.
+	 * Buffer must already be allocated and have at least size bytes of space.
+	 * Returns: number of bytes read, or 0 on failure or bad.
+	 */
 	PosType read(char *outBuffer, BigSizeType size);
+
+	/* Sets file position to given position.
+	 * Returns: new position, or -1 if failure or bad.
+	 */
+	PosType seek(PosType pos);
 	
-	void seek(PosType pos);
+	/* Returns: current file position, or -1 if failure or bad.
+	 */
 	PosType tell() const;
 	
-	BigSizeType getFileSize();
-
+	/* Returns: full file size in bytes, or -1 if failure or bad.
+	 */
+	PosType getFileSize();
+	
+	/* Returns: true if file is open and readable.
+	 */
 	bool isOpen() const;
-	bool isEOF() const;
-	bool isBad() const;
 
+	/* Returns: true if end of file has been reached.
+	 */
+	bool isEOF() const;
+
+	/* Returns: true if a failure has been encountered and the internal stream is bad.
+	 */
+	bool isBad() const;
+	
+	/* Returns: true if file is open and readable.
+	 */
 	operator bool() const;
+
+	/* Returns: true if file is not open or unreadable.
+	*/
 	bool operator!() const;
 
 private:

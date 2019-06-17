@@ -28,7 +28,7 @@
 #elif defined(SFML_SYSTEM_LINUX)
 	#define TS_PLATFORM TS_LINUX
 #else
-	#error "Platform not supported."
+// 	#error "Platform not supported."
 #endif
 
 ///////////////////////////////////////////////////////

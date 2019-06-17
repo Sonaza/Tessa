@@ -99,16 +99,20 @@ bool OutputFile::write(const char *inBuffer, BigSizeType size)
 	return false;
 }
 
-void OutputFile::seek(PosType pos)
+PosType OutputFile::seek(PosType pos)
 {
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
-		return;
+		return -1;
 
 	OutputFileStream *file = static_cast<OutputFileStream*>(_filePtr);
 	if (!file->seekp(pos))
+	{
 		_bad = true;
+		return -1;
+	}
+	return pos;
 }
 
 PosType OutputFile::tell() const
@@ -116,25 +120,30 @@ PosType OutputFile::tell() const
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
-		return 0;
+		return -1;
 
 	OutputFileStream *file = static_cast<OutputFileStream*>(_filePtr);
 	BigSizeType pos = file->tellp();
 	if (!(*file))
+	{
 		_bad = true;
+		return -1;
+	}
 	return pos;
 }
 
-void OutputFile::flush()
+bool OutputFile::flush()
 {
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
-		return;
+		return false;
 	
 	OutputFileStream *file = static_cast<OutputFileStream*>(_filePtr);
-	if (!file->flush())
-		_bad = true;
+	if (file->flush())
+		return true;
+	_bad = true;
+	return false;
 }
 
 bool OutputFile::isOpen() const

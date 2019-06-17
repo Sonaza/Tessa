@@ -7,8 +7,10 @@ class Vec3
 {
 public:
 	Vec3();
-	Vec3(T v);
 	Vec3(T x, T y, T z);
+
+	Vec3(const Vec3 &vector) = default;
+	Vec3 &operator=(const Vec3 &vector) = default;
 
 	// Explicit cast from a vector type to another
 	template <class U>

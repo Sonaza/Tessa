@@ -6,7 +6,7 @@
 	#define TS_DEBUG_BREAK  __debugbreak()
 #elif TS_COMPILER == TS_GNUC || TS_COMPILER == TS_CLANG
 	#define TS_DEBUG_BREAK  __builtin_trap()
-#elif
+#else
 	#error "Unsupported platform."
 #endif
 

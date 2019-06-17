@@ -37,8 +37,13 @@ ext/*/*
 *.a
 *.lib
 
+# Cppcheck
+*.cppcheck
+*cppcheck*
+
 # Executables
 *.exe
+*.msi
 *.out
 *.app
 

@@ -7,8 +7,10 @@ class Vec2
 {
 public:
 	Vec2();
-	Vec2(T v);
 	Vec2(T x, T y);
+
+	Vec2(const Vec2 &vector) = default;
+	Vec2 &operator=(const Vec2 &vector) = default;
 
 	// Explicit cast from a vector type to another
 	template <class U>

@@ -6,11 +6,11 @@
 
 TS_PACKAGE1(system)
 
-class ConfigReader
+class ConfigReader : public lang::Noncopyable
 {
 public:
 	ConfigReader();
-	ConfigReader(const std::string &configfile);
+	explicit ConfigReader(const std::string &configfile);
 	~ConfigReader();
 
 	bool isLoaded() const;

@@ -6,12 +6,6 @@ Vec3<T>::Vec3()
 }
 
 template <class T>
-Vec3<T>::Vec3(T v)
-	: x(v), y(v), z(v)
-{
-}
-
-template <class T>
 Vec3<T>::Vec3(T x, T y, T z)
 	: x(x), y(y), z(z)
 {
