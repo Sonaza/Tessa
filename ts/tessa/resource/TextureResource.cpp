@@ -1,6 +1,8 @@
 #include "Precompiled.h"
 #include "ts/tessa/resource/TextureResource.h"
 
+TS_DEFINE_RESOURCE_TYPE(resource::TextureResource);
+
 TS_PACKAGE1(resource)
 
 TextureResource::TextureResource(const std::string &filepath)

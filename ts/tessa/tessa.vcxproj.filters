@@ -95,6 +95,27 @@
     <ClCompile Include="threading\ThreadUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file\FileList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\FileUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lang\StringUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="net\Address.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math\CRC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\InputFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\OutputFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -160,9 +181,6 @@
     <ClInclude Include="resource\FontResource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="common\Pointers.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="instance\InstanceManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -187,24 +205,6 @@
     <ClInclude Include="resource\ResourceBase.inl">
       <Filter>Source Files\resource</Filter>
     </ClInclude>
-    <ClInclude Include="common\SharedPointer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\ScopedPointer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\UniquePointer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\SharedPointer.inl">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\UniquePointer.inl">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\ScopedPointer.inl">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="system\ConfigReader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -226,20 +226,72 @@
     <ClInclude Include="threading\ThreadUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="lang\UniquePointer.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\ScopedPointer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\ScopedPointer.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\SharedPointer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\SharedPointer.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\UniquePointer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\Pointers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\Debugging.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\IncludeSFML.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Vec2.inl">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Mat4.inl">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileList.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\Noncopyable.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Vec3.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Vec4.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\StringUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="net\Address.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\CRC.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\InputFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\OutputFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="math\Vec4.inl">
-      <Filter>Source Files\math</Filter>
-    </None>
-    <None Include="math\Vec2.inl">
-      <Filter>Source Files\math</Filter>
-    </None>
-    <None Include="math\Vec3.inl">
-      <Filter>Source Files\math</Filter>
-    </None>
-    <None Include="math\Mat4.inl">
-      <Filter>Source Files\math</Filter>
-    </None>
+    <None Include="Windows.props" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Tessa.natvis" />

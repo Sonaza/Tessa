@@ -1,30 +1,33 @@
 #pragma once
 
-TS_PACKAGE0()
+TS_PACKAGE1(lang)
 
-class ScopedPointerDefaultDeleter
+class DefaultScopedPointerDeleter;
+
+class ScopedPointerBaseImpl
 {
 public:
-	void operator()(void *pointer)
-	{
-		TS_ASSERT(pointer != nullptr);
-		delete pointer;
-	}
+	ScopedPointerBaseImpl() = default;
+
+protected:
+	void *pointer = nullptr;
 };
+
+TS_END_PACKAGE1()
+
+TS_PACKAGE0()
 
 // Scoped pointer type intended for use cases where a thing only
 // exists in a single scope and will never move outside of it.
-template <class T, class Deleter = ScopedPointerDefaultDeleter>
-class ScopedPointer
+template <class T, class Deleter = lang::DefaultScopedPointerDeleter>
+class ScopedPointer : public lang::ScopedPointerBaseImpl
 {
 public:
 	typedef T ElementType;
 
 	ScopedPointer() = default;
-
 	explicit ScopedPointer(T *pointer);
-
-	virtual ~ScopedPointer();
+	~ScopedPointer();
 
 	// Copying is forbidden.
 	ScopedPointer(const ScopedPointer &other) = delete;
@@ -56,8 +59,7 @@ public:
 	void swap(ScopedPointer &other);
 
 private:
-	void deletePointerDataIfNeeded();
-	T *pointer = nullptr;
+	void _deleteImpl();
 };
 
 #include "ScopedPointer.inl"
@@ -65,8 +67,6 @@ private:
 template <class T, class... Args>
 ScopedPointer<T> makeScoped(Args&&... args)
 {
-	static_assert(std::is_array<T>::value == false, "ScopedPointer does not support storing arrays.");
-
 	T *pointer = new T(args...);
 	TS_ASSERT(pointer != nullptr);
 	return ScopedPointer<T>(pointer);

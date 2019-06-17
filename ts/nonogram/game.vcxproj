@@ -94,13 +94,14 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)post_build.bat $(RootDir)</Command>
-      <Message>Running post build script</Message>
+      <Command>$(ProjectDir)post_build.bat $(Configuration)</Command>
+      <Message>Running post build script...</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -118,6 +119,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -126,8 +128,8 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)post_build.bat $(RootDir)</Command>
-      <Message>Running post build script</Message>
+      <Command>$(ProjectDir)post_build.bat $(Configuration)</Command>
+      <Message>Running post build script...</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -145,6 +147,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -153,8 +156,8 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)post_build.bat $(RootDir)</Command>
-      <Message>Running post build script</Message>
+      <Command>$(ProjectDir)post_build.bat $(Configuration)</Command>
+      <Message>Running post build script...</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -170,6 +173,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="randomtests.cpp" />
     <ClCompile Include="scenes\NonogramScene.cpp" />
   </ItemGroup>
   <ItemGroup>

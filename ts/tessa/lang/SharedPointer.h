@@ -3,17 +3,13 @@
 #include <atomic>
 #include <functional>
 
-TS_PACKAGE0()
+TS_PACKAGE1(lang)
 
-class SharedPointerDefaultDeleter
-{
-public:
-	void operator()(void *pointer)
-	{
-		TS_ASSERT(pointer != nullptr);
-		delete pointer;
-	}
-};
+class DefaultSharedPointerDeleter;
+
+TS_END_PACKAGE1()
+
+TS_PACKAGE0()
 
 // Shared pointer type intended for use cases where a thing may be shared between several 
 // different scopes and at the end when it is no longer needed the allocated memory is freed.
@@ -34,7 +30,7 @@ public:
 	template <class T2>
 	explicit SharedPointer(const SharedPointer<T2> &other, T *ptr);
 
-	virtual ~SharedPointer();
+	~SharedPointer();
 
 	// Copying allowed, increases refcounter.
 	SharedPointer(const SharedPointer &other);
@@ -95,8 +91,6 @@ private:
 template <class T, class... Args>
 SharedPointer<T> makeShared(Args&&... args)
 {
-	static_assert(std::is_array<T>::value == false, "SharedPointer does not support storing arrays.");
-
 	T *pointer = new T(std::forward<Args>(args)...);
 	TS_ASSERT(pointer != nullptr);
 	return SharedPointer<T>(pointer);

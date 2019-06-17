@@ -1,4 +1,18 @@
 
+class lang::DefaultSharedPointerDeleter
+{
+public:
+	template <class T>
+	void operator()(T *pointer)
+	{
+		// Type completeness check copied from boost's checked delete.
+		// intentionally complex - simplification causes regressions
+		typedef char type_must_be_complete[sizeof(T) ? 1 : -1];
+		(void) sizeof(type_must_be_complete);
+		delete pointer;
+	}
+};
+
 template <class T>
 SharedPointer<T>::SharedPointer(T *ptr)
 {
@@ -56,7 +70,6 @@ SharedPointer<T>::SharedPointer(SharedPointer<T> &&other)
 template <class T>
 SharedPointer<T> &SharedPointer<T>::operator=(SharedPointer<T> &&other)
 {
-
 	// Prevent self assignment
 	if (this != &other)
 	{
@@ -79,14 +92,12 @@ T *SharedPointer<T>::get() const
 template <class T>
 void SharedPointer<T>::reset(T *ptrParam)
 {
-	reset(ptrParam, SharedPointerDefaultDeleter());
+	reset(ptrParam, lang::DefaultSharedPointerDeleter());
 }
 
 template <class T> template <class Deleter>
 void SharedPointer<T>::reset(T *ptrParam, Deleter)
 {
-	static_assert(std::is_array<T>::value == false, "SharedPointer does not support storing arrays.");
-
 	decreaseReferenceCounter();
 
 	pointer = ptrParam;
@@ -99,7 +110,7 @@ void SharedPointer<T>::reset(T *ptrParam, Deleter)
 		{
 			static void destroy(void *pointer)
 			{
-				Deleter()(pointer);
+				Deleter()(static_cast<T *>(pointer));
 			}
 		};
 		impl->destructor = &DeleterImpl::destroy;

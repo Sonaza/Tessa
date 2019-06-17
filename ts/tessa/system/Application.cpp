@@ -1,4 +1,5 @@
 #include "Precompiled.h"
+#include "ts/tessa/common/Debugging.h"
 #include "ts/tessa/system/Application.h"
 
 #include "ts/tessa/system/WindowManager.h"
@@ -26,12 +27,18 @@ Application::~Application()
 
 Int32 Application::start()
 {
-	if (!_config.parse(CONFIG_FILE_NAME))
+	if (!_config.parse(TS_CONFIG_FILE_NAME))
 	{
-		TS_LOG_ERROR("Unable to open options file. File: %s", CONFIG_FILE_NAME);
+		TS_LOG_ERROR("Unable to open options file. File: %s", TS_CONFIG_FILE_NAME);
 	}
 
-	common::Log::setLogFile(_config.getString("General.LogFile", DEFAULT_LOG_FILE_NAME));
+	common::Log::setLogFile(_config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
+
+	if (!sf::Shader::isAvailable())
+	{
+		TS_LOG_ERROR("Shaders not available!");
+		return 2;
+	}
 
 	if (!initialize())
 	{

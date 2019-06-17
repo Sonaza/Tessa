@@ -2,10 +2,10 @@
 
 #define TS_DECLARE_SYSTEM_MANAGER_TYPE(__class_name) \
 	public: \
-		static const char * name;
+		static const char * TypeName;
 
 #define TS_DEFINE_SYSTEM_MANAGER_TYPE(__class_name) \
-	namespace ts { const char * __class_name::name = #__class_name; }
+	namespace ts { const char * __class_name::TypeName = #__class_name; }
 
 TS_DECLARE1(system, Application);
 

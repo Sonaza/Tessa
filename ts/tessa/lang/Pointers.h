@@ -16,9 +16,9 @@
 #define TS_VERIFY_POINTERS(...) __TS_VERIFY_POINTERS_IMPL(, __VA_ARGS__)
 #define TS_VERIFY_POINTERS_WITH_RETURN_VALUE(__return_value, ...) __TS_VERIFY_POINTERS_IMPL(__return_value, __VA_ARGS__)
 
-#include "ts/tessa/common/ScopedPointer.h"
-#include "ts/tessa/common/SharedPointer.h"
-#include "ts/tessa/common/UniquePointer.h"
+#include "ts/tessa/lang/ScopedPointer.h"
+#include "ts/tessa/lang/SharedPointer.h"
+#include "ts/tessa/lang/UniquePointer.h"
 
 TS_PACKAGE0()
 

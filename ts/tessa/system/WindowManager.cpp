@@ -149,12 +149,12 @@ std::vector<math::VC2U> WindowManager::getSupportedResolutions(const bool fullsc
 		}
 	);
 
-	for (auto r : result)
-	{
-		auto ratio = r / math::greatestCommonDivisor(r.x, r.y);
-		if (ratio.x == 8) ratio *= 2U;
-		TS_PRINTF("%u, %u (%u:%u)\n", r.x, r.y, ratio.x, ratio.y);
-	}
+// 	for (auto r : result)
+// 	{
+// 		auto ratio = r / math::greatestCommonDivisor(r.x, r.y);
+// 		if (ratio.x == 8) ratio *= 2U;
+// 		TS_PRINTF("%u, %u (%u:%u)\n", r.x, r.y, ratio.x, ratio.y);
+// 	}
 
 	return result;
 }

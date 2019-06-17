@@ -34,6 +34,9 @@
     <ClCompile Include="GameApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="randomtests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">

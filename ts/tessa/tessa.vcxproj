@@ -95,6 +95,7 @@
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -116,6 +117,7 @@
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -140,6 +142,7 @@
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -153,11 +156,18 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="file\FileList.cpp" />
+    <ClCompile Include="file\FileUtils.cpp" />
+    <ClCompile Include="file\InputFile.cpp" />
+    <ClCompile Include="file\OutputFile.cpp" />
     <ClCompile Include="instance\ComponentBase.cpp" />
     <ClCompile Include="instance\Entity.cpp" />
     <ClCompile Include="instance\InstanceManager.cpp" />
+    <ClCompile Include="lang\StringUtils.cpp" />
     <ClCompile Include="math\Angle.cpp" />
+    <ClCompile Include="math\CRC.cpp" />
     <ClCompile Include="math\Hash.cpp" />
+    <ClCompile Include="net\Address.cpp" />
     <ClCompile Include="Precompiled.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
@@ -168,10 +178,20 @@
     <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
-    <ClInclude Include="common\ScopedPointer.h" />
-    <ClInclude Include="common\SharedPointer.h" />
-    <ClInclude Include="common\UniquePointer.h" />
+    <ClInclude Include="common\Debugging.h" />
+    <ClInclude Include="common\IncludeSFML.h" />
+    <ClInclude Include="file\FileList.h" />
+    <ClInclude Include="file\FileUtils.h" />
+    <ClInclude Include="file\InputFile.h" />
+    <ClInclude Include="file\OutputFile.h" />
+    <ClInclude Include="lang\Noncopyable.h" />
+    <ClInclude Include="lang\ScopedPointer.h" />
+    <ClInclude Include="lang\SharedPointer.h" />
+    <ClInclude Include="lang\StringUtils.h" />
+    <ClInclude Include="lang\UniquePointer.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="math\CRC.h" />
+    <ClInclude Include="net\Address.h" />
     <ClInclude Include="resource\ResourceBase.inl">
       <FileType>CppCode</FileType>
     </ClInclude>
@@ -193,7 +213,7 @@
   <ItemGroup>
     <ClInclude Include="common\Common.h" />
     <ClInclude Include="common\FourCC.h" />
-    <ClInclude Include="common\Pointers.h" />
+    <ClInclude Include="lang\Pointers.h" />
     <ClInclude Include="instance\ComponentBase.h" />
     <ClInclude Include="instance\Entity.h" />
     <ClInclude Include="instance\InstanceManager.h" />
@@ -227,19 +247,28 @@
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common\SharedPointer.inl">
+    <ClInclude Include="lang\SharedPointer.inl">
       <FileType>Document</FileType>
     </ClInclude>
-    <ClInclude Include="common\ScopedPointer.inl">
+    <ClInclude Include="lang\ScopedPointer.inl">
       <FileType>Document</FileType>
     </ClInclude>
-    <ClInclude Include="common\UniquePointer.inl">
+    <ClInclude Include="lang\UniquePointer.inl">
       <FileType>Document</FileType>
     </ClInclude>
-    <None Include="math\Mat4.inl" />
-    <None Include="math\Vec2.inl" />
-    <None Include="math\Vec3.inl" />
-    <None Include="math\Vec4.inl" />
+    <ClInclude Include="math\Mat4.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="math\Vec2.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="math\Vec3.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="math\Vec4.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <None Include="Windows.props" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Tessa.natvis" />

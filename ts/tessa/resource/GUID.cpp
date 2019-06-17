@@ -21,7 +21,7 @@ GUID::GUID(Uint32 guid)
 }
 
 GUID::GUID(const std::string &str)
-	: guid(math::hash::simpleHash32(str))
+	: guid(math::simpleHash32(str))
 {
 }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
 #include <type_traits>
 #include <unordered_map>
 
@@ -116,7 +115,7 @@ bool Application::createManagerInstance(Args... args)
 
 	if (!managerInstance->initialize())
 	{
-		TS_LOG_ERROR("Initializing a manager instance %s failed.", ManagerType::name);
+		TS_LOG_ERROR("Initializing a manager instance failed. Manager type: %s", ManagerType::TypeName);
 		return false;
 	}
 

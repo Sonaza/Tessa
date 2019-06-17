@@ -1,30 +1,33 @@
 #pragma once
 
-TS_PACKAGE0()
+TS_PACKAGE1(lang)
 
-class UniquePointerDefaultDeleter
+class DefaultUniquePointerDeleter;
+
+class UniquePointerBaseImpl
 {
 public:
-	void operator()(void *pointer)
-	{
-		TS_ASSERT(pointer != nullptr);
-		delete pointer;
-	}
+	UniquePointerBaseImpl() = default;
+
+protected:
+	void *pointer = nullptr;
 };
+
+TS_END_PACKAGE1()
+
+TS_PACKAGE0()
 
 // Unique pointer type intended for use cases where a thing is only allowed to
 // exist in one place at a time but may be moved elsewhere through move semantics.
-template <class T, class Deleter = UniquePointerDefaultDeleter>
-class UniquePointer
+template <class T, class Deleter = lang::DefaultUniquePointerDeleter>
+class UniquePointer : public lang::UniquePointerBaseImpl
 {
 public:
 	typedef T ElementType;
 
 	UniquePointer() = default;
-
 	explicit UniquePointer(T *pointer);
-
-	virtual ~UniquePointer();
+	~UniquePointer();
 
 	// Copying is forbidden.
 	UniquePointer(const UniquePointer &other) = delete;
@@ -56,17 +59,14 @@ public:
 	void swap(UniquePointer &other);
 
 private:
-	void deletePointerDataIfNeeded();
-	T *pointer = nullptr;
+	void _deleteImpl();
 };
 
 #include "UniquePointer.inl"
 
-template <class T, class Deleter = UniquePointerDefaultDeleter, class... Args>
+template <class T, class Deleter = lang::DefaultUniquePointerDeleter, class... Args>
 UniquePointer<T, Deleter> makeUnique(Args&&... args)
 {
-	static_assert(std::is_array<T>::value == false, "UniquePointer does not support storing arrays.");
-
 	T *pointer = new T(std::forward<Args>(args)...);
 	TS_ASSERT(pointer != nullptr);
 	return UniquePointer<T, Deleter>(pointer);

@@ -1,4 +1,18 @@
 
+class lang::DefaultScopedPointerDeleter
+{
+public:
+	template <class T>
+	void operator()(T *pointer)
+	{
+		// Type completeness check copied from boost's checked delete.
+		// intentionally complex - simplification causes regressions
+		typedef char type_must_be_complete[sizeof(T) ? 1 : -1];
+		(void) sizeof(type_must_be_complete);
+		delete pointer;
+	}
+};
+
 template <class T, class Deleter>
 ScopedPointer<T, Deleter>::ScopedPointer(T *pointer)
 {
@@ -14,13 +28,13 @@ ScopedPointer<T, Deleter>::~ScopedPointer()
 template <class T, class Deleter>
 T *ScopedPointer<T, Deleter>::get() const
 {
-	return pointer;
+	return static_cast<T *>(pointer);
 }
 
 template <class T, class Deleter>
 T *ScopedPointer<T, Deleter>::dismiss()
 {
-	T *ptr = pointer;
+	T *ptr = static_cast<T *>(pointer);
 	pointer = nullptr;
 	return ptr;
 }
@@ -28,9 +42,7 @@ T *ScopedPointer<T, Deleter>::dismiss()
 template <class T, class Deleter>
 void ScopedPointer<T, Deleter>::reset(T *ptrParam)
 {
-	static_assert(std::is_array<T>::value == false, "ScopedPointer does not support storing arrays.");
-
-	deletePointerDataIfNeeded();
+	_deleteImpl();
 	pointer = ptrParam;
 }
 
@@ -38,14 +50,14 @@ template <class T, class Deleter>
 typename std::add_lvalue_reference<T>::type ScopedPointer<T, Deleter>::operator*() const
 {
 	TS_ASSERTF(pointer != nullptr, "Attempting to dereference a null pointer");
-	return *pointer;
+	return *static_cast<T *>(pointer);
 }
 
 template <class T, class Deleter>
 T *ScopedPointer<T, Deleter>::operator->()
 {
 	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
-	return pointer;
+	return static_cast<T *>(pointer);
 }
 
 template <class T, class Deleter>
@@ -97,21 +109,11 @@ void ScopedPointer<T, Deleter>::swap(ScopedPointer &other)
 }
 
 template <class T, class Deleter>
-void ScopedPointer<T, Deleter>::deletePointerDataIfNeeded()
+void ScopedPointer<T, Deleter>::_deleteImpl()
 {
 	if (pointer != nullptr)
 	{
-		struct DeleterImpl
-		{
-			static void destroy(T *pointer)
-			{
-				Deleter()(pointer);
-			}
-		};
-		DeleterImpl::destroy(pointer);
-
-		// 		delete pointer;
-		// 		destructor(pointer);
+		Deleter()(static_cast<T *>(pointer));
 		pointer = nullptr;
 	}
 }

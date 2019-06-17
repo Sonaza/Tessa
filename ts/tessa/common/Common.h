@@ -10,8 +10,18 @@
 #define TS_VERSION_MINOR 1
 #define TS_VERSION_PATCH 0
 
-#define TS_WINDOWS	0x00000001
-#define TS_LINUX	0x00000002
+#define TS_TRUE  1
+#define TS_FALSE 0
+
+#define TS_BIG_ENDIAN 0x01
+#define TS_LITTLE_ENDIAN 0x02
+#define TS_BYTE_ORDER TS_LITTLE_ENDIAN
+
+///////////////////////////////////////////////////////
+// Platform (define based on SFML)
+
+#define TS_WINDOWS	0x01
+#define TS_LINUX	0x02
 
 #if defined(SFML_SYSTEM_WINDOWS)
 	#define TS_PLATFORM TS_WINDOWS
@@ -21,9 +31,29 @@
 	#error "Platform not supported."
 #endif
 
-#define TS_DEBUG        0x00000010
-#define TS_RELEASE      0x00000020
-#define TS_FINALRELEASE 0x00000030
+///////////////////////////////////////////////////////
+// Compilers
+
+#define TS_MSC    0x01
+#define TS_GNUC   0x02
+#define TS_CLANG  0x03
+
+#if defined(_MSC_VER)
+	#define TS_COMPILER TS_MSC
+#elif defined(__GNUC__)
+	#define TS_COMPILER TS_GNUC
+#elif defined(__clang__)
+	#define TS_COMPILER TS_CLANG
+#else
+	#error "Compiler not supported"
+#endif
+
+///////////////////////////////////////////////////////
+// Build mode
+
+#define TS_DEBUG        0x01
+#define TS_RELEASE      0x02
+#define TS_FINALRELEASE 0x03
 
 #if defined(TS_BUILD_DEBUG)
 	#define TS_BUILD TS_DEBUG
@@ -35,35 +65,29 @@
 	#error "Build type not defined."
 #endif
 
-#if TS_PLATFORM == TS_WINDOWS
-	#define TS_NO_CONSOLE 1
-#endif
+///////////////////////////////////////////////////////
+// Useful macros
 
-#ifdef TS_NO_CONSOLE
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")	
-#endif
-
-#if defined(_MSC_VER)
-	#if _MSC_VER >= 1900
-		#define TS_PRETTY_FUNCTION __func__
-	#else
-		#define TS_PRETTY_FUNCTION __FUNCTION__
-	#endif
-#elif defined(__GNUC__) || defined(__clang__)
-	#define TS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#if TS_COMPILER == TS_MSC
+	#define TS_FUNCTION_LOG_SIMPLE __FUNCTION__
+	#define TS_FUNCTION_LOG_DETAIL __FUNCSIG__
+#elif TS_COMPILER == TS_GNUC || TS_COMPILER == TS_CLANG
+	#define TS_FUNCTION_LOG_SIMPLE __PRETTY_FUNCTION__
+	#define TS_FUNCTION_LOG_DETAIL __PRETTY_FUNCTION__
 #else
-	#error "Pretty function macro undefined on this compiler."
+	#define TS_FUNCTION_LOG_SIMPLE __func__
+	#define TS_FUNCTION_LOG_DETAIL __func__
 #endif
 
-#define __TS_STRINGIFY(str) (# str)
-#define TS_STRINGIFY(str)   __TS_STRINGIFY(str)
-
-#if defined(_MSC_VER)
+#if TS_COMPILER == TS_MSC
 	#define TS_FORCEINLINE __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
+	#define TS_ALIGN(alignment) __declspec(align(alignment))
+#elif TS_COMPILER == TS_GNUC || TS_COMPILER == TS_CLANG
 	#define TS_FORCEINLINE inline __attribute__((always_inline))
+	#define TS_ALIGN(alignment) __attribute__((aligned(alignment)))
 #else
 	#define TS_FORCEINLINE inline
+	#define TS_ALIGN(alignment) alignas(alignment)
 #endif
 
 #include <cstdint>
@@ -85,6 +109,8 @@ typedef std::uint64_t Uint64;
 
 typedef Uint32 SizeType;
 typedef Uint64 BigSizeType;
+
+typedef Int64 PosType;
 
 // Template hack to get readable type names for classes
 template<typename T>

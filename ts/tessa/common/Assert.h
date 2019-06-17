@@ -1,20 +1,25 @@
 #pragma once
 
-#if TS_PLATFORM == TS_WINDOWS
-	#define __TS_DEBUG_BREAK  __debugbreak()
-#elif TS_PLATFORM == TS_LINUX
-	#define __TS_DEBUG_BREAK  __builtin_trap()
+#include <intrin.h>
+
+#if TS_COMPILER == TS_MSC
+	#define TS_DEBUG_BREAK  __debugbreak()
+#elif TS_COMPILER == TS_GNUC || TS_COMPILER == TS_CLANG
+	#define TS_DEBUG_BREAK  __builtin_trap()
 #elif
 	#error "Unsupported platform."
 #endif
 
+#define __TS_STRINGIFY(str) (# str)
+#define TS_STRINGIFY(str)   __TS_STRINGIFY(str)
+
 #define __TS_ASSERT_IMPL_IMPL(__expression_str, __message_str) \
-	::ts::assert_impl(__expression_str, __message_str, __FILE__, __LINE__)
+	::ts::_assert_impl(__expression_str, __message_str, __FILE__, __LINE__)
 
 #define __TS_ASSERT_IMPL(__expression) \
 	do { \
 		if (!(__expression)) { \
-			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), nullptr)) __TS_DEBUG_BREAK; \
+			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), nullptr)) TS_DEBUG_BREAK; \
 		} \
 	} while(false)
 
@@ -22,7 +27,7 @@
 	do { \
 		if (!(__expression)) { \
 			const std::string &__fmt_message = TS_FMT(__message, ##__VA_ARGS__); \
-			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), __fmt_message.c_str())) __TS_DEBUG_BREAK; \
+			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), __fmt_message.c_str())) TS_DEBUG_BREAK; \
 		} \
 	} while(false)
 
@@ -50,9 +55,10 @@
 
 #endif
 
-namespace ts
-{
+#include "ts/tessa/common/Package.h"
 
-bool __cdecl assert_impl(const char *expression, const char *message, const char *filepath, const unsigned int line);
+TS_PACKAGE0()
 
-}
+extern bool _assert_impl(const char *expression, const char *message, const char *filepath, const unsigned int line);
+
+TS_END_PACKAGE0()

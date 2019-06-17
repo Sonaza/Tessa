@@ -58,6 +58,11 @@ private:
 	typedef std::unordered_map<const GUID, GUID, GuidHash> GuidList;
 	GuidList resourceGuids;
 
+#if TS_BUILD != TS_FINALRELEASE
+	std::map<const GUID, std::string> debugResourceHandles;
+	std::map<SizeType, std::string> debugResourceTypeNames;
+#endif
+
 	// Abstract resource list holds any type of resource
 	struct AbstractResourceContainer
 	{
@@ -86,7 +91,11 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 	resource = getResourceByFileGuid<ResourceType>(fileGuid);
 	if (resource != nullptr)
 	{
-		TS_ASSERTF(false, "Duplicate loading of resource '%s' detected, same file has been loaded with another GUID.", filepath);
+#if TS_BUILD != TS_FINALRELEASE
+		const std::string &debugHandle = debugResourceHandles[fileGuid];
+		const GUID debugGUID(debugHandle);
+		TS_ASSERTF(false, "Duplicate loading of a resource file, already loaded using a different resource handle.\n\nResource file: %s\nExisting handle: %s %s", filepath, debugHandle, debugGUID.getString());
+#endif
 		return nullptr;
 	}
 
@@ -96,7 +105,7 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 		TS_LOG_ERROR("Allocating resource failed.");
 		return nullptr;
 	}
-
+	
 	UniquePointer<AbstractResourceContainer> rc = makeUnique<AbstractResourceContainer>(resource, ResourceType::TypeId);
 	if (rc == nullptr)
 	{
@@ -106,6 +115,11 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 
 	resourceGuids.emplace(resourceGuid, fileGuid);
 	resources.emplace(fileGuid, std::move(rc));
+
+#if TS_BUILD != TS_FINALRELEASE
+	debugResourceHandles[fileGuid] = uniqueResourceHandle;
+	debugResourceTypeNames[ResourceType::TypeId] = ResourceType::TypeName;
+#endif
 
 	// Add to threaded load queue or load immediately based on user flag
 	if (immediate == false)
@@ -142,9 +156,15 @@ ResourceType *ResourceManager::getResourceByFileGuid(const GUID &fileGuid)
 	ResourceList::iterator iter = resources.find(fileGuid);
 	if (iter != resources.end())
 	{
-		TS_ASSERT(iter->second != nullptr && "AbstractResourceContainer is nullptr.");
-		TS_ASSERT(iter->second->isValid() && "AbstractResourceContainer is not valid. Resource might not have been set.");
-		TS_ASSERT(iter->second->typeId == ResourceType::TypeId && "Resource types don't match, requested resource handle is used by a different resource type.");
+#if TS_BUILD != TS_FINALRELEASE
+		TS_ASSERTF(iter->second != nullptr && iter->second->isValid(), "AbstractResourceContainer is nullptr or invalid.");
+		const std::string &debugHandle = debugResourceHandles[fileGuid];
+		const GUID debugGUID(debugHandle);
+		TS_ASSERTF(iter->second->typeId == ResourceType::TypeId,
+			"Resource types don't match, requested resource handle is already used by a different resource type.\n\nResource handle: %s %s\nExisting type: %s\nRequested type: %s",
+			debugHandle, debugGUID.getString(), debugResourceTypeNames[iter->second->typeId], ResourceType::TypeName
+		);
+#endif
 		if (iter->second != nullptr && iter->second->isValid() && iter->second->typeId == ResourceType::TypeId)
 			return static_cast<ResourceType*>(iter->second->resource.get());
 	}

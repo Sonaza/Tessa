@@ -4,16 +4,7 @@
 #if TS_PLATFORM == TS_WINDOWS
 #include "ts/tessa/common/IncludeWindows.h"
 #include <processthreadsapi.h>
-
 #pragma warning( disable : 4702 ) // Unreachable code warning, it's just the NYI asserts.
-
-__declspec(align(8)) struct THREADNAME_INFO
-{
-	DWORD dwType; // Must be 0x1000.
-	LPCSTR szName; // Pointer to name (in user addr space).
-	DWORD dwThreadID; // Thread ID (-1=caller thread).
-	DWORD dwFlags; // Reserved for future use, must be zero.
-};
 #endif
 
 TS_PACKAGE2(threading, utils)
@@ -35,6 +26,7 @@ Int32 convertToSystemThreadPriority(ThreadPriority priority)
 		case ThreadPriority_Idle:        return THREAD_PRIORITY_IDLE;
 	}
 #endif
+	TS_ASSERT(!"Not implemented on this platform.");
 	return 0;
 }
 
@@ -43,20 +35,31 @@ Int32 convertToSystemThreadPriority(ThreadPriority priority)
 extern void setThreadName(std::thread &thread, const std::string &threadName)
 {
 #if TS_PLATFORM == TS_WINDOWS
-
-	DWORD threadID = GetThreadId(thread.native_handle());
-
-	THREADNAME_INFO info;
+/*
+	Kinda terrible but Microsoft gonna Microsoft
+	https://docs.microsoft.com/en-us/visualstudio/debugger/how-to-set-a-thread-name-in-native-code
+	
+	Newer alternative for Win10 on VS2017
+	https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-setthreaddescription
+*/
+	
+	struct TS_ALIGN(8)
+	{
+		DWORD dwType;     // Must be 0x1000.
+		LPCSTR szName;    // Pointer to name (in user addr space).
+		DWORD dwThreadID; // Thread ID (-1=caller thread).
+		DWORD dwFlags;    // Reserved for future use, must be zero.
+	} info;
 	info.dwType = 0x1000;
 	info.szName = threadName.c_str();
-	info.dwThreadID = threadID;
+	info.dwThreadID = GetThreadId(thread.native_handle());
 	info.dwFlags = 0;
 
 #pragma warning( push )
 #pragma warning( disable : 6320 6322 )
-	static const DWORD MS_VC_THREAD_NAMING_EXCEPTION = 0x406D1388;
 	__try
 	{
+		const DWORD MS_VC_THREAD_NAMING_EXCEPTION = 0x406D1388;
 		RaiseException(MS_VC_THREAD_NAMING_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
@@ -72,8 +75,7 @@ extern void setThreadName(std::thread &thread, const std::string &threadName)
 extern void setThreadPriority(std::thread &thread, ThreadPriority priority)
 {
 #if TS_PLATFORM == TS_WINDOWS
-	HANDLE threadHwnd = thread.native_handle();
-	SetThreadPriority(threadHwnd, convertToSystemThreadPriority(priority));
+	SetThreadPriority(thread.native_handle(), convertToSystemThreadPriority(priority));
 	return;
 #endif
 

@@ -6,6 +6,7 @@
 #include <chrono>
 #include <ctime>
 
+#include "ts/tessa/lang/StringUtils.h"
 #include "ts/tessa/Config.h"
 
 #if TS_PLATFORM == TS_WINDOWS
@@ -15,7 +16,7 @@
 
 TS_PACKAGE1(common)
 
-std::string Log::filepath = DEFAULT_LOG_FILE_NAME;
+std::string Log::filepath = TS_DEFAULT_LOG_FILE_NAME;
 
 Log &Log::getSingleton()
 {
@@ -74,9 +75,6 @@ bool Log::openLogfile()
 
 	currentFilepath = Log::filepath;
 
-	fileStream << "THIS IS FIRST LINE\n";
-	fileStream.flush();
-
 	return true;
 }
 
@@ -90,7 +88,7 @@ void Log::write(const std::string &str)
 {
 	std::cout << str;
 
-#if TS_PLATFORM == TS_WINDOWS
+#if defined(_MSC_VER)
 	OutputDebugStringA(str.c_str());
 #endif
 
@@ -105,7 +103,7 @@ void Log::write(const std::wstring &str)
 {
 	std::wcout << str;
 
-#if TS_PLATFORM == TS_WINDOWS
+#if defined(_MSC_VER)
 	OutputDebugStringW(str.c_str());
 #endif
 

@@ -28,7 +28,7 @@
 
 #define __TS_LOG_WITH_SEVERITY_IMPL(__severity, __message, ...) \
 	do { \
-		__TS_PRINTF_IMPL("[%s] %s - %s:%u in function %s\n", __severity, TS_FMT(__message, ##__VA_ARGS__), __FILE__, __LINE__, TS_PRETTY_FUNCTION); \
+		__TS_PRINTF_IMPL("[%s] %s - %s\n", __severity, TS_FUNCTION_LOG_SIMPLE, TS_FMT(__message, ##__VA_ARGS__)/*, __FILE__, __LINE__*/); \
 	} while(false)
 
 #define TS_LOG_ERROR(__message, ...)   __TS_LOG_WITH_SEVERITY_IMPL("Error", __message, ##__VA_ARGS__)
@@ -61,10 +61,10 @@ public:
 	void write(FormatType format, Args... args);
 	
 	template<class... Args>
-	const std::string format(const std::string &format, Args... args);
+	std::string format(const std::string &format, Args... args);
 
 	template<class... Args>
-	const std::wstring format(const std::wstring &format, Args... args);
+	std::wstring format(const std::wstring &format, Args... args);
 
 	const std::string makeTimestampString() const;
 	const std::wstring makeTimestampStringWide() const;
@@ -86,19 +86,19 @@ private:
 };
 
 template<class FormatType, class... Args>
-void Log::write(FormatType format, Args... args)
+TS_FORCEINLINE void Log::write(FormatType format, Args... args)
 {
 	write(fmt::sprintf(format, args...));
 }
 
 template<class... Args>
-const std::string Log::format(const std::string &format, Args... args)
+std::string Log::format(const std::string &format, Args... args)
 {
 	return fmt::sprintf(format, args...);
 }
 
 template<class... Args>
-const std::wstring Log::format(const std::wstring &format, Args... args)
+std::wstring Log::format(const std::wstring &format, Args... args)
 {
 	return fmt::sprintf(format, args...);
 }

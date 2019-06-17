@@ -1,6 +1,8 @@
 #include "Precompiled.h"
 #include "ts/tessa/resource/FontResource.h"
 
+TS_DEFINE_RESOURCE_TYPE(resource::FontResource);
+
 TS_PACKAGE1(resource)
 
 FontResource::FontResource(const std::string &filepath)

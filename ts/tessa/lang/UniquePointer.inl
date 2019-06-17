@@ -1,4 +1,18 @@
 
+class lang::DefaultUniquePointerDeleter
+{
+public:
+	template <class T>
+	void operator()(T *pointer)
+	{
+		// Type completeness check copied from boost's checked delete.
+		// intentionally complex - simplification causes regressions
+		typedef char type_must_be_complete[sizeof(T) ? 1 : -1];
+		(void) sizeof(type_must_be_complete);
+		delete pointer;
+	}
+};
+
 template <class T, class Deleter>
 UniquePointer<T, Deleter>::UniquePointer(T *pointer)
 {
@@ -23,8 +37,7 @@ UniquePointer<T, Deleter> &UniquePointer<T, Deleter>::operator=(UniquePointer &&
 	// Prevent self assignment
 	if (this != &other)
 	{
-		deletePointerDataIfNeeded();
-
+		_deleteImpl();
 		pointer = other.pointer;
 		other.pointer = nullptr;
 	}
@@ -34,13 +47,13 @@ UniquePointer<T, Deleter> &UniquePointer<T, Deleter>::operator=(UniquePointer &&
 template <class T, class Deleter>
 T *UniquePointer<T, Deleter>::get() const
 {
-	return pointer;
+	return static_cast<T *>(pointer);
 }
 
 template <class T, class Deleter>
 T *UniquePointer<T, Deleter>::dismiss()
 {
-	T *ptr = pointer;
+	T *ptr = static_cast<T *>(pointer);
 	pointer = nullptr;
 	return ptr;
 }
@@ -48,9 +61,7 @@ T *UniquePointer<T, Deleter>::dismiss()
 template <class T, class Deleter>
 void UniquePointer<T, Deleter>::reset(T *ptrParam)
 {
-	static_assert(std::is_array<T>::value == false, "UniquePointer does not support storing arrays.");
-
-	deletePointerDataIfNeeded();
+	_deleteImpl();
 	pointer = ptrParam;
 }
 
@@ -58,14 +69,14 @@ template <class T, class Deleter>
 typename std::add_lvalue_reference<T>::type UniquePointer<T, Deleter>::operator*() const
 {
 	TS_ASSERTF(pointer != nullptr, "Attempting to dereference a null pointer");
-	return *pointer;
+	return *static_cast<T *>(pointer);
 }
 
 template <class T, class Deleter>
 T *UniquePointer<T, Deleter>::operator->()
 {
 	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
-	return pointer;
+	return static_cast<T *>(pointer);
 }
 
 template <class T, class Deleter>
@@ -117,21 +128,11 @@ void UniquePointer<T, Deleter>::swap(UniquePointer &other)
 }
 
 template <class T, class Deleter>
-void UniquePointer<T, Deleter>::deletePointerDataIfNeeded()
+void UniquePointer<T, Deleter>::_deleteImpl()
 {
 	if (pointer != nullptr)
 	{
-		struct DeleterImpl
-		{
-			static void destroy(T *pointer)
-			{
-				Deleter()(pointer);
-			}
-		};
-		DeleterImpl::destroy(pointer);
-
-// 		delete pointer;
-// 		destructor(pointer);
+		Deleter()(static_cast<T *>(pointer));
 		pointer = nullptr;
 	}
 }

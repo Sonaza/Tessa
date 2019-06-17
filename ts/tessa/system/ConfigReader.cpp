@@ -2,7 +2,7 @@
 #include "ts/tessa/system/ConfigReader.h"
 
 #include "ts/tessa/math/Hash.h"
-#include "INIReader.h"
+#include "ext/INIReader.h"
 #include <sstream>
 
 TS_PACKAGE1(system)
@@ -80,7 +80,7 @@ const std::set<std::string> &ConfigReader::getFields(const std::string &section)
 
 const std::string &ConfigReader::getString(const std::string &section, const std::string &key, const std::string &defaultValue) const
 {
-	const std::string section_dot_key = section + "." + key;
+	std::string section_dot_key = section + "." + key;
 	return getString(section_dot_key, defaultValue);
 }
 
@@ -97,7 +97,7 @@ const std::string &ConfigReader::getString(const std::string &section_dot_key, c
 
 Int32 ConfigReader::getInt32(const std::string &section, const std::string &key, const Int32 defaultValue) const
 {
-	const std::string section_dot_key = section + "." + key;
+	std::string section_dot_key = section + "." + key;
 	return getInt32(section_dot_key, defaultValue);
 }
 
@@ -114,7 +114,7 @@ Int32 ConfigReader::getInt32(const std::string &section_dot_key, const Int32 def
 
 Uint32 ConfigReader::getUint32(const std::string &section, const std::string &key, const Uint32 defaultValue) const
 {
-	const std::string section_dot_key = section + "." + key;
+	std::string section_dot_key = section + "." + key;
 	return getUint32(section_dot_key, defaultValue);
 }
 
@@ -131,7 +131,7 @@ Uint32 ConfigReader::getUint32(const std::string &section_dot_key, const Uint32 
 
 float ConfigReader::getFloat(const std::string &section, const std::string &key, const float defaultValue) const
 {
-	const std::string section_dot_key = section + "." + key;
+	std::string section_dot_key = section + "." + key;
 	return getFloat(section_dot_key, defaultValue);
 }
 
@@ -148,7 +148,7 @@ float ConfigReader::getFloat(const std::string &section_dot_key, const float def
 
 bool ConfigReader::getBoolean(const std::string &section, const std::string &key, const bool defaultValue) const
 {
-	const std::string section_dot_key = section + "." + key;
+	std::string section_dot_key = section + "." + key;
 	return getBoolean(section_dot_key, defaultValue);
 }
 
@@ -172,16 +172,16 @@ int ConfigReader::parserHandler(void *userdata, const char *sectionParam, const 
 {
 	ConfigReader &cfg = *(ConfigReader*)userdata;
 
-	const std::string section(sectionParam);
-	const std::string key(keyParam);
-	const std::string value(valueParam);
+	std::string section(sectionParam);
+	std::string key(keyParam);
+	std::string value(valueParam);
 
 	cfg.sections.emplace(section);
 
 	const Uint32 sectionHash = makeHash(section);
 	cfg.sectionFields[sectionHash].emplace(key);
 
-	const std::string section_dot_key = section + "." + key;
+	std::string section_dot_key = section + "." + key;
 	const Uint32 hash = makeHash(section_dot_key);
 	cfg.values[hash] = value;
 
@@ -192,7 +192,7 @@ Uint32 ConfigReader::makeHash(const std::string &tokenParam)
 {
 	std::string token = tokenParam;
 	std::transform(token.begin(), token.end(), token.begin(), ::tolower);
-	return math::hash::simpleHash32(token);
+	return math::simpleHash32(token);
 }
 
 TS_END_PACKAGE1()

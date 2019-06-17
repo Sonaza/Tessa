@@ -21,7 +21,7 @@ ThreadManager::~ThreadManager()
 
 bool ThreadManager::initialize()
 {
-	const SizeType numThreads = math::min(MAX_THREAD_POOL_THREAD_COUNT, ThreadManager::numHardwareThreads());
+	const SizeType numThreads = math::min(TS_MAX_THREAD_POOL_THREAD_COUNT, ThreadManager::numHardwareThreads());
 	createPoolThreads(numThreads);
 	
 	return true;
@@ -41,7 +41,11 @@ void ThreadManager::createPoolThreads(SizeType poolNumThreads)
 {
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
-		TS_ASSERT(running == false && "Trying to create pool threads again even though it is already running.");
+		if (running)
+		{
+			TS_ASSERT(!"Trying to create pool threads but it is already created and running.");
+			return;
+		}
 		running = true;
 	}
 	for (SizeType i = 0; i < poolNumThreads; ++i)
@@ -99,6 +103,8 @@ SizeType ThreadManager::numHardwareThreads()
 
 void ThreadManager::_threadTaskRunnerImpl(SizeType threadIndex)
 {
+	TS_LOG_DEBUG("Thread Worker %d running. Waiting for new tasks...", threadIndex);
+
 	while (true)
 	{
 		TaskContainer task;
@@ -118,6 +124,8 @@ void ThreadManager::_threadTaskRunnerImpl(SizeType threadIndex)
 
 		task.task();
 	}
+
+	TS_LOG_DEBUG("Thread Worker %d quitting.");
 }
 
 TS_END_PACKAGE1()

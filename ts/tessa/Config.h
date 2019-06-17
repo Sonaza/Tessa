@@ -1,8 +1,13 @@
 #pragma once
 
+#include "ts/tessa/common/Common.h"
+
+// Debug configuration
+#define TS_DEBUG_MEMORY_LEAKS TS_TRUE
+
 // General configuration
-#define CONFIG_FILE_NAME "options.ini"
-#define DEFAULT_LOG_FILE_NAME "output.log"
+#define TS_CONFIG_FILE_NAME "options.ini"
+#define TS_DEFAULT_LOG_FILE_NAME "output.log"
 
 // Systems
-#define MAX_THREAD_POOL_THREAD_COUNT 4U
+#define TS_MAX_THREAD_POOL_THREAD_COUNT 4U

@@ -6,6 +6,13 @@
 #include <atomic>
 #include <mutex>
 
+#define TS_DECLARE_RESOURCE_TYPE(__class_name) \
+	public: \
+		static const char * TypeName;
+
+#define TS_DEFINE_RESOURCE_TYPE(__class_name) \
+	namespace ts { const char * __class_name::TypeName = #__class_name; }
+
 TS_PACKAGE1(resource)
 
 template <class ResourceType, SizeType ResourceTypeIndex>

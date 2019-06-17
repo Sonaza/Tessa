@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ts/tessa/system/SystemManagerBase.h"
-#include <SFML/Graphics.hpp>
 
 TS_DECLARE1(system, Application);
 

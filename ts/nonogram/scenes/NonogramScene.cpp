@@ -41,7 +41,11 @@ void NonogramScene::loadResources(resource::ResourceManager &rm)
 	rm.loadResource<resource::TextureResource>("61579330_p0", "test/61579330_p0.jpg");
 	rm.loadResource<resource::TextureResource>("61827137_p0", "test/61827137_p0.png");
 	rm.loadResource<resource::TextureResource>("656mwuonuh011", "test/656mwuonuh011.jpg");
-	rm.loadResource<resource::TextureResource>("nepzume", "test/nepzume.png", true);
+
+	rm.loadResource<resource::TextureResource>("nepzume", "test/nepzume.png");
+// 	rm.loadResource<resource::FontResource>("nepzume", "calibri.ttf");
+// 	rm.loadResource<resource::TextureResource>("nepzumexcv", "test/nepzume.png");
+
 	rm.loadResource<resource::TextureResource>("67961452_p11", "test/67961452_p11.png");
 	rm.loadResource<resource::TextureResource>("68599620_p0", "test/68599620_p0.png");
 	rm.loadResource<resource::TextureResource>("68783222_p0", "test/68783222_p0.png");
