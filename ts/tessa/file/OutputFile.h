@@ -10,10 +10,10 @@ namespace priv
 
 enum OutputFileModeBits
 {
-	Out_ModeWrite    = 0b0001,
-	Out_ModeBinary   = 0b0010,
-	Out_ModeTruncate = 0b0100,
-	Out_ModeAppend   = 0b1000,
+	Out_ModeWrite    = (1 << 0),
+	Out_ModeBinary   = (1 << 1),
+	Out_ModeTruncate = (1 << 2),
+	Out_ModeAppend   = (1 << 3),
 };
 
 }
@@ -23,15 +23,15 @@ enum OutputFileMode
 	// Basic write mode
 	OutputFileMode_Write               = priv::Out_ModeWrite,
 	// Truncate after open
-	OutputFileMode_WriteTruncate       = priv::Out_ModeWrite | priv::Out_ModeTruncate,
+	OutputFileMode_WriteTruncate       = OutputFileMode_Write | priv::Out_ModeTruncate,
 	// Sets pointer at end
-	OutputFileMode_WriteAppend         = priv::Out_ModeWrite | priv::Out_ModeAppend,
+	OutputFileMode_WriteAppend         = OutputFileMode_Write | priv::Out_ModeAppend,
 	// Write in binary
-	OutputFileMode_WriteBinary         = priv::Out_ModeWrite | priv::Out_ModeBinary,
+	OutputFileMode_WriteBinary         = OutputFileMode_Write | priv::Out_ModeBinary,
 	// Write in binary, truncate after open
-	OutputFileMode_WriteBinaryTruncate = priv::Out_ModeWrite | priv::Out_ModeBinary | priv::Out_ModeTruncate,
+	OutputFileMode_WriteBinaryTruncate = OutputFileMode_WriteBinary | priv::Out_ModeTruncate,
 	// Write in binary, sets pointer at end
-	OutputFileMode_WriteBinaryAppend   = priv::Out_ModeWrite | priv::Out_ModeBinary | priv::Out_ModeAppend,
+	OutputFileMode_WriteBinaryAppend   = OutputFileMode_WriteBinary | priv::Out_ModeAppend,
 };
 
 class OutputFile : public lang::Noncopyable
@@ -54,11 +54,18 @@ public:
 	*/
 	void close();
 	
-	/* Writes size bytes on the inBuffer.
-	 * Buffer must be allocated and have at least size bytes of space.
+	/* Writes size bytes from the inBuffer to the write buffer.
+	 * Input buffer must be allocated and have at least size bytes of space.
 	 * Returns: true if buffering the write succeeded (does not guarantee successful write on disk, use flush and check its return value if required).
 	 */
 	bool write(const char *inBuffer, BigSizeType size);
+
+	/* Writes the variable value to the write buffer.
+	 * In practice, reinterpret casts the value to byte pointer and calls write() on it.
+	 * Returns: true if buffering the write succeeded (does not guarantee successful write on disk, use flush and check its return value if required).
+	 */
+	template <class Type>
+	bool writeVariable(const Type &value);
 	
 	/* Sets file position to given position.
 	 * Returns: new position, or -1 if failure or bad.
@@ -95,6 +102,13 @@ private:
 	void *_filePtr = nullptr;
 	mutable bool _bad = false;
 };
+
+template <class Type>
+bool OutputFile::writeVariable(const Type &value)
+{
+	static_assert(std::is_trivially_copyable<Type>::value, "Only trivially copyable types can be directly written.");
+	return write(reinterpret_cast<const char*>(&value), sizeof(Type));
+}
 
 TS_END_PACKAGE1()
 

@@ -116,6 +116,21 @@
     <ClCompile Include="file\OutputFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file\FileEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="util\LZ4Compressor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\ArchivistWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\ArchivistReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\ArchivistReaderExtractor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -287,6 +302,24 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="file\OutputFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileEntry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util\LZ4Compressor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\ArchivistCommon.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\ArchivistWriter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\ArchivistReader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\ArchivistReaderExtractor.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

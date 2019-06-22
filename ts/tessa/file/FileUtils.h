@@ -30,8 +30,11 @@ extern std::string getBasename(const std::string &path, const std::string &delim
 extern std::string getExtension(const std::string &path);
 
 extern bool exists(const std::string &path);
+// extern bool exists(const std::wstring &path);
+
 extern bool isFile(const std::string &path);
 extern bool isDirectory(const std::string &path);
-// extern bool exists(const std::wstring &path);
+
+extern bool removeFile(const std::string &path);
 
 TS_END_PACKAGE2()

@@ -1,12 +1,12 @@
 
 template <class T>
-Vec4<T>::Vec4()
+TS_FORCEINLINE Vec4<T>::Vec4()
 	: x(0), y(0), z(0), w(1)
 {
 }
 
 template <class T>
-Vec4<T>::Vec4(T x, T y, T z, T w)
+TS_FORCEINLINE Vec4<T>::Vec4(T x, T y, T z, T w)
 	: x(x), y(y), z(z), w(w)
 {
 }
@@ -14,6 +14,12 @@ Vec4<T>::Vec4(T x, T y, T z, T w)
 template <class T>
 Vec4<T>::Vec4(Vec3<T> v, T w)
 	: x(v.x), y(v.y), z(v.z), w(w)
+{
+}
+
+template <class T>
+Vec4<T>::Vec4(const T v[4])
+	: x(v[0]), y(v[1]), z(v[2]), w(v[3])
 {
 }
 
@@ -28,9 +34,23 @@ Vec4<T>::Vec4(const Vec4<U> &vector)
 }
 
 template <class T>
+T &Vec4<T>::operator[](SizeType index)
+{
+	TS_ASSERTF(index < 4, "Index out of range");
+	return v[index];
+}
+
+template <class T>
+const T &Vec4<T>::operator[](SizeType index) const
+{
+	TS_ASSERTF(index < 4, "Index out of range");
+	return v[index];
+}
+
+template <class T>
 inline float Vec4<T>::length() const
 {
-	return std::sqrt(squarelength());
+	return std::sqrt(x * x + y * y + z * z);
 }
 
 template <class T>

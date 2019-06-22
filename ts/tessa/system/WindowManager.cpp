@@ -52,15 +52,26 @@ void WindowManager::create(const math::VC2U &videomode, const std::string &windo
 
 	renderWindow.clear();
 	renderWindow.display();
+
+	windowCreated = true;
 }
 
 void WindowManager::close()
 {
+	windowCreated = false;
 	renderWindow.close();
+}
+
+void WindowManager::setVSyncEnabled(const bool enabled)
+{
+	TS_ASSERT(windowCreated && "Window should be created before using.");
+	renderWindow.setVerticalSyncEnabled(enabled);
 }
 
 bool WindowManager::pollEvent(sf::Event &eventParam)
 {
+	TS_ASSERT(windowCreated && "Window should be created before using.");
+
 	bool hasEvent = renderWindow.pollEvent(eventParam);
 	if (hasEvent)
 	{
@@ -83,22 +94,27 @@ bool WindowManager::isOpen() const
 
 math::VC2U WindowManager::getSize() const
 {
+	TS_ASSERT(windowCreated && "Window should be created before using.");
 	const sf::Vector2u s = renderWindow.getSize();
 	return math::VC2U(s.x, s.y);
 }
 
 void WindowManager::useGameView()
 {
+	TS_ASSERT(windowCreated && "Window should be created before using.");
 	renderWindow.setView(activeGameView);
 }
 
 void WindowManager::useInterfaceView()
 {
+	TS_ASSERT(windowCreated && "Window should be created before using.");
 	renderWindow.setView(activeInterfaceView);
 }
 
 bool WindowManager::setWindowIcon(const std::string &filepath)
 {
+	TS_ASSERT(windowCreated && "Window should be created before using.");
+
 	sf::Image icon;
 	if (!icon.loadFromFile(filepath))
 	{
@@ -111,6 +127,7 @@ bool WindowManager::setWindowIcon(const std::string &filepath)
 
 sf::RenderWindow &WindowManager::getRenderWindow()
 {
+	TS_ASSERT(windowCreated && "Window should be created before using.");
 	return renderWindow;
 }
 

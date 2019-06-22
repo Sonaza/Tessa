@@ -2,9 +2,10 @@
 
 #include "SFML/Config.hpp"
 
-#pragma warning( disable : 4100 ) // Unreferenced function parameter
-#pragma warning( disable : 4127 ) // Expression is constant
-#pragma warning( disable : 4313 ) // Format string conflicts with argument type (seems to be bogus warning or something)
+#pragma warning( disable : 4100 ) // unreferenced function parameter
+#pragma warning( disable : 4127 ) // expression is constant
+#pragma warning( disable : 4201 ) // nonstandard extension used: nameless struct/union
+#pragma warning( disable : 4313 ) // format string conflicts with argument type (seems to be bogus warning or something)
 
 #define TS_VERSION_MAJOR 0
 #define TS_VERSION_MINOR 1
@@ -88,6 +89,14 @@
 #else
 	#define TS_FORCEINLINE inline
 	#define TS_ALIGN(alignment) alignas(alignment)
+#endif
+
+#if TS_COMPILER == TS_MSC
+	#define TS_RESTRICT __restrict
+#elif TS_COMPILER == TS_GNUC || TS_COMPILER == TS_CLANG
+	#define TS_RESTRICT __restrict__
+#else
+	#define TS_RESTRICT __restrict
 #endif
 
 #include <cstdint>

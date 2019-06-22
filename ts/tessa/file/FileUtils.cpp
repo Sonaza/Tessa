@@ -3,6 +3,7 @@
 #include "ts/tessa/lang/StringUtils.h"
 
 #include <stack>
+#include <cstdio>
 
 #if TS_PLATFORM == TS_WINDOWS
 	#include <shlwapi.h>
@@ -140,6 +141,11 @@ extern bool exists(const std::string &path)
 	return access(path.c_str(), 0) == 0;
 }
 
+// extern bool exists(const std::wstring &path)
+// {
+// 	return waccess(path.c_str(), 0) == 0;
+// }
+
 extern bool isFile(const std::string &path)
 {
 #if TS_PLATFORM == TS_WINDOWS
@@ -160,9 +166,15 @@ extern bool isDirectory(const std::string &path)
 	return !isFile(path);
 }
 
-// extern bool exists(const std::wstring &path)
-// {
-// 	return waccess(path.c_str(), 0) == 0;
-// }
+extern bool removeFile(const std::string &path)
+{
+	if (remove(path.c_str()) == 0)
+		return true;
+
+	TS_LOG_ERROR("Unable to remove file or directory. File: %s. Error: %s", strerror(errno));
+	return false;
+}
+
+
 
 TS_END_PACKAGE2()

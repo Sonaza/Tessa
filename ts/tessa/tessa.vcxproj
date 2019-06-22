@@ -156,6 +156,10 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="file\ArchivistReader.cpp" />
+    <ClCompile Include="file\ArchivistReaderExtractor.cpp" />
+    <ClCompile Include="file\ArchivistWriter.cpp" />
+    <ClCompile Include="file\FileEntry.cpp" />
     <ClCompile Include="file\FileList.cpp" />
     <ClCompile Include="file\FileUtils.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
@@ -178,8 +182,14 @@
     <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
+    <ClCompile Include="util\LZ4Compressor.cpp" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
+    <ClInclude Include="file\ArchivistReader.h" />
+    <ClInclude Include="file\ArchivistReaderExtractor.h" />
+    <ClInclude Include="file\ArchivistWriter.h" />
+    <ClInclude Include="file\ArchivistCommon.h" />
+    <ClInclude Include="file\FileEntry.h" />
     <ClInclude Include="file\FileList.h" />
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
@@ -209,6 +219,7 @@
     <ClCompile Include="system\Timer.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="threading\ThreadUtils.h" />
+    <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\Common.h" />

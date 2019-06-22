@@ -29,6 +29,7 @@ bool GameApplication::createWindow(system::WindowManager &windowManager)
 	bool automaticResolution = true;
 
 	bool fullscreen = config.getBoolean("Display.Fullscreen", false);
+	bool vsyncEnabled = config.getBoolean("Display.VSync", false);
 
 	math::VC2U windowSize(GAME_DEFAULT_SCREEN_WIDTH, GAME_DEFAULT_SCREEN_HEIGHT);
 	if (automaticResolution)
@@ -49,9 +50,10 @@ bool GameApplication::createWindow(system::WindowManager &windowManager)
 		windowSize.y = math::max(config.getUint32("Display.ScreenHeight", GAME_DEFAULT_SCREEN_HEIGHT), GAME_MINIMUM_SCREEN_HEIGHT);
 	}
 
-	windowManager.create(windowSize, GAME_WINDOW_TITLE, true, fullscreen);
+	windowManager.create(windowSize, GAME_WINDOW_TITLE, false, fullscreen);
 
 	windowManager.setWindowIcon(GAME_WINDOW_ICON_PATH);
+	windowManager.setVSyncEnabled(vsyncEnabled);
 
 // 	sf::RenderWindow &renderwindow = windowManager.getRenderWindow();
 // 	renderwindow.getSystemHandle()

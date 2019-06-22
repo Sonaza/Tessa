@@ -4,39 +4,38 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <regex>
+
+#include "ts/tessa/file/FileEntry.h"
 
 TS_PACKAGE1(file)
 
-class FileEntry
+namespace priv 
 {
-public:
-	FileEntry() = default;
-	FileEntry(FileEntry &&other);
-	FileEntry &operator=(FileEntry &&other);
 
-	const std::string &getFilepath() const;
-	bool isDirectory() const;
-
-private:
-	friend class FileList;
-	std::string _filepath;
-	bool _isDir = false;
+enum FileListStyleBits
+{
+	ListStyleBits_Files       = (1 << 0),
+	ListStyleBits_Directories = (1 << 1),
+	ListStyleBits_Recursive   = (1 << 2),
 };
 
-#define TS_FILELIST_STYLE_FILES			0b001
-#define TS_FILELIST_STYLE_DIRECTORIES	0b010
-#define TS_FILELIST_STYLE_RECURSIVE     0b100
-#define TS_FILELIST_STYLE_ALL           TS_FILELIST_STYLE_FILES | TS_FILELIST_STYLE_DIRECTORIES
+}
 
 enum FileListStyle : Uint8
 {
-	FileListStyle_All                   = TS_FILELIST_STYLE_ALL,
-	FileListStyle_All_Recursive         = TS_FILELIST_STYLE_ALL | TS_FILELIST_STYLE_RECURSIVE,
-	FileListStyle_Directories           = TS_FILELIST_STYLE_DIRECTORIES,
-	FileListStyle_Directories_Recursive = TS_FILELIST_STYLE_DIRECTORIES | TS_FILELIST_STYLE_RECURSIVE,
-	FileListStyle_Files                 = TS_FILELIST_STYLE_FILES,
-	FileListStyle_Files_Recursive       = TS_FILELIST_STYLE_FILES | TS_FILELIST_STYLE_RECURSIVE,
+	FileListStyle_Directories           = priv::ListStyleBits_Directories,
+	FileListStyle_Directories_Recursive = FileListStyle_Directories | priv::ListStyleBits_Recursive,
+
+	FileListStyle_Files                 = priv::ListStyleBits_Files,
+	FileListStyle_Files_Recursive       = FileListStyle_Files | priv::ListStyleBits_Recursive,
+
+	FileListStyle_All                   = FileListStyle_Files | FileListStyle_Directories,
+	FileListStyle_All_Recursive         = FileListStyle_All | priv::ListStyleBits_Recursive,
+
 };
+
+typedef std::vector<FileEntry> FileEntryList;
 
 class FileList : public lang::Noncopyable
 {
@@ -49,8 +48,10 @@ public:
 	void close();
 
 	bool next(FileEntry &entry);
-	bool done() const;
 	void rewind();
+
+	bool isDone() const;
+	void setGlobRegex(const std::string &pattern);
 
 	std::vector<FileEntry> getFullListing();
 
@@ -67,11 +68,13 @@ private:
 		std::string rootPath;
 	};
 	std::stack<DirectoryFrame> _dirStack;
-
+	
 	std::string _directoryPath;
 	FileListStyle _style = FileListStyle_All;
 	bool _skipDotEntries = true;
 	bool _done = false;
+
+	UniquePointer<std::regex> _glob;
 };
 
 TS_END_PACKAGE1()

@@ -178,4 +178,10 @@ bool OutputFile::operator!() const
 	return !isOpen();
 }
 
+template <>
+bool OutputFile::writeVariable<std::string>(const std::string &value)
+{
+	return write(value.c_str(), value.size());
+}
+
 TS_END_PACKAGE1()

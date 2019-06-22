@@ -6,9 +6,17 @@ template <class T>
 class Vec4
 {
 public:
-	Vec4();
-	Vec4(T x, T y, T z, T w = 1);
-	Vec4(Vec3<T> v, T w = 1);
+	TS_FORCEINLINE Vec4();
+	TS_FORCEINLINE Vec4(T x, T y, T z, T w = 1);
+	TS_FORCEINLINE Vec4(Vec3<T> v, T w = 1);
+	explicit Vec4(const T v[4]);
+
+	// Vector components
+	union
+	{
+		T v[4];
+		struct { T x, y, z, w; };
+	};
 
 	Vec4(const Vec4 &vector) = default;
 	Vec4 &operator=(const Vec4 &vector) = default;
@@ -16,6 +24,9 @@ public:
 	// Explicit cast from a vector type to another
 	template <class U>
 	explicit Vec4(const Vec4<U> &vector);
+
+	T &operator[](SizeType index);
+	const T &operator[](SizeType index) const;
 
 	// Returns length of the Vector
 	float length() const;
@@ -34,9 +45,6 @@ public:
 
 	// Vector cross product
 	Vec4 &cross(const Vec4 &right);
-
-	// Vector components
-	T x, y, z, w;
 };
 
 template <class T>

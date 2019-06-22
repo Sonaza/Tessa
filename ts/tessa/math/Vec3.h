@@ -6,8 +6,21 @@ template <class T>
 class Vec3
 {
 public:
-	Vec3();
-	Vec3(T x, T y, T z);
+	static const Vec3<T> zero;
+	static const Vec3<T> up;
+	static const Vec3<T> forward;
+	static const Vec3<T> right;
+
+	TS_FORCEINLINE Vec3();
+	TS_FORCEINLINE Vec3(T x, T y, T z);
+	explicit Vec3(const T v[3]);
+
+	// Vector components
+	union
+	{
+		T v[3];
+		struct { T x, y, z; };
+	};
 
 	Vec3(const Vec3 &vector) = default;
 	Vec3 &operator=(const Vec3 &vector) = default;
@@ -23,6 +36,9 @@ public:
 	operator sf::Vector3<T>();
 
 #endif
+
+	T &operator[](SizeType index);
+	const T &operator[](SizeType index) const;
 
 	// Returns length of the Vector
 	float length() const;
@@ -41,14 +57,6 @@ public:
 
 	// Vector cross product
 	Vec3 &cross(const Vec3 &right);
-
-	// Vector components
-	T x, y, z;
-	
-	static const Vec3<float> zero;
-	static const Vec3<float> up;
-	static const Vec3<float> forward;
-	static const Vec3<float> right;
 };
 
 template <class T>

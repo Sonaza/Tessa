@@ -1,13 +1,19 @@
 
 template <class T>
-Vec2<T>::Vec2() :
-	x(0), y(0)
+TS_FORCEINLINE Vec2<T>::Vec2()
+	: x(0), y(0)
 {
 }
 
 template <class T>
-Vec2<T>::Vec2(T x, T y) :
-	x(x), y(y)
+TS_FORCEINLINE Vec2<T>::Vec2(T x, T y)
+	: x(x), y(y)
+{
+}
+
+template <class T>
+Vec2<T>::Vec2(const T v[2])
+	: x(v[0]), y(v[1])
 {
 }
 
@@ -38,9 +44,23 @@ inline Vec2<T>::operator sf::Vector2<T>()
 #endif
 
 template <class T>
+T &Vec2<T>::operator[](SizeType index)
+{
+	TS_ASSERTF(index < 2, "Index out of range");
+	return v[index];
+}
+
+template <class T>
+const T &Vec2<T>::operator[](SizeType index) const
+{
+	TS_ASSERTF(index < 2, "Index out of range");
+	return v[index];
+}
+
+template <class T>
 inline float Vec2<T>::length() const
 {
-	return std::sqrt(squarelength());
+	return std::sqrt(x * x + y * y);
 }
 
 template <class T>

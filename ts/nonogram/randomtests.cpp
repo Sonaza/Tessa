@@ -1,5 +1,7 @@
 #include "Precompiled.h"
 
+using namespace ts;
+
 #include "ts/tessa/system/ConfigReader.h"
 
 #if 0
@@ -185,55 +187,15 @@ int sse_test()
 
 #endif
 
-#if 1
+#if 0
 
 #include "lz4.h"
-#include <fstream>
-
-/*
-int lz4test()
-{
-	std::ifstream input;
-	input.open("lz4/file.c", std::ios_base::in | std::ios_base::binary);
-
-	std::string src_data(
-		(std::istreambuf_iterator<char>(input)),
-		std::istreambuf_iterator<char>()
-		);
-	TS_PRINTF("File size %u bytes\n", src_data.size());
-
-	int src_size = (int)src_data.size() + 1;
-	int dst_capacity = LZ4_compressBound(src_size);
-	char *compress_dst = (char*)malloc(dst_capacity);
-	memset(compress_dst, 0, dst_capacity);
-
-	int compress_result = LZ4_compress_default(&src_data[0], compress_dst, src_size, dst_capacity);
-	if (compress_result > 0)
-	{
-		TS_PRINTF("Compression was success! String compressed %d => %d bytes\n", src_data.size(), compress_result);
-
-		std::ofstream output;
-		output.open("lz4/output.lz4", std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-		output.write(compress_dst, compress_result);
-		output.close();
-	}
-	else
-	{
-		TS_PRINTF("Compression failed.\n");
-	}
-
-	free(compress_dst);
-
-	return 0;
-}*/
 
 enum
 {
 	COMPRESS_BLOCK_SIZE = 1024 * 64,
 };
 
-#include "ts/tessa/file/InputFile.h"
-#include "ts/tessa/file/OutputFile.h"
 #include "ts/tessa/math/CRC.h"
 
 void lz4_streaming_compress()
@@ -404,12 +366,240 @@ void lz4_streaming_uncompress()
 
 #endif
 
+#include "ts/tessa/file/FileList.h"
+#include "ts/tessa/file/FileUtils.h"
+#include "ts/tessa/file/InputFile.h"
+#include "ts/tessa/file/OutputFile.h"
+
+#include "ts/tessa/file/ArchivistWriter.h"
+#include "ts/tessa/file/ArchivistReader.h"
+#include "ts/tessa/file/ArchivistReaderExtractor.h"
+#include "ts/tessa/util/LZ4Compressor.h"
+
+class Streamy : public sf::InputStream
+{
+	file::ArchivistReaderExtractor extractor;
+
+public:
+	Streamy(file::ArchivistReader &reader, const std::string &file)
+	{
+		if (!reader.getFileExtractor(file, extractor))
+		{
+			TS_ASSERT(!"Failed to get extractor");
+		}
+	}
+
+	~Streamy()
+	{
+		extractor.close();
+	}
+
+	virtual Int64 read(void* data, Int64 size)
+	{
+		PosType bytesread = extractor.read((char*)data, size);
+// 		TS_PRINTF("read %d bytes (bytes read %d)\n", size, bytesread);
+		return bytesread;
+	}
+
+	virtual Int64 seek(Int64 position)
+	{
+		PosType seeked = extractor.seek(position);
+// 		TS_PRINTF("seek %d (seeked %d)\n", position, seeked);
+		return seeked;
+	}
+
+	virtual Int64 tell()
+	{
+// 		TS_PRINTF("tell %d\n", extractor.tell());
+		return extractor.tell();
+	}
+
+	virtual Int64 getSize()
+	{
+// 		TS_PRINTF("size %d\n", extractor.getSize());
+		return extractor.getSize();
+	}
+};
+
+bool writeImageRaw()
+{
+	sf::Image vertImage;
+	vertImage.loadFromFile("archivist/vert.png");
+
+	BigSizeType pixelsize = vertImage.getSize().x * vertImage.getSize().y * 4;
+
+	PosType bound = util::LZ4Compressor::fullStreamCompressBound(pixelsize);
+	std::vector<char> dstBuffer(bound);
+
+	const char *srcBuffer = (const char*)vertImage.getPixelsPtr();
+
+	file::OutputFile vert("archivist/vert.rgba", file::OutputFileMode_WriteBinaryTruncate);
+
+	vert.writeVariable(vertImage.getSize().x);
+	vert.writeVariable(vertImage.getSize().y);
+
+	bool compress = false;
+
+	if (compress)
+	{
+		util::LZ4Compressor cmp;
+		PosType compressSize = cmp.compressFullStream(srcBuffer, (SizeType)pixelsize, &dstBuffer[0], (SizeType)bound);
+// 		TS_PRINTF("Compressed to %lld\n", compressSize);
+
+		vert.write(&dstBuffer[0], compressSize);
+	}
+	else
+	{
+		vert.write(srcBuffer, pixelsize);
+	}
+	
+	vert.close();
+
+	return true;
+}
+
+bool loadImageRaw(const std::string &filepath, sf::Texture &texture)
+{
+	file::InputFile input(filepath, file::InputFileMode_ReadBinary);
+
+// 	bool decompress = true;
+
+	SizeType width = 0;
+	SizeType height = 0;
+	input.readVariable(width);
+	input.readVariable(height);
+	PosType pixelsize = width * height * 4;
+
+	std::vector<char> dstBuffer(pixelsize);
+	PosType bytesRead = input.read(&dstBuffer[0], pixelsize);
+	TS_ASSERT(bytesRead == pixelsize);
+
+	sf::Image image;
+	image.create(width, height, (sf::Uint8*)&dstBuffer[0]);
+
+	return texture.loadFromImage(image);
+}
+
+void writePack(const std::string &sourceFolder, const std::string &packfile, file::ArchivistCompressionMode mode)
+{
+	file::FileList list;
+	list.open(sourceFolder, true, file::FileListStyle_Files);
+
+	file::ArchivistWriter archiveWriter;
+// 	archiveWriter.stageFile("test/49561770_p0.png", "49561770_p0.png", file::CompressionType_LZ4Compression);
+
+	file::FileEntryList files = list.getFullListing();
+	TS_PRINTF("%u files\n", files.size());
+
+	for (file::FileEntry &f : files)
+	{
+		archiveWriter.stageFile(f.getFullFilepath(), f.getFilepath(), mode);
+	}
+	{
+		auto start = std::chrono::system_clock::now();
+
+		archiveWriter.saveToFile(packfile);
+
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		TS_PRINTF("Packing elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+	}
+}
+
 void randomtests()
 {
-	ts::file::InputFile input;
-	bool asd = input.open("kakkapeppu", ts::file::InputFileMode_ReadBinary);
-	TS_PRINTF("%d\n", asd);
+// 	if (wtf2())
+// 		return;
 
-// 	lz4_streaming_compress();
-// 	lz4_streaming_uncompress();
+
+	std::string packfile = "archivist/amazing.tspack";
+
+// 	writePack("test/", packfile, file::CompressionType_LZ4Compression);
+
+	file::ArchivistReader archiveReader;
+	archiveReader.openArchive(packfile);
+
+	sf::RenderWindow window;
+	window.create(sf::VideoMode(1680, 1050), "Test");
+	window.clear(sf::Color::White);
+	window.display();
+
+	writeImageRaw();
+
+	bool kakke = true;
+	while(kakke)
+	{
+		sf::Event e;
+		while (window.pollEvent(e))
+		{
+			switch (e.type)
+			{
+				case sf::Event::KeyPressed:
+					kakke = false;
+				break;
+			}
+		}
+	}
+	window.clear(sf::Color::Red);
+	window.display();
+
+	auto start = std::chrono::system_clock::now();
+
+	const SizeType loops = 10;
+	for (SizeType i = 0; i < loops; ++i)
+	{
+		sf::Texture texture;
+// 		loadImageRaw("archivist/vert.rgba", texture);
+		texture.loadFromFile("archivist/vert.png");
+	}
+
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	TS_PRINTF("Load elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+	TS_PRINTF("  Per load %ums\n", elapsed.count() / 1000 / loops);
+
+	sf::Texture texture;
+	sf::Sprite sprite;
+	Streamy strm(archiveReader, "69103464_p0.png");
+	texture.loadFromStream(strm);
+	sprite.setTexture(texture);
+
+	while(window.isOpen())
+	{
+		sf::Event e;
+		while (window.pollEvent(e))
+		{
+			switch (e.type)
+			{
+				case sf::Event::Closed:
+				case sf::Event::KeyPressed:
+					window.close();
+				break;
+			}
+		}
+
+		window.clear();
+
+		window.draw(sprite);
+
+		window.display();
+	}
+
+// 	auto archivelist = archiveReader.getFileList();
+// 
+// 	{
+// 		auto start = std::chrono::system_clock::now();
+// 
+// 		for (std::string &file : archivelist)
+// 		{
+// // 	 		TS_PRINTF("%s (size %0.1f KB)\n", file, archiveReader.getFileSize(file) / 1024.f);
+// 			archiveReader.extractToFile(file, file::utils::joinPaths("archivist/ext2/", file));
+// 		}
+// 
+// 		auto end = std::chrono::system_clock::now();
+// 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+// 		TS_PRINTF("Extract elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+// 	}
+
+	return;
 }

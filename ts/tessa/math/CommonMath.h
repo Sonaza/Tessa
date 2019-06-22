@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 TS_PACKAGE1(math)
 
 template<class T, class... Args>
@@ -36,6 +38,18 @@ template<class T>
 T abs(T value)
 {
 	return value >= 0 ? value : -value;
+}
+
+template<class T>
+T ceil(T value)
+{
+	return std::ceil(value);
+}
+
+template<class T>
+T floor(T value)
+{
+	return std::floor(value);
 }
 
 template<class T>

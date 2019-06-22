@@ -1,0 +1,35 @@
+#pragma once
+
+TS_PACKAGE1(file)
+
+enum ArchivistCompressionMode : Uint16
+{
+	CompressionType_NoCompression  = 0,
+	CompressionType_LZ4Compression = 1,
+};
+
+struct ArchivistFileHeader
+{
+	char filename[96];
+	SizeType filesize;
+	SizeType offset;
+	Uint16 compression;
+};
+
+struct ArchivistFileFormat
+{
+	char formatString[4];
+	SizeType version;
+};
+#define TS_ARCHIVIST_FORMAT_STRING "TSP"
+
+struct ArchivistConstants
+{
+	enum
+	{
+		CompressionBlockSize = 1024 * 64,
+		OverheadPerBlock = 8,
+	};
+};
+
+TS_END_PACKAGE1()

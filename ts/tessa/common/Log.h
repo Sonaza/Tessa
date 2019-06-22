@@ -5,6 +5,7 @@
 #include <fmt/printf.h>
 #pragma warning( pop )
 
+#include <ostream>
 #include <cstdarg>
 #include <memory>
 #include <fstream>
@@ -82,7 +83,7 @@ private:
 	std::string currentFilepath;
 	std::wofstream fileStream;
 
-	static std::string filepath;
+	static std::string filepathToBeOpened;
 };
 
 template<class FormatType, class... Args>

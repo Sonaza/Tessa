@@ -10,8 +10,8 @@ namespace priv
 
 enum InputFileModeBits
 {
-	In_ModeRead   = 0b0001,
-	In_ModeBinary = 0b0010,
+	In_ModeRead   = (1 << 0),
+	In_ModeBinary = (1 << 1),
 };
 
 }
@@ -21,7 +21,7 @@ enum InputFileMode
 	// Read file in text mode
 	InputFileMode_Read       = priv::In_ModeRead,
 	// Read file in binary mode
-	InputFileMode_ReadBinary = priv::In_ModeRead | priv::In_ModeBinary,
+	InputFileMode_ReadBinary = InputFileMode_Read | priv::In_ModeBinary,
 };
 
 class InputFile : public lang::Noncopyable
@@ -49,6 +49,11 @@ public:
 	 * Returns: number of bytes read, or 0 on failure or bad.
 	 */
 	PosType read(char *outBuffer, BigSizeType size);
+
+	/* Reads variable directly.
+	 */
+	template <class Type>
+	PosType readVariable(Type &value);
 
 	/* Sets file position to given position.
 	 * Returns: new position, or -1 if failure or bad.
@@ -88,7 +93,15 @@ private:
 	void *_filePtr = nullptr;
 	bool _eof = false;
 	mutable bool _bad = false;
+	PosType _filesize = -1;
 };
+
+template <class Type>
+PosType InputFile::readVariable(Type &value)
+{
+	static_assert(std::is_trivially_copyable<Type>::value, "Only trivially copyable types can be directly read.");
+	return read(reinterpret_cast<char*>(&value), sizeof(Type));
+}
 
 TS_END_PACKAGE1()
 

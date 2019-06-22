@@ -33,10 +33,12 @@ InputFile &InputFile::operator=(InputFile &&other)
 		_filePtr = other._filePtr;
 		_eof = other._eof;
 		_bad = other._bad;
+		_filesize = other._filesize;
 
 		other._filePtr = nullptr;
 		other._eof = false;
 		other._bad = false;
+		other._filesize = -1;
 	}
 	return *this;
 }
@@ -80,6 +82,7 @@ void InputFile::close()
 	_filePtr = nullptr;
 	_eof = false;
 	_bad = false;
+	_filesize = -1;
 }
 
 PosType InputFile::read(char *outBuffer, BigSizeType size)
@@ -144,6 +147,10 @@ PosType InputFile::getFileSize()
 	if (_filePtr == nullptr || _bad == true)
 		return -1;
 
+	// Return cached file size
+	if (_filesize != -1)
+		return _filesize;
+
 	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
 	
 	BigSizeType pos = file->tellg();
@@ -157,6 +164,8 @@ PosType InputFile::getFileSize()
 				_bad = true;
 				return -1;
 			}
+			// Store cached file size so don't need to do this again
+			_filesize = size;
 			return size;
 		}
 	}

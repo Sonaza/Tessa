@@ -22,6 +22,8 @@ public:
 	void create(const math::VC2U &videomode, const std::string &windowTitle, const bool resizable, const bool fullscreen);
 	void close();
 
+	void setVSyncEnabled(const bool enabled);
+
 	bool pollEvent(sf::Event &eventParam);
 
 	bool isOpen() const;
@@ -50,6 +52,8 @@ private:
 // 		math::VC2U size;
 // 	};
 // 	Settings settings;
+
+	bool windowCreated = false;
 
 	sf::RenderWindow renderWindow;
 	sf::View activeGameView;

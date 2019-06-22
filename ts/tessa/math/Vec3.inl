@@ -1,13 +1,19 @@
 
 template <class T>
-Vec3<T>::Vec3()
+TS_FORCEINLINE Vec3<T>::Vec3()
 	: x(0), y(0), z(0)
 {
 }
 
 template <class T>
-Vec3<T>::Vec3(T x, T y, T z)
+TS_FORCEINLINE Vec3<T>::Vec3(T x, T y, T z)
 	: x(x), y(y), z(z)
+{
+}
+
+template <class T>
+Vec3<T>::Vec3(const T v[3])
+	: x(v[0]), y(v[1]), z(v[2])
 {
 }
 
@@ -40,9 +46,23 @@ inline Vec3<T>::operator sf::Vector3<T>()
 #endif
 
 template <class T>
+T &Vec3<T>::operator[](SizeType index)
+{
+	TS_ASSERTF(index < 3, "Index out of range");
+	return v[index];
+}
+
+template <class T>
+const T &Vec3<T>::operator[](SizeType index) const
+{
+	TS_ASSERTF(index < 3, "Index out of range");
+	return v[index];
+}
+
+template <class T>
 inline float Vec3<T>::length() const
 {
-	return std::sqrt(squarelength());
+	return std::sqrt(x * x + y * y + z * z);
 }
 
 template <class T>

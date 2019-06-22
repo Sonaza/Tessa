@@ -6,8 +6,20 @@ template <class T>
 class Vec2
 {
 public:
-	Vec2();
-	Vec2(T x, T y);
+	static const Vec2<T> zero;
+	static const Vec2<T> up;
+	static const Vec2<T> right;
+
+	TS_FORCEINLINE Vec2();
+	TS_FORCEINLINE Vec2(T x, T y);
+	explicit Vec2(const T v[2]);
+
+	// Vector components
+	union
+	{
+		T v[2];
+		struct { T x, y; };
+	};
 
 	Vec2(const Vec2 &vector) = default;
 	Vec2 &operator=(const Vec2 &vector) = default;
@@ -24,6 +36,9 @@ public:
 
 #endif
 
+	T &operator[](SizeType index);
+	const T &operator[](SizeType index) const;
+
 	// Returns length of the Vector
 	float length() const;
 
@@ -38,13 +53,6 @@ public:
 
 	// Vector dot product
 	float dot(const Vec2 &right);
-
-	// Vector components
-	T x, y;
-	
-	static const Vec2<T> zero;
-	static const Vec2<T> up;
-	static const Vec2<T> right;
 };
 
 template <class T>

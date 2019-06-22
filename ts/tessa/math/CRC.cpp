@@ -7,19 +7,19 @@
 
 TS_PACKAGE1(math)
 
-extern Uint16 crc16(const Uint8 *bytes, BigSizeType size)
+extern Uint16 crc16(const char *bytes, BigSizeType size)
 {
 	static CRC::Table<Uint16, 16> table(CRC::CRC_16_XMODEM());
 	return CRC::Calculate(bytes, size, table);
 }
 
-extern Uint32 crc32(const Uint8 *bytes, BigSizeType size)
+extern Uint32 crc32(const char *bytes, BigSizeType size)
 {
 	static CRC::Table<Uint32, 32> table(CRC::CRC_32());
 	return CRC::Calculate(bytes, size, table);
 }
 
-extern Uint64 crc64(const Uint8 *bytes, BigSizeType size)
+extern Uint64 crc64(const char *bytes, BigSizeType size)
 {
 	static CRC::Table<Uint64, 64> table(CRC::CRC_64());
 	return CRC::Calculate(bytes, size, table);

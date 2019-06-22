@@ -1,35 +1,11 @@
 #include "Precompiled.h"
 #include "ts/tessa/file/FileList.h"
 
+#include "ts/tessa/file/FileUtils.h"
+
 #include "ext/dirent.h"
 
 TS_PACKAGE1(file)
-
-const std::string &FileEntry::getFilepath() const
-{
-	return _filepath;
-}
-
-FileEntry::FileEntry(FileEntry &&other)
-{
-	*this = std::move(other);
-}
-
-FileEntry &FileEntry::operator=(FileEntry &&other)
-{
-	if (this != &other)
-	{
-		_filepath = std::move(other._filepath);
-		_isDir = other._isDir;
-		other._isDir = false;
-	}
-	return *this;
-}
-
-bool FileEntry::isDirectory() const
-{
-	return _isDir;
-}
 
 FileList::FileList()
 {
@@ -91,33 +67,44 @@ bool FileList::next(FileEntry &entry)
 		ent = readdir((DIR*)frame.ptr);
 		if (ent != nullptr)
 		{
-			std::string currentPath = depth > 1 ? (frame.rootPath + "/" + ent->d_name) : ent->d_name;
+			const char *filename = ent->d_name;
+			std::string currentPath = depth > 1 ? (frame.rootPath + "/" + filename) : filename;
 
 			const bool isDir = (ent->d_type & DT_DIR) > 0;
 			if (isDir == true)
 			{
-				if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+				if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0)
 				{
 					if (_skipDotEntries == true)
 						continue;
 				}
-				else if ((_style & TS_FILELIST_STYLE_RECURSIVE) > 0)
+				else if ((_style & priv::ListStyleBits_Recursive) > 0)
 				{
 					DIR *dirPtr = opendir(currentPath.c_str());
 					if (dirPtr != nullptr)
 						_dirStack.push(DirectoryFrame(dirPtr, currentPath));
 				}
 
-				if ((_style & TS_FILELIST_STYLE_DIRECTORIES) == 0)
+				if ((_style & priv::ListStyleBits_Directories) == 0)
 					continue;
 			}
 			else
 			{
-				if ((_style & TS_FILELIST_STYLE_FILES) == 0)
+				if ((_style & priv::ListStyleBits_Files) == 0)
 					continue;
+
+				if (_glob != nullptr)
+				{
+					if (!std::regex_search(filename, *_glob))
+					{
+						TS_PRINTF("File %s does not match the glob.\n", filename);
+						continue;
+					}
+				}
 			}
 
 			entry._filepath = std::move(currentPath);
+			entry._rootDirectory = frame.rootPath;
 			entry._isDir = isDir;
 			return true;
 		}
@@ -131,12 +118,6 @@ bool FileList::next(FileEntry &entry)
 	}
 	_done = true;
 	return false;
-}
-
-bool FileList::done() const
-{
-	std::lock_guard<std::mutex> mg(mutex);
-	return _done;
 }
 
 void FileList::rewind()
@@ -154,6 +135,30 @@ void FileList::rewind()
 	_done = false;
 }
 
+bool FileList::isDone() const
+{
+	std::lock_guard<std::mutex> mg(mutex);
+	return _done;
+}
+
+void FileList::setGlobRegex(const std::string &pattern)
+{
+	std::lock_guard<std::mutex> mg(mutex);
+
+	std::regex *regex = nullptr;
+	try
+	{
+		regex = new std::regex(pattern, std::regex_constants::ECMAScript);
+	}
+	catch (std::regex_error &e)
+	{
+		TS_ASSERTF(false, "Given regex pattern is invalid. Error: %s\n", e.what());
+		return;
+	}
+
+	_glob.reset(regex);
+}
+
 std::vector<FileEntry> FileList::getFullListing()
 {
 	rewind();
@@ -161,9 +166,8 @@ std::vector<FileEntry> FileList::getFullListing()
 	std::vector<FileEntry> list;
 	FileEntry entry;
 	while (next(entry))
-	{
 		list.push_back(std::move(entry));
-	}
+
 	return list;
 }
 

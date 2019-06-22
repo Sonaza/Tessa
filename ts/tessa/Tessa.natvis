@@ -7,7 +7,7 @@
   -->
   
   <Type Name="ts::math::Vec2&lt;*&gt;">
-    <DisplayString>{{x={x} y={y} }}</DisplayString>
+    <DisplayString>{{x={x} y={y}}}</DisplayString>
   </Type>
   
   <Type Name="ts::math::Vec3&lt;*&gt;">

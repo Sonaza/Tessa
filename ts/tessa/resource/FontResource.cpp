@@ -20,7 +20,7 @@ bool FontResource::loadResourceImpl()
 {
 	if (!resource->loadFromFile(filepath))
 	{
-		TS_LOG_ERROR("Failed to load font from file: %s\n", filepath.c_str());
+		TS_LOG_ERROR("Failed to load font from file: %s", filepath.c_str());
 		return false;
 	}
 	return true;

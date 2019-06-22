@@ -6,17 +6,74 @@
 #include <chrono>
 #include <ctime>
 
+#include <streambuf>
+
 #include "ts/tessa/lang/StringUtils.h"
 #include "ts/tessa/Config.h"
 
+#include <array>
+
 #if TS_PLATFORM == TS_WINDOWS
-	#include "ts/tessa/common/IncludeWindows.h"
-	#define localtime_r(_a, _b) localtime_s(_b, _a)
+#include "ts/tessa/common/IncludeWindows.h"
+#define localtime_r(_a, _b) localtime_s(_b, _a)
 #endif
 
 TS_PACKAGE1(common)
 
-std::string Log::filepath = TS_DEFAULT_LOG_FILE_NAME;
+class CustomLoggerBuffer : public std::streambuf
+{
+public:
+	CustomLoggerBuffer(const std::string &messageTag)
+		: _messageTag(messageTag)
+	{
+		memset(&_buffer[0], 0, _buffer.size());
+		char *base = &_buffer[0];
+		setp(base, base + _buffer.size() - 1);
+	}
+
+protected:
+	virtual Int32 overflow(Int32 ch) override
+	{
+		if (ch != traits_type::eof())
+		{
+			*pptr() = (char)ch;
+			pbump(1);
+		}
+// 		return this->sync() ? traits_type::not_eof(ch) : traits_type::eof();
+		return traits_type::eof();
+	}
+
+	Int32 sync()
+	{
+		if (pbase() != pptr())
+		{
+			std::string str(pbase(), pptr());
+			setp(pbase(), epptr());
+
+			lang::utils::trimWhitespace(str);
+			TS_PRINTF("[%s] %s\n", _messageTag, str);
+		}
+		return 0;
+	}
+
+private:
+	enum { BUFFER_MAX_SIZE = 1024, };
+	std::array<char, BUFFER_MAX_SIZE> _buffer;
+	std::string _messageTag;
+};
+
+class CustomLoggerOutputStream : public std::ostream, private virtual CustomLoggerBuffer
+{
+public:
+	CustomLoggerOutputStream(const std::string &messageTag)
+		: CustomLoggerBuffer(messageTag)
+		, std::ostream(static_cast<std::streambuf*>(this))
+	{
+		flags(std::ios_base::unitbuf);
+	}
+};
+
+std::string Log::filepathToBeOpened = TS_DEFAULT_LOG_FILE_NAME;
 
 Log &Log::getSingleton()
 {
@@ -26,15 +83,15 @@ Log &Log::getSingleton()
 
 bool Log::setLogFile(const std::string &filepathParam)
 {
-	if (filepath.empty())
+	if (filepathToBeOpened.empty())
 		return false;
 
-	Log::filepath = filepathParam;
+	Log::filepathToBeOpened = filepathParam;
 
 	Log &log = getSingleton();
 	if (log.openLogfile())
 		return false;
-	
+
 	return true;
 }
 
@@ -46,6 +103,10 @@ bool Log::isLogFileOpen() const
 Log::Log()
 {
 	openLogfile();
+
+	static CustomLoggerOutputStream customLogger("SFML Error");
+	sf::err().rdbuf(customLogger.rdbuf());
+
 }
 
 Log::~Log()
@@ -55,25 +116,25 @@ Log::~Log()
 
 bool Log::openLogfile()
 {
-	TS_ASSERT(!Log::filepath.empty());
+	TS_ASSERT(!Log::filepathToBeOpened.empty());
 
 	// Check that the requested file isn't already opened
-	if (Log::filepath == currentFilepath && isLogFileOpen())
+	if (Log::filepathToBeOpened == currentFilepath && isLogFileOpen())
 		return true;
 
 	closeLogfile();
 
 	static const std::locale utf8_locale = std::locale(std::locale(), new std::codecvt_utf8<wchar_t>());
 	fileStream.imbue(utf8_locale);
-	fileStream.open(Log::filepath, std::ios::out | std::ios::trunc);
+	fileStream.open(Log::filepathToBeOpened, std::ios::out | std::ios::trunc);
 
 	if (!isLogFileOpen())
 	{
-		TS_LOG_ERROR("Opening log file for writing failed! File path: %s", filepath);
+		TS_LOG_ERROR("Opening log file for writing failed! File path: %s", filepathToBeOpened);
 		return false;
 	}
 
-	currentFilepath = Log::filepath;
+	currentFilepath = Log::filepathToBeOpened;
 
 	return true;
 }

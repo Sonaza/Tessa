@@ -3,7 +3,13 @@
 
 extern void randomtests();
 
+// #if TS_PLATFORM == TS_WINDOWS
+// #include "ts/tessa/common/IncludeWindows.h"
+
+// int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
+// #else
 int main(int argc, const char **argv)
+// #endif
 {
 // 	randomtests();
 // 	return 0;
