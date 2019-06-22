@@ -142,24 +142,17 @@ PosType LZ4Compressor::decompressFullStream(const char *TS_RESTRICT srcPtrStart,
 
 	while (true)
 	{
-		TS_PRINTF("  block size offset : %lld\n", srcPtr - srcPtrStart);
-		TS_PRINTF("  dst ptr offset    : %lld\n", dstPtr - dstPtrStart);
-
 		const SizeType blockCompressedSize = *reinterpret_cast<const SizeType*>(srcPtr);
 		if (blockCompressedSize == 0) // If block size is 0 end was reached
 			break;
 
 		srcPtr += sizeof(SizeType);
 
-		TS_PRINTF("  crc offset        : %lld\n", srcPtr - srcPtrStart);
-
 		const SizeType blockCRC = *reinterpret_cast<const SizeType*>(srcPtr);
 		srcPtr += sizeof(SizeType);
 
 		PosType dstBytesRemaining = dstSize - (dstPtr - dstPtrStart);
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
-
-		TS_PRINTF("  data block start  : %lld\n", srcPtr - srcPtrStart);
 
 		const Int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, srcPtr, dstPtr, (Int32)blockCompressedSize, (Int32)dstBytesRemaining);
 		if (decompressedBytes <= 0)
@@ -169,8 +162,6 @@ PosType LZ4Compressor::decompressFullStream(const char *TS_RESTRICT srcPtrStart,
 		}
 
 		SizeType decompressedCRC = math::crc32(dstPtr, decompressedBytes);
-		TS_PRINTF("  CRC32 %08X (original %08X)\n", decompressedCRC, blockCRC);
-
 		if (blockCRC != decompressedCRC)
 		{
 			TS_PRINTF("CRC mismatch: uncompressed data does not match the checksum.\n");
@@ -179,10 +170,6 @@ PosType LZ4Compressor::decompressFullStream(const char *TS_RESTRICT srcPtrStart,
 
 		srcPtr += blockCompressedSize;
 		dstPtr += decompressedBytes;
-
-		TS_PRINTF("  dst ptr offset    : %lld\n", dstPtr - dstPtrStart);
-		TS_PRINTF("  data block start  : %lld\n", srcPtr - srcPtrStart);
-		TS_PRINTF("--------------\n");
 	}
 
 	PosType dstBytesWritten = (dstPtr - dstPtrStart);

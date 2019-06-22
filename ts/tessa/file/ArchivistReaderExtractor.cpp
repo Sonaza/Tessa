@@ -51,8 +51,11 @@ PosType ArchivistReaderExtractor::read(char *outBuffer, BigSizeType size)
 	case CompressionType_NoCompression:
 		return readNoCompressed(outBuffer, size);
 
-	case CompressionType_LZ4Compression:
-		return readLZ4Compressed(outBuffer, size);
+	case CompressionType_LZ4FullBlock:
+		return readLZ4FullBlockCompressed(outBuffer, size);
+
+	case CompressionType_LZ4Streaming:
+		return readLZ4StreamingCompressed(outBuffer, size);
 	}
 
 	return -1;
@@ -115,7 +118,87 @@ PosType ArchivistReaderExtractor::readNoCompressed(char *outBuffer, BigSizeType 
 	return bytesRead;
 }
 
-PosType ArchivistReaderExtractor::readLZ4Compressed(char *outBuffer, BigSizeType size)
+PosType ArchivistReaderExtractor::readLZ4FullBlockCompressed(char *outBuffer, BigSizeType size)
+{
+	if (eof)
+		return 0;
+
+	PosType bytesRemaining = header.filesize - currentPosition;
+	TS_ASSERT(bytesRemaining >= 0 && "read overflow");
+
+	BigSizeType numBytesToRead = math::min((BigSizeType)bytesRemaining, size);
+	if (numBytesToRead == 0)
+		return 0;
+
+	if (decompressionComplete == false)
+	{
+		if (decompressFullBlock() < 0)
+		{
+			TS_LOG_ERROR("Decompressing full block failed.\n");
+			return -1;
+		}
+	}
+	
+	char *srcPtr = &decompressedBuffer[currentPosition];
+	memcpy(outBuffer, srcPtr, numBytesToRead);
+
+	currentPosition += numBytesToRead;
+	if (currentPosition >= header.filesize)
+		eof = true;
+
+	return numBytesToRead;
+}
+
+PosType ArchivistReaderExtractor::decompressFullBlock()
+{
+	TS_ASSERT(decompressionComplete == false);
+
+	archiveFile.seek(header.offset);
+
+	PosType bytesRead;
+
+	SizeType blockCompressedSize;
+	bytesRead = archiveFile.readVariable(blockCompressedSize);
+	TS_ASSERT(bytesRead == 4);
+	if (blockCompressedSize == 0)
+		return -1;
+
+	SizeType blockCRC;
+	bytesRead = archiveFile.readVariable(blockCRC);
+	TS_ASSERT(bytesRead == 4);
+
+	std::vector<char> srcBuffer(blockCompressedSize);
+	bytesRead = archiveFile.read(&srcBuffer[0], blockCompressedSize);
+	if (bytesRead < blockCompressedSize)
+	{
+		TS_LOG_ERROR("Error reading file.\n");
+		return -1;
+	}
+
+	decompressedBuffer.resize(header.filesize);
+
+	const Int32 bytesDecompressed = LZ4_decompress_safe(&srcBuffer[0], &decompressedBuffer[0], blockCompressedSize, header.filesize);
+	if (bytesDecompressed < (PosType)header.filesize)
+	{
+		TS_LOG_ERROR("Decompression encountered an error, full file was not decompressed.\n");
+		decompressedBuffer.clear();
+		decompressedBuffer.shrink_to_fit();
+		return -1;
+	}
+
+	const SizeType decompressedCRC = math::crc32(&decompressedBuffer[0], header.filesize);
+	if (blockCRC != decompressedCRC)
+	{
+		TS_LOG_ERROR("CRC mismatch: uncompressed data does not match the checksum.\n");
+		return -1;
+	}
+
+	decompressionComplete = true;
+
+	return (PosType)bytesDecompressed;
+}
+
+PosType ArchivistReaderExtractor::readLZ4StreamingCompressed(char *outBuffer, BigSizeType size)
 {
 	if (eof)
 		return 0;
@@ -133,7 +216,7 @@ PosType ArchivistReaderExtractor::readLZ4Compressed(char *outBuffer, BigSizeType
 		PosType overflowBytes = math::abs(bufferedBytesRemaining - (PosType)numBytesToRead);
 		SizeType numBlocksToDecompress =  (SizeType)math::ceil(overflowBytes / (float)ArchivistConstants::CompressionBlockSize);
 		
-		PosType bytesDecompressed = decompressBlocks(numBlocksToDecompress);
+		PosType bytesDecompressed = decompressStreamingBlocks(numBlocksToDecompress);
 		if (bytesDecompressed < overflowBytes)
 		{
 			TS_LOG_ERROR("Was not able to decompress enough bytes.\n");
@@ -151,7 +234,7 @@ PosType ArchivistReaderExtractor::readLZ4Compressed(char *outBuffer, BigSizeType
 	return numBytesToRead;
 }
 
-PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompress)
+PosType ArchivistReaderExtractor::decompressStreamingBlocks(SizeType numBlocksToDecompress)
 {
 	TS_ASSERT(decompressionComplete == false);
 
@@ -162,11 +245,10 @@ PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompres
 	bufferSize = math::min((PosType)header.filesize, bufferSize);
 	decompressedBuffer.resize(bufferSize);
 
-// 	char *TS_RESTRICT dstPtrZero = &decompressedBuffer[0];
 	char *TS_RESTRICT dstPtrStart = &decompressedBuffer[bytesDecompressed];
 	char *TS_RESTRICT dstPtr = dstPtrStart;
 
-	const SizeType dictSize = math::min<SizeType>(1024 * 64, (SizeType)bytesDecompressed);
+	const SizeType dictSize = math::min<SizeType>(ArchivistConstants::DictionarySize, (SizeType)bytesDecompressed);
 	char *TS_RESTRICT dictStart = dstPtrStart - dictSize;
 
 	LZ4_streamDecode_t *lz4Stream = (LZ4_streamDecode_t*)streamDecode;
@@ -180,12 +262,7 @@ PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompres
 
 	for (SizeType index = 0; index < numBlocksToDecompress; ++index)
 	{
-// 		TS_PRINTF("Block %u:\n", numDecompressedBlocks);
-
 		PosType bytesRead;
-
-// 		TS_PRINTF("  dst ptr offset    : %lld\n", dstPtr - dstPtrZero);
-// 		TS_PRINTF("  block size offset : %lld\n", archiveFile.tell() - header.offset);
 
 		SizeType blockCompressedSize;
 		bytesRead = archiveFile.readVariable(blockCompressedSize);
@@ -200,13 +277,9 @@ PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompres
 
 		TS_ASSERT(blockCompressedSize <= blockMaxSize);
 
-// 		TS_PRINTF("  crc offset        : %lld\n", archiveFile.tell() - header.offset);
-
 		SizeType blockCRC;
 		bytesRead = archiveFile.readVariable(blockCRC);
 		TS_ASSERT(bytesRead == 4);
-
-// 		TS_PRINTF("  data offset       : %lld\n", archiveFile.tell() - header.offset);
 
 		bytesRead = archiveFile.read(inputBuffer, blockCompressedSize);
 		if (bytesRead < blockCompressedSize)
@@ -219,8 +292,6 @@ PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompres
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
 
 		const Int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, inputBuffer, dstPtr, (Int32)blockCompressedSize, (Int32)dstBytesRemaining);
-// 		TS_PRINTF("  block data size   %u\n",blockCompressedSize);
-// 		TS_PRINTF("  decompressed size %d\n", decompressedBytes);
 		if (decompressedBytes <= 0)
 		{
 			TS_LOG_ERROR("Decompression encountered an error.\n");
@@ -228,8 +299,6 @@ PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompres
 		}
 
 		SizeType decompressedCRC = math::crc32(dstPtr, decompressedBytes);
-// 		TS_PRINTF("  CRC32 %08X (original %08X)\n", decompressedCRC, blockCRC);
-
 		if (blockCRC != decompressedCRC)
 		{
 			TS_LOG_ERROR("CRC mismatch: uncompressed data does not match the checksum.\n");
@@ -238,12 +307,7 @@ PosType ArchivistReaderExtractor::decompressBlocks(SizeType numBlocksToDecompres
 
 		dstPtr += decompressedBytes;
 		numDecompressedBlocks++;
-
-// 		TS_PRINTF("  dst ptr offset    : %lld\n", dstPtr - dstPtrZero);
-// 		TS_PRINTF("  block end offset  : %lld\n", archiveFile.tell() - header.offset);
 	}
-
-// 	TS_PRINTF("Blocks decompressed %u / %u\n", numDecompressedBlocks, blockOffsets.size());
 
 	PosType dstBytesWritten = (dstPtr - dstPtrStart);
 	return dstBytesWritten;
@@ -261,38 +325,49 @@ bool ArchivistReaderExtractor::initialize(const ArchivistFileHeader &headerParam
 
 	header = headerParam;
 
-	if (header.compression == CompressionType_NoCompression)
+	switch (header.compression)
 	{
-		initialized = true;
-		return true;
-	}
-	
-	PosType offset = header.offset;
-	blockOffsets.push_back(offset);
-	archiveFile.seek(offset);
-
-	while (true)
-	{
-		SizeType blockSize;
-		PosType bytesRead = archiveFile.readVariable(blockSize);
-		if (bytesRead < 4)
+		case CompressionType_NoCompression:
 		{
-			TS_LOG_ERROR("Unexpected read error or end of file.\n");
-			return false;
+			// Nothing special here
 		}
-		TS_ASSERT(blockSize < LZ4_COMPRESSBOUND(ArchivistConstants::CompressionBlockSize));
-		if (blockSize == 0)
-			break;
+		break;
 
-		offset += blockSize + sizeof(SizeType) * 2; // Account for block size and CRC
+		case CompressionType_LZ4FullBlock:
+		{
+			// Nothing special here
+		}
+		break;
 
-		blockOffsets.push_back(offset);
+		case CompressionType_LZ4Streaming:
+		{
+			PosType offset = header.offset;
+			blockOffsets.push_back(offset);
 
-		archiveFile.seek(offset);
+			while (true)
+			{
+				archiveFile.seek(offset);
+
+				SizeType blockSize;
+				PosType bytesRead = archiveFile.readVariable(blockSize);
+				if (bytesRead < 4)
+				{
+					TS_LOG_ERROR("Unexpected read error or end of file.\n");
+					return false;
+				}
+				TS_ASSERT(blockSize < LZ4_COMPRESSBOUND(ArchivistConstants::CompressionBlockSize));
+				if (blockSize == 0)
+					break;
+
+				offset += blockSize + sizeof(SizeType) * 2; // Account for block size and CRC
+
+				blockOffsets.push_back(offset);
+			}
+
+			streamDecode = LZ4_createStreamDecode();
+		}
+		break;
 	}
-
-	if (header.compression == CompressionType_LZ4Compression)
-		streamDecode = LZ4_createStreamDecode();
 
 	initialized = true;
 

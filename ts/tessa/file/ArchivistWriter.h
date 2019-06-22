@@ -21,7 +21,8 @@ private:
 	typedef std::vector<char> ByteBuffer;
 
 	PosType copyFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
-	PosType lz4_compressFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
+	PosType lz4_compressFullBlockFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
+	PosType lz4_compressStreamedFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
 
 	struct Stagefile
 	{

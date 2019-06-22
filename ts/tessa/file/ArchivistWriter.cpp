@@ -15,7 +15,7 @@ TS_PACKAGE1(file)
 namespace
 {
 
-const SizeType ArchivistWriterFormatVersion = 1;
+const SizeType ArchivistWriterFormatVersion = 2;
 
 }
 
@@ -122,9 +122,12 @@ bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwr
 		{
 			case CompressionType_NoCompression:
 				bufferBytesWritten = copyFileToBuffer(file.filepath, buffer);
-			break;
-			case CompressionType_LZ4Compression:
-				bufferBytesWritten = lz4_compressFileToBuffer(file.filepath, buffer);
+				break;
+			case CompressionType_LZ4FullBlock:
+				bufferBytesWritten = lz4_compressFullBlockFileToBuffer(file.filepath, buffer);
+				break;
+			case CompressionType_LZ4Streaming:
+				bufferBytesWritten = lz4_compressStreamedFileToBuffer(file.filepath, buffer);
 			break;
 		}
 
@@ -167,7 +170,53 @@ PosType ArchivistWriter::copyFileToBuffer(const std::string &filepath, ByteBuffe
 	return bytesRead;
 }
 
-PosType ArchivistWriter::lz4_compressFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer)
+PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer)
+{
+	InputFile input;
+	if (!input.open(filepath, InputFileMode_ReadBinary))
+		return false;
+
+	PosType filesize = input.getFileSize();
+	ByteBuffer srcBuffer(filesize);
+
+	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((Int32)filesize);
+	dstBuffer.resize(blockSizeMax);
+
+	PosType bytesRead = input.read(&srcBuffer[0], filesize);
+	if (bytesRead < filesize)
+	{
+		TS_LOG_ERROR("File read error. File: %s\n", filepath);
+		return -1;
+	}
+
+	char *TS_RESTRICT dstPtrStart = &dstBuffer[0];
+	char *TS_RESTRICT dstPtr = dstPtrStart;
+
+	SizeType *blockCompressedSize = reinterpret_cast<SizeType*>(dstPtr);
+	dstPtr += sizeof(SizeType);
+
+	SizeType *blockCRC = reinterpret_cast<SizeType*>(dstPtr);
+	dstPtr += sizeof(SizeType);
+
+	const Int32 compressedBytes = LZ4_compress_fast(&srcBuffer[0], dstPtr, (SizeType)bytesRead, blockSizeMax, 1);
+	if (compressedBytes < 0)
+	{
+		TS_LOG_ERROR("Compression encountered an error.\n");
+		return -1;
+	}
+
+	*blockCompressedSize = compressedBytes;
+	*blockCRC = math::crc32(&srcBuffer[0], filesize);
+
+	dstPtr += compressedBytes;
+	
+	PosType dstBytesWritten = (dstPtr - dstPtrStart);
+	dstBuffer.resize(dstBytesWritten);
+
+	return dstBytesWritten;
+}
+
+PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer)
 {
 	InputFile input;
 	if (!input.open(filepath, InputFileMode_ReadBinary))
@@ -181,9 +230,9 @@ PosType ArchivistWriter::lz4_compressFileToBuffer(const std::string &filepath, B
 	Int32 dstBoundSize = numBlocks * (blockSizeMax + ArchivistConstants::OverheadPerBlock) + sizeof(SizeType);
 	dstBuffer.resize(dstBoundSize);
 
-	char *TS_RESTRICT dstStart = &dstBuffer[0];
-	char *TS_RESTRICT dstPtr = dstStart;
-	memset(dstStart, 0, dstBoundSize);
+	char *TS_RESTRICT dstPtrStart = &dstBuffer[0];
+	char *TS_RESTRICT dstPtr = dstPtrStart;
+	memset(dstPtrStart, 0, dstBoundSize);
 
 	LZ4_stream_t lz4Stream_body;
 	LZ4_stream_t *lz4Stream = &lz4Stream_body;
@@ -204,20 +253,20 @@ PosType ArchivistWriter::lz4_compressFileToBuffer(const std::string &filepath, B
 		if (srcBytesRead <= 0)
 			break;
 
-// 		TS_PRINTF("  block size offset : %lld\n", dstPtr - dstStart);
+// 		TS_PRINTF("  block size offset : %lld\n", dstPtr - dstPtrStart);
 
 		SizeType *blockCompressedSize = reinterpret_cast<SizeType*>(dstPtr);
 		dstPtr += sizeof(SizeType);
 
-// 		TS_PRINTF("  crc offset        : %lld\n", dstPtr - dstStart);
+// 		TS_PRINTF("  crc offset        : %lld\n", dstPtr - dstPtrStart);
 
 		SizeType *blockCRC = reinterpret_cast<SizeType*>(dstPtr);
 		dstPtr += sizeof(SizeType);
 
-		PosType dstBytesRemaining = dstBoundSize - (dstPtr - dstStart);
+		PosType dstBytesRemaining = dstBoundSize - (dstPtr - dstPtrStart);
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
 
-// 		TS_PRINTF("  data offset       : %lld\n", dstPtr - dstStart);
+// 		TS_PRINTF("  data offset       : %lld\n", dstPtr - dstPtrStart);
 
 		const Int32 compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (Int32)srcBytesRead, (Int32)dstBytesRemaining, 1);
 		if (compressedBytes <= 0)
@@ -237,14 +286,14 @@ PosType ArchivistWriter::lz4_compressFileToBuffer(const std::string &filepath, B
 		srcBufferIndex = (srcBufferIndex + 1) % 2;
 		dstPtr += compressedBytes;
 
-// 		TS_PRINTF("  block end offset  : %lld\n", dstPtr - dstStart);
+// 		TS_PRINTF("  block end offset  : %lld\n", dstPtr - dstPtrStart);
 	}
 
 	// Finalize the file block with a zero which will be read as zero size block by the decompressor
 	*reinterpret_cast<SizeType*>(dstPtr) = 0;
 	dstPtr += sizeof(SizeType);
 
-	PosType dstBytesWritten = (dstPtr - dstStart);
+	PosType dstBytesWritten = (dstPtr - dstPtrStart);
 	dstBuffer.resize(dstBytesWritten);
 
 	return dstBytesWritten;

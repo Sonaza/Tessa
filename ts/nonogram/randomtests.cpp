@@ -421,7 +421,10 @@ public:
 	}
 };
 
-bool writeImageRaw()
+#include "lz4.h"
+#include "ts/tessa/math/CRC.h"
+
+bool writeImageRaw(int mode)
 {
 	sf::Image vertImage;
 	vertImage.loadFromFile("archivist/vert.png");
@@ -438,21 +441,31 @@ bool writeImageRaw()
 	vert.writeVariable(vertImage.getSize().x);
 	vert.writeVariable(vertImage.getSize().y);
 
-	bool compress = false;
-
-	if (compress)
+	switch (mode)
 	{
-		util::LZ4Compressor cmp;
-		PosType compressSize = cmp.compressFullStream(srcBuffer, (SizeType)pixelsize, &dstBuffer[0], (SizeType)bound);
-// 		TS_PRINTF("Compressed to %lld\n", compressSize);
+		case 0:
+		{
+			vert.write(srcBuffer, pixelsize);
+		}
+		break;
 
-		vert.write(&dstBuffer[0], compressSize);
+		case 1:
+		{
+			util::LZ4Compressor cmp;
+			PosType compressSize = cmp.compressFullStream(srcBuffer, (SizeType)pixelsize, &dstBuffer[0], (SizeType)bound);
+			vert.write(&dstBuffer[0], compressSize);
+		}
+		break;
+
+		case 2:
+		{
+			int compressSize = LZ4_compress_default(srcBuffer, &dstBuffer[0], (SizeType)pixelsize, (SizeType)bound);
+			vert.writeVariable(compressSize);
+			vert.write(&dstBuffer[0], compressSize);
+		}
+		break;
 	}
-	else
-	{
-		vert.write(srcBuffer, pixelsize);
-	}
-	
+
 	vert.close();
 
 	return true;
@@ -461,8 +474,6 @@ bool writeImageRaw()
 bool loadImageRaw(const std::string &filepath, sf::Texture &texture)
 {
 	file::InputFile input(filepath, file::InputFileMode_ReadBinary);
-
-// 	bool decompress = true;
 
 	SizeType width = 0;
 	SizeType height = 0;
@@ -478,6 +489,106 @@ bool loadImageRaw(const std::string &filepath, sf::Texture &texture)
 	image.create(width, height, (sf::Uint8*)&dstBuffer[0]);
 
 	return texture.loadFromImage(image);
+}
+
+PosType loadImageRawCompressed(const std::string &filepath, sf::Texture &texture)
+{
+	file::InputFile input(filepath, file::InputFileMode_ReadBinary);
+
+	SizeType width = 0;
+	SizeType height = 0;
+	input.readVariable(width);
+	input.readVariable(height);
+	PosType pixelsize = width * height * 4;
+
+	int blockSize;
+	input.readVariable(blockSize);
+
+	std::vector<char> srcBuffer(blockSize);
+	std::vector<char> dstBuffer(pixelsize);
+
+	PosType bytesRead = input.read(&srcBuffer[0], blockSize);
+	TS_ASSERT(bytesRead == blockSize);
+
+	int decompressSize = LZ4_decompress_safe(&srcBuffer[0], &dstBuffer[0], (SizeType)bytesRead, (SizeType)pixelsize);
+	TS_ASSERT(decompressSize == pixelsize);
+
+	sf::Image image;
+	image.create(width, height, (sf::Uint8*)&dstBuffer[0]);
+
+	return texture.loadFromImage(image) ? 0 : -1;
+}
+
+PosType loadImageRawStreamingCompressed(const std::string &filepath, sf::Texture &texture)
+{
+	file::InputFile input(filepath, file::InputFileMode_ReadBinary);
+
+	SizeType width = 0;
+	SizeType height = 0;
+	input.readVariable(width);
+	input.readVariable(height);
+	PosType pixelsize = width * height * 4;
+
+	std::vector<char> dstBuffer(pixelsize);
+
+	LZ4_streamDecode_t lz4Stream_body;
+	LZ4_streamDecode_t *lz4Stream = &lz4Stream_body;
+	LZ4_setStreamDecode(lz4Stream, nullptr, 0);
+
+	char *TS_RESTRICT dstPtrStart = &dstBuffer[0];
+	char *TS_RESTRICT dstPtr = dstPtrStart;
+
+	const SizeType blockMaxSize = LZ4_COMPRESSBOUND(file::ArchivistConstants::CompressionBlockSize);
+	char inputBuffer[blockMaxSize] = { 0 };
+
+	while (true)
+	{
+		PosType bytesRead;
+
+		SizeType blockCompressedSize;
+		bytesRead = input.readVariable(blockCompressedSize);
+		TS_ASSERT(bytesRead == 4);
+		if (blockCompressedSize == 0) // If block size is 0 end was reached
+			break;
+
+		SizeType blockCRC;
+		bytesRead = input.readVariable(blockCRC);
+		TS_ASSERT(bytesRead == 4);
+
+		bytesRead = input.read(inputBuffer, blockCompressedSize);
+		if (bytesRead < blockCompressedSize)
+		{
+			TS_LOG_ERROR("Error reading file.\n");
+			return -1;
+		}
+
+		PosType dstBytesRemaining = pixelsize - (dstPtr - dstPtrStart);
+		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
+
+		const Int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, inputBuffer, dstPtr, (Int32)blockCompressedSize, (Int32)dstBytesRemaining);
+		if (decompressedBytes <= 0)
+		{
+			TS_LOG_ERROR("Decompression encountered an error.\n");
+			return -1;
+		}
+
+		SizeType decompressedCRC = math::crc32(dstPtr, decompressedBytes);
+		if (blockCRC != decompressedCRC)
+		{
+			TS_LOG_ERROR("CRC mismatch: uncompressed data does not match the checksum.\n");
+			return -1;
+		}
+
+		dstPtr += decompressedBytes;
+	}
+
+	PosType dstBytesWritten = (dstPtr - dstPtrStart);
+	TS_ASSERT(dstBytesWritten == pixelsize);
+
+	sf::Image image;
+	image.create(width, height, (sf::Uint8*)dstPtrStart);
+
+	return texture.loadFromImage(image) ? 0 : -1;
 }
 
 void writePack(const std::string &sourceFolder, const std::string &packfile, file::ArchivistCompressionMode mode)
@@ -511,20 +622,35 @@ void randomtests()
 // 	if (wtf2())
 // 		return;
 
-
 	std::string packfile = "archivist/amazing.tspack";
-
-// 	writePack("test/", packfile, file::CompressionType_LZ4Compression);
+	writePack("test/", packfile, file::CompressionType_LZ4FullBlock);
 
 	file::ArchivistReader archiveReader;
 	archiveReader.openArchive(packfile);
+
+	auto archivelist = archiveReader.getFileList();
+
+	{
+		auto start = std::chrono::system_clock::now();
+
+		for (std::string &file : archivelist)
+		{
+// 	 		TS_PRINTF("%s (size %0.1f KB)\n", file, archiveReader.getFileSize(file) / 1024.f);
+			archiveReader.extractToFile(file, file::utils::joinPaths("archivist/ext2/", file));
+		}
+
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		TS_PRINTF("Extract elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+	}
+
+	if (rand() >= 0)
+		return;
 
 	sf::RenderWindow window;
 	window.create(sf::VideoMode(1680, 1050), "Test");
 	window.clear(sf::Color::White);
 	window.display();
-
-	writeImageRaw();
 
 	bool kakke = true;
 	while(kakke)
@@ -543,14 +669,20 @@ void randomtests()
 	window.clear(sf::Color::Red);
 	window.display();
 
+
+	writeImageRaw(0);
+
+	const SizeType loops = 100;
+	sf::Texture textures[loops];
+
 	auto start = std::chrono::system_clock::now();
 
-	const SizeType loops = 10;
 	for (SizeType i = 0; i < loops; ++i)
 	{
-		sf::Texture texture;
-// 		loadImageRaw("archivist/vert.rgba", texture);
-		texture.loadFromFile("archivist/vert.png");
+// 		textures[i].loadFromFile("archivist/vert.png");
+		loadImageRaw("archivist/vert.rgba", textures[i]);
+// 		loadImageRawStreamingCompressed("archivist/vert.rgba", textures[i]);
+// 		loadImageRawCompressed("archivist/vert.rgba", textures[i]);
 	}
 
 	auto end = std::chrono::system_clock::now();
@@ -560,9 +692,9 @@ void randomtests()
 
 	sf::Texture texture;
 	sf::Sprite sprite;
-	Streamy strm(archiveReader, "69103464_p0.png");
-	texture.loadFromStream(strm);
-	sprite.setTexture(texture);
+// 	Streamy strm(archiveReader, "69103464_p0.png");
+// 	texture.loadFromStream(strm);
+	sprite.setTexture(textures[0]);
 
 	while(window.isOpen())
 	{
@@ -584,22 +716,6 @@ void randomtests()
 
 		window.display();
 	}
-
-// 	auto archivelist = archiveReader.getFileList();
-// 
-// 	{
-// 		auto start = std::chrono::system_clock::now();
-// 
-// 		for (std::string &file : archivelist)
-// 		{
-// // 	 		TS_PRINTF("%s (size %0.1f KB)\n", file, archiveReader.getFileSize(file) / 1024.f);
-// 			archiveReader.extractToFile(file, file::utils::joinPaths("archivist/ext2/", file));
-// 		}
-// 
-// 		auto end = std::chrono::system_clock::now();
-// 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-// 		TS_PRINTF("Extract elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
-// 	}
 
 	return;
 }

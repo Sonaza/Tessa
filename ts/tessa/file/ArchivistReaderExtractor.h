@@ -33,9 +33,12 @@ private:
 	friend class ArchivistReader;
 
 	PosType readNoCompressed(char *outBuffer, BigSizeType size);
-	PosType readLZ4Compressed(char *outBuffer, BigSizeType size);
 
-	PosType decompressBlocks(SizeType numBlocks);
+	PosType readLZ4FullBlockCompressed(char *outBuffer, BigSizeType size);
+	PosType decompressFullBlock();
+
+	PosType readLZ4StreamingCompressed(char *outBuffer, BigSizeType size);
+	PosType decompressStreamingBlocks(SizeType numBlocks);
 
 	bool initialize(const ArchivistFileHeader &header, const std::string &archiveFilepath);
 

@@ -11,7 +11,7 @@ TS_PACKAGE1(file)
 namespace
 {
 
-const SizeType ArchivistReaderSupportedFormatVersion = 1;
+const SizeType ArchivistReaderSupportedFormatVersion = 2;
 
 }
 

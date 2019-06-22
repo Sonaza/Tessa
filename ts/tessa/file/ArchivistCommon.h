@@ -5,7 +5,8 @@ TS_PACKAGE1(file)
 enum ArchivistCompressionMode : Uint16
 {
 	CompressionType_NoCompression  = 0,
-	CompressionType_LZ4Compression = 1,
+	CompressionType_LZ4FullBlock   = 1,
+	CompressionType_LZ4Streaming   = 2,
 };
 
 struct ArchivistFileHeader
@@ -27,7 +28,9 @@ struct ArchivistConstants
 {
 	enum
 	{
-		CompressionBlockSize = 1024 * 64,
+		DictionarySize = 1024 * 64,
+
+		CompressionBlockSize = 1024 * 128,
 		OverheadPerBlock = 8,
 	};
 };
