@@ -11,7 +11,7 @@ TS_DECLARE1(system, Application);
 
 TS_PACKAGE1(system)
 
-class AbstractSystemManagerBase
+class AbstractSystemManagerBase : public lang::Noncopyable
 {
 public:
 	AbstractSystemManagerBase() {}

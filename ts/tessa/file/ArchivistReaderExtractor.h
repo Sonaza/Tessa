@@ -6,17 +6,20 @@
 #include "ts/tessa/file/ArchivistCommon.h"
 #include "ts/tessa/file/InputFile.h"
 
-TS_DECLARE1(file, ArchivistReader);
-
 TS_PACKAGE1(file)
 
 class ArchivistReader;
 
-class ArchivistReaderExtractor
+class ArchivistReaderExtractor : public lang::Noncopyable
 {
+	friend class ArchivistReader;
+
 public:
 	ArchivistReaderExtractor();
 	~ArchivistReaderExtractor();
+
+	ArchivistReaderExtractor(ArchivistReaderExtractor &&other);
+	ArchivistReaderExtractor &operator=(ArchivistReaderExtractor &&other);
 
 	void close();
 
@@ -27,10 +30,13 @@ public:
 
 	SizeType getSize() const;
 
+	bool isGood() const;
 	bool isEOF() const;
 
 private:
-	friend class ArchivistReader;
+	typedef std::vector<char> ByteBuffer;
+
+	bool initialize(const ArchivistFileHeader &header, const std::string &archiveFilepath);
 
 	PosType readNoCompressed(char *outBuffer, BigSizeType size);
 
@@ -39,8 +45,6 @@ private:
 
 	PosType readLZ4StreamingCompressed(char *outBuffer, BigSizeType size);
 	PosType decompressStreamingBlocks(SizeType numBlocks);
-
-	bool initialize(const ArchivistFileHeader &header, const std::string &archiveFilepath);
 
 	bool initialized = false;
 	bool eof = false;
@@ -53,7 +57,7 @@ private:
 	SizeType numDecompressedBlocks = 0;
 
 	void *streamDecode = nullptr;
-	std::vector<char> decompressedBuffer;
+	ByteBuffer decompressedBuffer;
 
 	PosType currentPosition = 0;
 

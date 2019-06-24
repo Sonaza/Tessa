@@ -2,17 +2,19 @@
 
 #include "ts/tessa/resource/ResourceBase.h"
 
+#include <SFML/Audio.hpp>
+
 TS_DECLARE1(resource, ArchivistInputStream);
 
 TS_PACKAGE1(resource)
 
-class FontResource : public ResourceBase<sf::Font, TS_FOURCC('f','n','t','r')>
+class MusicResource : public ResourceBase<sf::Music, TS_FOURCC('m','s','c','r')>
 {
-	TS_DECLARE_RESOURCE_TYPE(resource::FontResource);
+	TS_DECLARE_RESOURCE_TYPE(resource::MusicResource);
 
 public:
-	FontResource(const std::string &filepath);
-	~FontResource();
+	MusicResource(const std::string &filepath);
+	~MusicResource();
 
 protected:
 	virtual bool loadResourceImpl() override;

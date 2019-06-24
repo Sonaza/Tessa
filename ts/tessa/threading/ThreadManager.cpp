@@ -4,6 +4,8 @@
 
 #include "ts/tessa/Config.h"
 
+#include "ts/tessa/common/IncludeWindows.h"
+
 TS_DEFINE_SYSTEM_MANAGER_TYPE(threading::ThreadManager);
 
 TS_PACKAGE1(threading)
@@ -104,6 +106,8 @@ SizeType ThreadManager::numHardwareThreads()
 void ThreadManager::_threadTaskRunnerImpl(SizeType threadIndex)
 {
 	TS_LOG_DEBUG("Thread Worker %d running. Waiting for new tasks...", threadIndex);
+
+	static bool benchmarkComplete = false;
 
 	while (true)
 	{

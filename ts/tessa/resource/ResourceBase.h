@@ -38,7 +38,7 @@ public:
 protected:
 	virtual bool loadResourceImpl() = 0;
 
-	std::unique_ptr<ResourceType> resource;
+	UniquePointer<ResourceType> resource;
 
 	std::atomic<bool> resourceLoaded = false;
 	std::atomic<bool> loadError = false;

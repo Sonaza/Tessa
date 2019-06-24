@@ -45,7 +45,7 @@ InputFile &InputFile::operator=(InputFile &&other)
 
 bool InputFile::open(const std::string &filepath, InputFileMode mode)
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr == nullptr && "InputFile is already opened.");
 	if (_filePtr != nullptr)
 		return false;
@@ -72,7 +72,7 @@ bool InputFile::open(const std::string &filepath, InputFileMode mode)
 
 void InputFile::close()
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	if (_filePtr != nullptr)
 	{
 		InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
@@ -87,7 +87,9 @@ void InputFile::close()
 
 PosType InputFile::read(char *outBuffer, BigSizeType size)
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	TS_ASSERT(outBuffer != nullptr);
+
+	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true || _eof == true)
 		return 0;
@@ -108,7 +110,7 @@ PosType InputFile::read(char *outBuffer, BigSizeType size)
 
 PosType InputFile::seek(PosType pos)
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return -1;
@@ -125,7 +127,7 @@ PosType InputFile::seek(PosType pos)
 
 PosType InputFile::tell() const
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return -1;
@@ -140,9 +142,9 @@ PosType InputFile::tell() const
 	return pos;
 }
 
-PosType InputFile::getFileSize()
+PosType InputFile::getSize()
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return -1;
@@ -176,7 +178,7 @@ PosType InputFile::getFileSize()
 
 bool InputFile::isOpen() const
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	if (_filePtr != nullptr && _bad == false)
 	{
 		InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
@@ -187,13 +189,13 @@ bool InputFile::isOpen() const
 
 bool InputFile::isEOF() const
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	return _eof;
 }
 
 bool InputFile::isBad() const
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return true;

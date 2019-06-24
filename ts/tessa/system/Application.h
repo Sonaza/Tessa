@@ -11,6 +11,7 @@
 
 TS_DECLARE1(system, ThreadPool);
 TS_DECLARE1(system, WindowManager);
+TS_DECLARE1(file, ArchivistFilesystem);
 TS_DECLARE1(resource, ResourceManager);
 TS_DECLARE1(resource, FontResource);
 
@@ -43,6 +44,7 @@ protected:
 	// Abstract methods for GameApplication to implement
 	virtual bool sceneInitialize() = 0;
 	virtual bool createWindow(system::WindowManager &windowManager) = 0;
+	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem) = 0;
 
 private:
 	bool initialize();

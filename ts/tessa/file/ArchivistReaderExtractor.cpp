@@ -17,6 +17,45 @@ ArchivistReaderExtractor::~ArchivistReaderExtractor()
 	close();
 }
 
+ArchivistReaderExtractor::ArchivistReaderExtractor(ArchivistReaderExtractor &&other)
+{
+	*this = std::move(other);
+}
+
+ArchivistReaderExtractor &ArchivistReaderExtractor::operator=(ArchivistReaderExtractor &&other)
+{
+	if (this != &other)
+	{
+		initialized = other.initialized;
+		other.initialized = false;
+
+		eof = other.eof;
+		other.eof = false;
+		
+		decompressionComplete = other.decompressionComplete;
+		other.decompressionComplete = false;
+
+		archiveFile = std::move(other.archiveFile);
+
+		memcpy(&header, &other.header, sizeof(header));
+		memset(&other.header, 0, sizeof(other.header));
+
+		blockOffsets = std::move(other.blockOffsets);
+
+		numDecompressedBlocks = other.numDecompressedBlocks;
+		other.numDecompressedBlocks = 0;
+
+		streamDecode = other.streamDecode;
+		other.streamDecode = nullptr;
+
+		decompressedBuffer = std::move(other.decompressedBuffer);
+
+		currentPosition = other.currentPosition;
+		currentPosition = 0;
+	}
+	return *this;
+}
+
 void ArchivistReaderExtractor::close()
 {
 	if (initialized == false)
@@ -25,10 +64,12 @@ void ArchivistReaderExtractor::close()
 	initialized = false;
 	eof = false;
 	decompressionComplete = false;
+
 	memset(&header, 0, sizeof(header));
 
 	blockOffsets.clear();
 	blockOffsets.shrink_to_fit();
+
 	decompressedBuffer.clear();
 	decompressedBuffer.shrink_to_fit();
 
@@ -45,6 +86,12 @@ void ArchivistReaderExtractor::close()
 PosType ArchivistReaderExtractor::read(char *outBuffer, BigSizeType size)
 {
 	TS_ASSERT(initialized);
+	if (initialized == false)
+		return -1;
+
+	TS_ASSERT(outBuffer != nullptr);
+	if (size == 0)
+		return 0;
 	
 	switch (header.compression)
 	{
@@ -64,6 +111,8 @@ PosType ArchivistReaderExtractor::read(char *outBuffer, BigSizeType size)
 PosType ArchivistReaderExtractor::seek(PosType pos)
 {
 	TS_ASSERT(initialized);
+	if (initialized == false)
+		return -1;
 
 	eof = false;
 	currentPosition = pos;
@@ -79,18 +128,93 @@ PosType ArchivistReaderExtractor::seek(PosType pos)
 PosType ArchivistReaderExtractor::tell() const
 {
 	TS_ASSERT(initialized);
+	if (initialized == false)
+		return -1;
 	return currentPosition;
 }
 
 SizeType ArchivistReaderExtractor::getSize() const
 {
 	TS_ASSERT(initialized);
+	if (initialized == false)
+		return 0;
 	return header.filesize;
+}
+
+bool ArchivistReaderExtractor::isGood() const
+{
+	return initialized && archiveFile.isOpen();
 }
 
 bool ArchivistReaderExtractor::isEOF() const
 {
+	TS_ASSERT(initialized);
+	if (initialized == false)
+		return true;
 	return eof;
+}
+
+bool ArchivistReaderExtractor::initialize(const ArchivistFileHeader &headerParam, const std::string &archiveFilepath)
+{
+	TS_ASSERT(initialized == false && "Extractor is being reinitialized without a call to close first.");
+	TS_ASSERT(archiveFile.isOpen() == false);
+	TS_ASSERT(archiveFilepath.empty() == false);
+
+	if (!archiveFile.open(archiveFilepath, InputFileMode_ReadBinary))
+	{
+		TS_ASSERT(false);
+		return false;
+	}
+
+	header = headerParam;
+
+	switch (header.compression)
+	{
+		case CompressionType_NoCompression:
+		{
+			// Nothing special here
+		}
+		break;
+
+		case CompressionType_LZ4FullBlock:
+		{
+			// Nothing special here
+		}
+		break;
+
+		case CompressionType_LZ4Streaming:
+		{
+			PosType offset = header.offset;
+			blockOffsets.push_back(offset);
+
+			while (true)
+			{
+				archiveFile.seek(offset);
+
+				SizeType blockSize;
+				PosType bytesRead = archiveFile.readVariable(blockSize);
+				if (bytesRead < 4)
+				{
+					TS_LOG_ERROR("Unexpected read error or end of file.\n");
+					return false;
+				}
+				TS_ASSERT(blockSize < LZ4_COMPRESSBOUND(ArchivistConstants::CompressionBlockSize));
+				if (blockSize == 0)
+					break;
+
+				offset += blockSize + sizeof(SizeType) * 2; // Account for block size and CRC
+
+				blockOffsets.push_back(offset);
+			}
+
+			streamDecode = LZ4_createStreamDecode();
+		}
+		break;
+	}
+
+	initialized = true;
+
+	return true;
 }
 
 PosType ArchivistReaderExtractor::readNoCompressed(char *outBuffer, BigSizeType size)
@@ -167,7 +291,7 @@ PosType ArchivistReaderExtractor::decompressFullBlock()
 	bytesRead = archiveFile.readVariable(blockCRC);
 	TS_ASSERT(bytesRead == 4);
 
-	std::vector<char> srcBuffer(blockCompressedSize);
+	ByteBuffer srcBuffer(blockCompressedSize);
 	bytesRead = archiveFile.read(&srcBuffer[0], blockCompressedSize);
 	if (bytesRead < blockCompressedSize)
 	{
@@ -237,6 +361,7 @@ PosType ArchivistReaderExtractor::readLZ4StreamingCompressed(char *outBuffer, Bi
 PosType ArchivistReaderExtractor::decompressStreamingBlocks(SizeType numBlocksToDecompress)
 {
 	TS_ASSERT(decompressionComplete == false);
+	TS_PRINTF("Decompressing %u blocks\n", numBlocksToDecompress);
 
 	PosType bytesDecompressed = numDecompressedBlocks * ArchivistConstants::CompressionBlockSize;
 	PosType bytesToDecompress = numBlocksToDecompress * ArchivistConstants::CompressionBlockSize;
@@ -311,67 +436,6 @@ PosType ArchivistReaderExtractor::decompressStreamingBlocks(SizeType numBlocksTo
 
 	PosType dstBytesWritten = (dstPtr - dstPtrStart);
 	return dstBytesWritten;
-}
-
-bool ArchivistReaderExtractor::initialize(const ArchivistFileHeader &headerParam, const std::string &archiveFilepath)
-{
-	TS_ASSERT(!initialized);
-
-	if (!archiveFile.open(archiveFilepath, InputFileMode_ReadBinary))
-	{
-		TS_ASSERT(false);
-		return false;
-	}
-
-	header = headerParam;
-
-	switch (header.compression)
-	{
-		case CompressionType_NoCompression:
-		{
-			// Nothing special here
-		}
-		break;
-
-		case CompressionType_LZ4FullBlock:
-		{
-			// Nothing special here
-		}
-		break;
-
-		case CompressionType_LZ4Streaming:
-		{
-			PosType offset = header.offset;
-			blockOffsets.push_back(offset);
-
-			while (true)
-			{
-				archiveFile.seek(offset);
-
-				SizeType blockSize;
-				PosType bytesRead = archiveFile.readVariable(blockSize);
-				if (bytesRead < 4)
-				{
-					TS_LOG_ERROR("Unexpected read error or end of file.\n");
-					return false;
-				}
-				TS_ASSERT(blockSize < LZ4_COMPRESSBOUND(ArchivistConstants::CompressionBlockSize));
-				if (blockSize == 0)
-					break;
-
-				offset += blockSize + sizeof(SizeType) * 2; // Account for block size and CRC
-
-				blockOffsets.push_back(offset);
-			}
-
-			streamDecode = LZ4_createStreamDecode();
-		}
-		break;
-	}
-
-	initialized = true;
-
-	return true;
 }
 
 TS_END_PACKAGE1()

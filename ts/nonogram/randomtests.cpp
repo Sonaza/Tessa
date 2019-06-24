@@ -376,51 +376,6 @@ void lz4_streaming_uncompress()
 #include "ts/tessa/file/ArchivistReaderExtractor.h"
 #include "ts/tessa/util/LZ4Compressor.h"
 
-class Streamy : public sf::InputStream
-{
-	file::ArchivistReaderExtractor extractor;
-
-public:
-	Streamy(file::ArchivistReader &reader, const std::string &file)
-	{
-		if (!reader.getFileExtractor(file, extractor))
-		{
-			TS_ASSERT(!"Failed to get extractor");
-		}
-	}
-
-	~Streamy()
-	{
-		extractor.close();
-	}
-
-	virtual Int64 read(void* data, Int64 size)
-	{
-		PosType bytesread = extractor.read((char*)data, size);
-// 		TS_PRINTF("read %d bytes (bytes read %d)\n", size, bytesread);
-		return bytesread;
-	}
-
-	virtual Int64 seek(Int64 position)
-	{
-		PosType seeked = extractor.seek(position);
-// 		TS_PRINTF("seek %d (seeked %d)\n", position, seeked);
-		return seeked;
-	}
-
-	virtual Int64 tell()
-	{
-// 		TS_PRINTF("tell %d\n", extractor.tell());
-		return extractor.tell();
-	}
-
-	virtual Int64 getSize()
-	{
-// 		TS_PRINTF("size %d\n", extractor.getSize());
-		return extractor.getSize();
-	}
-};
-
 #include "lz4.h"
 #include "ts/tessa/math/CRC.h"
 
@@ -604,7 +559,8 @@ void writePack(const std::string &sourceFolder, const std::string &packfile, fil
 
 	for (file::FileEntry &f : files)
 	{
-		archiveWriter.stageFile(f.getFullFilepath(), f.getFilepath(), mode);
+// 		archiveWriter.stageFile(f.getFullFilepath(), f.getFilepath(), mode);
+		archiveWriter.stageFile(f.getFullFilepath(), f.getFullFilepath(), mode);
 	}
 	{
 		auto start = std::chrono::system_clock::now();
@@ -619,30 +575,32 @@ void writePack(const std::string &sourceFolder, const std::string &packfile, fil
 
 void randomtests()
 {
-// 	if (wtf2())
-// 		return;
+// 	std::string packfile = "afs/test.tspack";
+// 	writePack("test/", "afs/test.tspack", file::CompressionType_LZ4FullBlock);
+	writePack("phancy/", "afs/phancy.tspack", file::CompressionType_LZ4FullBlock);
 
-	std::string packfile = "archivist/amazing.tspack";
-	writePack("test/", packfile, file::CompressionType_LZ4FullBlock);
+// 	file::ArchivistWriter archiveWriter;
+// 	archiveWriter.stageFile("music.ogg", "test/music.ogg", file::CompressionType_LZ4Streaming);
+// 	archiveWriter.stageFile("sol.ogg", "test/sol.ogg", file::CompressionType_LZ4Streaming);
+// 	archiveWriter.saveToFile("afs/music.tspack");
 
-	file::ArchivistReader archiveReader;
-	archiveReader.openArchive(packfile);
+// 	file::ArchivistReader archiveReader;
+// 	archiveReader.openArchive(packfile);
 
-	auto archivelist = archiveReader.getFileList();
-
-	{
-		auto start = std::chrono::system_clock::now();
-
-		for (std::string &file : archivelist)
-		{
-// 	 		TS_PRINTF("%s (size %0.1f KB)\n", file, archiveReader.getFileSize(file) / 1024.f);
-			archiveReader.extractToFile(file, file::utils::joinPaths("archivist/ext2/", file));
-		}
-
-		auto end = std::chrono::system_clock::now();
-		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-		TS_PRINTF("Extract elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
-	}
+// 	auto archivelist = archiveReader.getFileList();
+// 	{
+// 		auto start = std::chrono::system_clock::now();
+// 
+// 		for (std::string &file : archivelist)
+// 		{
+// // 	 		TS_PRINTF("%s (size %0.1f KB)\n", file, archiveReader.getFileSize(file) / 1024.f);
+// 			archiveReader.extractToFile(file, file::utils::joinPaths("archivist/ext2/", file));
+// 		}
+// 
+// 		auto end = std::chrono::system_clock::now();
+// 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+// 		TS_PRINTF("Extract elapsed time: %uus (%ums)\n", elapsed.count(), elapsed.count() / 1000);
+// 	}
 
 	if (rand() >= 0)
 		return;

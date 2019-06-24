@@ -3,6 +3,7 @@
 #include "ts/tessa/system/Application.h"
 
 TS_DECLARE1(system, WindowManager);
+TS_DECLARE1(file, ArchivistFilesystem);
 
 TS_PACKAGE1(game)
 
@@ -15,6 +16,7 @@ public:
 protected:
 	virtual bool sceneInitialize();
 	virtual bool createWindow(system::WindowManager &windowManager);
+	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem);
 };
 
 TS_END_PACKAGE1()

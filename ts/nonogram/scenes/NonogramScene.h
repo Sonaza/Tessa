@@ -2,6 +2,8 @@
 
 #include "ts/tessa/system/AbstractSceneBase.h"
 
+#include <chrono>
+
 TS_DECLARE2(game, gameplay, NonogramPuzzle)
 
 TS_PACKAGE2(game, scenes)
@@ -28,7 +30,11 @@ protected:
 
 	std::unique_ptr<gameplay::NonogramPuzzle> puzzle;
 
-	resource::TextureResource *texture = nullptr;
+	void swapTexture(Int32 dir);
+	Int32 currentIndex = 0;
+
+	resource::MusicResource *music = nullptr;
+	std::vector<resource::TextureResource *> textures;
 
 	sf::Sprite sprite;
 };

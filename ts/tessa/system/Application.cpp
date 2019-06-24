@@ -2,11 +2,13 @@
 #include "ts/tessa/common/Debugging.h"
 #include "ts/tessa/system/Application.h"
 
+#include "ts/tessa/file/ArchivistFileSystem.h"
 #include "ts/tessa/system/WindowManager.h"
 #include "ts/tessa/resource/ResourceManager.h"
-#include "ts/tessa/resource/FontResource.h"
-
 #include "ts/tessa/threading/ThreadManager.h"
+#include "ts/tessa/threading/ThreadUtils.h"
+
+#include "ts/tessa/resource/FontResource.h"
 
 #include "ts/tessa/Config.h"
 
@@ -62,6 +64,8 @@ Int32 Application::start()
 
 bool Application::initialize()
 {
+// 	setCurrentThreadPriority(threading::utils::ThreadPriority_High);
+
 	if (!initializeManagers())
 		return false;
 
@@ -110,6 +114,13 @@ bool Application::initializeManagers()
 	if (!createManagerInstance<threading::ThreadManager>())
 		return false;
 
+	if (!createManagerInstance<file::ArchivistFilesystem>())
+		return false;
+
+	file::ArchivistFilesystem &afs = getManager<file::ArchivistFilesystem>();
+	if (!loadArchives(afs))
+		return false;
+	
 	if (!createManagerInstance<resource::ResourceManager>())
 		return false;
 
@@ -132,8 +143,12 @@ bool Application::initializeManagers()
 
 void Application::deinitializeManagers()
 {
+	threading::ThreadManager &tm = getManager<threading::ThreadManager>();
+	tm.clearTasks();
+
 	destroyManagerInstance<system::WindowManager>();
 	destroyManagerInstance<resource::ResourceManager>();
+	destroyManagerInstance<file::ArchivistFilesystem>();
 	destroyManagerInstance<threading::ThreadManager>();
 }
 

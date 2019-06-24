@@ -28,12 +28,16 @@ private:
 	{
 		std::string filepath;
 		std::string archiveFilepath;
+		SizeType filesize;
 		ArchivistCompressionMode compression;
 	};
 	typedef std::map<SizeType, Stagefile> StagefileList;
-	StagefileList stagefiles;
+	StagefileList _stagefiles;
 
-	const SizeType MaxFileSize = std::numeric_limits<int32_t>::max();
+	BigSizeType _stagedTotalFilesize = 0;
+
+	const BigSizeType FileMaxSize = std::numeric_limits<int32_t>::max();
+	const BigSizeType ArchiveMaxSize = std::numeric_limits<int32_t>::max();
 };
 
 TS_END_PACKAGE1()

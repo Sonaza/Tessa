@@ -1,6 +1,8 @@
 #include "Precompiled.h"
 #include "ts/nonogram/scenes/NonogramScene.h"
 
+#include "ts/tessa/file/ArchivistFilesystem.h"
+#include "ts/tessa/file/FileUtils.h"
 #include "ts/nonogram/gameplay/NonogramPuzzle.h"
 
 TS_PACKAGE2(game, scenes)
@@ -27,60 +29,73 @@ void NonogramScene::stop()
 
 void NonogramScene::loadResources(resource::ResourceManager &rm)
 {
-	rm.loadResource<resource::TextureResource>("nepnep", "test/nepnep.jpg");
-	rm.loadResource<resource::TextureResource>("2Gzjp1F", "test/2Gzjp1F.jpg");
-	rm.loadResource<resource::TextureResource>("33zyzuxd0d911", "test/33zyzuxd0d911.jpg");
-	rm.loadResource<resource::TextureResource>("47168900_p0_master1200", "test/47168900_p0_master1200.jpg");
-	rm.loadResource<resource::TextureResource>("47168900_p1_master1200", "test/47168900_p1_master1200.jpg");
-	rm.loadResource<resource::TextureResource>("47372029_p0", "test/47372029_p0.png");
-	rm.loadResource<resource::TextureResource>("49561770_p0", "test/49561770_p0.png");
-	rm.loadResource<resource::TextureResource>("4xvzjxz2hw211", "test/4xvzjxz2hw211.jpg");
-	rm.loadResource<resource::TextureResource>("54638899_p0", "test/54638899_p0.png");
-	rm.loadResource<resource::TextureResource>("55378833_p0", "test/55378833_p0.png");
-	rm.loadResource<resource::TextureResource>("59335804_p0", "test/59335804_p0.png");
-	rm.loadResource<resource::TextureResource>("61579330_p0", "test/61579330_p0.jpg");
-	rm.loadResource<resource::TextureResource>("61827137_p0", "test/61827137_p0.png");
-	rm.loadResource<resource::TextureResource>("656mwuonuh011", "test/656mwuonuh011.jpg");
-
-	rm.loadResource<resource::TextureResource>("nepzume", "test/nepzume.png");
-// 	rm.loadResource<resource::FontResource>("nepzume", "calibri.ttf");
-// 	rm.loadResource<resource::TextureResource>("nepzumexcv", "test/nepzume.png");
-
-	rm.loadResource<resource::TextureResource>("67961452_p11", "test/67961452_p11.png");
-	rm.loadResource<resource::TextureResource>("68599620_p0", "test/68599620_p0.png");
-	rm.loadResource<resource::TextureResource>("68783222_p0", "test/68783222_p0.png");
-	rm.loadResource<resource::TextureResource>("68783222_p1", "test/68783222_p1.png");
-	rm.loadResource<resource::TextureResource>("69103464_p0", "test/69103464_p0.png");
-	rm.loadResource<resource::TextureResource>("a6wmhr23h3e11", "test/a6wmhr23h3e11.jpg");
-	rm.loadResource<resource::TextureResource>("abitiffy", "test/abitiffy.png");
-	rm.loadResource<resource::TextureResource>("compa", "test/compa.png");
-	rm.loadResource<resource::TextureResource>("iffy", "test/iffy.jpg");
-	rm.loadResource<resource::TextureResource>("stick", "test/stick.jpg");
-	rm.loadResource<resource::TextureResource>("uzume", "test/uzume.jpg");
-
-	rm.loadResource<resource::FontResource>("calibri", "calibri.ttf");
-
-	texture = rm.getResource<resource::TextureResource>("nepzume");
-	if (texture)
+	file::ArchivistFilesystem &afs = getGigaton<file::ArchivistFilesystem>();
+	
+	const std::vector<std::string> list = afs.getFileList();
+	for (const std::string &filename : list)
 	{
-		if (texture->isLoaded())
+		std::string ext = file::utils::getExtension(filename);
+		if (ext == "jpg" || ext == "jpeg" || ext == "png")
 		{
-			TS_PRINTF("Texture is already loaded in loadResources!\n");
-		}
-		else
-		{
-			TS_PRINTF("Texture not loaded in loadResources!\n");
+			std::string handle = file::utils::getBasename(filename, true);
+			textures.push_back(rm.loadResource<resource::TextureResource>(handle, filename));
 		}
 	}
-	else
-	{
-		TS_PRINTF("Loading texture failed entirely!\n");
-	}
+
+	music = rm.loadResource<resource::MusicResource>("bg_music", "test/sol.ogg", true);
+	music->getResource()->setLoop(true);
+	music->getResource()->play();
 }
 
 bool NonogramScene::handleEvent(const sf::Event event)
 {
+	switch (event.type)
+	{
+		case sf::Event::KeyPressed:
+		{
+			if (event.key.code == sf::Keyboard::Left)
+			{
+				swapTexture(-1);
+				return true;
+			}
+			if (event.key.code == sf::Keyboard::Right)
+			{
+				swapTexture(1);
+				return true;
+			}
+		}
+		break;
+	}
+
 	return false;
+}
+
+void NonogramScene::swapTexture(Int32 dir)
+{
+	currentIndex += dir;
+	if (currentIndex < 0)
+		currentIndex = (Int32)(textures.size() - 1);
+	if (currentIndex >= textures.size())
+		currentIndex = 0;
+
+	resource::TextureResource *texture = textures[currentIndex];
+
+	if (texture && texture->isLoaded())
+	{
+		sf::Texture *tex = texture->getResource();
+		sprite.setTexture(*tex, true);
+
+		math::VC2U size = tex->getSize();
+		float scale = 800.f / (float)size.y;
+
+		sprite.setScale(scale, scale);
+
+		system::WindowManager &wm = application->getManager<system::WindowManager>();
+		math::VC2U windowSize = wm.getSize();
+		sprite.setPosition(windowSize.x / 2.f, windowSize.y / 2.f);
+
+		sprite.setOrigin(size.x / 2.f, size.y / 2.f);
+	}
 }
 
 void NonogramScene::update(const sf::Time deltaTime)
@@ -121,25 +136,14 @@ void NonogramScene::update(const sf::Time deltaTime)
 			timer.restart();
 		}
 	}
+	else
+	{
+		swapTexture(0);
+	}
 }
 
 void NonogramScene::render(sf::RenderWindow &renderWindow)
 {
-	if (texture && texture->isLoaded() && sprite.getTexture() == nullptr)
-	{
-		TS_PRINTF("Texture is now set!\n");
-		sprite.setTexture(*texture->getResource());
-
-		sprite.setScale(0.5f, 0.5f);
-
-		system::WindowManager &wm = application->getManager<system::WindowManager>();
-		math::VC2U windowSize = wm.getSize();
-		sprite.setPosition(windowSize.x / 2.f, windowSize.y / 2.f);
-
-		sf::Vector2u tsize = sprite.getTexture()->getSize();
-		sprite.setOrigin(tsize.x / 2.f, tsize.y / 2.f);
-	}
-
 // 	sf::Vector2i mp = sf::Mouse::getPosition(renderWindow);
 // 	sprite.setPosition((float)mp.x, (float)mp.y);
 	renderWindow.draw(sprite);

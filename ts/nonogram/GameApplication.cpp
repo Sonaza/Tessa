@@ -2,6 +2,7 @@
 #include "ts/nonogram/GameApplication.h"
 
 #include "ts/tessa/system/WindowManager.h"
+#include "ts/tessa/file/ArchivistFilesystem.h"
 
 #include "ts/nonogram/scenes/NonogramScene.h"
 #include "ts/nonogram/GameConfig.h"
@@ -57,6 +58,14 @@ bool GameApplication::createWindow(system::WindowManager &windowManager)
 
 // 	sf::RenderWindow &renderwindow = windowManager.getRenderWindow();
 // 	renderwindow.getSystemHandle()
+	return true;
+}
+
+bool GameApplication::loadArchives(file::ArchivistFilesystem &fileSystem)
+{
+	fileSystem.addArchive("afs/test.tspack");
+	fileSystem.addArchive("afs/phancy.tspack");
+	fileSystem.addArchive("afs/music.tspack");
 	return true;
 }
 

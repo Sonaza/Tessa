@@ -82,4 +82,14 @@ extern void setThreadPriority(std::thread &thread, ThreadPriority priority)
 	TS_ASSERT(!"Not implemented on this platform.");
 }
 
+extern void setCurrentThreadPriority(ThreadPriority priority)
+{
+#if TS_PLATFORM == TS_WINDOWS
+	SetThreadPriority(GetCurrentThread(), convertToSystemThreadPriority(priority));
+	return;
+#endif
+
+	TS_ASSERT(!"Not implemented on this platform.");
+}
+
 TS_END_PACKAGE2()

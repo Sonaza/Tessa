@@ -10,3 +10,4 @@ if /I "%CONFIGURATION%" == "debug" (
 	echo Skipping Visual Leak Detector copy in %CONFIGURATION% build.
 )
 
+call "%~dp0sfml\copy_bin.bat" %WORKING_DIRECTORY%

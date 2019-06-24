@@ -2,6 +2,7 @@ builds/*
 obj/*
 package/*
 ext_build/*
+misc/*
 
 # Externals folder, exclude extracted libraries but include archives
 ext/*/*

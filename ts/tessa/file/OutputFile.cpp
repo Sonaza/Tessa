@@ -85,6 +85,8 @@ void OutputFile::close()
 
 bool OutputFile::write(const char *inBuffer, BigSizeType size)
 {
+	TS_ASSERT(inBuffer != nullptr);
+
 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)

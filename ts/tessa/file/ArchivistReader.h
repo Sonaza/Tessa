@@ -22,21 +22,14 @@ public:
 
 	bool fileExists(const std::string &filename) const;
 	PosType getFileSize(const std::string &filename);
-	std::vector<std::string> getFileList() const;
 
+	std::vector<std::string> getFileList() const;
 	SizeType getNumFiles() const;
 
+	bool getFileExtractor(const std::string &filename, ArchivistReaderExtractor &extractor);
 	bool extractToFile(const std::string &filename, const std::string &targetFilepath);
 
-	bool getFileExtractor(const std::string &filename, ArchivistReaderExtractor &extractor);
-
 private:
-// 	mutable std::mutex mutex;
-
-	typedef std::vector<char> ByteBuffer;
-
-	file::InputFile archive;
-
 	typedef std::map<SizeType, ArchivistFileHeader> ArchivistFileHeaders;
 	ArchivistFileHeaders headers;
 	std::string archiveFilepath;

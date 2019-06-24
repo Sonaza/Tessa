@@ -22,11 +22,9 @@ ArchivistReader::ArchivistReader()
 
 bool ArchivistReader::openArchive(const std::string &filepath)
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
-
-	TS_ASSERT(archive.isOpen() == false && "Archive is already opened.");
-
 	archiveFilepath = filepath;
+
+	file::InputFile archive;
 	if (!archive.open(archiveFilepath, InputFileMode_ReadBinary))
 	{
 		TS_LOG_ERROR("Unable to open archive file. File: %s", archiveFilepath);
@@ -103,6 +101,18 @@ SizeType ArchivistReader::getNumFiles() const
 	return (SizeType)headers.size();
 }
 
+bool ArchivistReader::getFileExtractor(const std::string &filename, ArchivistReaderExtractor &extractor)
+{
+	const SizeType hash = math::simpleHash32(filename);
+	if (headers.count(hash) == 0)
+	{
+		TS_LOG_ERROR("Archive does not contain the request file. File: %s\n", filename);
+		return false;
+	}
+
+	return extractor.initialize(headers[hash], archiveFilepath);
+}
+
 bool ArchivistReader::extractToFile(const std::string &filename, const std::string &targetFilepath)
 {
 	ArchivistReaderExtractor extractor;
@@ -127,18 +137,6 @@ bool ArchivistReader::extractToFile(const std::string &filename, const std::stri
 	output.close();
 
 	return true;
-}
-
-bool ArchivistReader::getFileExtractor(const std::string &filename, ArchivistReaderExtractor &extractor)
-{
-	const SizeType hash = math::simpleHash32(filename);
-	if (headers.count(hash) == 0)
-	{
-		TS_LOG_ERROR("Archive does not contain the request file. File: %s\n", filename);
-		return false;
-	}
-
-	return extractor.initialize(headers[hash], archiveFilepath);
 }
 
 TS_END_PACKAGE1()

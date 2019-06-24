@@ -22,7 +22,7 @@ bool ResourceBase<ResourceType, ResourceTypeIndex>::loadResource()
 
 	resourceLoaded = false;
 
-	resource = std::make_unique<ResourceType>();
+	resource = makeUnique<ResourceType>();
 	if (resource == nullptr)
 	{
 		TS_LOG_ERROR("Failed to allocate memory for resource container.");
@@ -38,7 +38,7 @@ bool ResourceBase<ResourceType, ResourceTypeIndex>::loadResource()
 		return false;
 	}
 
-	TS_LOG_DEBUG("Resource '%s' has been loaded.", filepath);
+// 	TS_LOG_DEBUG("Resource '%s' has been loaded.", filepath);
 
 	resourceLoaded = true;
 	loadError = false;

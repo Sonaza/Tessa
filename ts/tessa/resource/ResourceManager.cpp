@@ -6,12 +6,15 @@
 
 #include "ts/tessa/resource/TextureResource.h"
 #include "ts/tessa/resource/FontResource.h"
+#include "ts/tessa/resource/SoundResource.h"
+#include "ts/tessa/resource/MusicResource.h"
 // #include "ts/tessa/resource/ShaderResource.h"
-// #include "ts/tessa/resource/SoundResource.h"
 
 TS_DEFINE_SYSTEM_MANAGER_TYPE(resource::ResourceManager);
 
 TS_PACKAGE1(resource)
+
+std::atomic_bool ResourceManager::stop_flag;
 
 ResourceManager::ResourceManager(system::Application *application)
 	: SystemManagerBase(application)
@@ -31,6 +34,7 @@ bool ResourceManager::initialize()
 
 void ResourceManager::deinitialize()
 {
+	ResourceManager::stop_flag.store(true);
 	unloadAll();
 }
 
@@ -89,17 +93,30 @@ bool ResourceManager::unloadResourceByFileGuid(const GUID &fileGuid)
 	return true;
 }
 
-void ResourceManager::loadResourceTask(AbstractResourceBase *resource)
+void ResourceManager::loadResourceTask(SharedPointer<AbstractResourceBase> resource)
 {
+	if (ResourceManager::stop_flag.load(std::memory_order_relaxed))
+		return;
+
+	// If resource is unique that means all other references are already gone and there is no point in loading.
+	if (resource.isUnique())
+	{
+		TS_PRINTF("skedaddle\n");
+		return;
+	}
+
 	TS_ASSERT(resource != nullptr);
-	TS_LOG_DEBUG("Now loading resource 0x%08X", (ptrdiff_t)resource);
+// 	TS_LOG_DEBUG("Now loading resource 0x%016X", (ptrdiff_t)resource.get());
 	resource->loadResource();
 }
 
-void ResourceManager::addResourceToLoadQueue(AbstractResourceBase *resource)
+void ResourceManager::addResourceToLoadQueue(SharedPointer<AbstractResourceBase> resource)
 {
 	TS_ASSERT(resource != nullptr);
 	TS_VERIFY_POINTERS(application, resource);
+
+// 	if (ResourceManager::stop_flag.load(std::memory_order_relaxed))
+// 		return;
 
 	threading::ThreadManager &tm = getGigaton<threading::ThreadManager>();
 	tm.push(threading::TaskPriorityNormal, &ResourceManager::loadResourceTask, resource);
@@ -123,7 +140,7 @@ ResourceManager::AbstractResourceContainer::~AbstractResourceContainer()
 {
 	if (resource != nullptr)
 	{
-		TS_PRINTF("Unloading resource 0x%" PRIXPTR " with typeid %u\n", (ptrdiff_t)resource.get(), typeId);
+// 		TS_PRINTF("Unloading resource 0x%" PRIXPTR " with typeid %u\n", (ptrdiff_t)resource.get(), typeId);
 		resource->unloadResource();
 	}
 	resource.reset();

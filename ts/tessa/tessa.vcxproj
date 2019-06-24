@@ -156,6 +156,7 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="file\ArchivistFilesystem.cpp" />
     <ClCompile Include="file\ArchivistReader.cpp" />
     <ClCompile Include="file\ArchivistReaderExtractor.cpp" />
     <ClCompile Include="file\ArchivistWriter.cpp" />
@@ -179,12 +180,16 @@
     </ClCompile>
     <ClCompile Include="renderer\GpuPreference.cpp" />
     <ClCompile Include="resource\AbstractResourceBase.cpp" />
+    <ClCompile Include="resource\ArchivistInputStream.cpp" />
     <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
+    <ClCompile Include="resource\MusicResource.cpp" />
+    <ClCompile Include="resource\SoundResource.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
     <ClCompile Include="util\LZ4Compressor.cpp" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
+    <ClInclude Include="file\ArchivistFilesystem.h" />
     <ClInclude Include="file\ArchivistReader.h" />
     <ClInclude Include="file\ArchivistReaderExtractor.h" />
     <ClInclude Include="file\ArchivistWriter.h" />
@@ -193,6 +198,7 @@
     <ClInclude Include="file\FileList.h" />
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
+    <ClInclude Include="file\IOFileBase.h" />
     <ClInclude Include="file\OutputFile.h" />
     <ClInclude Include="lang\Noncopyable.h" />
     <ClInclude Include="lang\ScopedPointer.h" />
@@ -202,6 +208,8 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="math\CRC.h" />
     <ClInclude Include="net\Address.h" />
+    <ClInclude Include="resource\ArchivistInputStream.h" />
+    <ClInclude Include="resource\MusicResource.h" />
     <ClInclude Include="resource\ResourceBase.inl">
       <FileType>CppCode</FileType>
     </ClInclude>
@@ -218,6 +226,7 @@
     <ClCompile Include="threading\ThreadManager.cpp" />
     <ClCompile Include="system\Timer.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
+    <ClInclude Include="resource\SoundResource.h" />
     <ClInclude Include="threading\ThreadUtils.h" />
     <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>

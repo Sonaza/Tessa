@@ -7,6 +7,8 @@
 #define TS_GIGATON_REGISTER_CLASS(instance) ::ts::system::Gigaton::getSingleton().registerClass(instance)
 #define TS_GIGATON_UNREGISTER_CLASS(instance) ::ts::system::Gigaton::getSingleton().unregisterClass(instance)
 
+#define TS_GET_GIGATON() ::ts::system::Gigaton::getSingleton()
+
 TS_PACKAGE1(system)
 
 class Gigaton

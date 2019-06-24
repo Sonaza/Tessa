@@ -115,12 +115,15 @@ extern std::string getDirname(const std::string &path, const std::string &delimi
 	return std::string();
 }
 
-extern std::string getBasename(const std::string &path, const std::string &delimiters)
+extern std::string getBasename(const std::string &path, bool stripExtension, const std::string &delimiters)
 {
-	size_t pos = path.find_last_of(&delimiters[0], std::string::npos, delimiters.size());
-	if (pos != std::string::npos)
-		return path.substr(pos + 1);
-	return path;
+	size_t extPos = stripExtension ? path.find_last_of('.', std::string::npos) : std::string::npos;
+
+	size_t delimPos = path.find_last_of(&delimiters[0], std::string::npos, delimiters.size());
+	if (delimPos != std::string::npos)
+		return path.substr(delimPos + 1, extPos - 1 - delimPos);
+
+	return path.substr(0, extPos);
 }
 
 extern std::string getExtension(const std::string &path)

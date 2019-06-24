@@ -6,6 +6,7 @@
 
 #include <queue>
 #include <unordered_map>
+#include <atomic>
 
 TS_DECLARE1(system, Application)
 
@@ -49,8 +50,10 @@ public:
 	bool unloadResourceByFileGuid(const GUID &fileGuid);
 
 private:
-	static void loadResourceTask(AbstractResourceBase *resource);
-	void addResourceToLoadQueue(AbstractResourceBase *resource);
+	static std::atomic_bool stop_flag;
+
+	static void loadResourceTask(SharedPointer<AbstractResourceBase> resource);
+	void addResourceToLoadQueue(SharedPointer<AbstractResourceBase> resource);
 
 	GUID findFileGuid(const GUID &resourceGuid);
 
@@ -70,7 +73,7 @@ private:
 		~AbstractResourceContainer();
 		bool isValid() const;
 
-		UniquePointer<AbstractResourceBase> resource;
+		SharedPointer<AbstractResourceBase> resource;
 		SizeType typeId = ~0U;
 	};
 	typedef std::unordered_map<const GUID, UniquePointer<AbstractResourceContainer>, GuidHash> ResourceList;
@@ -113,9 +116,6 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 		return nullptr;
 	}
 
-	resourceGuids.emplace(resourceGuid, fileGuid);
-	resources.emplace(fileGuid, std::move(rc));
-
 #if TS_BUILD != TS_FINALRELEASE
 	debugResourceHandles[fileGuid] = uniqueResourceHandle;
 	debugResourceTypeNames[ResourceType::TypeId] = ResourceType::TypeName;
@@ -124,12 +124,15 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 	// Add to threaded load queue or load immediately based on user flag
 	if (immediate == false)
 	{
-		addResourceToLoadQueue(resource);
+		addResourceToLoadQueue(rc->resource);
 	}
 	else
 	{
-		loadResourceTask(resource);
+		loadResourceTask(rc->resource);
 	}
+
+	resourceGuids.emplace(resourceGuid, fileGuid);
+	resources.emplace(fileGuid, std::move(rc));
 
 	return resource;
 }

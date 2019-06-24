@@ -23,7 +23,7 @@ extern std::string joinPaths(const std::string &left, const std::string &right, 
 extern std::string normalizePath(const std::string &path, char delimiter = TS_SYSTEM_PATH_DELIMITER);
 
 extern std::string getDirname(const std::string &path, const std::string &delimiters = TS_ALL_PATH_DELIMITERS);
-extern std::string getBasename(const std::string &path, const std::string &delimiters = TS_ALL_PATH_DELIMITERS);
+extern std::string getBasename(const std::string &path, bool stripExtension = false, const std::string &delimiters = TS_ALL_PATH_DELIMITERS);
 
 // Returns the substring after the last period (.) or empty if not found before the last path delimiter
 // Does not check if the given path is a directory or file

@@ -27,7 +27,7 @@ ArchivistWriter::ArchivistWriter()
 bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &archiveFilepath, ArchivistCompressionMode compression)
 {
 	const SizeType hash = math::simpleHash32(filepath);
-	if (stagefiles.count(hash) > 0)
+	if (_stagefiles.count(hash) > 0)
 	{
 		TS_LOG_WARNING("File is already staged. File: %s\n", filepath);
 		return false;
@@ -45,10 +45,38 @@ bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &
 		return false;
 	}
 
-	Stagefile &file = stagefiles[hash];
+	InputFile input;
+	if (!input.open(filepath, InputFileMode_ReadBinary))
+	{
+		TS_LOG_ERROR("Unable to open file for reading. File: %s\n", filepath);
+		return false;
+	}
+
+	BigSizeType filesize = input.getSize();
+	input.close();
+
+	// Limit individual file sizes
+	if (filesize > FileMaxSize)
+	{
+		TS_LOG_ERROR("File size exceeds the maximum size of %u MB. File: %s\n", (FileMaxSize / 1024 / 1024), filepath);
+		return false;
+	}
+
+	// Archive size would exceed the limit
+	if (_stagedTotalFilesize + filesize > ArchiveMaxSize)
+	{
+		TS_LOG_ERROR("All staged files together exceed the maximum size of %u MB. File: %s\n", (ArchiveMaxSize / 1024 / 1024), filepath);
+		return false;
+	}
+
+	Stagefile &file = _stagefiles[hash];
 	file.filepath = std::move(filepath);
 	file.archiveFilepath = utils::normalizePath(archiveFilepath, '/');
+	file.filesize = (SizeType)filesize; // Casting is fine, file size is less than the limits
 	file.compression = compression;
+
+	_stagedTotalFilesize += filesize;
+
 	return true;
 }
 
@@ -61,31 +89,15 @@ bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwr
 	}
 
 	std::vector<ArchivistFileHeader> headers;
-	for (StagefileList::const_iterator it = stagefiles.begin(); it != stagefiles.end(); ++it)
+	for (StagefileList::const_iterator it = _stagefiles.begin(); it != _stagefiles.end(); ++it)
 	{
 		const Stagefile &file = it->second;
-
-		InputFile input;
-		if (!input.open(file.filepath, InputFileMode_ReadBinary))
-		{
-			TS_LOG_ERROR("Unable to open file for reading. File: %s\n", file.filepath);
-			return false;
-		}
-
-		BigSizeType filesize = input.getFileSize();
-		if (filesize > MaxFileSize)
-		{
-			TS_LOG_ERROR("File is too large, maximum size is %u MB. File: %s\n", (MaxFileSize / 1024 / 1024), file.filepath);
-			return false;
-		}
-
-		input.close();
 
 		ArchivistFileHeader header;
 		memset(&header, 0, sizeof(ArchivistFileHeader));
 		
 		memcpy(header.filename, (void*)file.archiveFilepath.c_str(), file.archiveFilepath.size());
-		header.filesize = (SizeType)filesize;
+		header.filesize = (SizeType)file.filesize;
 		header.compression = file.compression;
 
 		headers.push_back(header);
@@ -113,7 +125,7 @@ bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwr
 	ByteBuffer buffer;
 
 	SizeType index = 0;
-	for (StagefileList::const_iterator it = stagefiles.begin(); it != stagefiles.end(); ++it, ++index)
+	for (StagefileList::const_iterator it = _stagefiles.begin(); it != _stagefiles.end(); ++it, ++index)
 	{
 		const Stagefile &file = it->second;
 
@@ -158,7 +170,7 @@ PosType ArchivistWriter::copyFileToBuffer(const std::string &filepath, ByteBuffe
 	if (!input.open(filepath, InputFileMode_ReadBinary))
 		return false;
 
-	PosType filesize = input.getFileSize();
+	PosType filesize = input.getSize();
 	dstBuffer.resize(filesize);
 
 	PosType bytesRead = input.read(&dstBuffer[0], filesize);
@@ -176,7 +188,7 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const std::string &fi
 	if (!input.open(filepath, InputFileMode_ReadBinary))
 		return false;
 
-	PosType filesize = input.getFileSize();
+	PosType filesize = input.getSize();
 	ByteBuffer srcBuffer(filesize);
 
 	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((Int32)filesize);
@@ -222,7 +234,7 @@ PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const std::string &fil
 	if (!input.open(filepath, InputFileMode_ReadBinary))
 		return false;
 
-	PosType filesize = input.getFileSize();
+	PosType filesize = input.getSize();
 
 	const SizeType blockSizeMax = LZ4_compressBound(ArchivistConstants::CompressionBlockSize);
 

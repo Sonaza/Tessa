@@ -66,7 +66,7 @@ public:
 	
 	/* Returns: full file size in bytes, or -1 if failure or bad.
 	 */
-	PosType getFileSize();
+	PosType getSize();
 	
 	/* Returns: true if file is open and readable.
 	 */
