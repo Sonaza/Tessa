@@ -154,6 +154,11 @@ bool ArchivistReaderExtractor::isEOF() const
 	return eof;
 }
 
+const std::string ArchivistReaderExtractor::getFilename() const
+{
+	return std::string(header.filename);
+}
+
 bool ArchivistReaderExtractor::initialize(const ArchivistFileHeader &headerParam, const std::string &archiveFilepath)
 {
 	TS_ASSERT(initialized == false && "Extractor is being reinitialized without a call to close first.");

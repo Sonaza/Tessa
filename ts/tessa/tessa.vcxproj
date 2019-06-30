@@ -198,7 +198,6 @@
     <ClInclude Include="file\FileList.h" />
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
-    <ClInclude Include="file\IOFileBase.h" />
     <ClInclude Include="file\OutputFile.h" />
     <ClInclude Include="lang\Noncopyable.h" />
     <ClInclude Include="lang\ScopedPointer.h" />

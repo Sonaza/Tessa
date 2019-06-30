@@ -33,6 +33,8 @@ public:
 	bool isGood() const;
 	bool isEOF() const;
 
+	const std::string getFilename() const;
+
 private:
 	typedef std::vector<char> ByteBuffer;
 

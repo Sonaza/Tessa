@@ -577,11 +577,11 @@ void randomtests()
 {
 // 	std::string packfile = "afs/test.tspack";
 // 	writePack("test/", "afs/test.tspack", file::CompressionType_LZ4FullBlock);
-	writePack("phancy/", "afs/phancy.tspack", file::CompressionType_LZ4FullBlock);
+// 	writePack("phancy/", "afs/phancy.tspack", file::CompressionType_LZ4FullBlock);
 
 // 	file::ArchivistWriter archiveWriter;
-// 	archiveWriter.stageFile("music.ogg", "test/music.ogg", file::CompressionType_LZ4Streaming);
-// 	archiveWriter.stageFile("sol.ogg", "test/sol.ogg", file::CompressionType_LZ4Streaming);
+// 	archiveWriter.stageFile("music.ogg", "test/music.ogg", file::CompressionType_NoCompression);
+// 	archiveWriter.stageFile("sol.ogg", "test/sol.ogg", file::CompressionType_NoCompression);
 // 	archiveWriter.saveToFile("afs/music.tspack");
 
 // 	file::ArchivistReader archiveReader;

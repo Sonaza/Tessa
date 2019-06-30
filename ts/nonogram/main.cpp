@@ -11,8 +11,8 @@ extern void randomtests();
 int main(int argc, const char **argv)
 // #endif
 {
-	randomtests();
-// 	return 0;
+// 	randomtests();
+// 	return r;
 
 	ts::game::GameApplication app(argc, argv);
 	int returnCode = app.start();

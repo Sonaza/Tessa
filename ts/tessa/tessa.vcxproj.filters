@@ -337,9 +337,6 @@
     <ClInclude Include="file\ArchivistFilesystem.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="file\IOFileBase.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource\ArchivistInputStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
