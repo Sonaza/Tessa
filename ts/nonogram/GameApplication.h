@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ts/tessa/system/Application.h"
+#include "ts/tessa/system/BaseApplication.h"
 
 TS_DECLARE1(system, WindowManager);
 TS_DECLARE1(file, ArchivistFilesystem);
 
 TS_PACKAGE1(game)
 
-class GameApplication : public system::Application
+class GameApplication : public system::BaseApplication
 {
 public:
 	GameApplication(Int32 argc, const char **argv);

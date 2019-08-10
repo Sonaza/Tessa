@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <atomic>
 
-TS_DECLARE1(system, Application)
+TS_DECLARE1(system, BaseApplication)
 
 TS_DECLARE1(resource, TextureResource)
 TS_DECLARE1(resource, FontResource)
@@ -22,7 +22,7 @@ class ResourceManager : public system::SystemManagerBase<TS_FOURCC('R','M','A','
 	TS_DECLARE_SYSTEM_MANAGER_TYPE(resource::ResourceManager);
 
 public:
-	ResourceManager(system::Application *application);
+	ResourceManager(system::BaseApplication *application);
 	virtual ~ResourceManager();
 
 	virtual bool initialize();
@@ -49,8 +49,14 @@ public:
 	bool unloadResourceByFilePath(const std::string &filepath);
 	bool unloadResourceByFileGuid(const GUID &fileGuid);
 
+	// Change the resource root directory, by default it uses working directory
+	// through releative paths but that may not always be correct.
+	static void setResourceRootDirectory(const std::string &rootDirectory);
+	static const std::string &getResourceRootDirectory();
+
 private:
 	static std::atomic_bool stop_flag;
+	static std::string resourceRootDirectory;
 
 	static void loadResourceTask(SharedPointer<AbstractResourceBase> resource);
 	void addResourceToLoadQueue(SharedPointer<AbstractResourceBase> resource);

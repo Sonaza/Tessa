@@ -156,12 +156,15 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="common\WindowsUtils.cpp" />
     <ClCompile Include="file\ArchivistFilesystem.cpp" />
     <ClCompile Include="file\ArchivistReader.cpp" />
     <ClCompile Include="file\ArchivistReaderExtractor.cpp" />
     <ClCompile Include="file\ArchivistWriter.cpp" />
     <ClCompile Include="file\FileEntry.cpp" />
+    <ClCompile Include="file\FileEntryW.cpp" />
     <ClCompile Include="file\FileList.cpp" />
+    <ClCompile Include="file\FileListW.cpp" />
     <ClCompile Include="file\FileUtils.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
@@ -185,17 +188,23 @@
     <ClCompile Include="resource\GUID.cpp" />
     <ClCompile Include="resource\MusicResource.cpp" />
     <ClCompile Include="resource\SoundResource.cpp" />
+    <ClCompile Include="threading\BaseThreadEntry.cpp" />
+    <ClCompile Include="threading\Thread.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
     <ClCompile Include="util\LZ4Compressor.cpp" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
+    <ClInclude Include="common\WindowsUtils.h" />
     <ClInclude Include="file\ArchivistFilesystem.h" />
     <ClInclude Include="file\ArchivistReader.h" />
     <ClInclude Include="file\ArchivistReaderExtractor.h" />
     <ClInclude Include="file\ArchivistWriter.h" />
     <ClInclude Include="file\ArchivistCommon.h" />
     <ClInclude Include="file\FileEntry.h" />
+    <ClInclude Include="file\FileEntryW.h" />
     <ClInclude Include="file\FileList.h" />
+    <ClInclude Include="file\FileListStyle.h" />
+    <ClInclude Include="file\FileListW.h" />
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
     <ClInclude Include="file\OutputFile.h" />
@@ -214,7 +223,7 @@
     </ClInclude>
     <ClCompile Include="resource\ResourceManager.cpp" />
     <ClCompile Include="resource\TextureResource.cpp" />
-    <ClCompile Include="system\Application.cpp" />
+    <ClCompile Include="system\BaseApplication.cpp" />
     <ClCompile Include="common\Assert.cpp" />
     <ClCompile Include="common\Log.cpp" />
     <ClCompile Include="system\Commando.cpp" />
@@ -222,10 +231,12 @@
     <ClCompile Include="system\Gigaton.cpp" />
     <ClCompile Include="system\AbstractSceneBase.cpp" />
     <ClCompile Include="system\SystemManagerBase.cpp" />
-    <ClCompile Include="threading\ThreadManager.cpp" />
+    <ClCompile Include="threading\ThreadScheduler.cpp" />
     <ClCompile Include="system\Timer.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="resource\SoundResource.h" />
+    <ClInclude Include="threading\BaseThreadEntry.h" />
+    <ClInclude Include="threading\Thread.h" />
     <ClInclude Include="threading\ThreadUtils.h" />
     <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>
@@ -251,7 +262,7 @@
     <ClInclude Include="resource\ResourceBase.h" />
     <ClInclude Include="resource\ResourceManager.h" />
     <ClInclude Include="resource\TextureResource.h" />
-    <ClInclude Include="system\Application.h" />
+    <ClInclude Include="system\BaseApplication.h" />
     <ClInclude Include="common\Assert.h" />
     <ClInclude Include="common\IncludeWindows.h" />
     <ClInclude Include="common\Log.h" />
@@ -261,7 +272,7 @@
     <ClInclude Include="system\Gigaton.h" />
     <ClInclude Include="system\AbstractSceneBase.h" />
     <ClInclude Include="system\SystemManagerBase.h" />
-    <ClInclude Include="threading\ThreadManager.h" />
+    <ClInclude Include="threading\ThreadScheduler.h" />
     <ClInclude Include="system\Timer.h" />
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>

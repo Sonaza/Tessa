@@ -5,7 +5,7 @@
 TS_PACKAGE2(threading, utils)
 
 extern void setThreadName(std::thread &thread, const std::string &threadName);
-// extern void setCurrentThreadName(const std::string &threadName);
+extern void setCurrentThreadName(const std::string &threadName);
 
 enum ThreadPriority
 {

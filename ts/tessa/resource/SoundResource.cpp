@@ -47,7 +47,7 @@ bool SoundResource::loadResourceImpl()
 		}
 
 		// Fallback from normal file system
-		if (resource->loadFromFile(filepath))
+		if (resource->loadFromFile(getAbsolutePath()))
 		{
 			return true;
 		}

@@ -3,7 +3,7 @@
 
 TS_PACKAGE1(system)
 
-AbstractSceneBase::AbstractSceneBase(system::Application *application)
+AbstractSceneBase::AbstractSceneBase(system::BaseApplication *application)
 	: application(application)
 {
 }

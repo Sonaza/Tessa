@@ -30,19 +30,18 @@ Int32 convertToSystemThreadPriority(ThreadPriority priority)
 	return 0;
 }
 
-}
-
-extern void setThreadName(std::thread &thread, const std::string &threadName)
-{
 #if TS_PLATFORM == TS_WINDOWS
-/*
+
+void setThreadName(DWORD nativeThreadID, const std::string &threadName)
+{
+	/*
 	Kinda terrible but Microsoft gonna Microsoft
 	https://docs.microsoft.com/en-us/visualstudio/debugger/how-to-set-a-thread-name-in-native-code
-	
+
 	Newer alternative for Win10 on VS2017
 	https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-setthreaddescription
-*/
-	
+	*/
+
 	struct TS_ALIGN(8)
 	{
 		DWORD dwType;     // Must be 0x1000.
@@ -52,7 +51,7 @@ extern void setThreadName(std::thread &thread, const std::string &threadName)
 	} info;
 	info.dwType = 0x1000;
 	info.szName = threadName.c_str();
-	info.dwThreadID = GetThreadId(thread.native_handle());
+	info.dwThreadID = nativeThreadID;;
 	info.dwFlags = 0;
 
 #pragma warning( push )
@@ -66,6 +65,27 @@ extern void setThreadName(std::thread &thread, const std::string &threadName)
 	{
 	}
 #pragma warning( pop )
+	return;
+}
+
+#endif
+
+}
+
+extern void setThreadName(std::thread &thread, const std::string &threadName)
+{
+#if TS_PLATFORM == TS_WINDOWS
+	setThreadName(GetThreadId(thread.native_handle()), threadName);
+	return;
+#endif
+
+	TS_ASSERT(!"Not implemented on this platform.");
+}
+
+extern void setCurrentThreadName(const std::string &threadName)
+{
+#if TS_PLATFORM == TS_WINDOWS
+	setThreadName(GetCurrentThreadId(), threadName);
 	return;
 #endif
 

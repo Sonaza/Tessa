@@ -7,7 +7,7 @@
 #define TS_DEFINE_SYSTEM_MANAGER_TYPE(__class_name) \
 	namespace ts { const char * __class_name::TypeName = #__class_name; }
 
-TS_DECLARE1(system, Application);
+TS_DECLARE1(system, BaseApplication);
 
 TS_PACKAGE1(system)
 
@@ -39,14 +39,14 @@ class SystemManagerBase : public AbstractSystemManagerBase
 public:
 	enum { TypeIndex = ManagerTypeIndex };
 
-	SystemManagerBase(system::Application *application)
+	SystemManagerBase(system::BaseApplication *application)
 		: application(application)
 	{
 	}
 	virtual ~SystemManagerBase() {}
 
 protected:
-	system::Application *application = nullptr;
+	system::BaseApplication *application = nullptr;
 };
 
 template <class T>

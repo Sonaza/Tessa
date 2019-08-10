@@ -16,6 +16,11 @@ InputFile::InputFile(const std::string &filepath, InputFileMode mode)
 	open(filepath, mode);
 }
 
+InputFile::InputFile(const std::wstring &filepath, InputFileMode mode)
+{
+	open(filepath, mode);
+}
+
 InputFile::~InputFile()
 {
 	close();
@@ -45,7 +50,6 @@ InputFile &InputFile::operator=(InputFile &&other)
 
 bool InputFile::open(const std::string &filepath, InputFileMode mode)
 {
-	//std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr == nullptr && "InputFile is already opened.");
 	if (_filePtr != nullptr)
 		return false;
@@ -70,9 +74,34 @@ bool InputFile::open(const std::string &filepath, InputFileMode mode)
 	return true;
 }
 
+bool InputFile::open(const std::wstring &filepath, InputFileMode mode)
+{
+	TS_ASSERT(_filePtr == nullptr && "InputFile is already opened.");
+	if (_filePtr != nullptr)
+		return false;
+
+	InputFileStream *file = new InputFileStream;
+	if (file == nullptr)
+		return false;
+
+	Int32 modeBits = std::ios_base::in;
+	if ((mode & priv::InputFileModeBits::In_ModeBinary) > 0)
+		modeBits |= std::ios_base::binary;
+
+	file->open(filepath.c_str(), modeBits);
+	if (!(*file))
+	{
+// 		TS_LOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, strerror(errno));
+		delete file;
+		return false;
+	}
+
+	_filePtr = file;
+	return true;
+}
+
 void InputFile::close()
 {
-	//std::lock_guard<std::mutex> mg(mutex);
 	if (_filePtr != nullptr)
 	{
 		InputFileStream *file = static_cast<InputFileStream*>(_filePtr);

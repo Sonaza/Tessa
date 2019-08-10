@@ -2,7 +2,7 @@
 
 #include "ts/tessa/system/SystemManagerBase.h"
 
-TS_DECLARE1(system, Application);
+TS_DECLARE1(system, BaseApplication);
 
 TS_PACKAGE1(system)
 
@@ -11,7 +11,7 @@ class WindowManager : public system::SystemManagerBase<TS_FOURCC('W','M','A','N'
 	TS_DECLARE_SYSTEM_MANAGER_TYPE(system::WindowManager);
 
 public:
-	WindowManager(system::Application *application);
+	WindowManager(system::BaseApplication *application);
 	virtual ~WindowManager();
 
 	virtual bool initialize();

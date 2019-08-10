@@ -29,6 +29,7 @@ class InputFile : public lang::Noncopyable
 public:
 	InputFile();
 	InputFile(const std::string &filepath, InputFileMode mode);
+	InputFile(const std::wstring &filepath, InputFileMode mode);
 	~InputFile();
 
 	// Move constructor and assignment
@@ -39,6 +40,7 @@ public:
 	 * Returns: true if file open succeeded. In case of failure the reason is output to the log.
 	 */
 	bool open(const std::string &filepath, InputFileMode mode);
+	bool open(const std::wstring &filepath, InputFileMode mode);
 	
 	/* Closes opened file, also clearing flags.
 	 */

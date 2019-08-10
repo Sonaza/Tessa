@@ -13,7 +13,7 @@ TS_DEFINE_SYSTEM_MANAGER_TYPE(file::ArchivistFilesystem);
 
 TS_PACKAGE1(file)
 
-ArchivistFilesystem::ArchivistFilesystem(system::Application *application)
+ArchivistFilesystem::ArchivistFilesystem(system::BaseApplication *application)
 	: SystemManagerBase(application)
 {
 	TS_GIGATON_REGISTER_CLASS(this);

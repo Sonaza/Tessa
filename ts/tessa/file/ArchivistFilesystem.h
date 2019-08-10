@@ -16,7 +16,7 @@ class ArchivistFilesystem : public system::SystemManagerBase<TS_FOURCC('A','r','
 	TS_DECLARE_SYSTEM_MANAGER_TYPE(file::ArchivistFilesystem);
 
 public:
-	ArchivistFilesystem(system::Application *application);
+	ArchivistFilesystem(system::BaseApplication *application);
 	virtual ~ArchivistFilesystem();
 
 	virtual bool initialize();

@@ -1,8 +1,8 @@
 #include "Precompiled.h"
 #include "ts/tessa/resource/ResourceManager.h"
 
-#include "ts/tessa/system/Application.h"
-#include "ts/tessa/threading/ThreadManager.h"
+#include "ts/tessa/system/BaseApplication.h"
+#include "ts/tessa/threading/ThreadScheduler.h"
 
 #include "ts/tessa/resource/TextureResource.h"
 #include "ts/tessa/resource/FontResource.h"
@@ -14,9 +14,11 @@ TS_DEFINE_SYSTEM_MANAGER_TYPE(resource::ResourceManager);
 
 TS_PACKAGE1(resource)
 
+std::string ResourceManager::resourceRootDirectory = "";
+
 std::atomic_bool ResourceManager::stop_flag;
 
-ResourceManager::ResourceManager(system::Application *application)
+ResourceManager::ResourceManager(system::BaseApplication *application)
 	: SystemManagerBase(application)
 {
 	TS_GIGATON_REGISTER_CLASS(this);
@@ -93,6 +95,16 @@ bool ResourceManager::unloadResourceByFileGuid(const GUID &fileGuid)
 	return true;
 }
 
+void ResourceManager::setResourceRootDirectory(const std::string &rootDirectory)
+{
+	ResourceManager::resourceRootDirectory = rootDirectory;
+}
+
+const std::string &ResourceManager::getResourceRootDirectory()
+{
+	return ResourceManager::resourceRootDirectory;
+}
+
 void ResourceManager::loadResourceTask(SharedPointer<AbstractResourceBase> resource)
 {
 	if (ResourceManager::stop_flag.load(std::memory_order_relaxed))
@@ -118,8 +130,8 @@ void ResourceManager::addResourceToLoadQueue(SharedPointer<AbstractResourceBase>
 // 	if (ResourceManager::stop_flag.load(std::memory_order_relaxed))
 // 		return;
 
-	threading::ThreadManager &tm = getGigaton<threading::ThreadManager>();
-	tm.push(threading::TaskPriorityNormal, &ResourceManager::loadResourceTask, resource);
+	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
+	tm.scheduleOnce(0, &ResourceManager::loadResourceTask, resource);
 }
 
 GUID ResourceManager::findFileGuid(const GUID &resourceGuid)

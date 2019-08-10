@@ -145,10 +145,10 @@ void FileList::setGlobRegex(const std::string &pattern)
 {
 	std::lock_guard<std::mutex> mg(mutex);
 
-	std::regex *regex = nullptr;
+	GlobRegexType *regex = nullptr;
 	try
 	{
-		regex = new std::regex(pattern, std::regex_constants::ECMAScript);
+		regex = new GlobRegexType(pattern, std::regex_constants::ECMAScript);
 	}
 	catch (std::regex_error &e)
 	{

@@ -51,7 +51,7 @@ bool MusicResource::loadResourceImpl()
 		}
 
 		// Fallback from normal file system
-		if (resource->openFromFile(filepath))
+		if (resource->openFromFile(getAbsolutePath()))
 		{
 			return true;
 		}

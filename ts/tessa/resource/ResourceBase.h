@@ -43,7 +43,6 @@ protected:
 	std::atomic<bool> resourceLoaded = false;
 	std::atomic<bool> loadError = false;
 
-	std::string filepath;
 	GUID resourceGuid;
 
 	mutable std::mutex resourceMutex;

@@ -50,9 +50,6 @@
     <ClCompile Include="system\Timer.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="system\Application.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="resource\FontResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -88,9 +85,6 @@
     </ClCompile>
     <ClCompile Include="system\AbstractSceneBase.cpp">
       <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="threading\ThreadManager.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="threading\ThreadUtils.cpp">
       <Filter>Source Files</Filter>
@@ -143,6 +137,27 @@
     <ClCompile Include="resource\SoundResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="system\BaseApplication.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\Thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\BaseThreadEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\FileEntryW.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\FileListW.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\WindowsUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\ThreadScheduler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -193,9 +208,6 @@
     <ClInclude Include="resource\GUID.h">
       <Filter>Source Files\resource</Filter>
     </ClInclude>
-    <ClInclude Include="system\Application.h">
-      <Filter>Source Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="common\Package.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
@@ -245,9 +257,6 @@
       <Filter>Source Files\system</Filter>
     </ClInclude>
     <ClInclude Include="math\CommonMath.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="threading\ThreadManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="threading\ThreadUtils.h">
@@ -344,6 +353,30 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="resource\SoundResource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\BaseApplication.h">
+      <Filter>Source Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="threading\Thread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threading\BaseThreadEntry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileListStyle.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileEntryW.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileListW.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\WindowsUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threading\ThreadScheduler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

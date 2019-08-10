@@ -5,7 +5,7 @@ TS_DEFINE_SYSTEM_MANAGER_TYPE(system::WindowManager);
 
 TS_PACKAGE1(system)
 
-WindowManager::WindowManager(system::Application *application)
+WindowManager::WindowManager(system::BaseApplication *application)
 	: SystemManagerBase(application)
 {
 	TS_GIGATON_REGISTER_CLASS(this);
@@ -44,7 +44,9 @@ void WindowManager::create(const math::VC2U &videomode, const std::string &windo
 	}
 
 	sf::ContextSettings settings;
-	settings.antialiasingLevel = 2;
+	settings.antialiasingLevel = 8;
+	settings.majorVersion = 3;
+	settings.minorVersion = 0;
 
 	renderWindow.create(sf::VideoMode(videomode.x, videomode.y), windowTitle, style, settings);
 	activeGameView = renderWindow.getView();

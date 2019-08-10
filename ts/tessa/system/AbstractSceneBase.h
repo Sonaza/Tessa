@@ -1,6 +1,6 @@
 #pragma once
 
-TS_DECLARE1(system, Application);
+TS_DECLARE1(system, BaseApplication);
 TS_DECLARE1(resource, ResourceManager);
 
 TS_PACKAGE1(system)
@@ -8,7 +8,7 @@ TS_PACKAGE1(system)
 class AbstractSceneBase
 {
 public:
-	AbstractSceneBase(system::Application *application);
+	AbstractSceneBase(system::BaseApplication *application);
 	virtual ~AbstractSceneBase();
 
 	virtual bool start() = 0;
@@ -37,8 +37,8 @@ protected:
 
 	bool sceneLoaded = false;
 
-	friend class system::Application;
-	system::Application *application = nullptr;
+	friend class system::BaseApplication;
+	system::BaseApplication *application = nullptr;
 };
 
 template <class T>
