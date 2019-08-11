@@ -28,7 +28,7 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
-	virtual void update(const sf::Time deltaTime);
+	virtual void update(const TimeSpan deltaTime);
 
 	template<class ResourceType>
 	ResourceType *loadResource(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);

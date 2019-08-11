@@ -26,7 +26,7 @@ void WindowManager::deinitialize()
 	close();
 }
 
-void WindowManager::update(const sf::Time deltaTime)
+void WindowManager::update(const TimeSpan deltaTime)
 {
 
 }
@@ -44,9 +44,10 @@ void WindowManager::create(const math::VC2U &videomode, const std::string &windo
 	}
 
 	sf::ContextSettings settings;
-	settings.antialiasingLevel = 8;
+	settings.antialiasingLevel = 4;
 	settings.majorVersion = 3;
 	settings.minorVersion = 0;
+// 	settings.sRgbCapable = true;
 
 	renderWindow.create(sf::VideoMode(videomode.x, videomode.y), windowTitle, style, settings);
 	activeGameView = renderWindow.getView();

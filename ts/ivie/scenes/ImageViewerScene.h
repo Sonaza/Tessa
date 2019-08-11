@@ -16,14 +16,10 @@ public:
 	virtual void loadResources(resource::ResourceManager &rm);
 
 	virtual bool handleEvent(const sf::Event event);
-	virtual void update(const sf::Time deltaTime);
+	virtual void update(const TimeSpan deltaTime);
 	virtual void render(sf::RenderWindow &renderWindow);
 
 protected:
-	sf::Clock timer;
-
-	bool isFormatSupported(const std::wstring& filename);
-
 	void loadImage();
 
 // 	void swapTexture(Int32 dir);

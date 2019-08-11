@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ts/tessa/Time/TimeSpan.h"
+
 TS_DECLARE1(system, BaseApplication);
 TS_DECLARE1(resource, ResourceManager);
 
@@ -17,7 +19,7 @@ public:
 	virtual void loadResources(resource::ResourceManager &rm) = 0;
 
 	virtual bool handleEvent(const sf::Event event) = 0;
-	virtual void update(const sf::Time deltaTime) = 0;
+	virtual void update(const TimeSpan deltaTime) = 0;
 	virtual void render(sf::RenderWindow &renderWindow) = 0;
 
 	bool isLoaded() const { return sceneLoaded; }

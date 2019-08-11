@@ -34,7 +34,7 @@ void ArchivistFilesystem::deinitialize()
 
 }
 
-void ArchivistFilesystem::update(const sf::Time deltaTime)
+void ArchivistFilesystem::update(const TimeSpan deltaTime)
 {
 
 }

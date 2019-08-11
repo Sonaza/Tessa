@@ -182,7 +182,7 @@ void ImageViewerScene::swapTexture(Int32 dir)
 	}
 }*/
 
-void ImageViewerScene::update(const sf::Time deltaTime)
+void ImageViewerScene::update(const TimeSpan deltaTime)
 {
 	system::WindowManager &wm = application->getManager<system::WindowManager>();
 	math::VC2U windowSize = wm.getSize();

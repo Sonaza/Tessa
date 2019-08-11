@@ -16,7 +16,7 @@ FileScanner::FileScanner(const std::wstring &directoryPath, const std::vector<st
 	TS_GIGATON_REGISTER_CLASS(this);
 
 	threading::ThreadScheduler &tm = TS_GET_GIGATON().getGigaton<threading::ThreadScheduler>();
-	scannerTaskId = tm.scheduleWithInterval(2000, &FileScanner::scanTaskEntry, this);
+	scannerTaskId = tm.scheduleWithInterval(TimeSpan::fromMilliseconds(2000), &FileScanner::scanTaskEntry, this);
 }
 
 FileScanner::~FileScanner()
@@ -44,17 +44,12 @@ void FileScanner::updateFilelist()
 	file::FileListW lister(directoryPath, true, file::FileListStyle_Files);
 	std::vector<file::FileEntryW> files = lister.getFullListing();
 
-	TS_PRINTF("Updating filelist!\n");
-
 	std::vector<std::wstring> tempList;
 	tempList.reserve(files.size());
 	for (file::FileEntryW &file : files)
 	{
 		if (isExtensionAllowed(file.getFilepath()))
-		{
-			TS_WPRINTF("  %s\n", file.getFullFilepath());
 			tempList.push_back(file.getFullFilepath());
-		}
 	}
 
 	std::sort(tempList.begin(), tempList.end(), util::NaturalSortByExtension);
@@ -63,8 +58,6 @@ void FileScanner::updateFilelist()
 		std::lock_guard<std::mutex> mg(mutex);
 		filelist = std::move(tempList);
 	}
-
-	TS_PRINTF("Donezo!\n");
 }
 
 void FileScanner::scanTaskEntry(FileScanner *scanner)

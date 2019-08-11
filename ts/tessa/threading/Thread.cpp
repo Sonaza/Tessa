@@ -67,12 +67,14 @@ void Thread::setMainThread(Thread &thread)
 	Thread::mainThread = &thread;
 }
 
-void Thread::sleep(SizeType milliseconds)
+void Thread::sleep(TimeSpan time)
 {
+	TS_ASSERT(time >= TimeSpan::zero && "Sleep time is negative.");
+
 #if TS_PLATFORM == TS_WINDOWS
-	Sleep(milliseconds);
+	Sleep((DWORD)time.getMilliseconds());
 #else
-	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+	std::this_thread::sleep_for(std::chrono::milliseconds(time.getMilliseconds()));
 #endif
 }
 

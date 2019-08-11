@@ -191,6 +191,10 @@
     <ClCompile Include="threading\BaseThreadEntry.cpp" />
     <ClCompile Include="threading\Thread.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
+    <ClCompile Include="time\Clock.cpp" />
+    <ClCompile Include="time\GlobalTimer.cpp" />
+    <ClCompile Include="time\Time.cpp" />
+    <ClCompile Include="time\TimeSpan.cpp" />
     <ClCompile Include="util\LZ4Compressor.cpp" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
@@ -232,12 +236,15 @@
     <ClCompile Include="system\AbstractSceneBase.cpp" />
     <ClCompile Include="system\SystemManagerBase.cpp" />
     <ClCompile Include="threading\ThreadScheduler.cpp" />
-    <ClCompile Include="system\Timer.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="resource\SoundResource.h" />
     <ClInclude Include="threading\BaseThreadEntry.h" />
     <ClInclude Include="threading\Thread.h" />
     <ClInclude Include="threading\ThreadUtils.h" />
+    <ClInclude Include="time\Clock.h" />
+    <ClInclude Include="time\GlobalTimer.h" />
+    <ClInclude Include="time\Time.h" />
+    <ClInclude Include="time\TimeSpan.h" />
     <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>
   <ItemGroup>
@@ -273,7 +280,6 @@
     <ClInclude Include="system\AbstractSceneBase.h" />
     <ClInclude Include="system\SystemManagerBase.h" />
     <ClInclude Include="threading\ThreadScheduler.h" />
-    <ClInclude Include="system\Timer.h" />
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>

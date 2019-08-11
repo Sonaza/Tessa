@@ -91,7 +91,7 @@ bool InputFile::open(const std::wstring &filepath, InputFileMode mode)
 	file->open(filepath.c_str(), modeBits);
 	if (!(*file))
 	{
-// 		TS_LOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, strerror(errno));
+		TS_WLOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, _wcserror(errno));
 		delete file;
 		return false;
 	}

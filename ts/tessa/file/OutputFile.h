@@ -39,6 +39,7 @@ class OutputFile : public lang::Noncopyable
 public:
 	OutputFile();
 	OutputFile(const std::string &filepath, OutputFileMode mode);
+	OutputFile(const std::wstring &filepath, OutputFileMode mode);
 	~OutputFile();
 
 	// Move constructor and assignment
@@ -49,6 +50,7 @@ public:
 	 * Returns: full file size in bytes, or -1 if failure or bad.
 	 */
 	bool open(const std::string &filepath, OutputFileMode mode);
+	bool open(const std::wstring &filepath, OutputFileMode mode);
 
 	/* Closes opened file, flushing the write buffer and also clearing flags. 
 	*/
@@ -66,6 +68,8 @@ public:
 	 */
 	template <class Type>
 	bool writeVariable(const Type &value);
+
+	bool writeString(const std::string &str);
 	
 	/* Sets file position to given position.
 	 * Returns: new position, or -1 if failure or bad.
@@ -102,6 +106,12 @@ private:
 	void *_filePtr = nullptr;
 	mutable bool _bad = false;
 };
+
+template <>
+TS_FORCEINLINE bool OutputFile::writeVariable<std::string>(const std::string &value)
+{
+	return write(value.c_str(), value.size());
+}
 
 template <class Type>
 bool OutputFile::writeVariable(const Type &value)

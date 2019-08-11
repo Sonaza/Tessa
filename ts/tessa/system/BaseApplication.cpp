@@ -3,8 +3,11 @@
 #include "ts/tessa/system/BaseApplication.h"
 
 #include "ts/tessa/file/ArchivistFileSystem.h"
+#include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/system/WindowManager.h"
 #include "ts/tessa/resource/ResourceManager.h"
+
+#include "ts/tessa/threading/Thread.h"
 #include "ts/tessa/threading/ThreadScheduler.h"
 #include "ts/tessa/threading/ThreadUtils.h"
 
@@ -35,9 +38,20 @@ BaseApplication::~BaseApplication()
 
 Int32 BaseApplication::launch()
 {
-	if (!_config.parse(TS_CONFIG_FILE_NAME))
+	initializeConfigDefaults(_config);
+
+	if (!_config.open(TS_CONFIG_FILE_NAME))
 	{
-		TS_LOG_ERROR("Unable to open options file. File: %s", TS_CONFIG_FILE_NAME);
+		if (!file::utils::exists(TS_CONFIG_FILE_NAME))
+		{
+			// Config doesn't exist, create a default.
+			_config.save(TS_CONFIG_FILE_NAME);
+			TS_LOG_WARNING("Unable to open config file. File: %s. Created a new file with application defaults.", TS_CONFIG_FILE_NAME);
+		}
+		else
+		{
+			TS_LOG_WARNING("Unable to open config file. File: %s. File exists but likely has syntax errors.", TS_CONFIG_FILE_NAME);
+		}
 	}
 
 	common::Log::setLogFile(_config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
@@ -102,11 +116,11 @@ void BaseApplication::setFramerateLimit(SizeType framerateLimit)
 {
 	if (framerateLimit == 0)
 	{
-		targetFrameTime = sf::milliseconds(16);
+		targetFrameTime = TimeSpan::fromMilliseconds(16);
 		return;
 	}
 
-	targetFrameTime = sf::milliseconds(1000 / framerateLimit);
+	targetFrameTime = TimeSpan::fromMilliseconds(1000 / framerateLimit);
 }
 
 SizeType BaseApplication::getCurrentFramerate() const
@@ -117,6 +131,11 @@ SizeType BaseApplication::getCurrentFramerate() const
 const Commando &BaseApplication::getCommando() const
 {
 	return _commando;
+}
+
+ConfigReader &BaseApplication::getConfig()
+{
+	return _config;
 }
 
 const ConfigReader &BaseApplication::getConfig() const
@@ -169,15 +188,16 @@ void BaseApplication::mainloop()
 	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "selawk.ttf", true);
 	TS_ASSERT(debugFont != nullptr && debugFont->isLoaded() && "Loading debug font failed.");
 
-	const sf::Time fixedDeltaTime = sf::milliseconds(16);
+	const TimeSpan fixedDeltaTime = TimeSpan::fromMilliseconds(16);
 
-	sf::Time deltaAccumulator;
+	TimeSpan deltaAccumulator;
 
 	SizeType frameCounter = 0;
-	sf::Clock framerateClock;
+	Clock framerateClock;
 
-	sf::Clock deltaClock;
-	sf::Clock loopTimer;
+	Clock deltaClock;
+	Clock loopTimer;
+
 	while (applicationRunning)
 	{
 		loopTimer.restart();
@@ -201,7 +221,7 @@ void BaseApplication::mainloop()
 			currentScene->loadResources(getManager<resource::ResourceManager>());
 		}
 
-		sf::Time deltaTime = deltaClock.restart();
+		TimeSpan deltaTime = deltaClock.restart();
 
 		for (SystemManagersList::iterator it = systemManagers.begin(); it != systemManagers.end(); ++it)
 		{
@@ -219,12 +239,14 @@ void BaseApplication::mainloop()
 
 		handleRendering();
 
-		sf::sleep(targetFrameTime - loopTimer.getElapsedTime());
+		TimeSpan frameSleep = targetFrameTime - loopTimer.getElapsedTime();
+		if (frameSleep > TimeSpan::zero)
+			Thread::sleep(targetFrameTime - loopTimer.getElapsedTime());
 
 		frameCounter++;
-		if (framerateClock.getElapsedTime() > sf::milliseconds(500))
+		if (framerateClock.getElapsedTime() > TimeSpan::fromMilliseconds(500))
 		{
-			float elapsedTime = framerateClock.restart().asSeconds();
+			float elapsedTime = framerateClock.restart().getSecondsAsFloat();
 			currentFramerate = (SizeType)(frameCounter / elapsedTime);
 			frameCounter = 0;
 		}
@@ -272,7 +294,7 @@ void BaseApplication::handleEvents()
 	}
 }
 
-void BaseApplication::handleUpdate(const sf::Time deltaTime)
+void BaseApplication::handleUpdate(const TimeSpan deltaTime)
 {
 	if (currentScene == nullptr)
 		return;

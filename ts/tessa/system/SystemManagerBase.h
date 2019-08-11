@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ts/tessa/Time/TimeSpan.h"
+
 #define TS_DECLARE_SYSTEM_MANAGER_TYPE(__class_name) \
 	public: \
 		static const char * TypeName;
@@ -20,7 +22,7 @@ public:
 	virtual bool initialize() = 0;
 	virtual void deinitialize() = 0;
 
-	virtual void update(const sf::Time deltaTime) = 0;
+	virtual void update(const TimeSpan deltaTime) = 0;
 
 protected:
 	template <class T>

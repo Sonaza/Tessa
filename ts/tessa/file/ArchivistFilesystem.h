@@ -22,7 +22,7 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
-	virtual void update(const sf::Time deltaTime);
+	virtual void update(const TimeSpan deltaTime);
 
 	bool addArchive(const std::string &archivePath);
 

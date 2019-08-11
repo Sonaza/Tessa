@@ -88,6 +88,17 @@ void Application::stop()
 	fileScanner.reset();
 }
 
+void Application::initializeConfigDefaults(system::ConfigReader &config)
+{
+	config.setString("General.LogFile", "output.log");
+
+	config.setBoolean("Display.Fullscreen", false);
+	config.setBoolean("Display.VSync", false);
+
+	config.setUint32("Display.ScreenWidth", APP_DEFAULT_SCREEN_WIDTH);
+	config.setUint32("Display.ScreenHeight", APP_DEFAULT_SCREEN_HEIGHT);
+}
+
 bool Application::initializeScene()
 {
 	return loadScene<scenes::ImageViewerScene>();
@@ -95,7 +106,7 @@ bool Application::initializeScene()
 
 bool Application::createWindow(system::WindowManager &windowManager)
 {
-	const system::ConfigReader &config = getConfig();
+	system::ConfigReader &config = getConfig();
 
 	bool automaticResolution = true;
 

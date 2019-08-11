@@ -17,7 +17,7 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
-	virtual void update(const sf::Time deltaTime);
+	virtual void update(const TimeSpan deltaTime);
 
 	void create(const math::VC2U &videomode, const std::string &windowTitle, const bool resizable, const bool fullscreen);
 	void close();

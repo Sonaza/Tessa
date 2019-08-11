@@ -16,6 +16,11 @@ OutputFile::OutputFile(const std::string &filepath, OutputFileMode mode)
 	open(filepath, mode);
 }
 
+OutputFile::OutputFile(const std::wstring &filepath, OutputFileMode mode)
+{
+	open(filepath, mode);
+}
+
 OutputFile::~OutputFile()
 {
 	close();
@@ -70,6 +75,37 @@ bool OutputFile::open(const std::string &filepath, OutputFileMode mode)
 	return true;
 }
 
+bool OutputFile::open(const std::wstring &filepath, OutputFileMode mode)
+{
+	std::lock_guard<std::mutex> mg(mutex);
+	TS_ASSERT(_filePtr == nullptr && "OutputFile is already opened.");
+	if (_filePtr != nullptr)
+		return false;
+
+	OutputFileStream *file = new OutputFileStream;
+	if (file == nullptr)
+		return false;
+
+	Int32 modeBits = std::ios_base::out;
+	if ((mode & priv::Out_ModeBinary) > 0)
+		modeBits |= std::ios_base::binary;
+	if ((mode & priv::Out_ModeTruncate) > 0)
+		modeBits |= std::ios_base::trunc;
+	if ((mode & priv::Out_ModeAppend) > 0)
+		modeBits |= std::ios_base::ate;
+
+	file->open(filepath.c_str(), modeBits);
+	if (!(*file))
+	{
+		TS_WLOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, _wcserror(errno));
+		delete file;
+		return false;
+	}
+
+	_filePtr = file;
+	return true;
+}
+
 void OutputFile::close()
 {
 	std::lock_guard<std::mutex> mg(mutex);
@@ -99,6 +135,11 @@ bool OutputFile::write(const char *inBuffer, BigSizeType size)
 
 	_bad = true;
 	return false;
+}
+
+bool OutputFile::writeString(const std::string &str)
+{
+	return writeVariable(str);
 }
 
 PosType OutputFile::seek(PosType pos)
@@ -178,12 +219,6 @@ OutputFile::operator bool() const
 bool OutputFile::operator!() const
 {
 	return !isOpen();
-}
-
-template <>
-bool OutputFile::writeVariable<std::string>(const std::string &value)
-{
-	return write(value.c_str(), value.size());
 }
 
 TS_END_PACKAGE1()

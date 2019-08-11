@@ -2,6 +2,9 @@
 
 #include "ts/tessa/system/SystemManagerBase.h"
 
+#include "ts/tessa/time/Time.h"
+#include "ts/tessa/time/TimeSpan.h"
+
 #include <thread>
 #include <condition_variable>
 #include <functional>
@@ -26,7 +29,7 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
-	virtual void update(const sf::Time deltaTime);
+	virtual void update(const TimeSpan deltaTime);
 
 	SizeType numTasks() const;
 	bool hasTasks() const;
@@ -37,15 +40,15 @@ public:
 
 	// For passing in function pointers and lambda functions
 	template<class Function, class... Args>
-	std::future<typename std::result_of<Function(Args...)>::type> scheduleOnce(Uint64 milliseconds_from_now, Function &&f, Args&&... args);
+	std::future<typename std::result_of<Function(Args...)>::type> scheduleOnce(TimeSpan time_from_now, Function &&f, Args&&... args);
 
 	// For passing in instanced class methods
 	template<class ReturnType, class Class, class... Args>
-	std::future<ReturnType> scheduleOnce(Uint64 milliseconds_from_now, ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
+	std::future<ReturnType> scheduleOnce(TimeSpan time_from_now, ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
 
 	// For passing in function pointers and lambda functions
 	template<class Function, class... Args>
-	SchedulerTaskId scheduleWithInterval(Uint64 interval_in_milliseconds, Function &&f, Args&&... args);
+	SchedulerTaskId scheduleWithInterval(TimeSpan interval, Function &&f, Args&&... args);
 	
 	static SizeType numHardwareThreads();
 
@@ -57,32 +60,38 @@ private:
 	{
 		ScheduledTask() = default;
 
-		ScheduledTask(std::chrono::system_clock::time_point time, std::function<void()> &&task)
-			: time(time)
+		ScheduledTask(Time time, std::function<void()> &&task)
+			: scheduledTime(time)
+			, interval(TimeSpan::zero)
 			, task(task)
 			, taskId(ScheduledTask::nextTaskId++)
 		{
 		}
 
-		ScheduledTask(std::chrono::system_clock::duration interval, std::function<void()> &&task)
-			: time(std::chrono::system_clock::now())
-			, task(task)
+		ScheduledTask(TimeSpan interval, std::function<void()> &&task)
+			: scheduledTime(Time::now())
 			, interval(interval)
+			, task(task)
 			, taskId(ScheduledTask::nextTaskId++)
 		{
 		}
 
-		std::chrono::system_clock::time_point time;
-		std::function<void()> task;
+		Time scheduledTime;
+		TimeSpan interval;
 
-		std::chrono::system_clock::duration interval;
+		std::function<void()> task;
 
 		SchedulerTaskId taskId = InvalidTaskId;
 		static SchedulerTaskId nextTaskId;
 
 		bool operator<(const ScheduledTask &rhs) const
 		{
-			return time > rhs.time;
+			return scheduledTime > rhs.scheduledTime;
+		}
+
+		void operator()()
+		{
+			task();
 		}
 	};
 
@@ -110,7 +119,7 @@ private:
 	TaskQueueType taskQueue;
 
 	template <class ReturnType>
-	std::future<ReturnType> _scheduleOnceImpl(Uint64 milliseconds_from_now, std::function<ReturnType()> &&f);
+	std::future<ReturnType> scheduleOnceImpl(TimeSpan time_from_now, std::function<ReturnType()> &&f);
 
 	void reschedule(ScheduledTask &&task);
 
@@ -131,26 +140,26 @@ private:
 
 template<class Function, class... Args>
 std::future<typename std::result_of<Function(Args...)>::type> ThreadScheduler::scheduleOnce(
-	Uint64 milliseconds_from_now,
+	TimeSpan time_from_now,
 	Function &&taskFunction, Args&&... args)
 {
 	typedef typename std::result_of<Function(Args...)>::type ReturnType;
 
 	std::function<ReturnType()> bound = std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...);
-	return _scheduleOnceImpl<ReturnType>(milliseconds_from_now, std::move(bound));
+	return scheduleOnceImpl<ReturnType>(time_from_now, std::move(bound));
 }
 
 template<class ReturnType, class Class, class... Args>
 std::future<ReturnType> ThreadScheduler::scheduleOnce(
-	Uint64 milliseconds_from_now,
+	TimeSpan time_from_now,
 	ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args)
 {
 	std::function<ReturnType()> bound = std::bind(taskFunction, instance, std::forward<Args>(args)...);
-	return _scheduleOnceImpl<ReturnType>(milliseconds_from_now, std::move(bound));
+	return scheduleOnceImpl<ReturnType>(time_from_now, std::move(bound));
 }
 
 template <class ReturnType>
-std::future<ReturnType> ThreadScheduler::_scheduleOnceImpl(Uint64 milliseconds_from_now, std::function<ReturnType()> &&bound)
+std::future<ReturnType> ThreadScheduler::scheduleOnceImpl(TimeSpan time_from_now, std::function<ReturnType()> &&bound)
 {
 	SharedPointer<std::packaged_task<ReturnType()>> packagedTask = makeShared<std::packaged_task<ReturnType()>>(bound);
 
@@ -159,8 +168,7 @@ std::future<ReturnType> ThreadScheduler::_scheduleOnceImpl(Uint64 milliseconds_f
 		std::unique_lock<std::mutex> lock(queueMutex);
 		if (running)
 		{
-			std::chrono::system_clock::time_point scheduledTime = std::chrono::system_clock::now() + std::chrono::milliseconds(milliseconds_from_now);
-			ScheduledTask task(scheduledTime, [packagedTask]()
+			ScheduledTask task(Time::now() + time_from_now, [packagedTask]()
 			{
 				(*packagedTask)();
 			});
@@ -175,7 +183,7 @@ std::future<ReturnType> ThreadScheduler::_scheduleOnceImpl(Uint64 milliseconds_f
 
 template<class Function, class... Args>
 SchedulerTaskId ThreadScheduler::scheduleWithInterval(
-	Uint64 interval_in_milliseconds,
+	TimeSpan interval,
 	Function &&taskFunction, Args&&... args)
 {
 	typedef typename std::result_of<Function(Args...)>::type ReturnType;
@@ -183,19 +191,15 @@ SchedulerTaskId ThreadScheduler::scheduleWithInterval(
 	SharedPointer<std::function<ReturnType()>> sharedTask = makeShared<std::function<ReturnType()>>();
 	*sharedTask = std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...);
 	
-// 	SharedPointer<std::packaged_task<ReturnType()>> packagedTask = makeShared<std::packaged_task<ReturnType()>>(bound);
-
 	SchedulerTaskId createdTaskId = InvalidTaskId;
 
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
 		if (running)
 		{
-			std::chrono::system_clock::duration interval = std::chrono::milliseconds(interval_in_milliseconds);
 			ScheduledTask task(interval, [sharedTask]()
 			{
 				(*sharedTask)();
-// 				(*packagedTask)();
 			});
 			pendingTaskQueue.push(std::move(task));
 

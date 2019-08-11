@@ -47,7 +47,7 @@ public:
 			if (scheduler->pendingTaskQueue.empty())
 				continue;
 
-			if (std::chrono::system_clock::now() >= scheduler->pendingTaskQueue.top().time)
+			if (Time::now() >= scheduler->pendingTaskQueue.top().scheduledTime)
 			{
 				// Move task from pending list to the active list
 				scheduler->taskQueue.push(std::move(scheduler->pendingTaskQueue.top()));
@@ -85,7 +85,7 @@ public:
 
 	void entry()
 	{
-		TS_LOG_DEBUG("Thread Worker %d running. Waiting for tasks...", workerIndex);
+		TS_LOG_DEBUG("BackgroundWorker %u running. Waiting for tasks...", workerIndex);
 
 		while (true)
 		{
@@ -104,9 +104,9 @@ public:
 				scheduler->taskQueue.pop();
 			}
 
-			task.task();
+			task();
 
-			if (task.interval != std::chrono::system_clock::duration::zero())
+			if (task.interval > TimeSpan::zero)
 			{
 				scheduler->reschedule(std::move(task));
 			}
@@ -143,7 +143,7 @@ void ThreadScheduler::deinitialize()
 	destroyBackgroundWorkers();
 }
 
-void ThreadScheduler::update(const sf::Time deltaTime)
+void ThreadScheduler::update(const TimeSpan deltaTime)
 {
 
 }
@@ -223,7 +223,7 @@ void ThreadScheduler::reschedule(ScheduledTask &&task)
 {
 	std::unique_lock<std::mutex> lock(queueMutex);
 
-	task.time = std::chrono::system_clock::now() + task.interval;
+	task.scheduledTime = Time::now() + task.interval;
 	pendingTaskQueue.push(std::move(task));
 }
 

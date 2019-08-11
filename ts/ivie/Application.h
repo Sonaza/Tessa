@@ -19,6 +19,8 @@ public:
 	virtual void stop();
 
 protected:
+	virtual void initializeConfigDefaults(system::ConfigReader &config);
+
 	virtual bool initializeScene();
 
 	virtual bool createWindow(system::WindowManager &windowManager);

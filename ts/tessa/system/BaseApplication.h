@@ -9,6 +9,8 @@
 #include "ts/tessa/system/SystemManagerBase.h"
 #include "ts/tessa/system/AbstractSceneBase.h"
 
+#include "ts/tessa/time/Clock.h"
+
 TS_DECLARE1(system, ThreadPool);
 TS_DECLARE1(system, WindowManager);
 TS_DECLARE1(file, ArchivistFilesystem);
@@ -39,6 +41,8 @@ public:
 	const ManagerType &getManager() const;
 
 	const system::Commando &getCommando() const;
+
+	system::ConfigReader &getConfig();
 	const system::ConfigReader &getConfig() const;
 
 protected:
@@ -46,6 +50,7 @@ protected:
 	virtual bool start() = 0;
 	virtual void stop() = 0;
 
+	virtual void initializeConfigDefaults(system::ConfigReader &config) = 0;
 	virtual bool initializeScene() = 0;
 
 	virtual bool createWindow(system::WindowManager &windowManager) = 0;
@@ -61,7 +66,7 @@ private:
 	void mainloop();
 
 	void handleEvents();
-	void handleUpdate(const sf::Time deltaTime);
+	void handleUpdate(const TimeSpan deltaTime);
 	void handleRendering();
 
 	template<class ManagerType, class... Args>
@@ -79,7 +84,7 @@ private:
 	ConfigReader _config;
 
 	// Target frame time affects framerate, a single update per 16 milliseconds roughly results in 60 fps
-	sf::Time targetFrameTime = sf::milliseconds(16);
+	TimeSpan targetFrameTime = TimeSpan::fromMilliseconds(16);
 	SizeType currentFramerate = 0;
 
 	UniquePointer<system::AbstractSceneBase> pendingScene;

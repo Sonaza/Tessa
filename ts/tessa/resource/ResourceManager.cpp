@@ -40,7 +40,7 @@ void ResourceManager::deinitialize()
 	unloadAll();
 }
 
-void ResourceManager::update(const sf::Time deltaTime)
+void ResourceManager::update(const TimeSpan deltaTime)
 {
 
 }
@@ -131,7 +131,7 @@ void ResourceManager::addResourceToLoadQueue(SharedPointer<AbstractResourceBase>
 // 		return;
 
 	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
-	tm.scheduleOnce(0, &ResourceManager::loadResourceTask, resource);
+	tm.scheduleOnce(TimeSpan::zero, &ResourceManager::loadResourceTask, resource);
 }
 
 GUID ResourceManager::findFileGuid(const GUID &resourceGuid)

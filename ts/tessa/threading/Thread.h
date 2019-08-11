@@ -2,6 +2,8 @@
 
 #include <thread>
 
+#include "ts/tessa/time/TimeSpan.h"
+
 TS_DECLARE1(threading, BaseThreadEntry);
 
 TS_PACKAGE1(threading)
@@ -21,7 +23,7 @@ public:
 
 	static void setMainThread(Thread &thread);
 
-	static void sleep(SizeType milliseconds);
+	static void sleep(TimeSpan time);
 
 private:
 	static Thread &getExternalThread();
