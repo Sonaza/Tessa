@@ -72,4 +72,12 @@ UniquePointer<T, Deleter> makeUnique(Args&&... args)
 	return UniquePointer<T, Deleter>(pointer);
 }
 
+// Special unique pointer caster that MOVES the original pointer to new while casting it (invalidates old pointer)
+template <class ToType, class FromType, class Deleter>
+UniquePointer<ToType, Deleter> staticUniquePointerCast(UniquePointer<FromType, Deleter> &&ptr) noexcept
+{
+	ToType *castPtr = static_cast<typename UniquePointer<ToType, Deleter>::ElementType *>(ptr.dismiss());
+	return UniquePointer<ToType, Deleter>(castPtr);
+}
+
 TS_END_PACKAGE0()

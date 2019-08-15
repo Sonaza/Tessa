@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ts/tessa/system/SystemManagerBase.h"
+#include "ts/tessa/system/AbstractManagerBase.h"
 
 #include <string>
 #include <vector>
@@ -11,12 +11,12 @@ TS_DECLARE1(file, ArchivistReaderExtractor);
 
 TS_PACKAGE1(file)
 
-class ArchivistFilesystem : public system::SystemManagerBase<TS_FOURCC('A','r','F','S')>
+class ArchivistFilesystem : public system::AbstractManagerBase
 {
-	TS_DECLARE_SYSTEM_MANAGER_TYPE(file::ArchivistFilesystem);
+	TS_DECLARE_MANAGER_TYPE(file::ArchivistFilesystem);
 
 public:
-	ArchivistFilesystem(system::BaseApplication *application);
+	ArchivistFilesystem();
 	virtual ~ArchivistFilesystem();
 
 	virtual bool initialize();

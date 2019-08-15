@@ -1,11 +1,10 @@
 #include "Precompiled.h"
 #include "FileScanner.h"
 
-#include "ts/ivie/util/NaturalSort.h"
 #include "ts/tessa/file/FileListW.h"
 #include "ts/tessa/file/FileUtils.h"
 
-#include "ts/tessa/threading/ThreadScheduler.h"
+TS_DEFINE_MANAGER_TYPE(app::viewer::FileScanner);
 
 TS_PACKAGE2(app, viewer)
 
@@ -13,17 +12,27 @@ FileScanner::FileScanner(const std::wstring &directoryPath, const std::vector<st
 	: directoryPath(directoryPath)
 	, allowedExtensions(allowedExtensions)
 {
-	TS_GIGATON_REGISTER_CLASS(this);
-
-	threading::ThreadScheduler &tm = TS_GET_GIGATON().getGigaton<threading::ThreadScheduler>();
-	scannerTaskId = tm.scheduleWithInterval(TimeSpan::fromMilliseconds(2000), &FileScanner::scanTaskEntry, this);
+	gigaton.registerClass(this);
 }
 
 FileScanner::~FileScanner()
 {
-	TS_GIGATON_UNREGISTER_CLASS(this);
+	gigaton.unregisterClass(this);
+}
 
-	threading::ThreadScheduler &tm = TS_GET_GIGATON().getGigaton<threading::ThreadScheduler>();
+bool FileScanner::initialize()
+{
+	TS_ASSERT(!allowedExtensions.empty() && "Allowed extensions list is empty!");
+
+	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
+	scannerTaskId = tm.scheduleWithInterval(TimeSpan::fromMilliseconds(2000), &FileScanner::scanTaskEntry, this);
+
+	return true;
+}
+
+void FileScanner::deinitialize()
+{
+	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
 	tm.cancelIntervalTask(scannerTaskId);
 }
 
@@ -41,22 +50,37 @@ bool FileScanner::isExtensionAllowed(const std::wstring &filename)
 
 void FileScanner::updateFilelist()
 {
+	TS_PRINTF("FileScanner::updateFilelist\n");
+
 	file::FileListW lister(directoryPath, true, file::FileListStyle_Files);
 	std::vector<file::FileEntryW> files = lister.getFullListing();
 
-	std::vector<std::wstring> tempList;
-	tempList.reserve(files.size());
+	std::vector<std::wstring> templist;
+	templist.reserve(files.size());
 	for (file::FileEntryW &file : files)
 	{
 		if (isExtensionAllowed(file.getFilepath()))
-			tempList.push_back(file.getFullFilepath());
+			templist.push_back(file.getFullFilepath());
 	}
 
-	std::sort(tempList.begin(), tempList.end(), util::NaturalSortByExtension);
+	std::sort(templist.begin(), templist.end());
 
+	bool listChanged = (templist.size() != filelist.size());
+	if (!listChanged)
+		listChanged = (templist != filelist);
+
+	if (listChanged)
 	{
-		std::lock_guard<std::mutex> mg(mutex);
-		filelist = std::move(tempList);
+		TS_PRINTF("  Files CHANGED!\n");
+		{
+			std::lock_guard<std::mutex> mg(mutex);
+			filelist = std::move(templist);
+		}
+		filelistChangedSignal();
+	}
+	else
+	{
+		TS_PRINTF("  Files not changed!\n");
 	}
 }
 

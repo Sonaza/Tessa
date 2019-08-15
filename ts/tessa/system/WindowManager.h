@@ -1,17 +1,17 @@
 #pragma once
 
-#include "ts/tessa/system/SystemManagerBase.h"
+#include "ts/tessa/system/AbstractManagerBase.h"
 
 TS_DECLARE1(system, BaseApplication);
 
 TS_PACKAGE1(system)
 
-class WindowManager : public system::SystemManagerBase<TS_FOURCC('W','M','A','N')>
+class WindowManager : public system::AbstractManagerBase
 {
-	TS_DECLARE_SYSTEM_MANAGER_TYPE(system::WindowManager);
+	TS_DECLARE_MANAGER_TYPE(system::WindowManager);
 
 public:
-	WindowManager(system::BaseApplication *application);
+	WindowManager();
 	virtual ~WindowManager();
 
 	virtual bool initialize();

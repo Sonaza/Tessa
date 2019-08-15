@@ -68,9 +68,6 @@
     <ClCompile Include="system\WindowManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="system\SystemManagerBase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="renderer\GpuPreference.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -167,6 +164,12 @@
     <ClCompile Include="time\GlobalTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="system\AbstractManagerBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lang\Signal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -244,9 +247,6 @@
     <ClInclude Include="system\WindowManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="system\SystemManagerBase.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource\ResourceBase.inl">
       <Filter>Source Files\resource</Filter>
     </ClInclude>
@@ -314,9 +314,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="math\Vec4.inl">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lang\StringUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="net\Address.h">
@@ -395,6 +392,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="time\GlobalTimer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\AbstractManagerBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\StringUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\Signal.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

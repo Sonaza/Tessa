@@ -7,7 +7,7 @@
 
 #include "ts/tessa/Config.h"
 
-TS_DEFINE_SYSTEM_MANAGER_TYPE(threading::ThreadScheduler);
+TS_DEFINE_MANAGER_TYPE(threading::ThreadScheduler);
 
 TS_PACKAGE1(threading)
 
@@ -118,15 +118,14 @@ public:
 
 SchedulerTaskId ThreadScheduler::ScheduledTask::nextTaskId = 0;
 
-ThreadScheduler::ThreadScheduler(system::BaseApplication *application)
-	: SystemManagerBase(application)
+ThreadScheduler::ThreadScheduler()
 {
-	TS_GIGATON_REGISTER_CLASS(this);
+	gigaton.registerClass(this);
 }
 
 ThreadScheduler::~ThreadScheduler()
 {
-	TS_GIGATON_UNREGISTER_CLASS(this);
+	gigaton.unregisterClass(this);
 }
 
 bool ThreadScheduler::initialize()
@@ -141,11 +140,6 @@ bool ThreadScheduler::initialize()
 void ThreadScheduler::deinitialize()
 {
 	destroyBackgroundWorkers();
-}
-
-void ThreadScheduler::update(const TimeSpan deltaTime)
-{
-
 }
 
 void ThreadScheduler::createBackgroundWorkers(SizeType numWorkers)
@@ -175,11 +169,12 @@ void ThreadScheduler::destroyBackgroundWorkers()
 	schedulerCondition.notify_all();
 	workerCondition.notify_all();
 
+	backgroundScheduler.reset();
+
 	for (SizeType index = 0; index< backgroundWorkers.size(); ++index)
 	{
 		backgroundWorkers[index].reset();
 	}
-	backgroundScheduler.reset();
 }
 
 SizeType ThreadScheduler::numTasks() const
@@ -208,10 +203,19 @@ void ThreadScheduler::clearTasks()
 void ThreadScheduler::cancelIntervalTask(SchedulerTaskId taskId)
 {
 	std::unique_lock<std::mutex> lock(queueMutex);
-	std::remove_if(pendingTaskQueue.begin(), pendingTaskQueue.end(), [taskId](const ScheduledTask &t)
+
+	auto pred = [taskId](const ScheduledTask &t)
 	{
 		return t.taskId == taskId;
-	});
+	};
+
+	if (pendingTaskQueue.erase_if(pred))
+		return;
+
+	if (taskQueue.erase_if(pred))
+		return;
+
+	TS_ASSERT(!"Task requested to be cancelled didn't exist.");
 }
 
 SizeType ThreadScheduler::numHardwareThreads()

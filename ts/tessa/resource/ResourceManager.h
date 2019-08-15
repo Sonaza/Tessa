@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ts/tessa/system/SystemManagerBase.h"
+#include "ts/tessa/system/AbstractManagerBase.h"
 #include "ts/tessa/resource/AbstractResourceBase.h"
 #include "ts/tessa/resource/GUID.h"
 
@@ -17,12 +17,12 @@ TS_DECLARE1(resource, FontResource)
 
 TS_PACKAGE1(resource)
 
-class ResourceManager : public system::SystemManagerBase<TS_FOURCC('R','M','A','N')>
+class ResourceManager : public system::AbstractManagerBase
 {
-	TS_DECLARE_SYSTEM_MANAGER_TYPE(resource::ResourceManager);
+	TS_DECLARE_MANAGER_TYPE(resource::ResourceManager);
 
 public:
-	ResourceManager(system::BaseApplication *application);
+	ResourceManager();
 	virtual ~ResourceManager();
 
 	virtual bool initialize();

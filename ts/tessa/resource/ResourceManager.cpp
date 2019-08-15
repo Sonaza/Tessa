@@ -10,7 +10,7 @@
 #include "ts/tessa/resource/MusicResource.h"
 // #include "ts/tessa/resource/ShaderResource.h"
 
-TS_DEFINE_SYSTEM_MANAGER_TYPE(resource::ResourceManager);
+TS_DEFINE_MANAGER_TYPE(resource::ResourceManager);
 
 TS_PACKAGE1(resource)
 
@@ -18,15 +18,14 @@ std::string ResourceManager::resourceRootDirectory = "";
 
 std::atomic_bool ResourceManager::stop_flag;
 
-ResourceManager::ResourceManager(system::BaseApplication *application)
-	: SystemManagerBase(application)
+ResourceManager::ResourceManager()
 {
-	TS_GIGATON_REGISTER_CLASS(this);
+	gigaton.registerClass(this);
 }
 
 ResourceManager::~ResourceManager()
 {
-	TS_GIGATON_UNREGISTER_CLASS(this);
+	gigaton.unregisterClass(this);
 }
 
 bool ResourceManager::initialize()
@@ -125,7 +124,7 @@ void ResourceManager::loadResourceTask(SharedPointer<AbstractResourceBase> resou
 void ResourceManager::addResourceToLoadQueue(SharedPointer<AbstractResourceBase> resource)
 {
 	TS_ASSERT(resource != nullptr);
-	TS_VERIFY_POINTERS(application, resource);
+	TS_VERIFY_POINTERS(resource);
 
 // 	if (ResourceManager::stop_flag.load(std::memory_order_relaxed))
 // 		return;

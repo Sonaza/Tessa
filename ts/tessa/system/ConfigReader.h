@@ -16,7 +16,7 @@ public:
 	// Opens specified config file and parses it.
 	bool open(const std::string &configFilePath);
 
-	// Saves current configuration to the previously opened config file.
+	// Saves current configuration to the previously opened config file or specified file.
 	bool save();
 	bool save(const std::string &configFilePath);
 

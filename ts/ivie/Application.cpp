@@ -10,7 +10,10 @@
 
 #include "ts/ivie/AppConfig.h"
 #include "ts/ivie/scenes/ImageViewerScene.h"
+#include "ts/ivie/viewer/SupportedFormats.h"
+
 #include "ts/ivie/viewer/FileScanner.h"
+#include "ts/ivie/viewer/ViewerStateManager.h"
 
 // #include "FreeImage.h"
 
@@ -46,37 +49,6 @@ bool Application::start()
 		resource::ResourceManager::setResourceRootDirectory(file::utils::getExecutableDirectory());
 	}
 
-	static const std::vector<std::wstring> supportedExtensions
-	{
-		  L"png"
-		, L"jpg"
-		, L"jpeg"
-		, L"jpe"
-		, L"bmp"
-		, L"dds"
-		, L"tga"
-		, L"pcx"
-		, L"exr"
-		, L"hdr"
-		, L"ico"
-		, L"iff"
-		, L"jng"
-		, L"tff"
-		, L"tiff"
-		, L"psd"
-// 		, L"gif"
-// 		, L"webm"
-	};
-
-	std::wstring workingDirectory;
-	getCommando().getNthParameter(0, workingDirectory);
-
-	workingDirectory = file::utils::getDirname(workingDirectory);
-	if (workingDirectory.empty())
-		workingDirectory = file::utils::getWorkingDirectoryWide();
-
-	fileScanner.reset(new viewer::FileScanner(workingDirectory, supportedExtensions));
-
 	FreeImage_Initialise();
 	return true;
 }
@@ -86,6 +58,21 @@ void Application::stop()
 	FreeImage_DeInitialise();
 
 	fileScanner.reset();
+}
+
+bool Application::createApplicationManagers()
+{
+	std::wstring workingDirectory;
+	getCommando().getNthParameter(0, workingDirectory);
+
+	workingDirectory = file::utils::getDirname(workingDirectory);
+	if (workingDirectory.empty())
+		workingDirectory = file::utils::getWorkingDirectoryWide();
+
+	createManagerInstance<viewer::FileScanner>(workingDirectory, viewer::SupportedFormats::getFormats());
+	createManagerInstance<viewer::ViewerStateManager>();
+
+	return true;
 }
 
 void Application::initializeConfigDefaults(system::ConfigReader &config)

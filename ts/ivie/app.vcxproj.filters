@@ -37,6 +37,12 @@
     <ClCompile Include="viewer\FileScanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="viewer\SupportedFormats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="viewer\ViewerStateManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -55,6 +61,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="AppConfig.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\SupportedFormats.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\ViewerStateManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

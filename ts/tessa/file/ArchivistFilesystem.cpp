@@ -9,19 +9,18 @@
 
 #include "ts/tessa/math/Hash.h"
 
-TS_DEFINE_SYSTEM_MANAGER_TYPE(file::ArchivistFilesystem);
+TS_DEFINE_MANAGER_TYPE(file::ArchivistFilesystem);
 
 TS_PACKAGE1(file)
 
-ArchivistFilesystem::ArchivistFilesystem(system::BaseApplication *application)
-	: SystemManagerBase(application)
+ArchivistFilesystem::ArchivistFilesystem()
 {
-	TS_GIGATON_REGISTER_CLASS(this);
+	gigaton.registerClass(this);
 }
 
 ArchivistFilesystem::~ArchivistFilesystem()
 {
-	TS_GIGATON_UNREGISTER_CLASS(this);
+	gigaton.unregisterClass(this);
 }
 
 bool ArchivistFilesystem::initialize()

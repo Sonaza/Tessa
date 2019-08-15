@@ -171,6 +171,7 @@
     <ClCompile Include="instance\ComponentBase.cpp" />
     <ClCompile Include="instance\Entity.cpp" />
     <ClCompile Include="instance\InstanceManager.cpp" />
+    <ClCompile Include="lang\Signal.cpp" />
     <ClCompile Include="lang\StringUtils.cpp" />
     <ClCompile Include="math\Angle.cpp" />
     <ClCompile Include="math\CRC.cpp" />
@@ -188,6 +189,7 @@
     <ClCompile Include="resource\GUID.cpp" />
     <ClCompile Include="resource\MusicResource.cpp" />
     <ClCompile Include="resource\SoundResource.cpp" />
+    <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="threading\BaseThreadEntry.cpp" />
     <ClCompile Include="threading\Thread.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
@@ -215,6 +217,7 @@
     <ClInclude Include="lang\Noncopyable.h" />
     <ClInclude Include="lang\ScopedPointer.h" />
     <ClInclude Include="lang\SharedPointer.h" />
+    <ClInclude Include="lang\Signal.h" />
     <ClInclude Include="lang\StringUtils.h" />
     <ClInclude Include="lang\UniquePointer.h" />
     <ClInclude Include="Config.h" />
@@ -234,10 +237,10 @@
     <ClCompile Include="system\ConfigReader.cpp" />
     <ClCompile Include="system\Gigaton.cpp" />
     <ClCompile Include="system\AbstractSceneBase.cpp" />
-    <ClCompile Include="system\SystemManagerBase.cpp" />
     <ClCompile Include="threading\ThreadScheduler.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="resource\SoundResource.h" />
+    <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="threading\BaseThreadEntry.h" />
     <ClInclude Include="threading\Thread.h" />
     <ClInclude Include="threading\ThreadUtils.h" />
@@ -278,7 +281,6 @@
     <ClInclude Include="system\ConfigReader.h" />
     <ClInclude Include="system\Gigaton.h" />
     <ClInclude Include="system\AbstractSceneBase.h" />
-    <ClInclude Include="system\SystemManagerBase.h" />
     <ClInclude Include="threading\ThreadScheduler.h" />
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>

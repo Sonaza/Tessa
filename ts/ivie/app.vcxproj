@@ -175,6 +175,8 @@
     <ClCompile Include="scenes\ImageViewerScene.cpp" />
     <ClCompile Include="util\NaturalSort.cpp" />
     <ClCompile Include="viewer\FileScanner.cpp" />
+    <ClCompile Include="viewer\SupportedFormats.cpp" />
+    <ClCompile Include="viewer\ViewerStateManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -190,6 +192,8 @@
     <ClInclude Include="scenes\ImageViewerScene.h" />
     <ClInclude Include="util\NaturalSort.h" />
     <ClInclude Include="viewer\FileScanner.h" />
+    <ClInclude Include="viewer\SupportedFormats.h" />
+    <ClInclude Include="viewer\ViewerStateManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tessa\tessa.vcxproj">

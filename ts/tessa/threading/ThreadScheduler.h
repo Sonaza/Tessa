@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ts/tessa/system/SystemManagerBase.h"
+#include "ts/tessa/system/AbstractManagerBase.h"
 
 #include "ts/tessa/time/Time.h"
 #include "ts/tessa/time/TimeSpan.h"
@@ -18,18 +18,16 @@ TS_PACKAGE1(threading)
 typedef SizeType SchedulerTaskId;
 static const SchedulerTaskId InvalidTaskId = ~0U;
 
-class ThreadScheduler : public system::SystemManagerBase<TS_FOURCC('T','M','A','N')>
+class ThreadScheduler : public system::AbstractManagerBase
 {
-	TS_DECLARE_SYSTEM_MANAGER_TYPE(threading::ThreadScheduler);
+	TS_DECLARE_MANAGER_TYPE(threading::ThreadScheduler);
 
 public:
-	ThreadScheduler(system::BaseApplication *application);
+	ThreadScheduler();
 	virtual ~ThreadScheduler();
 
 	virtual bool initialize();
 	virtual void deinitialize();
-
-	virtual void update(const TimeSpan deltaTime);
 
 	SizeType numTasks() const;
 	bool hasTasks() const;
@@ -106,6 +104,21 @@ private:
 		iterator end() { return this->c.end(); }
 		const_iterator begin() const { return this->c.begin(); }
 		const_iterator end() const { return this->c.end(); }
+
+		iterator erase(iterator it) { return this->c.erase(it); }
+
+		bool erase_if(std::function<bool(const Type &)> predicate)
+		{
+			for (iterator it = begin(); it != end(); ++it)
+			{
+				if (predicate(*it))
+				{
+					erase(it);
+					return true;
+				}
+			}
+			return false;
+		}
 
 		void clear()
 		{

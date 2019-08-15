@@ -19,6 +19,8 @@ public:
 	virtual void stop();
 
 protected:
+	virtual bool createApplicationManagers();
+
 	virtual void initializeConfigDefaults(system::ConfigReader &config);
 
 	virtual bool initializeScene();

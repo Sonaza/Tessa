@@ -166,7 +166,7 @@ float ConfigReader::getFloat(const std::string &section_dot_key, const float def
 
 void ConfigReader::setFloat(const std::string &section_dot_key, const float value, Int32 precision)
 {
-	setValue(section_dot_key, TS_FMT("%.*f", precision, value));
+	setValue(section_dot_key, TS_FMT("%.*f", math::max(0, precision), value));
 }
 
 bool ConfigReader::getBoolean(const std::string &section_dot_key, const bool defaultValue) const

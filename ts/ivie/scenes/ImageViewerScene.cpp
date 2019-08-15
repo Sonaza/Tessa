@@ -40,9 +40,6 @@ void ImageViewerScene::loadImage()
 	if (dir.empty())
 		dir = file::utils::getWorkingDirectoryWide();
 
-	viewer::FileScanner &fileScanner = getGigaton<viewer::FileScanner>();
-	std::vector<std::wstring> filelist = fileScanner.getFileList();
-
 	file::InputFile file;
 	file.open(wpath, file::InputFileMode_ReadBinary);
 

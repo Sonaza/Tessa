@@ -1,19 +1,18 @@
 #include "Precompiled.h"
 #include "ts/tessa/system/WindowManager.h"
 
-TS_DEFINE_SYSTEM_MANAGER_TYPE(system::WindowManager);
+TS_DEFINE_MANAGER_TYPE(system::WindowManager);
 
 TS_PACKAGE1(system)
 
-WindowManager::WindowManager(system::BaseApplication *application)
-	: SystemManagerBase(application)
+WindowManager::WindowManager()
 {
-	TS_GIGATON_REGISTER_CLASS(this);
+	gigaton.registerClass(this);
 }
 
 WindowManager::~WindowManager()
 {
-	TS_GIGATON_UNREGISTER_CLASS(this);
+	gigaton.unregisterClass(this);
 }
 
 bool WindowManager::initialize()

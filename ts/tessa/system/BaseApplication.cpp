@@ -20,20 +20,22 @@
 TS_PACKAGE1(system)
 
 BaseApplication::BaseApplication(Int32 argc, const char **argv)
-	: _commando(argc, argv)
+	: gigaton(TS_GET_GIGATON())
+	, _commando(argc, argv)
 {
-	TS_GIGATON_REGISTER_CLASS(this);
+	gigaton.registerClass(this);
 }
 
 BaseApplication::BaseApplication(Int32 argc, const wchar_t **argv)
-	: _commando(argc, argv)
+	: gigaton(TS_GET_GIGATON())
+	, _commando(argc, argv)
 {
-	TS_GIGATON_REGISTER_CLASS(this);
+	gigaton.registerClass(this);
 }
 
 BaseApplication::~BaseApplication()
 {
-	TS_GIGATON_UNREGISTER_CLASS(this);
+	gigaton.unregisterClass(this);
 }
 
 Int32 BaseApplication::launch()
@@ -93,9 +95,10 @@ Int32 BaseApplication::launch()
 
 bool BaseApplication::initialize()
 {
-// 	setCurrentThreadPriority(threading::utils::ThreadPriority_High);
+	if (!createSystemManagers())
+		return false;
 
-	if (!initializeManagers())
+	if (!createApplicationManagers())
 		return false;
 
 	return true;
@@ -109,7 +112,7 @@ void BaseApplication::deinitialize()
 	pendingScene.reset();
 	currentScene.reset();
 
-	deinitializeManagers();
+	destroyManagerInstances();
 }
 
 void BaseApplication::setFramerateLimit(SizeType framerateLimit)
@@ -143,7 +146,7 @@ const ConfigReader &BaseApplication::getConfig() const
 	return _config;
 }
 
-bool BaseApplication::initializeManagers()
+bool BaseApplication::createSystemManagers()
 {
 	if (!createManagerInstance<threading::ThreadScheduler>())
 		return false;
@@ -171,15 +174,18 @@ bool BaseApplication::initializeManagers()
 	return true;
 }
 
-void BaseApplication::deinitializeManagers()
+void BaseApplication::destroyManagerInstances()
 {
-	threading::ThreadScheduler &tm = getManager<threading::ThreadScheduler>();
-	tm.clearTasks();
+	TS_ASSERT(managerInstances.size() == managerInstancingOrder.size());
+	for (auto it = managerInstancingOrder.rbegin(); it != managerInstancingOrder.rend(); ++it)
+	{
+		const std::type_index &typeIndex = *it;
+		managerInstances[typeIndex]->deinitialize();
+		managerInstances[typeIndex].reset();
+	}
 
-	destroyManagerInstance<system::WindowManager>();
-	destroyManagerInstance<resource::ResourceManager>();
-	destroyManagerInstance<file::ArchivistFilesystem>();
-	destroyManagerInstance<threading::ThreadScheduler>();
+	managerInstances.clear();
+	managerInstancingOrder.clear();
 }
 
 void BaseApplication::mainloop()
@@ -223,7 +229,8 @@ void BaseApplication::mainloop()
 
 		TimeSpan deltaTime = deltaClock.restart();
 
-		for (SystemManagersList::iterator it = systemManagers.begin(); it != systemManagers.end(); ++it)
+		for (InstancedManagersList::iterator it = managerInstances.begin();
+		     it != managerInstances.end(); ++it)
 		{
 			it->second->update(deltaTime);
 		}

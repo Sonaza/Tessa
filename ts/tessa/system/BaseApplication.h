@@ -6,7 +6,7 @@
 #include "ts/tessa/system/Commando.h"
 #include "ts/tessa/system/ConfigReader.h"
 
-#include "ts/tessa/system/SystemManagerBase.h"
+#include "ts/tessa/system/AbstractManagerBase.h"
 #include "ts/tessa/system/AbstractSceneBase.h"
 
 #include "ts/tessa/time/Clock.h"
@@ -50,18 +50,21 @@ protected:
 	virtual bool start() = 0;
 	virtual void stop() = 0;
 
+	virtual bool createApplicationManagers() = 0;
+
 	virtual void initializeConfigDefaults(system::ConfigReader &config) = 0;
 	virtual bool initializeScene() = 0;
 
 	virtual bool createWindow(system::WindowManager &windowManager) = 0;
 	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem) = 0;
 
+	// For System and Application manager instantiation
+	template<class ManagerType, class... Args>
+	bool createManagerInstance(Args&&... args);
+
 private:
 	bool initialize();
 	void deinitialize();
-
-	bool initializeManagers();
-	void deinitializeManagers();
 
 	void mainloop();
 
@@ -69,16 +72,16 @@ private:
 	void handleUpdate(const TimeSpan deltaTime);
 	void handleRendering();
 
-	template<class ManagerType, class... Args>
-	bool createManagerInstance(Args... args);
+	bool createSystemManagers();
+	void destroyManagerInstances();
 
-	template<class ManagerType>
-	void destroyManagerInstance();
-
-	typedef std::map<SizeType, system::AbstractSystemManagerBase *> SystemManagersList;
-	SystemManagersList systemManagers;
+	typedef std::map<std::type_index, UniquePointer<system::AbstractManagerBase>> InstancedManagersList;
+	InstancedManagersList managerInstances;
+	std::vector<std::type_index> managerInstancingOrder;
 
 	bool applicationRunning = true;
+	
+	system::Gigaton &gigaton;
 
 	Commando _commando;
 	ConfigReader _config;
@@ -116,11 +119,18 @@ bool BaseApplication::loadScene()
 }
 
 template<class ManagerType, class... Args>
-bool BaseApplication::createManagerInstance(Args... args)
+bool BaseApplication::createManagerInstance(Args&&... args)
 {
-	static_assert(std::is_base_of<system::AbstractSystemManagerBase, ManagerType>::value, "Manager type must inherit from SystemManagerBase.");
+	static_assert(std::is_base_of<system::AbstractManagerBase, ManagerType>::value, "Manager type must inherit from AbstractManagerBase.");
 
-	ManagerType *managerInstance = new(std::nothrow) ManagerType(this, args...);
+	const std::type_index typeIndex = typeid(ManagerType);
+	if (managerInstances.find(typeIndex) != managerInstances.end())
+	{
+		TS_ASSERTF(false, "Manager of the type '%s' is already created.", ManagerType::TypeName);
+		return false;
+	}
+
+	UniquePointer<ManagerType> managerInstance = makeUnique<ManagerType>(std::forward<Args>(args)...);
 	TS_ASSERT(managerInstance && "Failed to allocate new manager instance.");
 	if (managerInstance == nullptr)
 		return false;
@@ -131,41 +141,27 @@ bool BaseApplication::createManagerInstance(Args... args)
 		return false;
 	}
 
-	systemManagers.emplace(ManagerType::TypeIndex, managerInstance);
+	managerInstances.emplace(typeIndex, staticUniquePointerCast<AbstractManagerBase>(std::move(managerInstance)));
+	managerInstancingOrder.push_back(typeIndex);
 	return true;
-}
-
-template<class ManagerType>
-void BaseApplication::destroyManagerInstance()
-{
-	static_assert(std::is_base_of<system::AbstractSystemManagerBase, ManagerType>::value, "Manager type must inherit from SystemManagerBase.");
-
-	SystemManagersList::iterator it = systemManagers.find(ManagerType::TypeIndex);
-	TS_ASSERT(it != systemManagers.end() && "Attempting to destroy a manager that has not been created.");
-
-	ManagerType *managerInstance = static_cast<ManagerType*>(it->second);
-	if (managerInstance != nullptr)
-	{
-		managerInstance->deinitialize();
-		delete managerInstance;
-	}
-	systemManagers.erase(it);
 }
 
 template<class ManagerType>
 ManagerType &BaseApplication::getManager()
 {
-	SystemManagersList::iterator it = systemManagers.find(ManagerType::TypeIndex);
-	TS_ASSERT(it != systemManagers.end() && "Attempting to retrieve a manager that has not been created.");
-	return *static_cast<ManagerType*>(it->second);
+	const std::type_index typeIndex = typeid(ManagerType);
+	InstancedManagersList::iterator it = managerInstances.find(typeIndex);
+	TS_ASSERT(it != managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
+	return *static_cast<ManagerType*>(it->second.get());
 }
 
 template<class ManagerType>
 const ManagerType &BaseApplication::getManager() const
 {
-	SystemManagersList::const_iterator it = systemManagers.find(ManagerType::TypeIndex);
-	TS_ASSERT(it != systemManagers.end() && "Attempting to retrieve a manager that has not been created.");
-	return *static_cast<ManagerType*>(it->second);
+	const std::type_index typeIndex = typeid(ManagerType);
+	InstancedManagersList::iterator it = managerInstances.find(typeIndex);
+	TS_ASSERT(it != managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
+	return *static_cast<ManagerType*>(it->second.get());
 }
 
 TS_END_PACKAGE1()
