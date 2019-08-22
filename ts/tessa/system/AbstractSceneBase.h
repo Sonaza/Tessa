@@ -2,6 +2,10 @@
 
 #include "ts/tessa/Time/TimeSpan.h"
 
+#define TS_DECLARE_SCENE(__class_name) \
+	private: \
+		typedef __class_name ThisClass;
+
 TS_DECLARE1(system, BaseApplication);
 TS_DECLARE1(resource, ResourceManager);
 

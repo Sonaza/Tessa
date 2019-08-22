@@ -18,6 +18,7 @@ static const std::string mainThreadName = "MainThread";
 static const std::string externalThreadName = "ExternalThread";
 }
 
+std::atomic<SizeType> Thread::nextThreadId;
 Thread Thread::firstThread(nullptr, mainThreadName);
 Thread *Thread::mainThread = &firstThread;
 
@@ -78,6 +79,16 @@ void Thread::sleep(TimeSpan time)
 #endif
 }
 
+const std::string &Thread::getThreadName() const
+{
+	return threadName;
+}
+
+const SizeType Thread::getThreadId() const
+{
+	return threadId;
+}
+
 void Thread::startup()
 {
 	currentThread = this;
@@ -88,6 +99,7 @@ Thread::Thread(BaseThreadEntry *entryParam, const std::string &threadNameParam)
 {
 	entry = entryParam;
 	threadName = threadNameParam;
+	threadId = nextThreadId.fetch_add(1, std::memory_order_relaxed);
 
 	if (entry != nullptr)
 	{

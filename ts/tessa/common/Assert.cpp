@@ -32,7 +32,8 @@ DialogAction dialog(const char *expression, const char *message, const char *fil
 
 	msg << "Expression: " << expression << "\n"
 		<< "File: " << filepath << "\n"
-		<< "Line: " << line << "\n";
+		<< "Line: " << line << "\n"
+		<< "\n(Press 'Retry' to debug break)\n";
 
 	Int32 button = MessageBoxW(nullptr, msg.str().c_str(), L"Assertion failure", MB_ABORTRETRYIGNORE | MB_ICONERROR);
 	switch (button)

@@ -8,13 +8,13 @@ TS_PACKAGE0()
 const Time Time::zero = Time();
 
 Time::Time()
+	: time_point(time_point.min())
 {
 }
 
 Time::Time(std::chrono::system_clock::time_point time_point)
 	: time_point(time_point)
 {
-	
 }
 
 Time Time::now()

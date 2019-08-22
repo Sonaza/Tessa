@@ -48,10 +48,12 @@ public:
 	void reset(T *ptrParam, Deleter);
 
 	typename std::add_lvalue_reference<T>::type operator*() const;
-	T *operator->() const;
 
-	explicit operator bool();
-	explicit operator void *();
+	T *operator->();
+	const T *operator->() const;
+
+	explicit operator bool() const;
+// 	explicit operator void *() const;
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;

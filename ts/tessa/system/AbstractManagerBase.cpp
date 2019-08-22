@@ -14,4 +14,9 @@ AbstractManagerBase::~AbstractManagerBase()
 
 }
 
+bool AbstractManagerBase::isInitialized() const
+{
+	return initialized;
+}
+
 TS_END_PACKAGE1()

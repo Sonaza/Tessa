@@ -6,7 +6,8 @@
 	private: \
 		typedef __class_name ThisClass; \
 	public: \
-		static const char * TypeName;
+		static const char * TypeName; \
+		virtual const char *getTypeName() const override { return ThisClass::TypeName; }
 
 #define TS_DEFINE_MANAGER_TYPE(__class_name) \
 	namespace ts { const char * __class_name::TypeName = #__class_name; }
@@ -15,6 +16,8 @@ TS_PACKAGE1(system)
 
 class AbstractManagerBase : public lang::Noncopyable
 {
+	friend class BaseApplication;
+
 public:
 	AbstractManagerBase();
 	virtual ~AbstractManagerBase();
@@ -22,7 +25,11 @@ public:
 	virtual bool initialize() = 0;
 	virtual void deinitialize() = 0;
 
+	bool isInitialized() const;
+
 	virtual void update(const TimeSpan deltaTime) {}
+
+	virtual const char *getTypeName() const = 0;
 
 protected:
 	template <class T>
@@ -35,6 +42,9 @@ protected:
 	T *getGigatonOptional();
 
 	system::Gigaton &gigaton;
+
+private:
+	bool initialized = false;
 };
 
 template <class T>

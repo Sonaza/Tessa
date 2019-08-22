@@ -4,15 +4,6 @@ TS_PACKAGE1(lang)
 
 class DefaultScopedPointerDeleter;
 
-class ScopedPointerBaseImpl
-{
-public:
-	ScopedPointerBaseImpl() = default;
-
-protected:
-	void *pointer = nullptr;
-};
-
 TS_END_PACKAGE1()
 
 TS_PACKAGE0()
@@ -20,7 +11,7 @@ TS_PACKAGE0()
 // Scoped pointer type intended for use cases where a thing only
 // exists in a single scope and will never move outside of it.
 template <class T, class Deleter = lang::DefaultScopedPointerDeleter>
-class ScopedPointer : public lang::ScopedPointerBaseImpl
+class ScopedPointer
 {
 public:
 	typedef T ElementType;
@@ -45,10 +36,12 @@ public:
 	void reset(T *ptrParam = nullptr);
 
 	typename std::add_lvalue_reference<T>::type operator*() const;
-	T *operator->();
 
-	explicit operator bool();
-	explicit operator void *();
+	T *operator->();
+	const T* operator->() const;
+
+	explicit operator bool() const;
+// 	explicit operator void *() const;
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;
@@ -60,6 +53,7 @@ public:
 
 private:
 	void _deleteImpl();
+	T *pointer = nullptr;
 };
 
 #include "ScopedPointer.inl"

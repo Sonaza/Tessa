@@ -5,21 +5,26 @@
 
 TS_PACKAGE2(app, viewer)
 
-// struct FormatInfo
-// {
-// 	std::string extension;
-// };
+struct FormatInfo
+{
+	bool animated;
+};
 
 class SupportedFormats
 {
 public:
-	static const std::vector<std::wstring> &getFormats();
+	static const std::vector<std::wstring> &getSupportedFormatExtensions();
+
+	static const bool isFormatAnimated(const std::wstring &extension);
 
 private:
 	static SupportedFormats instance;
 	SupportedFormats();
 
-	std::vector<std::wstring> supportedFormats;
+	typedef std::map<std::wstring, FormatInfo> FormatInfoList;
+	FormatInfoList supportedFormatInfo;
+
+	std::vector<std::wstring> supportedFormatExtensions;
 };
 
 TS_END_PACKAGE2()

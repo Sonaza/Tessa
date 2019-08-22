@@ -4,15 +4,6 @@ TS_PACKAGE1(lang)
 
 class DefaultUniquePointerDeleter;
 
-class UniquePointerBaseImpl
-{
-public:
-	UniquePointerBaseImpl() = default;
-
-protected:
-	void *pointer = nullptr;
-};
-
 TS_END_PACKAGE1()
 
 TS_PACKAGE0()
@@ -20,7 +11,7 @@ TS_PACKAGE0()
 // Unique pointer type intended for use cases where a thing is only allowed to
 // exist in one place at a time but may be moved elsewhere through move semantics.
 template <class T, class Deleter = lang::DefaultUniquePointerDeleter>
-class UniquePointer : public lang::UniquePointerBaseImpl
+class UniquePointer
 {
 public:
 	typedef T ElementType;
@@ -45,10 +36,12 @@ public:
 	void reset(T *ptrParam = nullptr);
 
 	typename std::add_lvalue_reference<T>::type operator*() const;
+	
 	T *operator->();
+	const T *operator->() const;
 
-	explicit operator bool();
-	explicit operator void *();
+	explicit operator bool() const;
+// 	explicit operator void *() const;
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;
@@ -60,6 +53,7 @@ public:
 
 private:
 	void _deleteImpl();
+	T *pointer = nullptr;
 };
 
 #include "UniquePointer.inl"

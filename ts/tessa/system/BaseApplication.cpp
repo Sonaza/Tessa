@@ -101,6 +101,32 @@ bool BaseApplication::initialize()
 	if (!createApplicationManagers())
 		return false;
 
+	TS_ASSERT(managerInstances.size() == managerInstancingOrder.size());
+	for (auto it = managerInstancingOrder.begin(); it != managerInstancingOrder.end(); ++it)
+	{
+		const std::type_index &typeIndex = *it;
+		if (managerInstances[typeIndex]->initialize())
+		{
+			managerInstances[typeIndex]->initialized = true;
+		}
+		else
+		{
+			TS_LOG_ERROR("Initializing a manager instance failed. Manager type: %s", managerInstances[typeIndex]->getTypeName());
+			return false;
+		}
+	}
+
+	file::ArchivistFilesystem &afs = getManager<file::ArchivistFilesystem>();
+	if (!loadArchives(afs))
+		return false;
+
+	system::WindowManager &wm = getManager<system::WindowManager>();
+	if (!createWindow(wm))
+	{
+		TS_LOG_ERROR("Window creation failed.");
+		return false;
+	}
+
 	return true;
 }
 
@@ -146,6 +172,11 @@ const ConfigReader &BaseApplication::getConfig() const
 	return _config;
 }
 
+sf::Font &BaseApplication::getDebugFont()
+{
+	return *debugFont->getResource();
+}
+
 bool BaseApplication::createSystemManagers()
 {
 	if (!createManagerInstance<threading::ThreadScheduler>())
@@ -153,23 +184,12 @@ bool BaseApplication::createSystemManagers()
 
 	if (!createManagerInstance<file::ArchivistFilesystem>())
 		return false;
-
-	file::ArchivistFilesystem &afs = getManager<file::ArchivistFilesystem>();
-	if (!loadArchives(afs))
-		return false;
 	
 	if (!createManagerInstance<resource::ResourceManager>())
 		return false;
 
 	if (!createManagerInstance<system::WindowManager>())
 		return false;
-
-	system::WindowManager &wm = getManager<system::WindowManager>();
-	if (!createWindow(wm))
-	{
-		TS_LOG_ERROR("Window creation failed.");
-		return false;
-	}
 
 	return true;
 }
@@ -180,7 +200,8 @@ void BaseApplication::destroyManagerInstances()
 	for (auto it = managerInstancingOrder.rbegin(); it != managerInstancingOrder.rend(); ++it)
 	{
 		const std::type_index &typeIndex = *it;
-		managerInstances[typeIndex]->deinitialize();
+		if (managerInstances[typeIndex]->isInitialized())
+			managerInstances[typeIndex]->deinitialize();
 		managerInstances[typeIndex].reset();
 	}
 
@@ -248,7 +269,7 @@ void BaseApplication::mainloop()
 
 		TimeSpan frameSleep = targetFrameTime - loopTimer.getElapsedTime();
 		if (frameSleep > TimeSpan::zero)
-			Thread::sleep(targetFrameTime - loopTimer.getElapsedTime());
+			Thread::sleep(frameSleep);
 
 		frameCounter++;
 		if (framerateClock.getElapsedTime() > TimeSpan::fromMilliseconds(500))

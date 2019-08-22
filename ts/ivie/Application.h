@@ -5,7 +5,7 @@
 TS_DECLARE1(system, WindowManager);
 TS_DECLARE1(file, ArchivistFilesystem);
 
-TS_DECLARE2(app, viewer, FileScanner);
+TS_DECLARE2(app, viewer, BackgroundFileScanner);
 
 TS_PACKAGE1(app)
 
@@ -29,7 +29,7 @@ protected:
 	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem);
 
 private:
-	ScopedPointer<viewer::FileScanner> fileScanner;
+	ScopedPointer<viewer::BackgroundFileScanner> BackgroundFileScanner;
 
 };
 

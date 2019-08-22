@@ -1,6 +1,7 @@
 #pragma once
 
 #include <thread>
+#include <atomic>
 
 #include "ts/tessa/time/TimeSpan.h"
 
@@ -25,12 +26,16 @@ public:
 
 	static void sleep(TimeSpan time);
 
+	const std::string &getThreadName() const;
+	const SizeType getThreadId() const;
+
 private:
 	static Thread &getExternalThread();
 
 	void startup();
 
 	bool running = false;
+	SizeType threadId = 0;
 
 	BaseThreadEntry *entry = nullptr;
 	std::string threadName;
@@ -39,6 +44,7 @@ private:
 
 	static thread_local Thread *currentThread;
 
+	static std::atomic<SizeType> nextThreadId;
 	static Thread firstThread;
 	static Thread *mainThread;
 

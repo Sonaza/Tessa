@@ -2,6 +2,11 @@
 
 #include "ts/tessa/system/AbstractManagerBase.h"
 
+#include "ts/tessa/threading/BaseThreadEntry.h"
+#include "ts/tessa/threading/TaskCompletionFuture.h"
+
+#include "ts/tessa/util/IterablePriorityQueue.h"
+
 #include "ts/tessa/time/Time.h"
 #include "ts/tessa/time/TimeSpan.h"
 
@@ -9,7 +14,6 @@
 #include <condition_variable>
 #include <functional>
 #include <memory>
-#include <queue>
 #include <chrono>
 #include <future>
 
@@ -17,6 +21,81 @@ TS_PACKAGE1(threading)
 
 typedef SizeType SchedulerTaskId;
 static const SchedulerTaskId InvalidTaskId = ~0U;
+
+template<class ReturnType>
+class ScheduledTaskFuture
+{
+	friend class ThreadScheduler;
+
+public:
+	ScheduledTaskFuture() = delete;
+
+	ScheduledTaskFuture(const ScheduledTaskFuture &other)
+	{
+		*this = other;
+	}
+
+	ScheduledTaskFuture &operator=(const ScheduledTaskFuture &other)
+	{
+		if (this != &other)
+		{
+			future = other.future;
+			taskId = other.taskId;
+		}
+		return *this;
+	}
+
+	ScheduledTaskFuture(ScheduledTaskFuture &&other)
+	{
+		*this = std::move(other);
+	}
+
+	ScheduledTaskFuture &operator=(ScheduledTaskFuture &&other)
+	{
+		if (this != &other)
+		{
+			future = std::move(other.future);
+			taskId = other.taskId;
+			other.taskId = InvalidTaskId;
+		}
+		return *this;
+	}
+
+	ScheduledTaskFuture(std::future<ReturnType> &&future)
+		: future(std::move(future))
+		, taskId(InvalidTaskId)
+	{
+	}
+
+	ReturnType getResult() const
+	{
+		return future.get();
+	}
+
+	bool isValid() const
+	{
+		return future.valid();
+	}
+
+	void wait() const
+	{
+		future.wait();
+	}
+
+	std::future_status waitFor(TimeSpan waitTime) const
+	{
+		return future.wait_for(std::chrono::milliseconds(waitTime.getMilliseconds()));
+	}
+
+	SchedulerTaskId getTaskId() const
+	{
+		return taskId;
+	}
+
+private:
+	std::shared_future<ReturnType> future;
+	SchedulerTaskId taskId = InvalidTaskId;
+};
 
 class ThreadScheduler : public system::AbstractManagerBase
 {
@@ -34,19 +113,30 @@ public:
 
 	void clearTasks();
 
-	void cancelIntervalTask(SchedulerTaskId taskId);
+	bool isTaskQueued(SchedulerTaskId taskId);
+	bool isTaskQueuedUnsafe(SchedulerTaskId taskId);
+
+	// Returns true if task was cancelled succesfully, false if task wasn't found
+	bool cancelTask(SchedulerTaskId taskId);
+	void waitUntilTaskComplete(SchedulerTaskId taskId);
+
+	SchedulerTaskId scheduleThreadEntry(BaseThreadEntry *entry);
 
 	// For passing in function pointers and lambda functions
 	template<class Function, class... Args>
-	std::future<typename std::result_of<Function(Args...)>::type> scheduleOnce(TimeSpan time_from_now, Function &&f, Args&&... args);
+	ScheduledTaskFuture<typename std::result_of<Function(Args...)>::type> scheduleOnce(TimeSpan time_from_now, Function &&f, Args&&... args);
 
 	// For passing in instanced class methods
 	template<class ReturnType, class Class, class... Args>
-	std::future<ReturnType> scheduleOnce(TimeSpan time_from_now, ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
+	ScheduledTaskFuture<ReturnType> scheduleOnce(TimeSpan time_from_now, ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
 
 	// For passing in function pointers and lambda functions
 	template<class Function, class... Args>
 	SchedulerTaskId scheduleWithInterval(TimeSpan interval, Function &&f, Args&&... args);
+
+	// For passing in instanced class methods
+	template<class Class, class... Args>
+	SchedulerTaskId scheduleWithInterval(TimeSpan interval, bool(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
 	
 	static SizeType numHardwareThreads();
 
@@ -56,83 +146,90 @@ private:
 
 	struct ScheduledTask
 	{
-		ScheduledTask() = default;
+		ScheduledTask()
+		{
+// 			TS_ASSERT(!"Hello");
+		}
 
-		ScheduledTask(Time time, std::function<void()> &&task)
-			: scheduledTime(time)
+		ScheduledTask(Time time, std::function<bool()> &&task)
+			: initialized(true)
+			, scheduledTime(time)
 			, interval(TimeSpan::zero)
-			, task(task)
+			, task(std::move(task))
 			, taskId(ScheduledTask::nextTaskId++)
 		{
+			promise = makeUnique<TaskCompletionPromise>();
 		}
 
-		ScheduledTask(TimeSpan interval, std::function<void()> &&task)
-			: scheduledTime(Time::now())
+		ScheduledTask(TimeSpan interval, std::function<bool()> &&task)
+			: initialized(true)
+			, scheduledTime(Time::now())
 			, interval(interval)
-			, task(task)
+			, task(std::move(task))
 			, taskId(ScheduledTask::nextTaskId++)
 		{
+			promise = makeUnique<TaskCompletionPromise>();
 		}
 
+		ScheduledTask(ScheduledTask &&other)
+		{
+			*this = std::move(other);
+		}
+
+		ScheduledTask &operator=(ScheduledTask &&other)
+		{
+			if (this != &other)
+			{
+				std::swap(initialized, other.initialized);
+				std::swap(scheduledTime, other.scheduledTime);
+				std::swap(interval, other.interval);
+				task = std::move(task);
+				std::swap(taskId, other.taskId);
+				std::swap(promise, other.promise);
+			}
+			return *this;
+		}
+
+		bool initialized = false;
+		SchedulerTaskId taskId = InvalidTaskId;
 		Time scheduledTime;
 		TimeSpan interval;
-
-		std::function<void()> task;
-
-		SchedulerTaskId taskId = InvalidTaskId;
-		static SchedulerTaskId nextTaskId;
+		std::function<bool()> task;
+		UniquePointer<TaskCompletionPromise> promise;
 
 		bool operator<(const ScheduledTask &rhs) const
 		{
 			return scheduledTime > rhs.scheduledTime;
 		}
 
-		void operator()()
+		// Returns if task should be rescheduled
+		bool run()
 		{
-			task();
+			TS_ASSERT(initialized && "Task is not properly initialized.");
+
+			bool reschedulable = std::invoke(task) && (interval > TimeSpan::zero);
+
+			TS_ASSERT(promise != nullptr && "My promises are empty? What?");
+			promise->signalCompletion();
+
+			return reschedulable;
 		}
+
+		static SchedulerTaskId nextTaskId;
 	};
 
-	template<class Type, class Container = std::vector<Type>>
-	class IterablePriorityQueue : public std::priority_queue<Type, Container>
-	{
-	public:
-		typedef typename Container::iterator iterator;
-		typedef typename Container::const_iterator const_iterator;
-
-		iterator begin() { return this->c.begin(); }
-		iterator end() { return this->c.end(); }
-		const_iterator begin() const { return this->c.begin(); }
-		const_iterator end() const { return this->c.end(); }
-
-		iterator erase(iterator it) { return this->c.erase(it); }
-
-		bool erase_if(std::function<bool(const Type &)> predicate)
-		{
-			for (iterator it = begin(); it != end(); ++it)
-			{
-				if (predicate(*it))
-				{
-					erase(it);
-					return true;
-				}
-			}
-			return false;
-		}
-
-		void clear()
-		{
-			IterablePriorityQueue<Type, Container> empty;
-			std::swap(*this, empty);
-		}
-	};
-
-	typedef IterablePriorityQueue<ScheduledTask> TaskQueueType;
+	typedef util::IterablePriorityQueue<ScheduledTask> TaskQueueType;
 	TaskQueueType pendingTaskQueue;
 	TaskQueueType taskQueue;
 
+	typedef std::map<SchedulerTaskId, TaskCompletionFuture> TaskCompletionFutures;
+	TaskCompletionFutures taskFutures;
+	std::map<SizeType, SchedulerTaskId> workerToTaskMap;
+
 	template <class ReturnType>
-	std::future<ReturnType> scheduleOnceImpl(TimeSpan time_from_now, std::function<ReturnType()> &&f);
+	ScheduledTaskFuture<ReturnType> scheduleOnceImpl(TimeSpan time_from_now, std::function<ReturnType()> &&f);
+
+	SchedulerTaskId scheduleWithIntervalImpl(TimeSpan interval, std::function<bool()> &&f);
 
 	void reschedule(ScheduledTask &&task);
 
@@ -148,50 +245,62 @@ private:
 
 	std::condition_variable schedulerCondition;
 	std::condition_variable workerCondition;
+	std::condition_variable taskStartedCondition;
 	mutable std::mutex queueMutex;
 };
 
 template<class Function, class... Args>
-std::future<typename std::result_of<Function(Args...)>::type> ThreadScheduler::scheduleOnce(
+ScheduledTaskFuture<typename std::result_of<Function(Args...)>::type> ThreadScheduler::scheduleOnce(
 	TimeSpan time_from_now,
 	Function &&taskFunction, Args&&... args)
 {
 	typedef typename std::result_of<Function(Args...)>::type ReturnType;
 
-	std::function<ReturnType()> bound = std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...);
-	return scheduleOnceImpl<ReturnType>(time_from_now, std::move(bound));
+	return scheduleOnceImpl<ReturnType>(
+		time_from_now,
+		std::move(std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...))
+	);
 }
 
 template<class ReturnType, class Class, class... Args>
-std::future<ReturnType> ThreadScheduler::scheduleOnce(
+ScheduledTaskFuture<ReturnType> ThreadScheduler::scheduleOnce(
 	TimeSpan time_from_now,
 	ReturnType(Class::*taskFunction)(Args...), Class *instance, Args&&... args)
 {
-	std::function<ReturnType()> bound = std::bind(taskFunction, instance, std::forward<Args>(args)...);
-	return scheduleOnceImpl<ReturnType>(time_from_now, std::move(bound));
+	return scheduleOnceImpl<ReturnType>(
+		time_from_now,
+		std::move(std::bind(taskFunction, instance, std::forward<Args>(args)...))
+	);
 }
 
 template <class ReturnType>
-std::future<ReturnType> ThreadScheduler::scheduleOnceImpl(TimeSpan time_from_now, std::function<ReturnType()> &&bound)
+ScheduledTaskFuture<ReturnType> ThreadScheduler::scheduleOnceImpl(
+	TimeSpan time_from_now, std::function<ReturnType()> &&function)
 {
-	SharedPointer<std::packaged_task<ReturnType()>> packagedTask = makeShared<std::packaged_task<ReturnType()>>(bound);
+	SharedPointer<std::packaged_task<ReturnType()>> packagedTask =
+		makeShared<std::packaged_task<ReturnType()>>(function);
 
-	std::future<ReturnType> result = packagedTask->get_future();
+	ScheduledTaskFuture<ReturnType> future = packagedTask->get_future();
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
 		if (running)
 		{
 			ScheduledTask task(Time::now() + time_from_now, [packagedTask]()
 			{
-				(*packagedTask)();
+				std::invoke(*packagedTask);
+// 				(*packagedTask)();
+				return false; // Schedule once task is not reschedulable
 			});
 			pendingTaskQueue.push(std::move(task));
+
+			future.taskId = task.taskId;
+			taskFutures.insert(std::make_pair(task.taskId, task.promise->getFuture()));
 		}
 	}
 
 	schedulerCondition.notify_all();
 
-	return result;
+	return future;
 }
 
 template<class Function, class... Args>
@@ -200,23 +309,46 @@ SchedulerTaskId ThreadScheduler::scheduleWithInterval(
 	Function &&taskFunction, Args&&... args)
 {
 	typedef typename std::result_of<Function(Args...)>::type ReturnType;
+	static_assert(std::is_same<bool, ReturnType>::value, "Interval schedule callback should return a boolean.");
 
-	SharedPointer<std::function<ReturnType()>> sharedTask = makeShared<std::function<ReturnType()>>();
-	*sharedTask = std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...);
-	
+	return scheduleWithIntervalImpl(
+		interval,
+		std::move(std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...))
+	);
+}
+
+template<class Class, class... Args>
+SchedulerTaskId ts::threading::ThreadScheduler::scheduleWithInterval(
+	TimeSpan interval,
+	bool(Class::*taskFunction)(Args...), Class *instance, Args&&... args)
+{
+	std::function<bool()> bound = std::bind(taskFunction, instance, std::forward<Args>(args)...);
+	return scheduleWithIntervalImpl(
+		interval,
+		std::move(std::bind(taskFunction, instance, std::forward<Args>(args)...))
+	);
+}
+
+inline SchedulerTaskId ThreadScheduler::scheduleWithIntervalImpl(
+	TimeSpan interval, std::function<bool()> &&function)
+{
+	SharedPointer<std::function<bool()>> sharedTask =
+		makeShared<std::function<bool()>>(std::move(function));
+
 	SchedulerTaskId createdTaskId = InvalidTaskId;
-
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
 		if (running)
 		{
 			ScheduledTask task(interval, [sharedTask]()
 			{
-				(*sharedTask)();
+				// Task return value determines if it will be rescheduled
+				return std::invoke(*sharedTask);
 			});
 			pendingTaskQueue.push(std::move(task));
 
 			createdTaskId = task.taskId;
+			taskFutures.insert(std::make_pair(task.taskId, task.promise->getFuture()));
 		}
 	}
 

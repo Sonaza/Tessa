@@ -9,7 +9,13 @@
 #include "FreeImage.h"
 
 #include "ts/ivie/util/NaturalSort.h"
-#include "ts/ivie/viewer/FileScanner.h"
+#include "ts/ivie/viewer/BackgroundFileScanner.h"
+#include "ts/ivie/viewer/ViewerStateManager.h"
+
+#include "ts/ivie/viewer/image/ImageManager.h"
+#include "ts/ivie/viewer/image/Image.h"
+
+#include "ts/ivie/util/RenderUtil.h"
 
 TS_PACKAGE2(app, scenes)
 
@@ -24,6 +30,10 @@ ImageViewerScene::~ImageViewerScene()
 
 bool ImageViewerScene::start()
 {
+	viewerStateManager = &getGigaton<viewer::ViewerStateManager>();
+
+	imageChangedBind.connect(viewerStateManager->currentImageChangedSignal, &ThisClass::imageChanged, this);
+
 	return true;
 }
 
@@ -31,100 +41,11 @@ void ImageViewerScene::stop()
 {
 }
 
-void ImageViewerScene::loadImage()
-{
-	std::wstring wpath;
-	application->getCommando().getNthParameter(0, wpath);
-
-	std::wstring dir = file::utils::getDirname(wpath);
-	if (dir.empty())
-		dir = file::utils::getWorkingDirectoryWide();
-
-	file::InputFile file;
-	file.open(wpath, file::InputFileMode_ReadBinary);
-
-	BigSizeType size = file.getSize();
-	char *buffer = new char[size];
-	file.read(buffer, size);
-	file.close();
-
-	FIMEMORY *memory = FreeImage_OpenMemory((BYTE*)buffer, (DWORD)size);
-
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(wpath.c_str());
-	if (format == FIF_UNKNOWN)
-	{
-		// Try to get file type from file name instead
-		format = FreeImage_GetFIFFromFilenameU(wpath.c_str());
-	}
-
-	FIBITMAP* bitmap = FreeImage_LoadFromMemory(format, memory);
-	if (!bitmap)
-	{
-		TS_PRINTF("FreeImage_LoadFromMemory failed\n");
-
-		FreeImage_CloseMemory(memory);
-		delete[] buffer;
-
-		return;
-	}
-
-	if (FreeImage_GetBPP(bitmap) != 32)
-	{
-		FIBITMAP* temp = FreeImage_ConvertTo32Bits(bitmap);
-
-		// Unload previous image and replace it with the new one
-		FreeImage_Unload(bitmap);
-		bitmap = temp;
-	}
-
-	BYTE* bits = FreeImage_GetBits(bitmap);
-	if (!bits)
-	{
-		TS_PRINTF("FreeImage_GetBits returned null\n");
-
-		FreeImage_CloseMemory(memory);
-		delete[] buffer;
-
-		return;
-	}
-
-	uint32_t width = FreeImage_GetWidth(bitmap);
-	uint32_t height = FreeImage_GetHeight(bitmap);
-
-	sf::Image image;
-	image.create(width, height, bits);
-
-	moireTexture.loadFromImage(image);
-	moireTexture.setSmooth(true);
-	moireTexture.generateMipmap();
-
-	FreeImage_Unload(bitmap);
-
-	FreeImage_CloseMemory(memory);
-	delete[] buffer;
-}
-
 void ImageViewerScene::loadResources(resource::ResourceManager &rm)
 {
-	loadImage();
+	font = rm.loadResource<resource::FontResource>("viewer_font", "SourceHanSans-Medium.ttc", true);
 
-	sprite.setTexture(moireTexture);
-
-	{
-		texSize = moireTexture.getSize();
-		float scale = 1000.f / (float)texSize.y;
-		sprite.setScale(scale, scale);
-
-		system::WindowManager &wm = application->getManager<system::WindowManager>();
-		math::VC2U windowSize = wm.getSize();
-		sprite.setPosition(windowSize.x / 2.f, windowSize.y / 2.f);
-
-		sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
-	}
-
-	blurTexture.create(texSize.x, texSize.y);
-
-	shader.loadFromFile("convert.glsl", sf::Shader::Fragment);
+	shader.loadFromFile("convert.frag", sf::Shader::Fragment);
 }
 
 bool ImageViewerScene::handleEvent(const sf::Event event)
@@ -135,12 +56,27 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 		{
 			if (event.key.code == sf::Keyboard::Left)
 			{
-// 				swapTexture(-1);
+				viewerStateManager->previousImage();
 				return true;
 			}
 			if (event.key.code == sf::Keyboard::Right)
 			{
-// 				swapTexture(1);
+				viewerStateManager->nextImage();
+				return true;
+			}
+		}
+		break;
+
+		case sf::Event::MouseButtonPressed:
+		{
+			if (event.mouseButton.button == sf::Mouse::XButton1)
+			{
+				viewerStateManager->previousImage();
+				return true;
+			}
+			if (event.mouseButton.button == sf::Mouse::XButton2)
+			{
+				viewerStateManager->nextImage();
 				return true;
 			}
 		}
@@ -150,50 +86,109 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 	return false;
 }
 
-/*
-void ImageViewerScene::swapTexture(Int32 dir)
-{
-	currentIndex += dir;
-	if (currentIndex < 0)
-		currentIndex = (Int32)(textures.size() - 1);
-	if (currentIndex >= textures.size())
-		currentIndex = 0;
-
-	resource::TextureResource *texture = textures[currentIndex];
-
-	if (texture && texture->isLoaded())
-	{
-		sf::Texture *tex = texture->getResource();
-		sprite.setTexture(*tex, true);
-
-		math::VC2U size = tex->getSize();
-		float scale = 800.f / (float)size.y;
-
-		sprite.setScale(scale, scale);
-
-		system::WindowManager &wm = application->getManager<system::WindowManager>();
-		math::VC2U windowSize = wm.getSize();
-		sprite.setPosition(windowSize.x / 2.f, windowSize.y / 2.f);
-
-		sprite.setOrigin(size.x / 2.f, size.y / 2.f);
-	}
-}*/
-
 void ImageViewerScene::update(const TimeSpan deltaTime)
 {
-	system::WindowManager &wm = application->getManager<system::WindowManager>();
-	math::VC2U windowSize = wm.getSize();
-	float offset = sf::Mouse::getPosition(wm.getRenderWindow()).x / (float)windowSize.x;
+// 	system::WindowManager &wm = application->getManager<system::WindowManager>();
+// 	math::VC2U windowSize = wm.getSize();
+// 	float offset = sf::Mouse::getPosition(wm.getRenderWindow()).x / (float)windowSize.x;
+// 
+// 	float scale = (900.f + offset * 600.f) / (float)texSize.y;
+// 	sprite.setScale(scale, scale);
+}
 
-	float scale = (900.f + offset * 600.f) / (float)texSize.y;
-	sprite.setScale(scale, scale);
+void ImageViewerScene::imageChanged(SizeType statusText)
+{
+	frameTimer.restart();
 }
 
 void ImageViewerScene::render(sf::RenderWindow &renderWindow)
 {
-	sf::RenderStates states;
-	states.shader = &shader;
-	renderWindow.draw(sprite, states);
+	viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
+	
+	SizeType frameIndex = 0;
+	SizeType frameIndexMax = 1;
+	SizeType framesBuffered = 0;
+
+	viewer::Image *currentImage = imageManager.getCurrentImage();
+	if (currentImage != nullptr && currentImage->isDisplayable())
+	{
+		frameIndex = currentImage->getCurrentFrameIndex();
+		frameIndexMax = currentImage->getNumFramesTotal();
+		framesBuffered = currentImage->getNumFramesBuffered();
+
+		const viewer::FrameStorage frame = *currentImage->getCurrentFrameStorage();
+// 		TS_ASSERT(frame != nullptr);
+
+		if (currentImage->getIsAnimated())
+		{
+			if (frameTimer.getElapsedTime() > frame.frameTime)
+			{
+// 				TS_PRINTF("Frame time was %llu ms\n", frame.frameTime.getMilliseconds());
+
+				currentImage->advanceToNextFrame();
+				frameTimer.restart();
+			}
+		}
+
+		math::VC2U size = currentImage->getSize();
+
+		float scale = math::min(1.f, (1000.f) / (float)size.y);
+
+		math::VC2U scaledSize(
+			(Uint32)(size.x * scale),
+			(Uint32)(size.y * scale)
+		);
+
+		sf::VertexArray va = util::makeQuadVertexArray(size.x, size.y);
+
+		sf::RenderStates states;
+		states.texture = frame.texture.get();
+		states.shader = &shader;
+		
+		system::WindowManager &wm = application->getManager<system::WindowManager>();
+		math::VC2U windowSize = wm.getSize();
+
+		sf::Transform transform;
+		transform.translate(windowSize.x / 2.f - scaledSize.x / 2.f, windowSize.y / 2.f - scaledSize.y / 2.f);
+		transform.scale(scale, scale);
+		states.transform = transform;
+
+		renderWindow.draw(va, states);
+	}
+
+	sf::Text statusText;
+	statusText.setOutlineThickness(2.f);
+	statusText.setFont(*font->getResource());
+
+	{
+		statusText.setString(TS_WFMT("%u / %u\n%s\nFrame %u / %u (%u buffered)",
+			viewerStateManager->getCurrentImageIndex() + 1,
+			viewerStateManager->getNumImages(),
+			file::utils::getBasename(viewerStateManager->getCurrentFilepath()),
+
+			frameIndex + 1, frameIndexMax,
+			framesBuffered
+			));
+
+		statusText.setPosition(10.f, 50.f);
+		statusText.setOutlineThickness(2.f);
+		statusText.setScale(0.9f, 0.9f);
+
+		renderWindow.draw(statusText);
+	}
+
+	{
+		std::wstring stats = imageManager.getStats();
+		statusText.setString(stats);
+
+		statusText.setPosition(10.f, 300.f);
+		statusText.setOutlineThickness(2.f);
+		statusText.setScale(0.7f, 0.7f);
+
+		renderWindow.draw(statusText);
+	}
+
+
 }
 
 TS_END_PACKAGE2()

@@ -127,23 +127,30 @@ typename std::add_lvalue_reference<T>::type SharedPointer<T>::operator*() const
 }
 
 template <class T>
-T *SharedPointer<T>::operator->() const
+T *SharedPointer<T>::operator->()
 {
 	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
 	return pointer;
 }
 
 template <class T>
-SharedPointer<T>::operator bool()
+const T *SharedPointer<T>::operator->() const
+{
+	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
+	return pointer;
+}
+
+template <class T>
+SharedPointer<T>::operator bool() const
 {
 	return pointer != nullptr;
 }
 
-template <class T>
-SharedPointer<T>::operator void *()
-{
-	return static_cast<void*>(pointer);
-}
+// template <class T>
+// SharedPointer<T>::operator void *() const
+// {
+// 	return static_cast<void*>(pointer);
+// }
 
 template <class T>
 bool SharedPointer<T>::operator!() const

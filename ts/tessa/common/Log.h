@@ -5,6 +5,8 @@
 #include <fmt/printf.h>
 #pragma warning( pop )
 
+#include "ts/tessa/common/Assert.h"
+
 #include <ostream>
 #include <cstdarg>
 #include <memory>
@@ -12,6 +14,9 @@
 
 #define TS_FMT(__format, ...) \
 	::ts::common::Log::getSingleton().format(__format, ## __VA_ARGS__)
+
+#define TS_WFMT(__format, ...) \
+	::ts::common::Log::getSingleton().format(L ## __format, ## __VA_ARGS__)
 
 #define __TS_PRINTF_IMPL(__format, ...) \
 	::ts::common::Log::getSingleton().write(__format, ## __VA_ARGS__)
@@ -102,21 +107,37 @@ private:
 };
 
 template<class FormatType, class... Args>
-TS_FORCEINLINE void Log::write(FormatType format, Args... args)
+TS_FORCEINLINE void Log::write(FormatType formatStr, Args... args)
 {
-	write(fmt::sprintf(format, args...));
+	write(format(formatStr, args...));
 }
 
 template<class... Args>
-std::string Log::format(const std::string &format, Args... args)
+std::string Log::format(const std::string &formatStr, Args... args)
 {
-	return fmt::sprintf(format, args...);
+	try
+	{
+		return fmt::sprintf(formatStr, args...);
+	}
+	catch (const fmt::v5::format_error &e)
+	{
+		TS_ASSERTF(false, "String formatting error: %s", e.what());
+		return "<formatting error>";
+	}
 }
 
 template<class... Args>
-std::wstring Log::format(const std::wstring &format, Args... args)
+std::wstring Log::format(const std::wstring &formatStr, Args... args)
 {
-	return fmt::sprintf(format, args...);
+	try
+	{
+		return fmt::sprintf(formatStr, args...);
+	}
+	catch (const fmt::v5::format_error &e)
+	{
+		TS_ASSERTF(false, "String formatting error: %s", e.what());
+		return L"<formatting error>";
+	}
 }
 
 TS_END_PACKAGE1()

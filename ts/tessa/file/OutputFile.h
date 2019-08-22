@@ -61,6 +61,7 @@ public:
 	 * Returns: true if buffering the write succeeded (does not guarantee successful write on disk, use flush and check its return value if required).
 	 */
 	bool write(const char *inBuffer, BigSizeType size);
+	bool write(const unsigned char *inBuffer, BigSizeType size);
 
 	/* Writes the variable value to the write buffer.
 	 * In practice, reinterpret casts the value to byte pointer and calls write() on it.
@@ -71,10 +72,21 @@ public:
 
 	bool writeString(const std::string &str);
 	
-	/* Sets file position to given position.
+	/* Sets file position to given position relative to beginning
 	 * Returns: new position, or -1 if failure or bad.
 	 */
 	PosType seek(PosType pos);
+
+	/* Sets file position to given position relative to the seek origin.
+	* Returns: new position, or -1 if failure/bad.
+	*/
+	enum SeekOrigin
+	{
+		SeekFromBeginning = 0,
+		SeekFromCurrent   = 1,
+		SeekFromEnd       = 2,
+	};
+	PosType seek(PosType pos, SeekOrigin seekOrigin);
 	
 	/* Returns: current file position, or -1 if failure or bad.
 	 */

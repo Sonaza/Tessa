@@ -12,26 +12,21 @@
 #include "ts/ivie/scenes/ImageViewerScene.h"
 #include "ts/ivie/viewer/SupportedFormats.h"
 
-#include "ts/ivie/viewer/FileScanner.h"
+#include "ts/ivie/viewer/BackgroundFileScanner.h"
 #include "ts/ivie/viewer/ViewerStateManager.h"
-
-// #include "FreeImage.h"
+#include "ts/ivie/viewer/image/FreeImageStaticInitializer.h"
+#include "ts/ivie/viewer/image/ImageManager.h"
 
 #if TS_PLATFORM == TS_WINDOWS && TS_BUILD != TS_FINALRELEASE
 #include "ts/tessa/common/IncludeWindows.h"
 #endif
-
-extern "C"
-{
-extern void FreeImage_Initialise(BOOL v = 0);
-extern void FreeImage_DeInitialise();
-};
 
 TS_PACKAGE1(app)
 
 Application::Application(Int32 argc, const wchar_t **argv)
 	: system::BaseApplication(argc, argv)
 {
+	viewer::FreeImageStaticInitializer::staticInitialize();
 }
 
 Application::~Application()
@@ -49,15 +44,12 @@ bool Application::start()
 		resource::ResourceManager::setResourceRootDirectory(file::utils::getExecutableDirectory());
 	}
 
-	FreeImage_Initialise();
 	return true;
 }
 
 void Application::stop()
 {
-	FreeImage_DeInitialise();
-
-	fileScanner.reset();
+	BackgroundFileScanner.reset();
 }
 
 bool Application::createApplicationManagers()
@@ -69,8 +61,9 @@ bool Application::createApplicationManagers()
 	if (workingDirectory.empty())
 		workingDirectory = file::utils::getWorkingDirectoryWide();
 
-	createManagerInstance<viewer::FileScanner>(workingDirectory, viewer::SupportedFormats::getFormats());
+	createManagerInstance<viewer::BackgroundFileScanner>(workingDirectory, viewer::SupportedFormats::getSupportedFormatExtensions());
 	createManagerInstance<viewer::ViewerStateManager>();
+	createManagerInstance<viewer::ImageManager>();
 
 	return true;
 }

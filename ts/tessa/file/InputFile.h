@@ -51,16 +51,28 @@ public:
 	 * Returns: number of bytes read, or 0 on failure or bad.
 	 */
 	PosType read(char *outBuffer, BigSizeType size);
+	PosType read(unsigned char *outBuffer, BigSizeType size);
 
 	/* Reads variable directly.
 	 */
 	template <class Type>
 	PosType readVariable(Type &value);
 
-	/* Sets file position to given position.
-	 * Returns: new position, or -1 if failure or bad.
+	/* Sets file position to given position (uses beginning origin).
+	 * Returns: new position, or -1 if failure/bad.
 	 */
 	PosType seek(PosType pos);
+
+	/* Sets file position to given position relative to the seek origin.
+	 * Returns: new position, or -1 if failure/bad.
+	 */
+	enum SeekOrigin
+	{
+		SeekFromBeginning = 0,
+		SeekFromCurrent   = 1,
+		SeekFromEnd       = 2,
+	};
+	PosType seek(PosType pos, SeekOrigin seekOrigin);
 	
 	/* Returns: current file position, or -1 if failure or bad.
 	 */

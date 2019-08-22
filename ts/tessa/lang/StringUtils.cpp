@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <sstream>
 
 TS_PACKAGE2(lang, utils)
 
@@ -90,20 +91,77 @@ extern std::string replaceCharacterCopy(const std::string &str, const char searc
 	return out;
 }
 
-extern std::vector<std::string> splitString(const std::string &str, const std::string &delimiters)
+template<class StringType>
+std::vector<StringType> splitString(const StringType &str, const StringType &delimiters)
 {
-	std::vector<std::string> tokens;
+	std::vector<StringType> tokens;
 	size_t index = 0;
 	while (index < str.size())
 	{
 		size_t pos = str.find_first_of(&delimiters[0], index, delimiters.size());
 		tokens.push_back(str.substr(index, pos - index));
-		if (pos == std::string::npos)
+		if (pos == StringType::npos)
 			break;
 
 		index = pos + 1;
 	}
 	return tokens;
+}
+
+std::vector<std::string> splitString(const std::string &str, const std::string &delimiters)
+{
+	typedef std::string StringType;
+
+	std::vector<StringType> tokens;
+	size_t index = 0;
+	while (index < str.size())
+	{
+		size_t pos = str.find_first_of(&delimiters[0], index, delimiters.size());
+		tokens.push_back(str.substr(index, pos - index));
+		if (pos == StringType::npos)
+			break;
+
+		index = pos + 1;
+	}
+	return tokens;
+}
+
+std::vector<std::wstring> splitString(const std::wstring &str, const std::wstring &delimiters)
+{
+	typedef std::wstring StringType;
+
+	std::vector<StringType> tokens;
+	size_t index = 0;
+	while (index < str.size())
+	{
+		size_t pos = str.find_first_of(&delimiters[0], index, delimiters.size());
+		tokens.push_back(str.substr(index, pos - index));
+		if (pos == StringType::npos)
+			break;
+
+		index = pos + 1;
+	}
+	return tokens;
+}
+
+extern std::string joinString(const std::vector<std::string> &arr, const std::string &glue)
+{
+	std::stringstream ss;
+	for (auto it = arr.begin(); it != arr.end(); ++it)
+	{
+		ss << (it != arr.begin() ? glue : "") << *it;
+	}
+	return ss.str();
+}
+
+extern std::wstring joinString(const std::vector<std::wstring> &arr, const std::wstring &glue)
+{
+	std::wstringstream ss;
+	for (auto it = arr.begin(); it != arr.end(); ++it)
+	{
+		ss << (it != arr.begin() ? glue : L"") << *it;
+	}
+	return ss.str();
 }
 
 TS_END_PACKAGE2()

@@ -5,116 +5,128 @@ TS_PACKAGE2(app, viewer)
 
 SupportedFormats SupportedFormats::instance;
 
-const std::vector<std::wstring> &SupportedFormats::getFormats()
+const std::vector<std::wstring> &SupportedFormats::getSupportedFormatExtensions()
 {
-	return SupportedFormats::instance.supportedFormats;
+	return SupportedFormats::instance.supportedFormatExtensions;
+}
+
+const bool SupportedFormats::isFormatAnimated(const std::wstring &extension)
+{
+	FormatInfoList::const_iterator it = SupportedFormats::instance.supportedFormatInfo.find(extension);
+	return it != SupportedFormats::instance.supportedFormatInfo.end() ? it->second.animated : false;
 }
 
 SupportedFormats::SupportedFormats()
 {
-	supportedFormats = std::vector<std::wstring>
+	supportedFormatInfo = FormatInfoList
 	{
 		// BMP files
-		L"bmp",
+		{ L"bmp",   { false } },
 		// Dr. Halo CUT files (grayscale only)
-		L"cut",
+		{ L"cut",   { false } },
 		// DDS files
-		L"dds",
+		{ L"dds",   { false } },
 		// EXR files
-		L"exr",
+		{ L"exr",   { false } },
 		// Raw Fax G3 files
-		L"g3",
+		{ L"g3",    { false } },
 		// GIF files (animated)
-		L"gif",
+		{ L"gif",   { true } },
 		// HDR files
-		L"hdr",
+		{ L"hdr",   { false } },
 		// ICO files (can support multiple layers)
-		L"ico",
+		{ L"ico",   { false } },
 		// IFF files
-		L"iff",
+		{ L"iff",   { false } },
 		// JNG files
-		L"jng",
+		{ L"jng",   { false } },
 		// JPEG/JIF files
-		L"jpeg",
-		L"jpg",
-		L"jpe",
-		L"jif",
-		L"jfif",
-		L"jfi",
+		{ L"jpeg",  { false } },
+		{ L"jpg",   { false } },
+		{ L"jpe",   { false } },
+		{ L"jif",   { false } },
+		{ L"jfif",  { false } },
+		{ L"jfi",   { false } },
 		// JPEG-2000 File Format
-		L"jpf",
-		L"jpx",
-		L"jp2",
-		L"jpm",
-		L"mj2",
+		{ L"jpf",   { false } },
+		{ L"jpx",   { false } },
+		{ L"jp2",   { false } },
+		{ L"jpm",   { false } },
+		{ L"mj2",   { false } },
 		// JPEG-2000 codestream
-		L"j2c",
-		L"j2k",
-		L"jpc",
+		{ L"j2c",   { false } },
+		{ L"j2k",   { false } },
+		{ L"jpc",   { false } },
 		// JPEG-XR files
-		L"jxr",
-		L"hdp",
-		L"wdp",
+		{ L"jxr",   { false } },
+		{ L"hdp",   { false } },
+		{ L"wdp",   { false } },
 		// KOALA files (http://fileformats.archiveteam.org/wiki/Atari_graphics_formats)
-		L"pic",
+		{ L"pic",   { false } },
 		// Kodak PhotoCD files
-		L"pcd",
+		{ L"pcd",   { false } },
 		// MNG files (sort of an animated "PNG")
-		L"mng",
+		{ L"mng",   { true } },
 		// PCX files
-		L"pcx",
-		L"pcc",
+		{ L"pcx",   { false } },
+		{ L"pcc",   { false } },
 		// PBM/PGM/PPM files
-		L"pbm",
-		L"pgm",
-		L"ppm",
-		L"pnm",
+		{ L"pbm",   { false } },
+		{ L"pgm",   { false } },
+		{ L"ppm",   { false } },
+		{ L"pnm",   { false } },
 		// PFM files
-		L"pfm",
+		{ L"pfm",   { false } },
 		// PNG files
-		L"png",
+		{ L"png",   { false } },
 		// Macintosh PICT files
-		L"pict",
-		L"pct",
+		{ L"pict",  { false } },
+		{ L"pct",   { false } },
 		// Photoshop PSD files
-		L"psd",
+		{ L"psd",   { false } },
 		// RAW camera files
-		L"raw",
+		{ L"raw",   { false } },
 		// Sun RAS files
-		L"sun",
-		L"ras",
-		L"rast",
-		L"rs",
-		L"sr",
-		L"scr",
-		L"im1",
-		L"im8",
-		L"im24",
-		L"im32",
+		{ L"sun",   { false } },
+		{ L"ras",   { false } },
+		{ L"rast",  { false } },
+		{ L"rs",    { false } },
+		{ L"sr",    { false } },
+		{ L"scr",   { false } },
+		{ L"im1",   { false } },
+		{ L"im8",   { false } },
+		{ L"im24",  { false } },
+		{ L"im32",  { false } },
 		// SGI files
-		L"sgi",
+		{ L"sgi",   { false } },
 		// TARGA files
-		L"tga",
-		L"icb",
-		L"vda",
-		L"vst",
+		{ L"tga",   { false } },
+		{ L"icb",   { false } },
+		{ L"vda",   { false } },
+		{ L"vst",   { false } },
 		// TIFF files
-		L"tif",
-		L"tiff",
+		{ L"tif",   { false } },
+		{ L"tiff",  { false } },
 		// WBMP files
-		L"wbmp",
+		{ L"wbmp",  { false } },
 		// WebP files
-		L"webp",
+		{ L"webp",  { false } },
 		// XBM files
-		L"xbm",
-		L"bm",
+		{ L"xbm",   { false } },
+		{ L"bm",    { false } },
 		// XPM files
-		L"xpm",
-		L"pm",
+		{ L"xpm",   { false } },
+		{ L"pm",    { false } },
 
 		// WEBM video files
-		// L"webm"
+// 		{ L"webm",  { true } }
 	};
+
+	supportedFormatExtensions.reserve(supportedFormatInfo.size());
+	for (auto &it : supportedFormatInfo)
+	{
+		supportedFormatExtensions.push_back(it.first);
+	}
 }
 
 TS_END_PACKAGE2()

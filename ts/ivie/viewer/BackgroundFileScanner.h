@@ -7,13 +7,13 @@
 
 TS_PACKAGE2(app, viewer)
 
-class FileScanner : public system::AbstractManagerBase
+class BackgroundFileScanner : public system::AbstractManagerBase
 {
-	TS_DECLARE_MANAGER_TYPE(viewer::FileScanner);
+	TS_DECLARE_MANAGER_TYPE(viewer::BackgroundFileScanner);
 
 public:
-	FileScanner(const std::wstring &directoryPath, const std::vector<std::wstring> &allowedExtensions);
-	~FileScanner();
+	BackgroundFileScanner(const std::wstring &directoryPath, const std::vector<std::wstring> &allowedExtensions);
+	~BackgroundFileScanner();
 
 	virtual bool initialize();
 	virtual void deinitialize();
@@ -22,9 +22,7 @@ public:
 
 	bool isExtensionAllowed(const std::wstring &filename);
 
-	void updateFilelist();
-
-	static void scanTaskEntry(FileScanner *scanner);
+	bool updateFilelist();
 
 	lang::Signal<> filelistChangedSignal;
 

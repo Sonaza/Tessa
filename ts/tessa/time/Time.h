@@ -19,6 +19,11 @@ public:
 
 	static Time now();
 
+	Time(const Time &other) = default;
+	Time &operator=(const Time &other) = default;
+	Time(Time &&other) = default;
+	Time &operator=(Time &&other) = default;
+
 	bool operator==(Time rhs) const;
 	bool operator!=(Time rhs) const;
 	bool operator<(Time rhs) const;

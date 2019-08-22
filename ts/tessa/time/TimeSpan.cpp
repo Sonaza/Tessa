@@ -15,34 +15,34 @@ TimeSpan::TimeSpan(std::chrono::system_clock::duration duration)
 {
 }
 
-Int64 TimeSpan::getSeconds()
+const Int64 TimeSpan::getSeconds() const
 {
 	return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 }
 
-float TimeSpan::getSecondsAsFloat()
+const float TimeSpan::getSecondsAsFloat() const
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000.f;
 }
 
-Int64 TimeSpan::getMilliseconds()
+const Int64 TimeSpan::getMilliseconds() const
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
-Int64 TimeSpan::getMicroseconds()
+const Int64 TimeSpan::getMicroseconds() const
 {
 	return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-}
-
-TimeSpan TimeSpan::fromSeconds(float seconds)
-{
-	return TimeSpan(std::chrono::milliseconds(static_cast<Int64>(seconds * 1000)));
 }
 
 TimeSpan TimeSpan::fromSeconds(Int64 seconds)
 {
 	return TimeSpan(std::chrono::seconds(seconds));
+}
+
+TimeSpan TimeSpan::fromSecondsFloat(float seconds)
+{
+	return TimeSpan(std::chrono::milliseconds(static_cast<Int64>(seconds * 1000)));
 }
 
 TimeSpan TimeSpan::fromMilliseconds(Int64 milliseconds)

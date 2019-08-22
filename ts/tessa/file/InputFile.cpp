@@ -137,15 +137,33 @@ PosType InputFile::read(char *outBuffer, BigSizeType size)
 	return 0;
 }
 
+PosType InputFile::read(unsigned char *outBuffer, BigSizeType size)
+{
+	return read(reinterpret_cast<char*>(outBuffer), size);
+}
+
 PosType InputFile::seek(PosType pos)
 {
-	//std::lock_guard<std::mutex> mg(mutex);
+	return seek(pos, SeekFromBeginning);
+}
+
+PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
+{
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return -1;
 
+	std::ios_base::seek_dir origin;
+	switch (seekOrigin)
+	{
+		default:
+		case SeekFromBeginning: origin = std::ios_base::beg; break;
+		case SeekFromCurrent:   origin = std::ios_base::cur; break;
+		case SeekFromEnd:       origin = std::ios_base::end; break;
+	}
+
 	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-	if (!file->seekg(pos))
+	if (!file->seekg(pos, origin))
 	{
 		_bad = true;
 		return -1;

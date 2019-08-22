@@ -13,13 +13,18 @@ public:
 	TimeSpan();
 	explicit TimeSpan(std::chrono::system_clock::duration duration);
 
-	Int64 getSeconds();
-	float getSecondsAsFloat();
-	Int64 getMilliseconds();
-	Int64 getMicroseconds();
+	TimeSpan(const TimeSpan &other) = default;
+	TimeSpan &operator=(const TimeSpan &other) = default;
+	TimeSpan(TimeSpan &&other) = default;
+	TimeSpan &operator=(TimeSpan &&other) = default;
+
+	const Int64 getSeconds() const;
+	const float getSecondsAsFloat() const;
+	const Int64 getMilliseconds() const;
+	const Int64 getMicroseconds() const;
 
 	static TimeSpan fromSeconds(Int64 seconds);
-	static TimeSpan fromSeconds(float seconds);
+	static TimeSpan fromSecondsFloat(float seconds);
 	static TimeSpan fromMilliseconds(Int64 milliseconds);
 	static TimeSpan fromMicroseconds(Int64 microseconds);
 

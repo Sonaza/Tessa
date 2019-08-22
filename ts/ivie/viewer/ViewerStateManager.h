@@ -17,18 +17,46 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
+	SizeType getCurrentImageIndex() const;
+	const std::wstring &getCurrentFilepath() const;
+
 	void nextImage();
 	void previousImage();
 
 	void jumpToImage(SizeType index);
 	SizeType getNumImages() const;
 
+	enum SortingStyle
+	{
+		SortByName,
+		SortByExtension,
+	};
+	void setSorting(SortingStyle sorting);
+
+	std::vector<std::wstring> getCurrentSortedFileList() const;
+
+	// If startIndex > endIndex, it'll wrap around
+	std::map<SizeType, std::wstring> getFileListSlice(SizeType startIndex, SizeType endIndex);
+	std::map<SizeType, std::wstring> getFileListSliceByOffsets(PosType startOffset, SizeType endOffset);
+
+	lang::Signal<SizeType> currentImageChangedSignal;
+
 private:
+	std::map<SizeType, std::wstring> getFileListSliceUnsafe(SizeType startIndex, SizeType endIndex);
+
 	void updateFileList();
+
+	void applySorting();
+	PosType findFileIndexByName(const std::wstring &filepath, const std::vector<std::wstring> &filelist);
+
+	SortingStyle currentSorting = SortByName;
 
 	lang::SignalBind filelistChangedBind;
 
-	SizeType currentFileIndex;
+	SizeType currentImageIndex;
+	std::wstring currentFilePath;
+
+	mutable std::mutex mutex;
 	std::vector<std::wstring> currentFileList;
 };
 

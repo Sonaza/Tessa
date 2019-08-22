@@ -168,9 +168,6 @@
     <ClCompile Include="file\FileUtils.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
-    <ClCompile Include="instance\ComponentBase.cpp" />
-    <ClCompile Include="instance\Entity.cpp" />
-    <ClCompile Include="instance\InstanceManager.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
     <ClCompile Include="lang\StringUtils.cpp" />
     <ClCompile Include="math\Angle.cpp" />
@@ -191,12 +188,14 @@
     <ClCompile Include="resource\SoundResource.cpp" />
     <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="threading\BaseThreadEntry.cpp" />
+    <ClCompile Include="threading\TaskCompletionFuture.cpp" />
     <ClCompile Include="threading\Thread.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
     <ClCompile Include="time\Clock.cpp" />
     <ClCompile Include="time\GlobalTimer.cpp" />
     <ClCompile Include="time\Time.cpp" />
     <ClCompile Include="time\TimeSpan.cpp" />
+    <ClCompile Include="util\ContainerUtil.cpp" />
     <ClCompile Include="util\LZ4Compressor.cpp" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
@@ -242,21 +241,21 @@
     <ClInclude Include="resource\SoundResource.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="threading\BaseThreadEntry.h" />
+    <ClInclude Include="threading\TaskCompletionFuture.h" />
     <ClInclude Include="threading\Thread.h" />
     <ClInclude Include="threading\ThreadUtils.h" />
     <ClInclude Include="time\Clock.h" />
     <ClInclude Include="time\GlobalTimer.h" />
     <ClInclude Include="time\Time.h" />
     <ClInclude Include="time\TimeSpan.h" />
+    <ClInclude Include="util\ContainerUtil.h" />
+    <ClInclude Include="util\IterablePriorityQueue.h" />
     <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\Common.h" />
     <ClInclude Include="common\FourCC.h" />
     <ClInclude Include="lang\Pointers.h" />
-    <ClInclude Include="instance\ComponentBase.h" />
-    <ClInclude Include="instance\Entity.h" />
-    <ClInclude Include="instance\InstanceManager.h" />
     <ClInclude Include="math\Angle.h" />
     <ClInclude Include="math\Constants.h" />
     <ClInclude Include="math\Hash.h" />

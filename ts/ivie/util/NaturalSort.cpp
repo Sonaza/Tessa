@@ -1,5 +1,6 @@
 #include "Precompiled.h"
-#include "ts/ivie/util/NaturalSort.h"
+#include "NaturalSort.h"
+
 #include "ts/tessa/file/FileUtils.h"
 
 #if TS_PLATFORM == TS_WINDOWS

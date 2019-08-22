@@ -45,6 +45,8 @@ public:
 	system::ConfigReader &getConfig();
 	const system::ConfigReader &getConfig() const;
 
+	sf::Font &getDebugFont();
+
 protected:
 	// Methods for derived Application to implement
 	virtual bool start() = 0;
@@ -66,6 +68,7 @@ private:
 	bool initialize();
 	void deinitialize();
 
+
 	void mainloop();
 
 	void handleEvents();
@@ -73,6 +76,7 @@ private:
 	void handleRendering();
 
 	bool createSystemManagers();
+	void initializeManagers();
 	void destroyManagerInstances();
 
 	typedef std::map<std::type_index, UniquePointer<system::AbstractManagerBase>> InstancedManagersList;
@@ -134,12 +138,6 @@ bool BaseApplication::createManagerInstance(Args&&... args)
 	TS_ASSERT(managerInstance && "Failed to allocate new manager instance.");
 	if (managerInstance == nullptr)
 		return false;
-
-	if (!managerInstance->initialize())
-	{
-		TS_LOG_ERROR("Initializing a manager instance failed. Manager type: %s", ManagerType::TypeName);
-		return false;
-	}
 
 	managerInstances.emplace(typeIndex, staticUniquePointerCast<AbstractManagerBase>(std::move(managerInstance)));
 	managerInstancingOrder.push_back(typeIndex);

@@ -65,7 +65,7 @@ public:
 	template <class ClassType>
 	void connect(SignalBind &signalBind, void(ClassType::*function)(Args...), ClassType *instance);
 	void connect(SignalBind &signalBind, const std::function<void(Args...)> &function);
-	void disconnect(SignalBind &signalBind);
+	virtual void disconnect(SignalBind &signalBind);
 
 	bool hasConnections() const;
 	void disconnectAll();
@@ -106,7 +106,8 @@ void Signal<Args...>::connect(SignalBind &signalBind, void(ClassType::*function)
 
 	connect(signalBind, [function, instance](Args... args)
 	{
-		(instance->*function)(std::forward<Args>(args)...);
+// 		(instance->*function)(std::forward<Args>(args)...);
+		(instance->*function)(args...);
 	});
 }
 

@@ -61,16 +61,23 @@ T *ScopedPointer<T, Deleter>::operator->()
 }
 
 template <class T, class Deleter>
-ScopedPointer<T, Deleter>::operator bool()
+const T *ScopedPointer<T, Deleter>::operator->() const
+{
+	TS_ASSERTF(pointer != nullptr, "Attempting indirection on a null pointer");
+	return static_cast<const T *>(pointer);
+}
+
+template <class T, class Deleter>
+ScopedPointer<T, Deleter>::operator bool() const
 {
 	return pointer != nullptr;
 }
 
-template <class T, class Deleter>
-ScopedPointer<T, Deleter>::operator void *()
-{
-	return static_cast<void*>(pointer);
-}
+// template <class T, class Deleter>
+// ScopedPointer<T, Deleter>::operator void *() const
+// {
+// 	return static_cast<void*>(pointer);
+// }
 
 template <class T, class Deleter>
 bool ScopedPointer<T, Deleter>::operator!() const
