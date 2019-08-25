@@ -35,7 +35,7 @@ Application::~Application()
 
 bool Application::start()
 {
-	if (IsDebuggerPresent() && TS_BUILD != TS_FINALRELEASE)
+	if (TS_BUILD != TS_FINALRELEASE && IsDebuggerPresent())
 	{
 		resource::ResourceManager::setResourceRootDirectory(file::utils::getWorkingDirectory());
 	}
@@ -86,6 +86,7 @@ void Application::initializeConfigDefaults(system::ConfigReader &config)
 	config.setString("General.LogFile", "output.log");
 
 	config.setBoolean("Display.Fullscreen", false);
+	config.setBoolean("Display.Maximized", false);
 	config.setBoolean("Display.VSync", false);
 
 	config.setUint32("Display.ScreenWidth", APP_DEFAULT_SCREEN_WIDTH);
@@ -104,6 +105,7 @@ bool Application::createWindow(system::WindowManager &windowManager)
 	bool automaticResolution = true;
 
 	bool fullscreen = config.getBoolean("Display.Fullscreen", false);
+	bool maximized = config.getBoolean("Display.Maximized", false);
 	bool vsyncEnabled = config.getBoolean("Display.VSync", false);
 
 	math::VC2U windowSize(APP_DEFAULT_SCREEN_WIDTH, APP_DEFAULT_SCREEN_HEIGHT);
@@ -126,6 +128,9 @@ bool Application::createWindow(system::WindowManager &windowManager)
 	}
 
 	windowManager.create(windowSize, APP_WINDOW_TITLE, true, fullscreen);
+
+	if (maximized)
+		windowManager.setWindowState(system::WindowManager::WindowState_Maximized);
 
 	windowManager.setWindowIcon(APP_WINDOW_ICON_PATH);
 	windowManager.setVSyncEnabled(vsyncEnabled);

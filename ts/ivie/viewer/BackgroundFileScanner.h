@@ -3,8 +3,6 @@
 #include "ts/tessa/system/AbstractManagerBase.h"
 #include "ts/tessa/threading/ThreadScheduler.h"
 
-#include "ts/tessa/lang/Signal.h"
-
 TS_PACKAGE2(app, viewer)
 
 class BackgroundFileScanner : public system::AbstractManagerBase

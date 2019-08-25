@@ -36,7 +36,7 @@ Vec2<T>::Vec2(const sf::Vector2<T> &vector)
 }
 
 template <class T>
-inline Vec2<T>::operator sf::Vector2<T>()
+inline Vec2<T>::operator sf::Vector2<T>() const
 {
 	return sf::Vector2<T>(x, y);
 }

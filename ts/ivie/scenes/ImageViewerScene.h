@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ts/tessa/system/AbstractSceneBase.h"
-#include "ts/tessa/lang/Signal.h"
 
 TS_DECLARE2(app, viewer, ViewerStateManager);
+
+TS_DECLARE_STRUCT1(system, WindowView);
+
 
 TS_PACKAGE2(app, scenes)
 
@@ -18,11 +20,13 @@ public:
 	virtual bool start();
 	virtual void stop();
 
-	virtual void loadResources(resource::ResourceManager &rm);
+	virtual void loadResources(resource::ResourceManager &rm) override;
 
-	virtual bool handleEvent(const sf::Event event);
-	virtual void update(const TimeSpan deltaTime);
-	virtual void render(sf::RenderWindow &renderWindow);
+	virtual bool handleEvent(const sf::Event event) override;
+	virtual void update(const TimeSpan deltaTime) override;
+
+	virtual void renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view) override;
+	virtual void renderInterface(sf::RenderTarget &renderTarget, const system::WindowView &view) override;
 
 protected:
 	void imageChanged(SizeType imageIndex);

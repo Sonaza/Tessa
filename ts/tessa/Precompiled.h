@@ -21,6 +21,8 @@
 
 #include "ts/tessa/system/Gigaton.h"
 
+#include "ts/tessa/lang/Signal.h"
+
 #include <memory>
 
 #include <map>

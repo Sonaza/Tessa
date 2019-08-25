@@ -1,14 +1,14 @@
 #pragma once
 
-#define __TS_VERIFY_POINTERS_IMPL_OLD(__return_value, ...) \
-	do {\
-		const void *__ptr[] = { ((void*)0), ## __VA_ARGS__ }; \
-		const unsigned int __size = sizeof(__ptr) / sizeof(void *); \
-		static_assert(__size > 1, "Pointer verification macro requires at least 1 pointer to check."); \
-		for (unsigned int __i = 1; __i < __size; ++__i) { \
-			if (__ptr[__i] == nullptr) return __return_value; \
-		} \
-	} while(false)
+// #define __TS_VERIFY_POINTERS_IMPL_OLD(__return_value, ...) \
+// 	do {\
+// 		const void *__ptr[] = { ((void*)0), ## __VA_ARGS__ }; \
+// 		const unsigned int __size = sizeof(__ptr) / sizeof(void *); \
+// 		static_assert(__size > 1, "Pointer verification macro requires at least 1 pointer to check."); \
+// 		for (unsigned int __i = 1; __i < __size; ++__i) { \
+// 			if (__ptr[__i] == nullptr) return __return_value; \
+// 		} \
+// 	} while(false)
 
 #define __TS_VERIFY_POINTERS_IMPL(__return_value, ...) \
 	do { if (::ts::verify_pointers(__VA_ARGS__) == false) return __return_value; } while(false)

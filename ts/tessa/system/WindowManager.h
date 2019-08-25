@@ -2,9 +2,11 @@
 
 #include "ts/tessa/system/AbstractManagerBase.h"
 
-TS_DECLARE1(system, BaseApplication);
+#include "ts/tessa/system/WindowViewManager.h"
 
 TS_PACKAGE1(system)
+
+struct SystemEventCallbackParams;
 
 class WindowManager : public system::AbstractManagerBase
 {
@@ -22,42 +24,49 @@ public:
 	void create(const math::VC2U &videomode, const std::string &windowTitle, const bool resizable, const bool fullscreen);
 	void close();
 
-	void setVSyncEnabled(const bool enabled);
+	bool setWindowIcon(const std::string &filepath);
 
 	bool pollEvent(sf::Event &eventParam);
 
+	enum WindowState
+	{
+		WindowState_Normal,
+		WindowState_Maximized,
+		WindowState_Minimized,
+	};
+	WindowState getWindowState() const;
+	void setWindowState(WindowState state);
+
+	void setVSyncEnabled(const bool enabled);
+
 	bool isOpen() const;
+	bool isInFocus() const;
 
 	math::VC2U getSize() const;
-	math::VC2U getViewSize() const;
 
 	void useApplicationView();
 	void useInterfaceView();
 
-	void setCustomView(sf::View customView);
-	void resetView();
-
-	bool setWindowIcon(const std::string &filepath);
+	const WindowView &getCurrentView() const;
 
 	sf::RenderWindow &getRenderWindow();
 
 	std::vector<math::VC2U> getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize = math::VC2U::zero);
 
+	lang::Signal<const math::VC2U &> screenSizeChangedSignal;
+	lang::Signal<WindowState> windowStateChangedSignal;
+
 private:
-// 	struct Settings
-// 	{
-// 		std::string title;
-// 		Uint32 style = sf::Style::Default;
-// 		sf::ContextSettings context;
-// 		math::VC2U size;
-// 	};
-// 	Settings settings;
+	class SystemEventCallbackWrapper;
+	friend class SystemEventCallbackWrapper;
+	bool systemEventCallback(SystemEventCallbackParams *params);
 
 	bool windowCreated = false;
 
 	sf::RenderWindow renderWindow;
-	sf::View activeApplicationView;
-	sf::View activeInterfaceView;
+	WindowViewManager::ViewType currentViewType;
+
+	system::WindowViewManager *windowViewManager = nullptr;
 };
 
 TS_END_PACKAGE1()

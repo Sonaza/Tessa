@@ -10,6 +10,8 @@
 #include "ts/tessa/resource/MusicResource.h"
 #include "ts/tessa/resource/ShaderResource.h"
 
+#include "ts/tessa/file/FileUtils.h"
+
 TS_DEFINE_MANAGER_TYPE(resource::ResourceManager);
 
 TS_PACKAGE1(resource)
@@ -152,6 +154,14 @@ void ResourceManager::setResourceRootDirectory(const std::string &rootDirectory)
 const std::string &ResourceManager::getResourceRootDirectory()
 {
 	return ResourceManager::resourceRootDirectory;
+}
+
+std::string ResourceManager::getAbsoluteResourcePath(const std::string &filepath)
+{
+	if (!file::utils::isAbsolutePath(filepath))
+		return file::utils::joinPaths(ResourceManager::resourceRootDirectory, filepath);
+
+	return filepath;
 }
 
 void ResourceManager::loadResourceTask(SharedPointer<AbstractResourceBase> resource)

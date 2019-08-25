@@ -33,7 +33,7 @@ public:
 #if defined(SFML_VERSION_MAJOR)
 
 	Vec3(const sf::Vector3<T> &vector);
-	operator sf::Vector3<T>();
+	operator sf::Vector3<T>() const;
 
 #endif
 

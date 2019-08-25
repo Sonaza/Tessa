@@ -68,7 +68,6 @@ private:
 	bool initialize();
 	void deinitialize();
 
-
 	void mainloop();
 
 	void handleEvents();
@@ -89,8 +88,10 @@ private:
 	Commando _commando;
 	ConfigReader _config;
 
+	// Fixed delta of all logic updates, independent of frame rate
+	const TimeSpan fixedDeltaTime = TimeSpan::fromMilliseconds(16);
 	// Target frame time affects framerate, a single update per 16 milliseconds roughly results in 60 fps
-	TimeSpan targetFrameTime = TimeSpan::fromMilliseconds(16);
+	TimeSpan targetFrameTime = TimeSpan::fromMilliseconds(8);
 	SizeType currentFramerate = 0;
 
 	UniquePointer<system::AbstractSceneBase> pendingScene;

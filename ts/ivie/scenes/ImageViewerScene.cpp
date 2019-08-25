@@ -93,6 +93,14 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				targetPositionOffset.x = math::clamp(targetPositionOffset.x - (float)mouseDelta.x, -1000.f, 1000.f);
 				targetPositionOffset.y = math::clamp(targetPositionOffset.y - (float)mouseDelta.y, -1000.f, 1000.f);
 			}
+			else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
+			{
+				// Scales image by holding down middle mouse: moving mouse pointer up or to the right enlarges, and vice versa
+				Int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? -math::sign(mouseDelta.x) : math::sign(mouseDelta.y);
+				float delta = static_cast<math::VC2>(mouseDelta).length() * deltaSign;
+				targetImageScale += (delta / 140.f) * targetImageScale;
+				targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
+			}
 
 			lastMousePosition = mousePosition;
 		}
@@ -102,7 +110,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 		{
 			float delta = event.mouseWheelScroll.delta;
 			targetImageScale += delta * 0.15f * targetImageScale;
-			targetImageScale = math::clamp(targetImageScale, 0.5f, 10.f);
+			targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
 
 // 			targetPositionOffset -= dir / 2.f / m_targetScale;
 		}
@@ -127,28 +135,19 @@ void ImageViewerScene::imageChanged(SizeType statusText)
 	frameTimer.restart();
 }
 
-void ImageViewerScene::render(sf::RenderWindow &renderWindow)
+void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view)
 {
-	renderWindow.clear(sf::Color(30, 30, 30));
+	renderTarget.clear(sf::Color(30, 30, 30));
+
+// 	system::WindowManager &wm = application->getManager<system::WindowManager>();
+// 	math::VC2U windowSize = wm.getSize();
 
 	viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
-
-	system::WindowManager &wm = application->getManager<system::WindowManager>();
-	math::VC2U windowSize = wm.getSize();
-
-	SizeType frameIndex = 0;
-	SizeType frameIndexMax = 1;
-	SizeType framesBuffered = 0;
-
 	viewer::Image *currentImage = imageManager.getCurrentImage();
 	if (currentImage != nullptr)
 	{
 		if (currentImage->isDisplayable())
 		{
-			frameIndex = currentImage->getCurrentFrameIndex();
-			frameIndexMax = currentImage->getNumFramesTotal();
-			framesBuffered = currentImage->getNumFramesBuffered();
-
 			const viewer::FrameStorage frame = *currentImage->getCurrentFrameStorage();
 			if (currentImage->getIsAnimated())
 			{
@@ -161,39 +160,69 @@ void ImageViewerScene::render(sf::RenderWindow &renderWindow)
 
 			math::VC2U size = currentImage->getSize();
 
-			float scale = math::min(1.f, (windowSize.y - 30.f)  / (float)size.y) * imageScale;
+			float scale = math::min(1.f, (view.size.y - 30.f) / (float)size.y) * imageScale;
 
-			math::VC2U scaledSize(
-				(Uint32)(size.x * scale),
-				(Uint32)(size.y * scale)
-			);
-
-			sf::VertexArray va = util::makeQuadVertexArray(size.x, size.y);
+// 			sf::VertexArray va = util::makeQuadVertexArray(size.x, size.y);
+			sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
+				size.x, size.y, size.x, size.y, 3, sf::Color(0, 0, 0, 170));
 
 			sf::RenderStates states;
 			states.texture = frame.texture.get();
 
-			currentImage->getDisplayShader()->setUniform("u_useAlphaChecker", true);
-			states.shader = currentImage->getDisplayShader().get();
+			math::VC2 scaledSize = static_cast<math::VC2>(size) * scale;
 
 			sf::Transform transform;
-			transform.translate(
-				windowSize.x / 2.f - scaledSize.x / 2.f + positionOffset.x,
-				windowSize.y / 2.f - scaledSize.y / 2.f + positionOffset.y
-			);
+			transform.translate(scaledSize / -2.f + positionOffset);
+//	 		transform.translate(positionOffset);
 			transform.scale(scale, scale);
 			states.transform = transform;
 
-			renderWindow.draw(va, states);
-		}
+			SharedPointer<sf::Shader> shader = currentImage->getDisplayShader();
+			shader->setUniform("u_textureApparentSize", scaledSize);
+			shader->setUniform("u_useAlphaChecker", true);
+			states.shader = shader.get();
 
+			renderTarget.draw(va, states);
+		}
+	}
+
+// 	sf::CircleShape shape(20.f);
+// 	shape.setOrigin(10.f, 10.f);
+// 
+// 	{
+// 		shape.setFillColor(sf::Color::Red);
+// 		shape.setPosition(0.f, 0.f);
+// 		renderTarget.draw(shape);
+// 	}
+// 
+// 	{
+// 		shape.setFillColor(sf::Color::Green);
+// 		shape.setPosition((float)windowSize.x, 0.f);
+// 		renderTarget.draw(shape);
+// 	}
+// 	{
+// 		shape.setFillColor(sf::Color::Blue);
+// 		shape.setPosition(0.f, (float)windowSize.y);
+// 		renderTarget.draw(shape);
+// 	}
+}
+
+void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const system::WindowView &view)
+{
+	system::WindowManager &wm = application->getManager<system::WindowManager>();
+	math::VC2U windowSize = wm.getSize();
+
+	viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
+	viewer::Image *currentImage = imageManager.getCurrentImage();
+	if (currentImage != nullptr)
+	{
 		SharedPointer<sf::Texture> thumbnail = currentImage->getThumbnail();
 		if (thumbnail != nullptr)
 		{
 			sf::Sprite asd;
 			asd.setTexture(*thumbnail);
 			asd.setPosition(windowSize.x - 180.f, 30.f);
-			renderWindow.draw(asd);
+			renderTarget.draw(asd);
 		}
 	}
 
@@ -202,20 +231,17 @@ void ImageViewerScene::render(sf::RenderWindow &renderWindow)
 	statusText.setFont(*font->getResource());
 
 	{
-		statusText.setString(TS_WFMT("%u / %u\n%s",//\nFrame %u / %u (%u buffered)",
+		statusText.setString(TS_WFMT("%u / %u\n%s",
 			viewerStateManager->getCurrentImageIndex() + 1,
 			viewerStateManager->getNumImages(),
 			file::utils::getBasename(viewerStateManager->getCurrentFilepath())
-
-			/*, frameIndex + 1, frameIndexMax,
-			framesBuffered*/
-			));
+		));
 
 		statusText.setPosition(10.f, 50.f);
 		statusText.setOutlineThickness(2.f);
 		statusText.setScale(0.9f, 0.9f);
 
-		renderWindow.draw(statusText);
+		renderTarget.draw(statusText);
 	}
 
 // 	{
@@ -226,7 +252,7 @@ void ImageViewerScene::render(sf::RenderWindow &renderWindow)
 // 		statusText.setOutlineThickness(2.f);
 // 		statusText.setScale(0.7f, 0.7f);
 // 
-// 		renderWindow.draw(statusText);
+// 		renderTarget.draw(statusText);
 // 	}
 
 // 	{
@@ -244,7 +270,7 @@ void ImageViewerScene::render(sf::RenderWindow &renderWindow)
 // 		statusText.setOutlineThickness(2.f);
 // 		statusText.setScale(0.7f, 0.7f);
 // 
-// 		renderWindow.draw(statusText);
+// 		renderTarget.draw(statusText);
 // 	}
 }
 

@@ -38,7 +38,7 @@ Vec3<T>::Vec3(const sf::Vector3<T> &vector)
 }
 
 template <class T>
-inline Vec3<T>::operator sf::Vector3<T>()
+inline Vec3<T>::operator sf::Vector3<T>() const
 {
 	return sf::Vector3<T>(x, y, z);
 }

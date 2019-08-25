@@ -32,7 +32,7 @@ public:
 #if defined(SFML_VERSION_MAJOR)
 
 	Vec2(const sf::Vector2<T> &vector);
-	operator sf::Vector2<T>();
+	operator sf::Vector2<T>() const;
 
 #endif
 

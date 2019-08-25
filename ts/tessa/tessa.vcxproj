@@ -188,6 +188,7 @@
     <ClCompile Include="resource\ShaderResource.cpp" />
     <ClCompile Include="resource\SoundResource.cpp" />
     <ClCompile Include="system\AbstractManagerBase.cpp" />
+    <ClCompile Include="system\WindowViewManager.cpp" />
     <ClCompile Include="threading\BaseThreadEntry.cpp" />
     <ClCompile Include="threading\TaskCompletionFuture.cpp" />
     <ClCompile Include="threading\Thread.cpp" />
@@ -242,6 +243,7 @@
     <ClInclude Include="resource\ShaderResource.h" />
     <ClInclude Include="resource\SoundResource.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
+    <ClInclude Include="system\WindowViewManager.h" />
     <ClInclude Include="threading\BaseThreadEntry.h" />
     <ClInclude Include="threading\TaskCompletionFuture.h" />
     <ClInclude Include="threading\Thread.h" />

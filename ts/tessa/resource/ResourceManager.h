@@ -67,6 +67,9 @@ public:
 	static void setResourceRootDirectory(const std::string &rootDirectory);
 	static const std::string &getResourceRootDirectory();
 
+	// Converts the given filepath to an absolute resource path, relative to the resource root.
+	static std::string getAbsoluteResourcePath(const std::string &filepath);
+
 private:
 	static std::atomic_bool stop_flag;
 	static std::string resourceRootDirectory;

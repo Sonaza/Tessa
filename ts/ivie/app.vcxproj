@@ -18,6 +18,7 @@
     <ProjectGuid>{02C16045-DEC1-45D1-90D6-7DB760C1ED9D}</ProjectGuid>
     <RootNamespace>ivie</RootNamespace>
     <ProjectName>01 ivie</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -68,7 +69,7 @@
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
     <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
-    <TargetName>$(MSBuildProjectName)</TargetName>
+    <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CustomBuildBeforeTargets>
@@ -76,14 +77,14 @@
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
     <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
-    <TargetName>$(MSBuildProjectName)</TargetName>
+    <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
     <CustomBuildBeforeTargets />
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
     <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
-    <TargetName>$(MSBuildProjectName)</TargetName>
+    <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -196,6 +197,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
       </ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="scenes\ImageViewerScene.h" />
     <ClInclude Include="util\NaturalSort.h" />
     <ClInclude Include="util\RenderUtil.h" />
@@ -213,6 +215,14 @@
     <ProjectReference Include="..\tessa\tessa.vcxproj">
       <Project>{de986e68-23c8-446b-9562-846cacf157d2}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="01 ivie.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="application_icon.ico" />
+    <Image Include="icon1.ico" />
+    <Image Include="icon2.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

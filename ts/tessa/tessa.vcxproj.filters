@@ -170,6 +170,9 @@
     <ClCompile Include="resource\ShaderResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="system\WindowViewManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -404,6 +407,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="resource\ShaderResource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="system\WindowViewManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

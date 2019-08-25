@@ -43,7 +43,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 	{
 		case LoaderFreeImage:
 		{
-			displayShader = im.getDisplayShader(ImageManager::DisplayShader_FreeImage);
+			displayShader = im.loadDisplayShader(ImageManager::DisplayShader_FreeImage);
 
 			loaderState = Loading;
 			backgroundLoader.reset(new ImageBackgroundLoaderFreeImage(this, filepath));
@@ -52,7 +52,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 		case LoaderWebm:
 		{
-			displayShader = im.getDisplayShader(ImageManager::DisplayShader_Webm);
+			displayShader = im.loadDisplayShader(ImageManager::DisplayShader_Webm);
 
 			loaderState = Loading;
 // 			backgroundLoader.reset(new ImageBackgroundLoaderWebm(this, filepath));
@@ -363,7 +363,8 @@ bool Image::makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize)
 	sf::RenderStates states;
 	states.texture = bufferStorage.texture.get();
 
-	displayShader->setUniform("u_useAlphaChecker", false);
+	displayShader->setUniform("u_textureApparentSize", static_cast<math::VC2>(scaledSize));
+	displayShader->setUniform("u_useAlphaChecker", true);
 	states.shader = displayShader.get();
 
 	rt.clear(sf::Color::White);

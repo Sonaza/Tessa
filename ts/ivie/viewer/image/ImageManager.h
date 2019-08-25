@@ -2,7 +2,7 @@
 
 #include "ts/tessa/system/AbstractManagerBase.h"
 
-#include "ts/tessa/lang/Signal.h"
+#include <map>
 
 TS_DECLARE1(resource, SoundResource);
 TS_DECLARE2(app, viewer, Image);
@@ -29,13 +29,13 @@ public:
 		DisplayShader_FreeImage,
 		DisplayShader_Webm,
 	};
-	SharedPointer<sf::Shader> getDisplayShader(DisplayShaderTypes type);
-	bool loadDisplayShader(DisplayShaderTypes type, const std::string &handle, const std::string &filepath);
+	SharedPointer<sf::Shader> loadDisplayShader(DisplayShaderTypes type);
 
 	lang::Signal<SizeType> currentImageChangedSignal;
 
 private:
-	std::map<DisplayShaderTypes, resource::ShaderResource *> displayShaders;
+	void prepareShaders();
+	std::map<DisplayShaderTypes, std::string> displayShaderFiles;
 
 	void currentImageChanged(SizeType imageIndex);
 
@@ -45,10 +45,9 @@ private:
 	typedef std::map<Uint32, UniquePointer<Image>> ImageStorageList;
 	ImageStorageList imageStorage;
 
-// 	std::vector<Uint32> currentlyActiveImages;
+	SharedPointer<sf::Texture> alphaCheckerPatternTexture;
 
 	lang::SignalBind currentImageChangedBind;
-
 
 	mutable std::mutex mutex;
 };

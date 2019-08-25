@@ -2,8 +2,6 @@
 
 #include "ts/tessa/system/AbstractManagerBase.h"
 
-#include "ts/tessa/lang/Signal.h"
-
 TS_PACKAGE2(app, viewer)
 
 class ViewerStateManager : public system::AbstractManagerBase

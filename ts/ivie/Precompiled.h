@@ -13,5 +13,6 @@
 
 #include "ts/tessa/resource/TextureResource.h"
 #include "ts/tessa/resource/FontResource.h"
+#include "ts/tessa/resource/ShaderResource.h"
 #include "ts/tessa/resource/SoundResource.h"
 #include "ts/tessa/resource/MusicResource.h"

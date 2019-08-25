@@ -5,6 +5,7 @@
 #include "ts/tessa/file/ArchivistFileSystem.h"
 #include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/system/WindowManager.h"
+#include "ts/tessa/system/WindowViewManager.h"
 #include "ts/tessa/resource/ResourceManager.h"
 
 #include "ts/tessa/threading/Thread.h"
@@ -191,6 +192,9 @@ bool BaseApplication::createSystemManagers()
 	if (!createManagerInstance<system::WindowManager>())
 		return false;
 
+	if (!createManagerInstance<system::WindowViewManager>())
+		return false;
+
 	return true;
 }
 
@@ -214,8 +218,6 @@ void BaseApplication::mainloop()
 	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
 	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "selawk.ttf", true);
 	TS_ASSERT(debugFont != nullptr && debugFont->isLoaded() && "Loading debug font failed.");
-
-	const TimeSpan fixedDeltaTime = TimeSpan::fromMilliseconds(16);
 
 	TimeSpan deltaAccumulator;
 
@@ -344,11 +346,11 @@ void BaseApplication::handleRendering()
 	
 	// Application custom view step
 	windowManager.useApplicationView();
-
-	currentScene->render(renderWindow);
+	currentScene->renderApplication(renderWindow, windowManager.getCurrentView());
 
 	// Interface view step
 	windowManager.useInterfaceView();
+	currentScene->renderInterface(renderWindow, windowManager.getCurrentView());
 
 	if (debugFont != nullptr && debugFont->isLoaded())
 	{

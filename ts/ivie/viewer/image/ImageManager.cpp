@@ -29,7 +29,7 @@ ImageManager::~ImageManager()
 
 bool ImageManager::initialize()
 {
-	loadDisplayShader(DisplayShader_FreeImage, "DisplayShader_FreeImage", "shader/convert.frag");
+	prepareShaders();
 
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
 	currentImageChangedBind.connect(vsm.currentImageChangedSignal, &ThisClass::currentImageChanged, this);
@@ -46,8 +46,6 @@ void ImageManager::deinitialize()
 			image->unload();
 	}
 	imageStorage.clear();
-
-	ImageManager::displayShaders.clear();
 }
 
 std::wstring ImageManager::getStats()
@@ -76,29 +74,72 @@ Image *ImageManager::getCurrentImage() const
 	return nullptr;
 }
 
-SharedPointer<sf::Shader> ImageManager::getDisplayShader(DisplayShaderTypes type)
+void ImageManager::prepareShaders()
 {
-	auto it = displayShaders.find(type);
-	if (it != displayShaders.end())
-		return it->second->getResource();
+	{
+		const SizeType checkerPatternSize = 8;
 
-	TS_ASSERT(!"Display shader was not found.");
-	return nullptr;
+		sf::RenderTexture rt;
+		rt.create(checkerPatternSize * 2, checkerPatternSize * 2);
+		rt.clear(sf::Color::White);
+
+		const math::VC2 size = math::VC2((float)checkerPatternSize, (float)checkerPatternSize);
+		sf::RectangleShape shape(size);
+		shape.setPosition(0.f, 0.f);
+		shape.setFillColor(sf::Color(190, 190, 190));
+		rt.draw(shape);
+		shape.setPosition(size);
+		rt.draw(shape);
+		rt.display();
+
+		alphaCheckerPatternTexture = makeShared<sf::Texture>(rt.getTexture());
+		if (alphaCheckerPatternTexture)
+		{
+			alphaCheckerPatternTexture->setRepeated(true);
+			alphaCheckerPatternTexture->setSmooth(true);
+		}
+	}
+
+	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert.frag"));
 }
 
-bool ImageManager::loadDisplayShader(DisplayShaderTypes type, const std::string &handle, const std::string &filepath)
+// bool ImageManager::loadDisplayShader(DisplayShaderTypes type, const std::string &handle, const std::string &filepath)
+// {
+// 	TS_ASSERT(displayShaders.find(type) == displayShaders.end() && "Attempting to load a display shader type again.");
+// 
+// 	resource::ResourceManager &rm = getGigaton<resource::ResourceManager>();
+// 
+// 	resource::ShaderResource *shaderResource = rm.loadShader(handle, filepath, true);
+// 	TS_ASSERT(shaderResource != nullptr && shaderResource->isLoaded());
+// 	if (shaderResource == nullptr)
+// 		return false;
+// 
+// 
+// 	TS_ASSERT(alphaCheckerPatternTexture);
+// 	shaderResource->getResource()->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
+// 
+// 	SharedPointer<DisplayShader> displayShader = makeShared<DisplayShader>(shaderResource);
+// 	displayShaders[type] = displayShader;
+// 	return true;
+// }
+
+SharedPointer<sf::Shader> ImageManager::loadDisplayShader(DisplayShaderTypes type)
 {
-	TS_ASSERT(displayShaders.find(type) == displayShaders.end() && "Attempting to load a display shader type again.");
+	SharedPointer<sf::Shader> displayShader = makeShared<sf::Shader>();
+	TS_ASSERT(displayShader);
+	if (displayShader == nullptr)
+		return nullptr;
 
-	resource::ResourceManager &rm = getGigaton<resource::ResourceManager>();
+	TS_ASSERT(displayShaderFiles.find(type) != displayShaderFiles.end() && "Attempting to load an undefined display shader.");
+	
+	std::string filepath = resource::ResourceManager::getAbsoluteResourcePath(displayShaderFiles[type]);
+	if (!displayShader->loadFromFile(filepath, sf::Shader::Fragment))
+		return nullptr;
 
-	resource::ShaderResource *shaderResource = rm.loadShader(handle, filepath, true);
-	TS_ASSERT(shaderResource != nullptr && shaderResource->isLoaded());
-	if (shaderResource == nullptr)
-		return false;
-
-	displayShaders[type] = shaderResource;
-	return true;
+	TS_ASSERT(alphaCheckerPatternTexture);
+	displayShader->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
+	
+	return displayShader;
 }
 
 void ImageManager::currentImageChanged(SizeType imageIndex)

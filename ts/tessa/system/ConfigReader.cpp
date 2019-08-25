@@ -184,7 +184,7 @@ bool ConfigReader::getBoolean(const std::string &section_dot_key, const bool def
 
 void ConfigReader::setBoolean(const std::string &section_dot_key, const bool value)
 {
-	setValue(section_dot_key, value ? "on" : "off");
+	setValue(section_dot_key, value ? "true" : "false");
 }
 
 int ConfigReader::parserHandler(void *userdata, const char *sectionParam, const char *keyParam, const char *valueParam)

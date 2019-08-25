@@ -9,6 +9,8 @@
 TS_DECLARE1(system, BaseApplication);
 TS_DECLARE1(resource, ResourceManager);
 
+TS_DECLARE_STRUCT1(system, WindowView);
+
 TS_PACKAGE1(system)
 
 class AbstractSceneBase
@@ -24,7 +26,9 @@ public:
 
 	virtual bool handleEvent(const sf::Event event) = 0;
 	virtual void update(const TimeSpan deltaTime) = 0;
-	virtual void render(sf::RenderWindow &renderWindow) = 0;
+
+	virtual void renderApplication(sf::RenderTarget &renderTarget, const WindowView &view) = 0;
+	virtual void renderInterface(sf::RenderTarget &renderTarget, const WindowView &view) = 0;
 
 	bool isLoaded() const { return sceneLoaded; }
 
