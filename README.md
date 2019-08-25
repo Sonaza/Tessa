@@ -1,5 +1,6 @@
-# Nonogram
-Nonogram game or smth like that idk.
-
 ## Tessa
-Also making a game engine for it.
+Game and application boilerplate stuff for making things!
+
+### And making things!
+Ivie - Image Viewer Enhanced (the third attempt)
+![Logo](https://raw.githubusercontent.com/Sonaza/Tessa/master/resource/logo/ivie_logo_256.png)
