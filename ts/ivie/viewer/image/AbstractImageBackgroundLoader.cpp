@@ -27,7 +27,7 @@ void AbstractImageBackgroundLoader::start(bool suspendAfterBufferFullParam)
 	suspendAfterBufferFull = suspendAfterBufferFullParam;
 
 	loaderState = Uninitialized;
-	taskId = threadScheduler.scheduleThreadEntry(this);
+	taskId = threadScheduler.scheduleThreadEntry(this, threading::Priority_Normal);
 	TS_WPRINTF("AbstractImageBackgroundLoader::start() : Task ID %u [%s]\n", taskId, filepath);
 }
 
@@ -77,8 +77,14 @@ void AbstractImageBackgroundLoader::resume()
 	{
 		suspendAfterBufferFull = false;
 		loaderState = Resuming;
-		taskId = threadScheduler.scheduleThreadEntry(this);
+		taskId = threadScheduler.scheduleThreadEntry(this, threading::Priority_High);
 	}
+}
+
+void AbstractImageBackgroundLoader::cancelPendingSuspension()
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	suspendAfterBufferFull = false;
 }
 
 bool AbstractImageBackgroundLoader::isSuspended() const
@@ -116,7 +122,7 @@ void AbstractImageBackgroundLoader::entry()
 		}
 		else if (loaderState == Resuming)
 		{
-			TS_PRINTF("Loader is resuming\n");
+			TS_WPRINTF("Loader is resuming : TaskID %u [%s]\n", taskId, filepath);
 			onResume();
 			loaderState = Running;
 			ownerImage->loaderState = Image::Loading;
@@ -138,19 +144,19 @@ void AbstractImageBackgroundLoader::entry()
 
 	while (loaderState)
 	{
-		while (!ownerImage->frameBuffer.isFull())
+		while (!ownerImage->getIsBufferFull())
 		{
 			nextFrameRequested = false;
 
-			FrameStorage &storage = ownerImage->frameBuffer.getWritePtr();
+			FrameStorage &storage = ownerImage->getNextBuffer();
 			bool success = loadNextFrame(storage);
 			if (success)
 			{
-				ownerImage->frameBuffer.incrementWrite();
+				ownerImage->swapBuffer();
 
-				if (isLoadingComplete())
+				if (wasLoadingCompleted())
 				{
-					ownerImage->frameBuffer.removeReadConstraint();
+					ownerImage->finalizeBuffer();
 					processingState = Complete;
 				}
 			}

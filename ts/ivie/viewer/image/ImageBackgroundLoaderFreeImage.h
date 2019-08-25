@@ -32,6 +32,7 @@ protected:
 	virtual bool restartImpl() override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
+	virtual bool wasLoadingCompleted() const override;
 
 private:
 	bool prepareForLoading();

@@ -342,8 +342,8 @@ void BaseApplication::handleRendering()
 	sf::RenderWindow &renderWindow = windowManager.getRenderWindow();
 	renderWindow.clear();
 	
-	// Game view step
-	windowManager.useGameView();
+	// Application custom view step
+	windowManager.useApplicationView();
 
 	currentScene->render(renderWindow);
 

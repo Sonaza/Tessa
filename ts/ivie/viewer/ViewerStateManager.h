@@ -24,6 +24,7 @@ public:
 	void previousImage();
 
 	void jumpToImage(SizeType index);
+	void jumpToImageByFilename(const std::wstring &filename);
 	SizeType getNumImages() const;
 
 	enum SortingStyle

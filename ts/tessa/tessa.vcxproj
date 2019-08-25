@@ -185,6 +185,7 @@
     <ClCompile Include="resource\FontResource.cpp" />
     <ClCompile Include="resource\GUID.cpp" />
     <ClCompile Include="resource\MusicResource.cpp" />
+    <ClCompile Include="resource\ShaderResource.cpp" />
     <ClCompile Include="resource\SoundResource.cpp" />
     <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="threading\BaseThreadEntry.cpp" />
@@ -238,6 +239,7 @@
     <ClCompile Include="system\AbstractSceneBase.cpp" />
     <ClCompile Include="threading\ThreadScheduler.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
+    <ClInclude Include="resource\ShaderResource.h" />
     <ClInclude Include="resource\SoundResource.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="threading\BaseThreadEntry.h" />
@@ -249,7 +251,7 @@
     <ClInclude Include="time\Time.h" />
     <ClInclude Include="time\TimeSpan.h" />
     <ClInclude Include="util\ContainerUtil.h" />
-    <ClInclude Include="util\IterablePriorityQueue.h" />
+    <ClInclude Include="util\PriorityQueue.h" />
     <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>
   <ItemGroup>

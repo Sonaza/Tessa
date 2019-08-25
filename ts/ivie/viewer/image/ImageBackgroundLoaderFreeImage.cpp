@@ -241,8 +241,6 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 		loaderIsComplete = true;
 	}
 
-	cleanup();
-
 	return success;
 }
 
@@ -437,6 +435,11 @@ bool ImageBackgroundLoaderFreeImage::loadNextFrame(FrameStorage &bufferStorage)
 	}
 
 	return true;
+}
+
+bool ImageBackgroundLoaderFreeImage::wasLoadingCompleted() const
+{
+	return loaderIsComplete;
 }
 
 TS_END_PACKAGE2()

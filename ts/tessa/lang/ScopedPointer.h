@@ -17,6 +17,7 @@ public:
 	typedef T ElementType;
 
 	ScopedPointer() = default;
+	ScopedPointer(nullptr_t);
 	explicit ScopedPointer(T *pointer);
 	~ScopedPointer();
 

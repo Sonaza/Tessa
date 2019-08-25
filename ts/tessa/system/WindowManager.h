@@ -31,7 +31,7 @@ public:
 	math::VC2U getSize() const;
 	math::VC2U getViewSize() const;
 
-	void useGameView();
+	void useApplicationView();
 	void useInterfaceView();
 
 	void setCustomView(sf::View customView);
@@ -56,7 +56,7 @@ private:
 	bool windowCreated = false;
 
 	sf::RenderWindow renderWindow;
-	sf::View activeGameView;
+	sf::View activeApplicationView;
 	sf::View activeInterfaceView;
 };
 

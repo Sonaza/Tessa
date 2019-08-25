@@ -20,19 +20,24 @@ UniquePointer<T, Deleter>::UniquePointer(T *pointer)
 }
 
 template <class T, class Deleter>
+UniquePointer<T, Deleter>::UniquePointer(nullptr_t)
+{
+}
+
+template <class T, class Deleter>
 UniquePointer<T, Deleter>::~UniquePointer()
 {
 	reset();
 }
 
 template <class T, class Deleter>
-UniquePointer<T, Deleter>::UniquePointer(UniquePointer &&other)
+UniquePointer<T, Deleter>::UniquePointer(UniquePointer &&other) noexcept
 {
 	*this = std::move(other);
 }
 
 template <class T, class Deleter>
-UniquePointer<T, Deleter> &UniquePointer<T, Deleter>::operator=(UniquePointer &&other)
+UniquePointer<T, Deleter> &UniquePointer<T, Deleter>::operator=(UniquePointer &&other) noexcept
 {
 	// Prevent self assignment
 	if (this != &other)

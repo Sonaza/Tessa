@@ -20,7 +20,7 @@ public:
 	typedef T ElementType;
 
 	SharedPointer() = default;
-
+	SharedPointer(nullptr_t);
 	explicit SharedPointer(T *ptr);
 
 	template <class Deleter>
@@ -37,8 +37,8 @@ public:
 	SharedPointer &operator=(const SharedPointer &other);
 
 	// Moving allowed, doesn't increase refcounter, other pointer becomes invalid.
-	SharedPointer(SharedPointer &&other);
-	SharedPointer &operator=(SharedPointer &&other);
+	SharedPointer(SharedPointer &&other) noexcept;
+	SharedPointer &operator=(SharedPointer &&other) noexcept;
 
 	T *get() const;
 

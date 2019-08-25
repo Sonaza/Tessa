@@ -23,7 +23,7 @@ bool ResourceBase<ResourceType, ResourceTypeIndex>::loadResource()
 
 	resourceLoaded = false;
 
-	resource = makeUnique<ResourceType>();
+	resource = makeShared<ResourceType>();
 	if (resource == nullptr)
 	{
 		TS_LOG_ERROR("Failed to allocate memory for resource container.");
@@ -56,9 +56,9 @@ void ResourceBase<ResourceType, ResourceTypeIndex>::unloadResource()
 }
 
 template <class ResourceType, SizeType ResourceTypeIndex>
-ResourceType *ResourceBase<ResourceType, ResourceTypeIndex>::getResource() const
+SharedPointer<ResourceType> ResourceBase<ResourceType, ResourceTypeIndex>::getResource() const
 {
 	TS_ASSERT(resourceLoaded && "Resource is not loaded");
 	std::lock_guard<std::mutex> lock(resourceMutex);
-	return resource.get();
+	return resource;
 }

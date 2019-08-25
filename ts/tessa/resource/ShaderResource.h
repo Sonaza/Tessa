@@ -4,13 +4,16 @@
 
 TS_PACKAGE1(resource)
 
-class ShaderResource : public ResourceBase<sf::Shader>
+class ShaderResource : public resource::ResourceBase<sf::Shader, TS_FOURCC('s','h','d','r')>
 {
+	TS_DECLARE_RESOURCE_TYPE(resource::ShaderResource);
+
 public:
 	ShaderResource(const std::string &filepath);
 	~ShaderResource();
 
-	bool loadResource();
+protected:
+	virtual bool loadResourceImpl() override;
 
 };
 

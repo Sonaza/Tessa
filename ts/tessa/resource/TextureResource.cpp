@@ -71,6 +71,8 @@ bool TextureResource::loadResourceImpl()
 		return false;
 
 	resource->setSmooth(true);
+	resource->generateMipmap();
+
 	return true;
 }
 

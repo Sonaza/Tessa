@@ -5,6 +5,7 @@ TS_PACKAGE1(system)
 
 AbstractSceneBase::AbstractSceneBase(system::BaseApplication *application)
 	: application(application)
+	, gigaton(system::Gigaton::getSingleton())
 {
 }
 

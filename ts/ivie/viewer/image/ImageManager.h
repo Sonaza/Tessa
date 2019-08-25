@@ -4,6 +4,7 @@
 
 #include "ts/tessa/lang/Signal.h"
 
+TS_DECLARE1(resource, SoundResource);
 TS_DECLARE2(app, viewer, Image);
 
 TS_PACKAGE2(app, viewer)
@@ -21,11 +22,21 @@ public:
 
 	std::wstring getStats();
 
-	Image *getCurrentImage();
+	Image *getCurrentImage() const;
+
+	enum DisplayShaderTypes
+	{
+		DisplayShader_FreeImage,
+		DisplayShader_Webm,
+	};
+	SharedPointer<sf::Shader> getDisplayShader(DisplayShaderTypes type);
+	bool loadDisplayShader(DisplayShaderTypes type, const std::string &handle, const std::string &filepath);
 
 	lang::Signal<SizeType> currentImageChangedSignal;
 
 private:
+	std::map<DisplayShaderTypes, resource::ShaderResource *> displayShaders;
+
 	void currentImageChanged(SizeType imageIndex);
 
 	SizeType currentImageIndex = 0;
@@ -38,8 +49,8 @@ private:
 
 	lang::SignalBind currentImageChangedBind;
 
+
 	mutable std::mutex mutex;
-// 	std::vector<std::wstring> currentFileList;
 };
 
 TS_END_PACKAGE2()

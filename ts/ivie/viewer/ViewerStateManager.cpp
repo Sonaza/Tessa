@@ -21,8 +21,9 @@ ViewerStateManager::~ViewerStateManager()
 bool ViewerStateManager::initialize()
 {
 	BackgroundFileScanner &fs = getGigaton<BackgroundFileScanner>();
-	
 	filelistChangedBind.connect(fs.filelistChangedSignal, &ThisClass::updateFileList, this);
+
+	updateFileList();
 
 	return true;
 }
@@ -74,6 +75,21 @@ void ViewerStateManager::jumpToImage(SizeType index)
 	}
 
 	currentImageChangedSignal(currentImageIndex);
+}
+
+void ViewerStateManager::jumpToImageByFilename(const std::wstring &filename)
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	std::vector<std::wstring>::iterator it = std::find(currentFileList.begin(), currentFileList.end(), filename);
+	if (it != currentFileList.end())
+	{
+		currentImageIndex = (SizeType)std::distance(currentFileList.begin(), it);
+		currentFilePath = currentFileList[currentImageIndex];
+
+		lock.unlock();
+
+		currentImageChangedSignal(currentImageIndex);
+	}
 }
 
 SizeType ViewerStateManager::getNumImages() const

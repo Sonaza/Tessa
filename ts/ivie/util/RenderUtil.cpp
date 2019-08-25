@@ -3,10 +3,21 @@
 
 TS_PACKAGE2(app, util)
 
-extern sf::VertexArray makeQuadVertexArray(Uint32 width, Uint32 height, Uint32 offsetX, Uint32 offsetY)
+extern sf::VertexArray makeQuadVertexArray(
+	Uint32 width, Uint32 height,
+	Uint32 offsetX, Uint32 offsetY)
 {
-	math::VC2 size((float)width, (float)height);
-	math::VC2 offset((float)offsetX, (float)offsetY);
+	return makeQuadVertexArrayScaled(width, height, width, height, offsetX, offsetY);
+}
+
+extern sf::VertexArray makeQuadVertexArrayScaled(
+	Uint32 width, Uint32 height,
+	Uint32 texWidth, Uint32 texHeight,
+	Uint32 offsetX, Uint32 offsetY)
+{
+	const math::VC2 size((float)width, (float)height);
+	const math::VC2 texsize((float)texWidth, (float)texHeight);
+	const math::VC2 offset((float)offsetX, (float)offsetY);
 
 	sf::VertexArray va(sf::Quads, 4);
 	va[0] = sf::Vertex(
@@ -15,15 +26,15 @@ extern sf::VertexArray makeQuadVertexArray(Uint32 width, Uint32 height, Uint32 o
 	);
 	va[1] = sf::Vertex(
 		sf::Vector2f(size.x + offset.x, offset.y),
-		sf::Vector2f(size.x,            0.f)
+		sf::Vector2f(texsize.x,         0.f)
 	);
 	va[2] = sf::Vertex(
 		sf::Vector2f(size.x + offset.x, size.y + offset.y),
-		sf::Vector2f(size.x,            size.y)
+		sf::Vector2f(texsize.x,         texsize.y)
 	);
 	va[3] = sf::Vertex(
 		sf::Vector2f(offset.x,          size.y + offset.y),
-		sf::Vector2f(0.f,               size.y)
+		sf::Vector2f(0.f,               texsize.y)
 	);
 	return va;
 }

@@ -20,6 +20,12 @@ SharedPointer<T>::SharedPointer(T *ptr)
 }
 
 template <class T>
+SharedPointer<T>::SharedPointer(nullptr_t)
+{
+	reset(nullptr);
+}
+
+template <class T>
 template <class T2>
 SharedPointer<T>::SharedPointer(const SharedPointer<T2> &other, T *ptr)
 {
@@ -62,13 +68,13 @@ SharedPointer<T> &SharedPointer<T>::operator=(const SharedPointer<T> &other)
 }
 
 template <class T>
-SharedPointer<T>::SharedPointer(SharedPointer<T> &&other)
+SharedPointer<T>::SharedPointer(SharedPointer<T> &&other) noexcept
 {
 	*this = other;
 }
 
 template <class T>
-SharedPointer<T> &SharedPointer<T>::operator=(SharedPointer<T> &&other)
+SharedPointer<T> &SharedPointer<T>::operator=(SharedPointer<T> &&other) noexcept
 {
 	// Prevent self assignment
 	if (this != &other)

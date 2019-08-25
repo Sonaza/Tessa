@@ -44,6 +44,19 @@ bool Application::start()
 		resource::ResourceManager::setResourceRootDirectory(file::utils::getExecutableDirectory());
 	}
 
+	viewer::ViewerStateManager &vsm = getManager<viewer::ViewerStateManager>();
+
+	std::wstring filepath;
+	getCommando().getNthParameter(0, filepath);
+	if (!filepath.empty())
+	{
+		vsm.jumpToImageByFilename(filepath);
+	}
+	else
+	{
+		vsm.jumpToImage(0);
+	}
+
 	return true;
 }
 

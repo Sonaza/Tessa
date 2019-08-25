@@ -17,6 +17,7 @@ public:
 	typedef T ElementType;
 
 	UniquePointer() = default;
+	UniquePointer(nullptr_t);
 	explicit UniquePointer(T *pointer);
 	~UniquePointer();
 
@@ -25,8 +26,8 @@ public:
 	UniquePointer &operator=(const UniquePointer &other) = delete;
 
 	// Move is allowed.
-	UniquePointer(UniquePointer &&other);
-	UniquePointer &operator=(UniquePointer &&other);
+	UniquePointer(UniquePointer &&other) noexcept;
+	UniquePointer &operator=(UniquePointer &&other) noexcept;
 
 	T *get() const;
 

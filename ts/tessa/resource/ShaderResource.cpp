@@ -1,13 +1,16 @@
 #include "Precompiled.h"
-#include "ts/tessa/resource/ShaderResource.h"
-#include <szen/System/ErrorStream.hpp>
+#include "ShaderResource.h"
 
-#include <szen/System/Window.hpp>
+#include "ts/tessa/system/Gigaton.h"
+#include "ts/tessa/file/ArchivistFilesystem.h"
+#include "ts/tessa/resource/ArchivistInputStream.h"
+
+TS_DEFINE_RESOURCE_TYPE(resource::ShaderResource);
 
 TS_PACKAGE1(resource)
 
-ShaderResource::ShaderResource(const std::string &filepath) :
-	ResourceBase(path)
+ShaderResource::ShaderResource(const std::string &filepath)
+	: ResourceBase(filepath)
 {
 }
 
@@ -15,27 +18,49 @@ ShaderResource::~ShaderResource()
 {
 }
 
-bool ShaderResource::loadResource()
+bool ShaderResource::loadResourceImpl()
 {
-	TS_ASSERT(!m_loaded && "Shader has already been loaded");
-	TS_ASSERT(!m_filename.empty() && "Must have file name");
-
-	m_asset = new(std::nothrow) sf::Shader();
-	TS_ASSERT(m_asset && "Allocation failed");
-
-	if(!m_asset->loadFromFile(m_filename, sf::Shader::Fragment))
+	bool success = ([&]()
 	{
-		szerr << "Unable to open shader file: " << m_filename << ErrorStream::error;
+		file::ArchivistFilesystem &afs = TS_GET_GIGATON().getGigaton<file::ArchivistFilesystem>();
+
+		// First try if it exists in the virtual file system
+		if (afs.fileExists(filepath))
+		{
+			file::ArchivistReaderExtractor extractor;
+			if (afs.getFileExtractor(filepath, extractor))
+			{
+				ArchivistInputStream strm(extractor);
+				if (resource->loadFromStream(strm, sf::Shader::Fragment))
+				{
+					return true;
+				}
+				else
+				{
+					TS_LOG_ERROR("Failed to load a shader from archivist input stream. File: %s", filepath);
+				}
+			}
+			else
+			{
+				TS_ASSERT(false);
+			}
+		}
+
+		// Fallback from normal file system
+		if (resource->loadFromFile(getAbsolutePath(), sf::Shader::Fragment))
+		{
+			return true;
+		}
+		else
+		{
+			TS_LOG_ERROR("Failed to load a shader from disk. File: %s", filepath);
+		}
 
 		return false;
-	}
+	})();
 
-	m_asset->setParameter("u_resolution", static_cast<sf::Vector2f>(Window::getSize()));
-	m_asset->setParameter("u_vresolution", static_cast<sf::Vector2f>(Window::getVirtualSize()));
-
-	m_asset->setParameter("u_texture", sf::Shader::CurrentTexture);
-
-	m_loaded = true;
+	if (!success)
+		return false;
 
 	return true;
 }

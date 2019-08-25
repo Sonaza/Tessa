@@ -26,22 +26,19 @@ public:
 
 protected:
 	void imageChanged(SizeType imageIndex);
-
-	resource::FontResource *font;
-
 	lang::SignalBind imageChangedBind;
 
-// 	void swapTexture(Int32 dir);
-	Int32 currentIndex = 0;
+	resource::FontResource *font = nullptr;
 
 	Clock frameTimer;
 
-	sf::Shader shader;
+	float imageScale = 1.f;
+	float targetImageScale = 1.f;
 
-	sf::Texture imageTexture;
-	math::VC2U texSize;
+	math::VC2 positionOffset;
+	math::VC2 targetPositionOffset;
 
-	std::mutex textureMutex;
+	math::VC2I lastMousePosition;
 
 	viewer::ViewerStateManager *viewerStateManager = nullptr;
 

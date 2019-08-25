@@ -45,24 +45,27 @@ protected:
 
 	friend class system::BaseApplication;
 	system::BaseApplication *application = nullptr;
+
+private:
+	system::Gigaton &gigaton;
 };
 
 template <class T>
 TS_FORCEINLINE T &AbstractSceneBase::getGigaton()
 {
-	return system::Gigaton::getSingleton().getGigaton<T>();
+	return gigaton.getGigaton<T>();
 }
 
 template <class T>
 TS_FORCEINLINE const T &AbstractSceneBase::getGigaton() const
 {
-	return system::Gigaton::getSingleton().getGigaton<T>();
+	return gigaton.getGigaton<T>();
 }
 
 template <class T>
 TS_FORCEINLINE T *AbstractSceneBase::getGigatonOptional()
 {
-	return system::Gigaton::getSingleton().getGigatonOptional<T>();
+	return gigaton.getGigatonOptional<T>();
 }
 
 TS_END_PACKAGE1()

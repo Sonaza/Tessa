@@ -13,6 +13,7 @@ class TaskCompletionFuture
 	friend class TaskCompletionPromise;
 public:
 	TaskCompletionFuture();
+	~TaskCompletionFuture() = default;
 
 	void waitForCompletion();
 
@@ -27,9 +28,10 @@ class TaskCompletionPromise
 	friend class TaskCompletionFuture;
 public:
 	TaskCompletionPromise() = default;
+	~TaskCompletionPromise() = default;
 
 	void signalCompletion();
-	void reset();
+	void resetPromise();
 	TaskCompletionFuture getFuture();
 
 private:

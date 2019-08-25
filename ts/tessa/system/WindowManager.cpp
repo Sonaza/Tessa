@@ -49,8 +49,11 @@ void WindowManager::create(const math::VC2U &videomode, const std::string &windo
 // 	settings.sRgbCapable = true;
 
 	renderWindow.create(sf::VideoMode(videomode.x, videomode.y), windowTitle, style, settings);
-	activeGameView = renderWindow.getView();
+	activeApplicationView = renderWindow.getView();
 	activeInterfaceView = renderWindow.getView();
+
+	math::VC2 center = activeInterfaceView.getCenter();
+	TS_PRINTF("Center %0.2f, %0.2f\n", center.x, center.y);
 
 	renderWindow.clear();
 	renderWindow.display();
@@ -81,7 +84,13 @@ bool WindowManager::pollEvent(sf::Event &eventParam)
 		{
 			case sf::Event::Resized:
 			{
-				activeInterfaceView.setSize((float)eventParam.size.width, (float)eventParam.size.height);
+				math::VC2 size((float)eventParam.size.width, (float)eventParam.size.height);
+
+				activeApplicationView.setSize(size);
+				activeApplicationView.setCenter(size / 2.f);
+
+				activeInterfaceView.setSize(size);
+				activeInterfaceView.setCenter(size / 2.f);
 			}
 			break;
 		}
@@ -97,20 +106,29 @@ bool WindowManager::isOpen() const
 math::VC2U WindowManager::getSize() const
 {
 	TS_ASSERT(windowCreated && "Window should be created before using.");
-	const sf::Vector2u s = renderWindow.getSize();
-	return math::VC2U(s.x, s.y);
+	return static_cast<math::VC2U>(renderWindow.getSize());
 }
 
-void WindowManager::useGameView()
+void WindowManager::useApplicationView()
 {
 	TS_ASSERT(windowCreated && "Window should be created before using.");
-	renderWindow.setView(activeGameView);
+	renderWindow.setView(activeApplicationView);
 }
 
 void WindowManager::useInterfaceView()
 {
 	TS_ASSERT(windowCreated && "Window should be created before using.");
 	renderWindow.setView(activeInterfaceView);
+}
+
+void WindowManager::setCustomView(sf::View customView)
+{
+
+}
+
+void WindowManager::resetView()
+{
+
 }
 
 bool WindowManager::setWindowIcon(const std::string &filepath)

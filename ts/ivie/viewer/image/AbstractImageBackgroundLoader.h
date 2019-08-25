@@ -22,6 +22,8 @@ public:
 	void suspend(bool waitUntilBufferIsFull = false);
 	void resume();
 
+	void cancelPendingSuspension();
+
 	bool isSuspended() const;
 	virtual bool isLoadingComplete() const;
 
@@ -48,6 +50,7 @@ public:
 			case Inactive: return L"Inactive";
 			case Uninitialized: return L"Uninitialized";
 			case Running: return L"Running";
+			case Resuming: return L"Resuming";
 			case Suspended: return L"Suspended";
 			case Finished: return L"Finished";
 		}
@@ -67,10 +70,10 @@ protected:
 	virtual bool restartImpl() = 0;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) = 0;
-	
+	virtual bool wasLoadingCompleted() const = 0;
+
 	BackgroundLoaderState loaderState = Inactive;
 	bool suspendAfterBufferFull = false;
-
 
 	math::VC2U imageSize;
 

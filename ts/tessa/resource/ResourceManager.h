@@ -8,12 +8,13 @@
 #include <unordered_map>
 #include <atomic>
 
-TS_DECLARE1(system, BaseApplication)
+TS_DECLARE1(system, BaseApplication);
 
-TS_DECLARE1(resource, TextureResource)
-TS_DECLARE1(resource, FontResource)
-// TS_DECLARE1(resource, ShaderResource)
-// TS_DECLARE1(resource, SoundResource)
+TS_DECLARE1(resource, TextureResource);
+TS_DECLARE1(resource, FontResource);
+TS_DECLARE1(resource, ShaderResource);
+TS_DECLARE1(resource, MusicResource);
+TS_DECLARE1(resource, SoundResource);
 
 TS_PACKAGE1(resource)
 
@@ -34,13 +35,25 @@ public:
 	ResourceType *loadResource(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
 
 	template<class ResourceType>
-	ResourceType *getResource(const std::string &uniqueResourceHandle);
+	ResourceType *getResource(const std::string &uniqueResourceHandle) const;
 
 	template<class ResourceType>
-	ResourceType *getResource(const GUID &resourceGuid);
+	ResourceType *getResource(const GUID &resourceGuid) const;
 
 	template<class ResourceType>
-	ResourceType *getResourceByFileGuid(const GUID &fileGuid);
+	ResourceType *getResourceByFileGuid(const GUID &fileGuid) const;
+
+	TextureResource *loadTexture(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+	FontResource *loadFont(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+	ShaderResource *loadShader(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+	MusicResource *loadMusic(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+	SoundResource *loadSound(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+
+	TextureResource *getTexture(const std::string &uniqueResourceHandle) const;
+	FontResource *getFont(const std::string &uniqueResourceHandle) const;
+	ShaderResource *getShader(const std::string &uniqueResourceHandle) const;
+	MusicResource *getMusic(const std::string &uniqueResourceHandle) const;
+	SoundResource *getSound(const std::string &uniqueResourceHandle) const;
 
 	void unloadAll();
 
@@ -144,15 +157,15 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 }
 
 template<class ResourceType>
-ResourceType *ResourceManager::getResource(const std::string &uniqueResourceHandle)
+ResourceType *ResourceManager::getResource(const std::string &uniqueResourceHandle) const
 {
 	return getResource<ResourceType>(GUID(uniqueResourceHandle));
 }
 
 template<class ResourceType>
-ResourceType *ResourceManager::getResource(const GUID &resourceGuid)
+ResourceType *ResourceManager::getResource(const GUID &resourceGuid) const
 {
-	GuidList::iterator iter = resourceGuids.find(resourceGuid);
+	GuidList::const_iterator iter = resourceGuids.find(resourceGuid);
 	if (iter == resourceGuids.end())
 		return nullptr;
 
@@ -160,22 +173,25 @@ ResourceType *ResourceManager::getResource(const GUID &resourceGuid)
 }
 
 template<class ResourceType>
-ResourceType *ResourceManager::getResourceByFileGuid(const GUID &fileGuid)
+ResourceType *ResourceManager::getResourceByFileGuid(const GUID &fileGuid) const
 {
-	ResourceList::iterator iter = resources.find(fileGuid);
+	ResourceList::const_iterator iter = resources.find(fileGuid);
 	if (iter != resources.end())
 	{
+		const UniquePointer<AbstractResourceContainer> &rc = iter->second;
+
 #if TS_BUILD != TS_FINALRELEASE
-		TS_ASSERTF(iter->second != nullptr && iter->second->isValid(), "AbstractResourceContainer is nullptr or invalid.");
-		const std::string &debugHandle = debugResourceHandles[fileGuid];
+		TS_ASSERTF(rc != nullptr && rc->isValid(), "AbstractResourceContainer is nullptr or invalid.");
+		const std::string &debugHandle = debugResourceHandles.at(fileGuid);
 		const GUID debugGUID(debugHandle);
-		TS_ASSERTF(iter->second->typeId == ResourceType::TypeId,
-			"Resource types don't match, requested resource handle is already used by a different resource type.\n\nResource handle: %s %s\nExisting type: %s\nRequested type: %s",
-			debugHandle, debugGUID.getString(), debugResourceTypeNames[iter->second->typeId], ResourceType::TypeName
-		);
+		TS_ASSERTF(rc->typeId == ResourceType::TypeId,
+			"Resource types don't match, requested resource handle is already used by a different resource type.\n\n"
+			"Resource handle: %s %s\nExisting type: %s\nRequested type: %s",
+			debugHandle, debugGUID.getString(), debugResourceTypeNames.at(rc->typeId), ResourceType::TypeName
+			);
 #endif
-		if (iter->second != nullptr && iter->second->isValid() && iter->second->typeId == ResourceType::TypeId)
-			return static_cast<ResourceType*>(iter->second->resource.get());
+		if (rc != nullptr && rc->isValid() && rc->typeId == ResourceType::TypeId)
+			return static_cast<ResourceType*>(rc->resource.get());
 	}
 	return nullptr;
 }

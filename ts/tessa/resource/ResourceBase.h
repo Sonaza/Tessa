@@ -33,12 +33,12 @@ public:
 	virtual bool loadResource();
 	virtual void unloadResource();
 
-	ResourceType *getResource() const;
+	SharedPointer<ResourceType> getResource() const;
 
 protected:
 	virtual bool loadResourceImpl() = 0;
 
-	UniquePointer<ResourceType> resource;
+	SharedPointer<ResourceType> resource;
 
 	std::atomic<bool> resourceLoaded = false;
 	std::atomic<bool> loadError = false;

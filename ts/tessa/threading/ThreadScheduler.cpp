@@ -40,20 +40,20 @@ public:
 			scheduler->schedulerCondition.wait_for(lock, std::chrono::milliseconds(10),
 			[this]()
 			{
-				return !scheduler->running || !scheduler->pendingTaskQueue.empty();
+				return !scheduler->running || !scheduler->waitingTaskQueue.empty();
 			});
 
 			if (!scheduler->running)// && scheduler->pendingTaskQueue.empty())
 				return;
 
-			if (scheduler->pendingTaskQueue.empty())
+			if (scheduler->waitingTaskQueue.empty())
 				continue;
 
-			if (Time::now() >= scheduler->pendingTaskQueue.top().scheduledTime)
+			if (Time::now() >= scheduler->waitingTaskQueue.top().scheduledTime)
 			{
 				// Move task from pending list to the active list
-				scheduler->taskQueue.push(std::move(scheduler->pendingTaskQueue.top()));
-				scheduler->pendingTaskQueue.pop();
+				scheduler->pendingTaskQueue.push(std::move(scheduler->waitingTaskQueue.top()));
+				scheduler->waitingTaskQueue.pop();
 
 				lock.unlock();
 
@@ -96,14 +96,14 @@ public:
 				std::unique_lock<std::mutex> lock(scheduler->queueMutex);
 				scheduler->workerCondition.wait(lock, [this]()
 				{
-					return !scheduler->running || !scheduler->taskQueue.empty();
+					return !scheduler->running || !scheduler->pendingTaskQueue.empty();
 				});
 
 				if (!scheduler->running)// && scheduler->taskQueue.empty())
 					return;
 
-				task = std::move(scheduler->taskQueue.top());
-				scheduler->taskQueue.pop();
+				task = std::move(scheduler->pendingTaskQueue.top());
+				scheduler->pendingTaskQueue.pop();
 
 				scheduler->workerToTaskMap[workerIndex] = task.taskId;
 			}
@@ -192,24 +192,62 @@ void ThreadScheduler::destroyBackgroundWorkers()
 	}
 }
 
-SizeType ThreadScheduler::numTasks() const
+SizeType ThreadScheduler::getNumTasks() const
 {
 	std::unique_lock<std::mutex> lock(queueMutex);
-	return (SizeType)(pendingTaskQueue.size() + taskQueue.size());
+	return (SizeType)(waitingTaskQueue.size() + pendingTaskQueue.size());
+}
+
+SizeType ThreadScheduler::getNumTasksInProgress() const
+{
+	std::unique_lock<std::mutex> lock(queueMutex);
+	SizeType numTasks = 0;
+	for (auto &it : workerToTaskMap)
+	{
+		if (it.second != InvalidTaskId)
+			numTasks++;
+	}
+	return numTasks;
+}
+
+SizeType ThreadScheduler::getNumWorkers() const
+{
+	std::unique_lock<std::mutex> lock(queueMutex);
+	return (SizeType)backgroundWorkers.size();
+}
+
+ThreadScheduler::SchedulerStats ThreadScheduler::getStats() const
+{
+// 	std::unique_lock<std::mutex> lock(queueMutex);
+	SchedulerStats stats;
+
+	stats.numBackgroundWorkers = (SizeType)backgroundWorkers.size();
+	
+	stats.numQueuedTasks = (SizeType)(waitingTaskQueue.size() + pendingTaskQueue.size());
+
+	for (auto &it : workerToTaskMap)
+		stats.numWorkedTasks += (it.second != InvalidTaskId ? 1 : 0);
+
+	for (auto &it : waitingTaskQueue)
+		stats.numIntervalTasks += (it.interval > TimeSpan::zero ? 1 : 0);
+	for (auto &it : pendingTaskQueue)
+		stats.numIntervalTasks += (it.interval > TimeSpan::zero ? 1 : 0);
+
+	return stats;
 }
 
 bool ThreadScheduler::hasTasks() const
 {
 	std::unique_lock<std::mutex> lock(queueMutex);
-	return !pendingTaskQueue.empty() && !taskQueue.empty();
+	return !waitingTaskQueue.empty() && !pendingTaskQueue.empty();
 }
 
 void ThreadScheduler::clearTasks()
 {
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
+		waitingTaskQueue.clear();
 		pendingTaskQueue.clear();
-		taskQueue.clear();
 	}
 	schedulerCondition.notify_all();
 	workerCondition.notify_all();
@@ -228,8 +266,8 @@ bool ThreadScheduler::isTaskQueuedUnsafe(SchedulerTaskId taskId)
 		return t.taskId == taskId;
 	};
 
-	return (pendingTaskQueue.find_if(pred) != pendingTaskQueue.end()) ||
-		   (taskQueue.find_if(pred) != taskQueue.end());
+	return (waitingTaskQueue.find_if(pred) != waitingTaskQueue.end()) ||
+		   (pendingTaskQueue.find_if(pred) != pendingTaskQueue.end());
 }
 
 bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
@@ -241,7 +279,7 @@ bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
 		return t.taskId == taskId;
 	};
 
-	return pendingTaskQueue.erase_if(pred) || taskQueue.erase_if(pred);
+	return waitingTaskQueue.erase_if(pred) || pendingTaskQueue.erase_if(pred);
 }
 
 void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
@@ -255,49 +293,32 @@ void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
 
 	TaskCompletionFuture &future = it->second;
 	future.waitForCompletion();
-
-	/*
-	// Waits until the task is started by scheduler
-	{
-		std::unique_lock<std::mutex> lock(queueMutex);
-		while (isTaskQueuedUnsafe(taskId))
-		{
-			TS_PRINTF("Waiting for unstarted task...\n");
-			taskStartedCondition.wait(lock);
-		}
-	}
-	
-	SizeType taskWorkerIndex = ~0U;
-	{
-		std::unique_lock<std::mutex> lock(queueMutex);
-
-		for (SizeType workerIndex = 0; workerIndex < workerToTaskMap.size(); ++workerIndex)
-		{
-			if (workerToTaskMap[workerIndex] == taskId)
-			{
-				taskWorkerIndex = workerIndex;
-				break;
-			}
-		}
-		if (taskWorkerIndex == ~0U)
-		{
-			TS_PRINTF("Task %u is not under processing.\n", taskId);
-			return;
-		}
-	}
-
-	// Should block until the task is done
-	std::unique_lock<std::mutex> lock(*workerMutexes[taskWorkerIndex]);*/
 }
 
-SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry)
+SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry, TaskPriority priority, TimeSpan time_from_now)
 {
 	TS_ASSERT(entry != nullptr);
 
-	ScheduledTaskFuture<void> future = scheduleOnce(TimeSpan::zero, [=]()
+	ScheduledTaskFuture<void> future = scheduleOnce(priority, time_from_now, [=]()
 	{
 		entry->entry();
 	});
+
+	{
+		std::unique_lock<std::mutex> lock(queueMutex);
+		Time now = Time::now();
+		TS_PRINTF("waitingTaskQueue (%llu tasks):\n", waitingTaskQueue.size());
+		for (auto &it : waitingTaskQueue)
+		{
+			TS_PRINTF("  ID %u : priority %d / time %lld ms\n",
+				it.taskId,
+				it.priority,
+				(it.scheduledTime - now).getMilliseconds()
+			);
+		}
+		TS_PRINTF("\n");
+	}
+
 	return future.getTaskId();
 }
 
@@ -313,8 +334,8 @@ void ThreadScheduler::reschedule(ScheduledTask &&task)
 	std::unique_lock<std::mutex> lock(queueMutex);
 
 	task.scheduledTime = Time::now() + task.interval;
-	task.promise.reset();
-	pendingTaskQueue.push(std::move(task));
+	task.promise->resetPromise();
+	waitingTaskQueue.push(std::move(task));
 }
 
 TS_END_PACKAGE1()

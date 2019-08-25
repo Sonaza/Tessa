@@ -41,6 +41,12 @@ T abs(T value)
 }
 
 template<class T>
+Int32 sign(T value)
+{
+	return value >= 0 ? 1 : -1;
+}
+
+template<class T>
 T ceil(T value)
 {
 	return std::ceil(value);

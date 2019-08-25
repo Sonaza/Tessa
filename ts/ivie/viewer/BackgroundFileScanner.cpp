@@ -24,8 +24,13 @@ bool BackgroundFileScanner::initialize()
 {
 	TS_ASSERT(!allowedExtensions.empty() && "Allowed extensions list is empty!");
 
+	updateFilelist();
+
 	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
-	scannerTaskId = tm.scheduleWithInterval(TimeSpan::fromMilliseconds(2000), &BackgroundFileScanner::updateFilelist, this);
+	scannerTaskId = tm.scheduleWithInterval(
+		threading::Priority_Normal,
+		TimeSpan::fromMilliseconds(2000),
+		&BackgroundFileScanner::updateFilelist, this);
 
 	return true;
 }

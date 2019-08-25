@@ -8,7 +8,7 @@
 #include "ts/tessa/resource/FontResource.h"
 #include "ts/tessa/resource/SoundResource.h"
 #include "ts/tessa/resource/MusicResource.h"
-// #include "ts/tessa/resource/ShaderResource.h"
+#include "ts/tessa/resource/ShaderResource.h"
 
 TS_DEFINE_MANAGER_TYPE(resource::ResourceManager);
 
@@ -42,6 +42,56 @@ void ResourceManager::deinitialize()
 void ResourceManager::update(const TimeSpan deltaTime)
 {
 
+}
+
+TextureResource *ResourceManager::loadTexture(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+{
+	return loadResource<TextureResource>(uniqueResourceHandle, filepath, immediate);
+}
+
+FontResource *ResourceManager::loadFont(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+{
+	return loadResource<FontResource>(uniqueResourceHandle, filepath, immediate);
+}
+
+ShaderResource *ResourceManager::loadShader(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+{
+	return loadResource<ShaderResource>(uniqueResourceHandle, filepath, immediate);
+}
+
+MusicResource *ResourceManager::loadMusic(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+{
+	return loadResource<MusicResource>(uniqueResourceHandle, filepath, immediate);
+}
+
+SoundResource *ResourceManager::loadSound(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+{
+	return loadResource<SoundResource>(uniqueResourceHandle, filepath, immediate);
+}
+
+TextureResource *ResourceManager::getTexture(const std::string &uniqueResourceHandle) const
+{
+	return getResource<TextureResource>(uniqueResourceHandle);
+}
+
+FontResource *ResourceManager::getFont(const std::string &uniqueResourceHandle) const
+{
+	return getResource<FontResource>(uniqueResourceHandle);
+}
+
+ShaderResource *ResourceManager::getShader(const std::string &uniqueResourceHandle) const
+{
+	return getResource<ShaderResource>(uniqueResourceHandle);
+}
+
+MusicResource *ResourceManager::getMusic(const std::string &uniqueResourceHandle) const
+{
+	return getResource<MusicResource>(uniqueResourceHandle);
+}
+
+SoundResource *ResourceManager::getSound(const std::string &uniqueResourceHandle) const
+{
+	return getResource<SoundResource>(uniqueResourceHandle);
 }
 
 void ResourceManager::unloadAll()
@@ -130,7 +180,7 @@ void ResourceManager::addResourceToLoadQueue(SharedPointer<AbstractResourceBase>
 // 		return;
 
 	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
-	tm.scheduleOnce(TimeSpan::zero, &ResourceManager::loadResourceTask, resource);
+	tm.scheduleOnce(threading::Priority_Normal, TimeSpan::zero, &ResourceManager::loadResourceTask, resource);
 }
 
 GUID ResourceManager::findFileGuid(const GUID &resourceGuid)

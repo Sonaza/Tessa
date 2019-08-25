@@ -8,6 +8,9 @@
 #include "ts/ivie/viewer/BackgroundFileScanner.h"
 #include "ts/ivie/viewer/ViewerStateManager.h"
 
+#include "ts/tessa/resource/ResourceManager.h"
+#include "ts/tessa/resource/ShaderResource.h"
+
 #include "ts/ivie/viewer/image/Image.h"
 
 TS_DEFINE_MANAGER_TYPE(app::viewer::ImageManager);
@@ -26,8 +29,9 @@ ImageManager::~ImageManager()
 
 bool ImageManager::initialize()
 {
+	loadDisplayShader(DisplayShader_FreeImage, "DisplayShader_FreeImage", "shader/convert.frag");
+
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
-	
 	currentImageChangedBind.connect(vsm.currentImageChangedSignal, &ThisClass::currentImageChanged, this);
 
 	return true;
@@ -42,6 +46,8 @@ void ImageManager::deinitialize()
 			image->unload();
 	}
 	imageStorage.clear();
+
+	ImageManager::displayShaders.clear();
 }
 
 std::wstring ImageManager::getStats()
@@ -59,7 +65,7 @@ std::wstring ImageManager::getStats()
 	return lang::utils::joinString(stats, L"\n");
 }
 
-Image *ImageManager::getCurrentImage()
+Image *ImageManager::getCurrentImage() const
 {
 	std::unique_lock<std::mutex> lock(mutex);
 
@@ -68,6 +74,31 @@ Image *ImageManager::getCurrentImage()
 		return it->second.get();
 
 	return nullptr;
+}
+
+SharedPointer<sf::Shader> ImageManager::getDisplayShader(DisplayShaderTypes type)
+{
+	auto it = displayShaders.find(type);
+	if (it != displayShaders.end())
+		return it->second->getResource();
+
+	TS_ASSERT(!"Display shader was not found.");
+	return nullptr;
+}
+
+bool ImageManager::loadDisplayShader(DisplayShaderTypes type, const std::string &handle, const std::string &filepath)
+{
+	TS_ASSERT(displayShaders.find(type) == displayShaders.end() && "Attempting to load a display shader type again.");
+
+	resource::ResourceManager &rm = getGigaton<resource::ResourceManager>();
+
+	resource::ShaderResource *shaderResource = rm.loadShader(handle, filepath, true);
+	TS_ASSERT(shaderResource != nullptr && shaderResource->isLoaded());
+	if (shaderResource == nullptr)
+		return false;
+
+	displayShaders[type] = shaderResource;
+	return true;
 }
 
 void ImageManager::currentImageChanged(SizeType imageIndex)
@@ -111,6 +142,8 @@ void ImageManager::currentImageChanged(SizeType imageIndex)
 			TS_WPRINTF("--- Resuming loading %s\n", filepath);
 			image->resumeLoading();
 		}
+
+		image->setActive(isCurrentImage);
 	}
 
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)

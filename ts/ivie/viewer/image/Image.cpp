@@ -4,6 +4,9 @@
 #include "ts/tessa/file/InputFile.h"
 #include "ts/tessa/file/FileUtils.h"
 
+#include "ts/ivie/util/RenderUtil.h"
+
+#include "ts/ivie/viewer/image/ImageManager.h"
 #include "ts/ivie/viewer/image/ImageBackgroundLoaderFreeImage.h"
 // #include "ts/ivie/viewer/image/ImageBackgroundLoaderWebm.h"
 
@@ -31,6 +34,8 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 	TS_WPRINTF("Starting to load file %s\n", filepath);
 
+	ImageManager &im = TS_GET_GIGATON().getGigaton<ImageManager>();
+
 	std::unique_lock<std::mutex> lock(mutex);
 
 	LoaderType type = sniffLoaderType();
@@ -38,6 +43,8 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 	{
 		case LoaderFreeImage:
 		{
+			displayShader = im.getDisplayShader(ImageManager::DisplayShader_FreeImage);
+
 			loaderState = Loading;
 			backgroundLoader.reset(new ImageBackgroundLoaderFreeImage(this, filepath));
 		}
@@ -45,6 +52,8 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 		case LoaderWebm:
 		{
+			displayShader = im.getDisplayShader(ImageManager::DisplayShader_Webm);
+
 			loaderState = Loading;
 // 			backgroundLoader.reset(new ImageBackgroundLoaderWebm(this, filepath));
 		}
@@ -97,6 +106,17 @@ void Image::restart(bool suspend)
 	}
 }
 
+void Image::setActive(bool activeParam)
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	active = activeParam;
+	if (active)
+	{
+		TS_ASSERT(backgroundLoader);
+		backgroundLoader->cancelPendingSuspension();
+	}
+}
+
 bool Image::isUnloaded() const
 {
 	std::unique_lock<std::mutex> lock(mutex);
@@ -133,6 +153,11 @@ const FrameStorage *Image::getCurrentFrameStorage() const
 	if (!frameBuffer.isEmpty())
 		return &frameBuffer.getReadPtr();
 	return nullptr;
+}
+
+SharedPointer<sf::Shader> Image::getDisplayShader() const
+{
+	return displayShader;
 }
 
 SizeType Image::getCurrentFrameIndex() const
@@ -185,13 +210,25 @@ bool Image::advanceToNextFrame()
 bool Image::isDisplayable() const
 {
 	std::unique_lock<std::mutex> lock(mutex);
-	return loaderState != Error && !frameBuffer.isEmpty();
+	return loaderState != Error && !frameBuffer.isEmpty() && displayShader != nullptr;
 }
 
 bool Image::hasError() const
 {
 	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState == Error;
+}
+
+bool Image::hasThumbnail() const
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	return thumbnail != nullptr;
+}
+
+SharedPointer<sf::Texture> Image::getThumbnail() const
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	return thumbnail;
 }
 
 void Image::setImageData(const ImageData &dataParam)
@@ -262,6 +299,82 @@ void Image::setState(ImageLoaderState state)
 {
 	std::unique_lock<std::mutex> lock(mutex);
 	loaderState = state;
+}
+
+bool Image::getIsBufferFull() const
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	return frameBuffer.isFull();
+}
+
+FrameStorage &Image::getNextBuffer()
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	return frameBuffer.getWritePtr();
+}
+
+void Image::swapBuffer()
+{
+	{
+		std::unique_lock<std::mutex> lock(mutex);
+		frameBuffer.incrementWrite();
+	}
+
+	if (thumbnail == nullptr)
+		makeThumbnail(frameBuffer.getReadPtr(), 150);
+}
+
+void Image::finalizeBuffer()
+{
+	std::unique_lock<std::mutex> lock(mutex);
+	frameBuffer.removeReadConstraint();
+}
+
+bool Image::makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize)
+{
+	TS_ASSERT(maxSize > 0);
+	TS_ASSERT(bufferStorage.texture != nullptr);
+	if (bufferStorage.texture == nullptr)
+		return false;
+
+	math::VC2U textureSize = bufferStorage.texture->getSize();
+	TS_ASSERT(textureSize.x != 0 && textureSize.y != 0);
+	if (textureSize.x == 0 || textureSize.y == 0)
+		return false;
+
+	math::VC2U scaledSize;
+	if (textureSize.x >= textureSize.y)
+	{
+		float factor = maxSize / (float)textureSize.x;
+		scaledSize.x = maxSize;
+		scaledSize.y = (Uint32)(textureSize.y * factor);
+	}
+	else
+	{
+		float factor = maxSize / (float)textureSize.y;
+		scaledSize.y = maxSize;
+		scaledSize.x = (Uint32)(textureSize.x * factor);
+	}
+
+	sf::RenderTexture rt;
+	if (!rt.create(scaledSize.x, scaledSize.y))
+		return false;
+
+	sf::RenderStates states;
+	states.texture = bufferStorage.texture.get();
+
+	displayShader->setUniform("u_useAlphaChecker", false);
+	states.shader = displayShader.get();
+
+	rt.clear(sf::Color::White);
+	rt.draw(
+		util::makeQuadVertexArrayScaled(scaledSize.x, scaledSize.y, textureSize.x, textureSize.y),
+		states);
+	rt.display();
+
+	std::unique_lock<std::mutex> lock(mutex);
+	thumbnail = makeShared<sf::Texture>(rt.getTexture());
+	return thumbnail != nullptr;
 }
 
 TS_END_PACKAGE2()

@@ -15,10 +15,12 @@ void TaskCompletionFuture::waitForCompletion()
 	}
 	TS_PRINTF("Not yet complete. Starting to wait...\n");
 
-	while (!promise->isComplete)
+	promise->condition.wait(lock, [this]()
 	{
-		promise->condition.wait(lock);
-	}
+		return promise->isComplete;
+	});
+
+	TS_PRINTF("All donezo!\n");
 }
 
 TaskCompletionFuture::TaskCompletionFuture(TaskCompletionPromise *promise)
@@ -44,7 +46,7 @@ void TaskCompletionPromise::signalCompletion()
 	condition.notify_all();
 }
 
-void TaskCompletionPromise::reset()
+void TaskCompletionPromise::resetPromise()
 {
 	{
 		std::unique_lock<std::mutex> lock(mutex);

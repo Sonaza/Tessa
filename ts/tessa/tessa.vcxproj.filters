@@ -167,6 +167,9 @@
     <ClCompile Include="threading\TaskCompletionFuture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="resource\ShaderResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -394,10 +397,13 @@
     <ClInclude Include="util\ContainerUtil.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="util\IterablePriorityQueue.h">
+    <ClInclude Include="threading\TaskCompletionFuture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="threading\TaskCompletionFuture.h">
+    <ClInclude Include="util\PriorityQueue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\ShaderResource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

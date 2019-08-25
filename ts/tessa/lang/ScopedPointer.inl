@@ -20,6 +20,11 @@ ScopedPointer<T, Deleter>::ScopedPointer(T *pointer)
 }
 
 template <class T, class Deleter>
+ScopedPointer<T, Deleter>::ScopedPointer(nullptr_t)
+{
+}
+
+template <class T, class Deleter>
 ScopedPointer<T, Deleter>::~ScopedPointer()
 {
 	reset();

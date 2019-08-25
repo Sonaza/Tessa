@@ -76,7 +76,6 @@ private:
 	void handleRendering();
 
 	bool createSystemManagers();
-	void initializeManagers();
 	void destroyManagerInstances();
 
 	typedef std::map<std::type_index, UniquePointer<system::AbstractManagerBase>> InstancedManagersList;

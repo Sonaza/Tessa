@@ -27,6 +27,8 @@ public:
 
 	void restart(bool suspend);
 
+	void setActive(bool active);
+
 	bool isUnloaded() const;
 	bool isSuspended() const;
 	void resumeLoading();
@@ -36,6 +38,7 @@ public:
 	const math::VC2U getSize() const;
 
 	const FrameStorage *getCurrentFrameStorage() const;
+	SharedPointer<sf::Shader> getDisplayShader() const;
 
 	SizeType getCurrentFrameIndex() const;
 	SizeType getNumFramesTotal() const;
@@ -45,6 +48,9 @@ public:
 
 	bool isDisplayable() const;
 	bool hasError() const;
+
+	bool hasThumbnail() const;
+	SharedPointer<sf::Texture> getThumbnail() const;
 
 	enum ImageLoaderState
 	{
@@ -74,7 +80,15 @@ public:
 	std::wstring getStats() const;
 
 private:
+	bool getIsBufferFull() const;
+	FrameStorage &getNextBuffer();
+	void swapBuffer();
+	void finalizeBuffer();
+
+	bool makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize);
+
 	std::wstring filepath;
+	bool active = false;
 
 	struct ImageData
 	{
@@ -101,6 +115,8 @@ private:
 	static const BigSizeType MaxFrameBufferCapacity = 30;
 	typedef util::RingBuffer<FrameStorage, MaxFrameBufferCapacity> FrameRingBuffer;
 	FrameRingBuffer frameBuffer;
+	SharedPointer<sf::Texture> thumbnail;
+	SharedPointer<sf::Shader> displayShader;
 
 	ScopedPointer<AbstractImageBackgroundLoader> backgroundLoader;
 	
