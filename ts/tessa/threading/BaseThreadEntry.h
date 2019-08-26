@@ -19,6 +19,8 @@ public:
 
 	virtual void entry() = 0;
 
+	virtual std::string getDebugString() const { return ""; }
+
 protected:
 	void startup();
 

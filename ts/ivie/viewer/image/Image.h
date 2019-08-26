@@ -67,6 +67,7 @@ public:
 		Loading,
 		Complete,
 		Suspended,
+		Unloading,
 		Error,
 	};
 	ImageLoaderState getState() const;
@@ -75,12 +76,14 @@ public:
 	{
 		switch (state)
 		{
-			case Unloaded: return L"Unloaded";
-			case Loading: return L"Loading";
-			case Complete: return L"Complete";
+			case Unloaded:  return L"Unloaded";
+			case Loading:   return L"Loading";
+			case Complete:  return L"Complete";
 			case Suspended: return L"Suspended";
-			case Error: return L"Error";
+			case Unloading: return L"Unloading";
+			case Error:     return L"Error";
 		}
+		TS_ASSERT(!"All states not handled.");
 		return L"Unknown";
 	}
 
@@ -98,8 +101,6 @@ private:
 
 	std::wstring filepath;
 	bool active = false;
-
-	std::atomic_bool unloading;
 
 	struct ImageData
 	{

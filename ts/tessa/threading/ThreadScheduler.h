@@ -3,7 +3,6 @@
 #include "ts/tessa/system/AbstractManagerBase.h"
 
 #include "ts/tessa/threading/BaseThreadEntry.h"
-#include "ts/tessa/threading/TaskCompletionFuture.h"
 
 #include "ts/tessa/util/PriorityQueue.h"
 
@@ -16,6 +15,8 @@
 #include <memory>
 #include <chrono>
 #include <future>
+
+#include "ts/ivie/viewer/image/Image.h"
 
 TS_PACKAGE1(threading)
 
@@ -138,7 +139,7 @@ public:
 	bool cancelTask(SchedulerTaskId taskId);
 
 	// Blocks until given task id is complete (returns immediately if task wasn't found)
-	// If used with interval tasks it will wait until the next run is complete.
+	// Can't be used with interval tasks.
 	void waitUntilTaskComplete(SchedulerTaskId taskId);
 
 	// Clears all tasks from queues.
@@ -201,6 +202,8 @@ private:
 	void destroyBackgroundWorkers();
 
 	bool isTaskQueuedUnsafe(SchedulerTaskId taskId);
+
+	typedef std::future<void> TaskFuture;
 
 	struct ScheduledTask
 	{
@@ -279,35 +282,70 @@ private:
 		bool run()
 		{
 			TS_ASSERT(isValid() && "Trying to run an invalid/uninitialized task.");
+			TS_ASSERT(completed == false && "Trying to run already completed.");
+			
+			bool reschedulable = false;
+			try
+			{
+				reschedulable = std::invoke(task) && (interval > TimeSpan::zero);
 
-			bool reschedulable = std::invoke(task) && (interval > TimeSpan::zero);
+				if (!reschedulable)
+					TS_PRINTF("Signaling Task ID %u completion!\n", taskId);
 
-			TS_PRINTF("Signaling Task ID %u completion!\n", taskId);
-			promise.signalCompletion();
+				promise.set_value();
+			}
+			catch (const ts::app::viewer::ImageUnloadingException &)
+			{
+// 				TS_UNUSED_VARIABLE(e);
+				TS_PRINTF("Caught some bs here!\n");
+				TS_ASSERT(!"Craptastic");
+			}
 
 			return reschedulable;
 		}
 
+		// Resets parameters for interval task rescheduling
+		void reschedule()
+		{
+			TS_ASSERT(interval > TimeSpan::zero && "Task with zero interval is not valid for rescheduling.");
+
+			scheduledTime = Time::now() + interval;
+			promise = std::promise<void>();
+			completed = false;
+		}
+
+		TaskFuture getFuture()
+		{
+			return promise.get_future();
+		}
+
 		bool initialized = false;
+		bool completed = false;
 		SchedulerTaskId taskId = InvalidTaskId;
 		Time scheduledTime;
 		TimeSpan interval;
 		std::function<bool()> task;
-		TaskCompletionPromise promise;
+		std::promise<void> promise;
 		TaskPriority priority = Priority_Normal;
 
 		static SchedulerTaskId nextTaskId;
 	};
 
 	typedef util::PriorityQueue<ScheduledTask> TaskQueueType;
+	// Queue for waiting tasks, i.e. ones where scheduled time has not yet passed.
 	TaskQueueType waitingTaskQueue;
+	// Queue for pending tasks, i.e. tasks that are ready for execution
+	// and a worker can start processing whenever able.
 	TaskQueueType pendingTaskQueue;
 
-	typedef std::map<SchedulerTaskId, TaskCompletionFuture> TaskCompletionFutures;
-	TaskCompletionFutures taskFutures;
+	typedef std::map<SchedulerTaskId, TaskFuture> TaskFutures;
+	TaskFutures taskFutures;
 
 	// Matches worker ids to actively worked tasks
-	std::map<SizeType, SchedulerTaskId> workerToTaskMap;
+	std::vector<SchedulerTaskId> workerToTaskMap;
+
+	std::vector<SharedPointer<std::mutex>> workerMutexes;
+	std::vector<std::condition_variable> workerCompleteConditions;
 
 	template <class ReturnType>
 	ScheduledTaskFuture<ReturnType> scheduleOnceImpl(
@@ -330,7 +368,6 @@ private:
 
 	std::condition_variable schedulerCondition;
 	std::condition_variable workerCondition;
-	std::condition_variable taskStartedCondition;
 	mutable std::mutex queueMutex;
 };
 
@@ -372,22 +409,19 @@ ScheduledTaskFuture<ReturnType> ThreadScheduler::scheduleOnceImpl(
 		makeShared<std::packaged_task<ReturnType()>>(function);
 
 	ScheduledTaskFuture<ReturnType> future = packagedTask->get_future();
+	if (running)
 	{
-		std::unique_lock<std::mutex> lock(queueMutex);
-		if (running)
+		ScheduledTask task(priority, Time::now() + time_from_now, [packagedTask]()
 		{
-			ScheduledTask task(priority, Time::now() + time_from_now, [packagedTask]()
-			{
-				std::invoke(*packagedTask);
-// 				(*packagedTask)();
-				return false; // Schedule once task is not reschedulable
-			});
+			std::invoke(*packagedTask);
+// 			(*packagedTask)();
+			return false; // Schedule once task is not reschedulable
+		});
 
-			future.taskId = task.taskId;
-			taskFutures.insert(std::make_pair(task.taskId, std::move(task.promise.getFuture())));
-
-			waitingTaskQueue.push(std::move(task));
-		}
+		std::unique_lock<std::mutex> lock(queueMutex);
+		future.taskId = task.taskId;
+		taskFutures.insert(std::make_pair(task.taskId, std::move(task.getFuture())));
+		waitingTaskQueue.push(std::move(task));
 	}
 
 	schedulerCondition.notify_all();
@@ -434,21 +468,18 @@ inline SchedulerTaskId ThreadScheduler::scheduleWithIntervalImpl(
 		makeShared<std::function<bool()>>(std::move(function));
 
 	SchedulerTaskId createdTaskId = InvalidTaskId;
+	if (running)
 	{
-		std::unique_lock<std::mutex> lock(queueMutex);
-		if (running)
+		ScheduledTask task(priority, interval, [sharedTask]()
 		{
-			ScheduledTask task(priority, interval, [sharedTask]()
-			{
-				// Task return value determines if it will be rescheduled
-				return std::invoke(*sharedTask);
-			});
+			// Task return value determines if it will be rescheduled
+			return std::invoke(*sharedTask);
+		});
 
-			createdTaskId = task.taskId;
-			taskFutures.insert(std::make_pair(task.taskId, std::move(task.promise.getFuture())));
-
-			waitingTaskQueue.push(std::move(task));
-		}
+		std::unique_lock<std::mutex> lock(queueMutex);
+		createdTaskId = task.taskId;
+		taskFutures.insert(std::make_pair(task.taskId, std::move(task.getFuture())));
+		waitingTaskQueue.push(std::move(task));
 	}
 
 	schedulerCondition.notify_all();

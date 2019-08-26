@@ -164,9 +164,6 @@
     <ClCompile Include="util\ContainerUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="threading\TaskCompletionFuture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="resource\ShaderResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -398,9 +395,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="util\ContainerUtil.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="threading\TaskCompletionFuture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="util\PriorityQueue.h">

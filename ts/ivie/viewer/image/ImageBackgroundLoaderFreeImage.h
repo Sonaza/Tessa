@@ -62,6 +62,7 @@ private:
 	sf::VertexArray imageVertexArray;
 	SharedPointer<sf::Texture> previousFrame;
 	UniquePointer<sf::RenderTexture> stackingRenderTexture;
+	Int32 stackingRenderTextureThreadId = -1;
 
 	// Storage for render texture before suspension since its GL context requires that the 
 	// creation and deletion happen in the same thread. Gotta deinit before suspending.

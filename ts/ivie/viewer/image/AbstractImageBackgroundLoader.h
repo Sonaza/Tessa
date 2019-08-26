@@ -57,6 +57,11 @@ public:
 		return L"Unknown";
 	}
 
+	virtual std::string getDebugString() const
+	{
+		return TS_FMT("Task ID %u", taskId);
+	}
+
 protected:
 	virtual void entry() override;
 
@@ -87,11 +92,11 @@ protected:
 	mutable std::mutex mutex;
 	std::condition_variable condition;
 
-	threading::SchedulerTaskId getTaskId() const { return taskId; }
+// 	threading::SchedulerTaskId getTaskId() const { return taskId; }
+	threading::SchedulerTaskId taskId;
 
 private:
 	threading::ThreadScheduler &threadScheduler;
-	threading::SchedulerTaskId taskId;
 
 };
 

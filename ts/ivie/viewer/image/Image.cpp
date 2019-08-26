@@ -82,7 +82,7 @@ void Image::unload()
 
 	std::unique_lock<std::mutex> lock(mutex);
 
-	unloading = true;
+	loaderState = Unloading;
 
 	backgroundLoader->stop();
 	backgroundLoader.reset();
@@ -92,8 +92,6 @@ void Image::unload()
 	data = ImageData();
 	currentFrameIndex = 0;
 	loaderState = Unloaded;
-
-	unloading = false;
 }
 
 void Image::restart(bool suspend)
@@ -130,7 +128,7 @@ bool Image::isUnloaded() const
 
 bool Image::isUnloading() const
 {
-	return unloading;
+	return loaderState == Unloading;
 }
 
 bool Image::isSuspended() const
@@ -218,7 +216,7 @@ bool Image::advanceToNextFrame()
 
 bool Image::isDisplayable() const
 {
-	if (unloading)
+	if (loaderState == Unloading)
 		return false;
 
 	std::unique_lock<std::mutex> lock(mutex);
@@ -244,7 +242,7 @@ SharedPointer<sf::Texture> Image::getThumbnail() const
 
 void Image::setImageData(const ImageData &dataParam)
 {
-	if (unloading)
+	if (loaderState == Unloading)
 		throw ImageUnloadingException();
 
 	std::unique_lock<std::mutex> lock(mutex);
@@ -315,7 +313,7 @@ void Image::setState(ImageLoaderState state)
 
 bool Image::getIsBufferFull() const
 {
-	if (unloading)
+	if (loaderState == Unloading)
 		throw ImageUnloadingException();
 
 	std::unique_lock<std::mutex> lock(mutex);
@@ -324,7 +322,7 @@ bool Image::getIsBufferFull() const
 
 FrameStorage &Image::getNextBuffer()
 {
-	if (unloading)
+	if (loaderState == Unloading)
 		throw ImageUnloadingException();
 
 	std::unique_lock<std::mutex> lock(mutex);
@@ -333,7 +331,7 @@ FrameStorage &Image::getNextBuffer()
 
 void Image::swapBuffer()
 {
-	if (unloading)
+	if (loaderState == Unloading)
 		throw ImageUnloadingException();
 
 	{
@@ -342,12 +340,12 @@ void Image::swapBuffer()
 	}
 
 	if (thumbnail == nullptr)
-		makeThumbnail(frameBuffer.getReadPtr(), 150);
+		makeThumbnail(frameBuffer.getReadPtr(), 300);
 }
 
 void Image::finalizeBuffer()
 {
-	if (unloading)
+	if (loaderState == Unloading)
 		throw ImageUnloadingException();
 
 	std::unique_lock<std::mutex> lock(mutex);
@@ -399,6 +397,8 @@ bool Image::makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize)
 
 	std::unique_lock<std::mutex> lock(mutex);
 	thumbnail = makeShared<sf::Texture>(rt.getTexture());
+	thumbnail->setSmooth(true);
+	thumbnail->generateMipmap();
 	return thumbnail != nullptr;
 }
 

@@ -9,6 +9,8 @@
 
 #include <type_traits>
 
+#pragma optimize("", off)
+
 TS_DEFINE_MANAGER_TYPE(threading::ThreadScheduler);
 
 TS_PACKAGE1(threading)
@@ -68,13 +70,15 @@ class ThreadScheduler::BackgroundWorker : public BaseThreadEntry
 {
 	ThreadScheduler *scheduler = nullptr;
 	SizeType workerIndex = 0;
+	SharedPointer<std::mutex> mutex;
 
 	Thread *thread;
 
 public:
-	BackgroundWorker(ThreadScheduler *scheduler, SizeType workerIndex)
+	BackgroundWorker(ThreadScheduler *scheduler, SizeType workerIndex, SharedPointer<std::mutex> mutex)
 		: scheduler(scheduler)
 		, workerIndex(workerIndex)
+		, mutex(mutex)
 	{
 		thread = Thread::createThread(this, TS_FMT("ThreadScheduler::BackgroundWorker %u", workerIndex));
 	}
@@ -108,6 +112,8 @@ public:
 				scheduler->workerToTaskMap[workerIndex] = task.taskId;
 			}
 
+			mutex->lock();
+
 			bool canReschedule = task.run();
 			if (canReschedule)
 			{
@@ -120,11 +126,15 @@ public:
 
 				if (!canReschedule)
 				{
-					TaskCompletionFutures::iterator it = scheduler->taskFutures.find(task.taskId);
+					TaskFutures::iterator it = scheduler->taskFutures.find(task.taskId);
 					if (it != scheduler->taskFutures.end())
 						scheduler->taskFutures.erase(it);
 				}
 			}
+
+			mutex->unlock();
+
+
 		}
 
 		TS_LOG_DEBUG("Thread Worker %u quitting.", workerIndex);
@@ -167,9 +177,13 @@ void ThreadScheduler::createBackgroundWorkers(SizeType numWorkers)
 	backgroundScheduler.reset(new BackgroundScheduler(this));
 
 	backgroundWorkers.reserve(numWorkers);
+	workerMutexes.reserve(numWorkers);
+	workerToTaskMap.resize(numWorkers, InvalidTaskId);
 	for (SizeType index = 0; index < numWorkers; ++index)
 	{
-		UniquePointer<BackgroundWorker> worker = makeUnique<BackgroundWorker>(this, index);
+		workerMutexes.push_back(makeShared<std::mutex>());
+
+		UniquePointer<BackgroundWorker> worker = makeUnique<BackgroundWorker>(this, index, workerMutexes.back());
 		backgroundWorkers.push_back(std::move(worker));
 	}
 }
@@ -202,9 +216,9 @@ SizeType ThreadScheduler::getNumTasksInProgress() const
 {
 	std::unique_lock<std::mutex> lock(queueMutex);
 	SizeType numTasks = 0;
-	for (auto &it : workerToTaskMap)
+	for (SchedulerTaskId id : workerToTaskMap)
 	{
-		if (it.second != InvalidTaskId)
+		if (id != InvalidTaskId)
 			numTasks++;
 	}
 	return numTasks;
@@ -225,8 +239,8 @@ ThreadScheduler::SchedulerStats ThreadScheduler::getStats() const
 	
 	stats.numQueuedTasks = (SizeType)(waitingTaskQueue.size() + pendingTaskQueue.size());
 
-	for (auto &it : workerToTaskMap)
-		stats.numWorkedTasks += (it.second != InvalidTaskId ? 1 : 0);
+	for (SchedulerTaskId id : workerToTaskMap)
+		stats.numWorkedTasks += (id != InvalidTaskId ? 1 : 0);
 
 	for (auto &it : waitingTaskQueue)
 		stats.numIntervalTasks += (it.interval > TimeSpan::zero ? 1 : 0);
@@ -284,16 +298,73 @@ bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
 
 void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
 {
-	TaskCompletionFutures::iterator it = taskFutures.find(taskId);
-	if (it == taskFutures.end())
+	TaskFuture *future = nullptr;
+
 	{
-		TS_PRINTF("Task %u is already complete.\n", taskId);
+		std::unique_lock<std::mutex> lock(queueMutex);
+
+		TaskFutures::iterator futureIt = taskFutures.find(taskId);
+		if (futureIt == taskFutures.end())
+		{
+			TS_PRINTF("Task %u is already complete.\n", taskId);
+			return;
+		}
+
+		future = &futureIt->second;
+
+		if (!isTaskQueuedUnsafe(taskId))
+		{
+			bool found = false;
+			for (SchedulerTaskId id: workerToTaskMap)
+			{
+				if (id == taskId)
+				{
+					TS_PRINTF("waitUntilTaskComplete : Task ID %u is worked by worker %u\n", taskId, id);
+					found = true;
+					break;
+				}
+			}
+			TS_ASSERT(found && "Task is not queued or being worked on.");
+		}
+		else
+		{
+			TS_PRINTF("waitUntilTaskComplete : Task ID %u is queued.\n", taskId);
+		}
+	}
+
+	if (future == nullptr)
+	{
+		TS_PRINTF("Future is null! Task ID %u\n", taskId);
 		return;
 	}
 
-	TaskCompletionFuture &future = it->second;
 	TS_PRINTF("Gonna wait for Task ID %u\n", taskId);
-	future.waitForCompletion(taskId);
+
+	try
+	{
+		if (!future->valid())
+		{
+			TS_PRINTF("Future is not even valid! Task ID %u\n", taskId);
+			return;
+		}
+
+		while (true)
+		{
+			std::future_status status = future->wait_for(std::chrono::milliseconds(100));
+			switch (status)
+			{
+				case std::future_status::timeout:  TS_PRINTF("Wait timeouted! Task ID %u\n", taskId); break;
+				case std::future_status::ready:    TS_PRINTF("Wait is ready! Task ID %u\n", taskId); break;
+				case std::future_status::deferred: TS_PRINTF("Wait is deferred! Task ID %u\n", taskId); break;
+			}
+
+			if (status == std::future_status::ready) break;
+		}
+	}
+	catch (const std::future_error &e)
+	{
+		TS_PRINTF("\nTask ID %u wait exception: %s\n\n", taskId, e.what());
+	}
 }
 
 SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry, TaskPriority priority, TimeSpan time_from_now)
@@ -302,7 +373,9 @@ SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry, Tas
 
 	ScheduledTaskFuture<void> future = scheduleOnce(priority, time_from_now, [=]()
 	{
+		TS_LOG_DEBUG("Entered scheduleThreadEntry task (%s)", entry->getDebugString());
 		entry->entry();
+		TS_LOG_DEBUG("Exiting scheduleThreadEntry task (%s)", entry->getDebugString());
 	});
 
 #if TS_BUILD != TS_FINALRELEASE
@@ -332,14 +405,10 @@ SizeType ThreadScheduler::numHardwareThreads()
 
 void ThreadScheduler::reschedule(ScheduledTask &&task)
 {
-	TS_ASSERT(task.interval > TimeSpan::zero && "Task with zero interval is not valid for rescheduling.");
-
 	std::unique_lock<std::mutex> lock(queueMutex);
 
-	task.scheduledTime = Time::now() + task.interval;
-	
-	task.promise.resetPromise();
-	taskFutures[task.taskId] = std::move(task.promise.getFuture());
+	task.reschedule();
+	taskFutures[task.taskId] = std::move(task.getFuture());
 
 	waitingTaskQueue.push(std::move(task));
 }

@@ -222,6 +222,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			sf::Sprite asd;
 			asd.setTexture(*thumbnail);
 			asd.setPosition(windowSize.x - 180.f, 30.f);
+			asd.setScale(0.5f, 0.5f);
 			renderTarget.draw(asd);
 		}
 	}

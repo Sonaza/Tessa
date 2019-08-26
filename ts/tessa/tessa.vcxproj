@@ -190,7 +190,6 @@
     <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="system\WindowViewManager.cpp" />
     <ClCompile Include="threading\BaseThreadEntry.cpp" />
-    <ClCompile Include="threading\TaskCompletionFuture.cpp" />
     <ClCompile Include="threading\Thread.cpp" />
     <ClCompile Include="threading\ThreadUtils.cpp" />
     <ClCompile Include="time\Clock.cpp" />
@@ -245,7 +244,6 @@
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="system\WindowViewManager.h" />
     <ClInclude Include="threading\BaseThreadEntry.h" />
-    <ClInclude Include="threading\TaskCompletionFuture.h" />
     <ClInclude Include="threading\Thread.h" />
     <ClInclude Include="threading\ThreadUtils.h" />
     <ClInclude Include="time\Clock.h" />

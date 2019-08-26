@@ -39,7 +39,10 @@ ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage
 
 ImageBackgroundLoaderFreeImage::~ImageBackgroundLoaderFreeImage()
 {
-	TS_ASSERTF(loaderIsPrepared == false, "Cleanup is incomplete. Task ID %u", getTaskId());
+	TS_WPRINTF("~ImageBackgroundLoaderFreeImage()  : Task ID %u [%s]\n", taskId, filepath);
+
+	TS_ASSERTF(loaderIsPrepared == false, "Cleanup is incomplete. Task ID %u", taskId);
+	TS_ASSERT(stackingRenderTextureThreadId == -1 && "It should've been already freed.");
 	TS_ASSERT(stackingRenderTexture == nullptr && "Render texture must be freed by the thread that created it.");
 }
 
@@ -50,7 +53,7 @@ bool ImageBackgroundLoaderFreeImage::initialize()
 
 void ImageBackgroundLoaderFreeImage::deinitialize()
 {
-	TS_WPRINTF("ImageBackgroundLoaderFreeImage::deinitialize()  %s\n", filepath);
+	TS_WPRINTF("ImageBackgroundLoaderFreeImage::deinitialize()  : Task ID %u [%s]\n", taskId, filepath);
 	cleanup();
 }
 
@@ -62,6 +65,8 @@ void ImageBackgroundLoaderFreeImage::onResume()
 		stackingRenderTexture->create(imageSize.x, imageSize.y);
 		stackingRenderTexture->draw(imageVertexArray, savedRenderTexture.get());
 		savedRenderTexture.reset();
+
+		stackingRenderTextureThreadId = (Int32)Thread::getCurrentThread().getThreadId();
 	}
 }
 
@@ -69,12 +74,16 @@ void ImageBackgroundLoaderFreeImage::onSuspend()
 {
 	if (stackingRenderTexture != nullptr)
 	{
+		Int32 threadId = (Int32)Thread::getCurrentThread().getThreadId();
+		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
+			"Thread ID mismatch. Got: %d  Expected: %d", threadId, stackingRenderTextureThreadId);
+
 		// Store render texture before suspension since its GL context requires that the 
 		// creation and deletion happen in the same thread. Gotta deinit before suspending.
 		savedRenderTexture = makeShared<sf::Texture>(stackingRenderTexture->getTexture());
 		stackingRenderTexture.reset();
+		stackingRenderTextureThreadId = -1;
 	}
-	
 }
 
 bool ImageBackgroundLoaderFreeImage::prepareForLoading()
@@ -151,7 +160,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 
 void ImageBackgroundLoaderFreeImage::cleanup()
 {
-	TS_WPRINTF("ImageBackgroundLoaderFreeImage::cleanup()  %s\n", filepath);
+	TS_WPRINTF("ImageBackgroundLoaderFreeImage::cleanup()  : Task ID %u [%s]\n", taskId, filepath);
 
 	switch (loaderFormat)
 	{
@@ -186,8 +195,17 @@ void ImageBackgroundLoaderFreeImage::cleanup()
 	state.memoryBuffer.clear();
 
 	previousFrame.reset();
-// 	stackingRenderTexture->setActive(false);
-	stackingRenderTexture.reset();
+
+	if(stackingRenderTexture)
+	{
+		Int32 threadId = (Int32)Thread::getCurrentThread().getThreadId();
+		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
+			"Thread ID mismatch. Got: %d  Expected: %d", threadId, stackingRenderTextureThreadId);
+
+		stackingRenderTexture.reset();
+		savedRenderTexture.reset();
+		stackingRenderTextureThreadId = -1;
+	}
 
 	loaderIsPrepared = false;
 	loaderIsComplete = false;
@@ -274,6 +292,7 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 
 			stackingRenderTexture = makeUnique<sf::RenderTexture>();
 			stackingRenderTexture->create(imageSize.x, imageSize.y);
+			stackingRenderTextureThreadId = (Int32)Thread::getCurrentThread().getThreadId();
 
 			imageVertexArray = util::makeQuadVertexArray(imageSize.x, imageSize.y);
 

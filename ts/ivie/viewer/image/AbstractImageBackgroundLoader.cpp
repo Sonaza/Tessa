@@ -41,7 +41,10 @@ void AbstractImageBackgroundLoader::stop()
 		return;
 	}
 
-	loaderState = Finished;
+	{
+		std::unique_lock<std::mutex> lock(mutex);
+		loaderState = Finished;
+	}
 	condition.notify_all();
 	threadScheduler.waitUntilTaskComplete(taskId);
 }
@@ -170,8 +173,9 @@ void AbstractImageBackgroundLoader::entry()
 			}
 			catch (const ImageUnloadingException &e)
 			{
+				TS_PRINTF("Task ID %u : loading was interrupted, image is being unloaded.\n", taskId);
 				TS_UNUSED_VARIABLE(e);
-				processingState = Error;
+				processingState = Aborted;
 			}
 
 			if (loaderState != Running)
@@ -208,6 +212,8 @@ void AbstractImageBackgroundLoader::entry()
 	switch (processingState)
 	{
 		case Aborted:
+			TS_WPRINTF("OwnerImage state %s : Task ID %u\n", ownerImage->getStateString(ownerImage->loaderState), taskId);
+		break;
 		case Complete: ownerImage->setState(Image::Complete); break;
 		case Error:    ownerImage->setState(Image::Error); break;
 		case Pending:
@@ -236,9 +242,10 @@ void AbstractImageBackgroundLoader::entry()
 
 	TS_ASSERTF(
 		ownerImage->getState() == Image::Complete ||
+		ownerImage->getState() == Image::Unloading ||
 		ownerImage->getState() == Image::Suspended ||
 		ownerImage->getState() == Image::Error,
-		"OwnerImage's state at exit should always be Complete, Suspended or Error."
+		"OwnerImage's state at exit should always be Complete, Unloading, Suspended or Error."
 	);
 }
 
