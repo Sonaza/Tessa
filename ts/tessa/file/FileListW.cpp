@@ -155,6 +155,7 @@ void FileListW::setGlobRegex(const std::wstring &pattern)
 	}
 	catch (std::regex_error &e)
 	{
+		TS_UNUSED_VARIABLE(e);
 		TS_ASSERTF(false, "Given regex pattern is invalid. Error: %s\n", e.what());
 		return;
 	}

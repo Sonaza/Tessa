@@ -35,28 +35,24 @@ void AbstractImageBackgroundLoader::stop()
 {
 	TS_WPRINTF("AbstractImageBackgroundLoader::stop()  : Task ID %u [%s]\n", taskId, filepath);
 
+	if (loaderState == Suspended)
 	{
-		std::unique_lock<std::mutex> lock(mutex);
-		if (loaderState == Suspended)
-		{
-			deinitialize();
-			return;
-		}
-
-		loaderState = Finished;
+		deinitialize();
+		return;
 	}
-	condition.notify_all();
 
+	loaderState = Finished;
+	condition.notify_all();
 	threadScheduler.waitUntilTaskComplete(taskId);
 }
 
 void AbstractImageBackgroundLoader::suspend(bool waitUntilBufferIsFull)
 {
 	{
-		std::unique_lock<std::mutex> lock(mutex);
 		if (loaderState != Running)
 			return;
 
+		std::unique_lock<std::mutex> lock(mutex);
 		if (waitUntilBufferIsFull)
 		{
 			suspendAfterBufferFull = true;
@@ -72,9 +68,9 @@ void AbstractImageBackgroundLoader::suspend(bool waitUntilBufferIsFull)
 
 void AbstractImageBackgroundLoader::resume()
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	if (loaderState == Suspended)
 	{
+		std::unique_lock<std::mutex> lock(mutex);
 		suspendAfterBufferFull = false;
 		loaderState = Resuming;
 		taskId = threadScheduler.scheduleThreadEntry(this, threading::Priority_High);
@@ -89,13 +85,11 @@ void AbstractImageBackgroundLoader::cancelPendingSuspension()
 
 bool AbstractImageBackgroundLoader::isSuspended() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState == Suspended;
 }
 
 bool AbstractImageBackgroundLoader::isLoadingComplete() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState == Finished;
 }
 
@@ -116,7 +110,7 @@ void AbstractImageBackgroundLoader::entry()
 				TS_LOG_ERROR("AbstractImageBackgroundLoader failed to initialize.");
 
 				loaderState = Finished;
-				ownerImage->loaderState = Image::Error;
+				ownerImage->setState(Image::Error);
 				return;
 			}
 		}
@@ -125,7 +119,7 @@ void AbstractImageBackgroundLoader::entry()
 			TS_WPRINTF("Loader is resuming : TaskID %u [%s]\n", taskId, filepath);
 			onResume();
 			loaderState = Running;
-			ownerImage->loaderState = Image::Loading;
+			ownerImage->setState(Image::Loading);
 		}
 		else
 		{
@@ -142,28 +136,46 @@ void AbstractImageBackgroundLoader::entry()
 	};
 	ProcessingState processingState = Pending;
 
-	while (loaderState)
+	while (loaderState == Running)
 	{
-		while (!ownerImage->getIsBufferFull())
+		while (!ownerImage->getIsBufferFull() && loaderState == Running)
 		{
 			nextFrameRequested = false;
 
-			FrameStorage &storage = ownerImage->getNextBuffer();
-			bool success = loadNextFrame(storage);
-			if (success)
+			if (ownerImage->isUnloading())
 			{
-				ownerImage->swapBuffer();
+				processingState = Aborted;
+				break;
+			}
 
-				if (wasLoadingCompleted())
+			try
+			{
+				FrameStorage &storage = ownerImage->getNextBuffer();
+				bool success = loadNextFrame(storage);
+
+				if (success)
 				{
-					ownerImage->finalizeBuffer();
-					processingState = Complete;
+					ownerImage->swapBuffer();
+
+					if (wasLoadingCompleted())
+					{
+						ownerImage->finalizeBuffer();
+						processingState = Complete;
+					}
+				}
+				else
+				{
+					processingState = Error;
 				}
 			}
-			else
+			catch (const ImageUnloadingException &e)
 			{
+				TS_UNUSED_VARIABLE(e);
 				processingState = Error;
 			}
+
+			if (loaderState != Running)
+				break;
 
 			if (processingState != Pending)
 			{
@@ -196,12 +208,12 @@ void AbstractImageBackgroundLoader::entry()
 	switch (processingState)
 	{
 		case Aborted:
-		case Complete: ownerImage->loaderState = Image::Complete; break;
-		case Error:    ownerImage->loaderState = Image::Error; break;
+		case Complete: ownerImage->setState(Image::Complete); break;
+		case Error:    ownerImage->setState(Image::Error); break;
 		case Pending:
 			if (loaderState == Suspended)
 			{
-				ownerImage->loaderState = Image::Suspended;
+				ownerImage->setState(Image::Suspended);
 			}
 		break;
 		default: /* Nada */ break;
@@ -223,9 +235,9 @@ void AbstractImageBackgroundLoader::entry()
 	TS_WPRINTF("AbstractImageBackgroundLoader::entry() exiting with state '%s' : TaskID %u [%s]\n", getStateString(loaderState), taskId, filepath);
 
 	TS_ASSERTF(
-		ownerImage->loaderState == Image::Complete ||
-		ownerImage->loaderState == Image::Suspended ||
-		ownerImage->loaderState == Image::Error,
+		ownerImage->getState() == Image::Complete ||
+		ownerImage->getState() == Image::Suspended ||
+		ownerImage->getState() == Image::Error,
 		"OwnerImage's state at exit should always be Complete, Suspended or Error."
 	);
 }
@@ -256,7 +268,6 @@ bool AbstractImageBackgroundLoader::restart(bool suspendAfterBufferFullParam)
 
 AbstractImageBackgroundLoader::BackgroundLoaderState AbstractImageBackgroundLoader::getState() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState;
 }
 

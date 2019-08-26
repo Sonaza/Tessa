@@ -49,9 +49,8 @@
 
 	#define TS_ASSERT(assertion)                            ((void)0)
 	#define TS_EXPENSIVE_ASSERT(assertion)                  ((void)0)
-	#define TS_ASSERTF(assertion, message)                  ((void)0)
-	#define TS_EXPENSIVE_ASSERTF(assertion, message)        ((void)0)
-
+	#define TS_ASSERTF(assertion, message, ...)             ((void)0)
+	#define TS_EXPENSIVE_ASSERTF(assertion, message, ...)   ((void)0)
 
 #endif
 

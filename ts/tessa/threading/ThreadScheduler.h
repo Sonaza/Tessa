@@ -219,7 +219,6 @@ private:
 			, taskId(ScheduledTask::nextTaskId++)
 			, priority(priority)
 		{
-			promise = makeUnique<TaskCompletionPromise>();
 		}
 
 		ScheduledTask(TaskPriority priority, TimeSpan interval, std::function<bool()> &&task)
@@ -230,7 +229,6 @@ private:
 			, taskId(ScheduledTask::nextTaskId++)
 			, priority(priority)
 		{
-			promise = makeUnique<TaskCompletionPromise>();
 		}
 
 		ScheduledTask(const ScheduledTask &other) = delete;
@@ -266,7 +264,7 @@ private:
 
 		bool isValid() const
 		{
-			return initialized == true && task && promise != nullptr;
+			return initialized == true && task;
 		}
 
 		bool operator<(const ScheduledTask &rhs) const
@@ -284,8 +282,8 @@ private:
 
 			bool reschedulable = std::invoke(task) && (interval > TimeSpan::zero);
 
-			TS_ASSERT(promise != nullptr && "My promises are empty? What?");
-			promise->signalCompletion();
+			TS_PRINTF("Signaling Task ID %u completion!\n", taskId);
+			promise.signalCompletion();
 
 			return reschedulable;
 		}
@@ -295,7 +293,7 @@ private:
 		Time scheduledTime;
 		TimeSpan interval;
 		std::function<bool()> task;
-		UniquePointer<TaskCompletionPromise> promise;
+		TaskCompletionPromise promise;
 		TaskPriority priority = Priority_Normal;
 
 		static SchedulerTaskId nextTaskId;
@@ -386,7 +384,7 @@ ScheduledTaskFuture<ReturnType> ThreadScheduler::scheduleOnceImpl(
 			});
 
 			future.taskId = task.taskId;
-			taskFutures.insert(std::make_pair(task.taskId, task.promise->getFuture()));
+			taskFutures.insert(std::make_pair(task.taskId, std::move(task.promise.getFuture())));
 
 			waitingTaskQueue.push(std::move(task));
 		}
@@ -447,7 +445,7 @@ inline SchedulerTaskId ThreadScheduler::scheduleWithIntervalImpl(
 			});
 
 			createdTaskId = task.taskId;
-			taskFutures.insert(std::make_pair(task.taskId, task.promise->getFuture()));
+			taskFutures.insert(std::make_pair(task.taskId, std::move(task.promise.getFuture())));
 
 			waitingTaskQueue.push(std::move(task));
 		}

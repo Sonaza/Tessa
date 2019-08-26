@@ -121,6 +121,7 @@ std::string Log::format(const std::string &formatStr, Args... args)
 	}
 	catch (const fmt::v5::format_error &e)
 	{
+		TS_UNUSED_VARIABLE(e);
 		TS_ASSERTF(false, "String formatting error: %s", e.what());
 		return "<formatting error>";
 	}
@@ -135,6 +136,7 @@ std::wstring Log::format(const std::wstring &formatStr, Args... args)
 	}
 	catch (const fmt::v5::format_error &e)
 	{
+		TS_UNUSED_VARIABLE(e);
 		TS_ASSERTF(false, "String formatting error: %s", e.what());
 		return L"<formatting error>";
 	}

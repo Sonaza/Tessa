@@ -99,6 +99,8 @@
 	#define TS_RESTRICT __restrict
 #endif
 
+#define TS_UNUSED_VARIABLE(variable) ((void)variable)
+
 #include <cstdint>
 #include <cinttypes>
 

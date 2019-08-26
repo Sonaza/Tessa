@@ -85,5 +85,3 @@ bool BackgroundFileScanner::updateFilelist()
 }
 
 TS_END_PACKAGE2()
-
-

@@ -292,7 +292,8 @@ void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
 	}
 
 	TaskCompletionFuture &future = it->second;
-	future.waitForCompletion();
+	TS_PRINTF("Gonna wait for Task ID %u\n", taskId);
+	future.waitForCompletion(taskId);
 }
 
 SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry, TaskPriority priority, TimeSpan time_from_now)
@@ -304,6 +305,7 @@ SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry, Tas
 		entry->entry();
 	});
 
+#if TS_BUILD != TS_FINALRELEASE
 	{
 		std::unique_lock<std::mutex> lock(queueMutex);
 		Time now = Time::now();
@@ -318,6 +320,7 @@ SchedulerTaskId ThreadScheduler::scheduleThreadEntry(BaseThreadEntry *entry, Tas
 		}
 		TS_PRINTF("\n");
 	}
+#endif
 
 	return future.getTaskId();
 }
@@ -334,7 +337,10 @@ void ThreadScheduler::reschedule(ScheduledTask &&task)
 	std::unique_lock<std::mutex> lock(queueMutex);
 
 	task.scheduledTime = Time::now() + task.interval;
-	task.promise->resetPromise();
+	
+	task.promise.resetPromise();
+	taskFutures[task.taskId] = std::move(task.promise.getFuture());
+
 	waitingTaskQueue.push(std::move(task));
 }
 

@@ -17,8 +17,10 @@
 #include "ts/ivie/viewer/image/FreeImageStaticInitializer.h"
 #include "ts/ivie/viewer/image/ImageManager.h"
 
-#if TS_PLATFORM == TS_WINDOWS && TS_BUILD != TS_FINALRELEASE
+#if TS_PLATFORM == TS_WINDOWS //&& TS_BUILD != TS_FINALRELEASE
 #include "ts/tessa/common/IncludeWindows.h"
+#else
+bool IsDebuggerPresent() { return false; }
 #endif
 
 TS_PACKAGE1(app)
@@ -35,7 +37,7 @@ Application::~Application()
 
 bool Application::start()
 {
-	if (TS_BUILD != TS_FINALRELEASE && IsDebuggerPresent())
+	if (IsDebuggerPresent())
 	{
 		resource::ResourceManager::setResourceRootDirectory(file::utils::getWorkingDirectory());
 	}
@@ -48,7 +50,7 @@ bool Application::start()
 
 	std::wstring filepath;
 	getCommando().getNthParameter(0, filepath);
-	if (!filepath.empty())
+	if (!filepath.empty() && file::utils::exists(filepath) && file::utils::isFile(filepath))
 	{
 		vsm.jumpToImageByFilename(filepath);
 	}

@@ -72,7 +72,7 @@ protected:
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) = 0;
 	virtual bool wasLoadingCompleted() const = 0;
 
-	BackgroundLoaderState loaderState = Inactive;
+	std::atomic<BackgroundLoaderState> loaderState = Inactive;
 	bool suspendAfterBufferFull = false;
 
 	math::VC2U imageSize;
@@ -86,6 +86,8 @@ protected:
 
 	mutable std::mutex mutex;
 	std::condition_variable condition;
+
+	threading::SchedulerTaskId getTaskId() const { return taskId; }
 
 private:
 	threading::ThreadScheduler &threadScheduler;

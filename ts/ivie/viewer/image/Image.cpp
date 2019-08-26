@@ -77,9 +77,12 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 void Image::unload()
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	if (loaderState == Unloaded)
 		return;
+
+	std::unique_lock<std::mutex> lock(mutex);
+
+	unloading = true;
 
 	backgroundLoader->stop();
 	backgroundLoader.reset();
@@ -89,13 +92,16 @@ void Image::unload()
 	data = ImageData();
 	currentFrameIndex = 0;
 	loaderState = Unloaded;
+
+	unloading = false;
 }
 
 void Image::restart(bool suspend)
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	if (loaderState == Error)
 		return;
+
+	std::unique_lock<std::mutex> lock(mutex);
 
 	TS_ASSERT(backgroundLoader);
 
@@ -119,23 +125,26 @@ void Image::setActive(bool activeParam)
 
 bool Image::isUnloaded() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState == Unloaded;
+}
+
+bool Image::isUnloading() const
+{
+	return unloading;
 }
 
 bool Image::isSuspended() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
-	return loaderState == Suspended && backgroundLoader && backgroundLoader->isSuspended();
+	return loaderState == Suspended;// && backgroundLoader && backgroundLoader->isSuspended();
 }
 
 void Image::resumeLoading()
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	TS_ASSERT(loaderState == Suspended);
 	if (loaderState != Suspended)
 		return;
 
+	std::unique_lock<std::mutex> lock(mutex);
 	TS_ASSERT(backgroundLoader);
 	backgroundLoader->resume();
 }
@@ -209,13 +218,15 @@ bool Image::advanceToNextFrame()
 
 bool Image::isDisplayable() const
 {
+	if (unloading)
+		return false;
+
 	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState != Error && !frameBuffer.isEmpty() && displayShader != nullptr;
 }
 
 bool Image::hasError() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState == Error;
 }
 
@@ -233,6 +244,9 @@ SharedPointer<sf::Texture> Image::getThumbnail() const
 
 void Image::setImageData(const ImageData &dataParam)
 {
+	if (unloading)
+		throw ImageUnloadingException();
+
 	std::unique_lock<std::mutex> lock(mutex);
 	data = dataParam;
 }
@@ -271,7 +285,6 @@ Image::LoaderType Image::sniffLoaderType()
 
 Image::ImageLoaderState Image::getState() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	return loaderState;
 }
 
@@ -297,24 +310,32 @@ std::wstring Image::getStats() const
 
 void Image::setState(ImageLoaderState state)
 {
-	std::unique_lock<std::mutex> lock(mutex);
 	loaderState = state;
 }
 
 bool Image::getIsBufferFull() const
 {
+	if (unloading)
+		throw ImageUnloadingException();
+
 	std::unique_lock<std::mutex> lock(mutex);
 	return frameBuffer.isFull();
 }
 
 FrameStorage &Image::getNextBuffer()
 {
+	if (unloading)
+		throw ImageUnloadingException();
+
 	std::unique_lock<std::mutex> lock(mutex);
 	return frameBuffer.getWritePtr();
 }
 
 void Image::swapBuffer()
 {
+	if (unloading)
+		throw ImageUnloadingException();
+
 	{
 		std::unique_lock<std::mutex> lock(mutex);
 		frameBuffer.incrementWrite();
@@ -326,6 +347,9 @@ void Image::swapBuffer()
 
 void Image::finalizeBuffer()
 {
+	if (unloading)
+		throw ImageUnloadingException();
+
 	std::unique_lock<std::mutex> lock(mutex);
 	frameBuffer.removeReadConstraint();
 }

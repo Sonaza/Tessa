@@ -149,7 +149,7 @@ void ImageManager::currentImageChanged(SizeType imageIndex)
 	currentImageIndex = imageIndex;
 
 	const PosType numForwardBuffered = 2;
-	const PosType numBackwardBuffered = 1;
+	const PosType numBackwardBuffered = 0;
 
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
 

@@ -70,6 +70,9 @@ private:
 	SizeType currentPage = 0;
 	SizeType numPagesTotal = 0;
 
+	bool imageDataUpdated = false;
+	Image::ImageData imageData;
+
 	bool multibitmapInitialized = false;
 
 	enum FormatType

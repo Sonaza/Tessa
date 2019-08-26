@@ -3,30 +3,11 @@
 
 TS_PACKAGE1(threading)
 
-void TaskCompletionFuture::waitForCompletion()
-{
-	TS_ASSERT(promise != nullptr);
-	std::unique_lock<std::mutex> lock(promise->mutex);
-
-	if (promise->isComplete)
-	{
-		TS_PRINTF("Already complete, skedaddlering...");
-		return;
-	}
-	TS_PRINTF("Not yet complete. Starting to wait...\n");
-
-	promise->condition.wait(lock, [this]()
-	{
-		return promise->isComplete;
-	});
-
-	TS_PRINTF("All donezo!\n");
-}
-
 TaskCompletionFuture::TaskCompletionFuture(TaskCompletionPromise *promise)
 	: promise(promise)
 {
 	TS_ASSERT(promise != nullptr);
+	future = promise->promise.get_future();
 }
 
 TaskCompletionFuture::TaskCompletionFuture()
@@ -34,24 +15,72 @@ TaskCompletionFuture::TaskCompletionFuture()
 	TS_ASSERT(!"Don't call this");
 }
 
+TaskCompletionFuture::~TaskCompletionFuture()
+{
+// 	TS_PRINTF("Destroy TaskCompletionFuture!\n");
+}
+
+TaskCompletionFuture::TaskCompletionFuture(TaskCompletionFuture &&other)
+{
+	*this = std::move(other);
+}
+
+TaskCompletionFuture &TaskCompletionFuture::operator=(TaskCompletionFuture &&other)
+{
+	if (this != &other)
+	{
+		std::swap(promise, other.promise);
+		future = std::move(other.future);
+	}
+	return *this;
+}
+
+void TaskCompletionFuture::waitForCompletion(SizeType taskId)
+{
+	TS_PRINTF("TaskCompletionFuture::waitForCompletion() Task ID %u\n", taskId);
+	TS_ASSERT(future.valid());
+	future.get();
+
+	TS_PRINTF("All donezo!\n");
+}
+
 //////////////////////////////
+
+TaskCompletionPromise::TaskCompletionPromise()
+{
+
+}
+
+TaskCompletionPromise::TaskCompletionPromise(TaskCompletionPromise &&other)
+{
+	*this = std::move(other);
+}
+
+TaskCompletionPromise &TaskCompletionPromise::operator=(TaskCompletionPromise &&other)
+{
+	if (this != &other)
+	{
+		promise = std::move(other.promise);
+// 		std::swap(completed, other.completed);
+	}
+	return *this;
+}
+
+TaskCompletionPromise::~TaskCompletionPromise()
+{
+}
 
 void TaskCompletionPromise::signalCompletion()
 {
-	{
-		std::unique_lock<std::mutex> lock(mutex);
-		TS_ASSERT(isComplete == false && "TaskCompletionPromise completion was already signaled.");
-		isComplete = true;
-	}
-	condition.notify_all();
+// 	TS_ASSERT(!completed);
+	promise.set_value();
+// 	completed = true;
 }
 
 void TaskCompletionPromise::resetPromise()
 {
-	{
-		std::unique_lock<std::mutex> lock(mutex);
-		isComplete = false;
-	}
+	promise = std::promise<void>();
+// 	completed = false;
 }
 
 TaskCompletionFuture TaskCompletionPromise::getFuture()

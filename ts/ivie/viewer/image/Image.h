@@ -2,6 +2,8 @@
 
 #include "ts/ivie/util/RingBuffer.h"
 
+#include <exception>
+
 TS_DECLARE2(app, viewer, AbstractImageBackgroundLoader);
 
 TS_PACKAGE2(app, viewer)
@@ -10,6 +12,12 @@ struct FrameStorage
 {
 	SharedPointer<sf::Texture> texture;
 	TimeSpan frameTime;
+};
+
+class ImageUnloadingException : public std::exception
+{
+public:
+	ImageUnloadingException() = default;
 };
 
 class Image
@@ -30,6 +38,7 @@ public:
 	void setActive(bool active);
 
 	bool isUnloaded() const;
+	bool isUnloading() const;
 	bool isSuspended() const;
 	void resumeLoading();
 
@@ -90,6 +99,8 @@ private:
 	std::wstring filepath;
 	bool active = false;
 
+	std::atomic_bool unloading;
+
 	struct ImageData
 	{
 		math::VC2U size;
@@ -108,7 +119,7 @@ private:
 	LoaderType sniffLoaderType();
 
 	void setState(ImageLoaderState state);
-	ImageLoaderState loaderState = Unloaded;
+	std::atomic<ImageLoaderState> loaderState = Unloaded;
 
 	SizeType currentFrameIndex = 0;
 

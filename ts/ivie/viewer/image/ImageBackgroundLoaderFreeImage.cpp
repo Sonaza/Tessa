@@ -39,7 +39,8 @@ ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage
 
 ImageBackgroundLoaderFreeImage::~ImageBackgroundLoaderFreeImage()
 {
-	TS_ASSERT(loaderIsPrepared == false && "Cleanup is incomplete.");
+	TS_ASSERTF(loaderIsPrepared == false, "Cleanup is incomplete. Task ID %u", getTaskId());
+	TS_ASSERT(stackingRenderTexture == nullptr && "Render texture must be freed by the thread that created it.");
 }
 
 bool ImageBackgroundLoaderFreeImage::initialize()
@@ -49,6 +50,7 @@ bool ImageBackgroundLoaderFreeImage::initialize()
 
 void ImageBackgroundLoaderFreeImage::deinitialize()
 {
+	TS_WPRINTF("ImageBackgroundLoaderFreeImage::deinitialize()  %s\n", filepath);
 	cleanup();
 }
 
@@ -149,8 +151,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 
 void ImageBackgroundLoaderFreeImage::cleanup()
 {
-	loaderIsPrepared = false;
-	loaderIsComplete = false;
+	TS_WPRINTF("ImageBackgroundLoaderFreeImage::cleanup()  %s\n", filepath);
 
 	switch (loaderFormat)
 	{
@@ -188,6 +189,9 @@ void ImageBackgroundLoaderFreeImage::cleanup()
 // 	stackingRenderTexture->setActive(false);
 	stackingRenderTexture.reset();
 
+	loaderIsPrepared = false;
+	loaderIsComplete = false;
+
 // 	TS_PRINTF("Cleanup complete.\n");
 }
 
@@ -221,10 +225,8 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 		return false;
 	}
 
-	Image::ImageData data;
-	data.size = imageSize;
-	data.hasAlpha = true;
-	ownerImage->setImageData(data);
+	imageData.size = imageSize;
+	imageData.hasAlpha = true;
 
 	sf::Image image;
 	image.create(imageSize.x, imageSize.y, bits);
@@ -266,11 +268,9 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 		{
 			imageSize = frameSize;
 
-			Image::ImageData data;
-			data.size = imageSize;
-			data.hasAlpha = (FreeImage_IsTransparent(lockedPage) == 1);
-			data.numFramesTotal = numPagesTotal;
-			ownerImage->setImageData(data);
+			imageData.size = imageSize;
+			imageData.hasAlpha = (FreeImage_IsTransparent(lockedPage) == 1);
+			imageData.numFramesTotal = numPagesTotal;
 
 			stackingRenderTexture = makeUnique<sf::RenderTexture>();
 			stackingRenderTexture->create(imageSize.x, imageSize.y);
@@ -432,6 +432,13 @@ bool ImageBackgroundLoaderFreeImage::loadNextFrame(FrameStorage &bufferStorage)
 				return false;
 		}
 		break;
+	}
+
+	if (imageDataUpdated == false)
+	{
+		TS_ASSERT(imageData.size.x > 0 && imageData.size.y > 0 && "Image size is not set.");
+		ownerImage->setImageData(imageData);
+		imageDataUpdated = true;
 	}
 
 	return true;
