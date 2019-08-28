@@ -68,6 +68,7 @@ private:
 	// creation and deletion happen in the same thread. Gotta deinit before suspending.
 	SharedPointer<sf::Texture> savedRenderTexture;
 
+	math::VC2U imageSize;
 	SizeType currentPage = 0;
 	SizeType numPagesTotal = 0;
 

@@ -11,11 +11,106 @@
 #include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/resource/ShaderResource.h"
 
+#include "ts/tessa/thread/AbstractThreadEntry.h"
+#include "ts/tessa/thread/Thread.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
+
 #include "ts/ivie/viewer/image/Image.h"
+
+#include "ts/tessa/profiling/SimpleScopedZoneTimer.h"
 
 TS_DEFINE_MANAGER_TYPE(app::viewer::ImageManager);
 
 TS_PACKAGE2(app, viewer)
+
+class ImageManager::BackgroundImageUnloader : public thread::AbstractThreadEntry
+{
+	ImageManager *imageManager = nullptr;
+
+	std::atomic_bool running = true;
+	Thread *thread = nullptr;
+
+	Mutex mutex;
+	ConditionVariable condition;
+
+	std::map<Uint32, Time> unloadQueue;
+
+public:
+	BackgroundImageUnloader(ImageManager *imageManager)
+		: imageManager(imageManager)
+	{
+		running = true;
+		condition.notifyAll();
+
+		thread = Thread::createThread(this, "ImageManager::BackgroundImageUnloader");
+	}
+
+	~BackgroundImageUnloader()
+	{
+		running = false;
+		if (thread != nullptr)
+			Thread::joinThread(thread);
+	}
+
+	void addToQueue(Uint32 imageHash, TimeSpan delay)
+	{
+		TS_ASSERT(imageManager->imageStorage.find(imageHash) != imageManager->imageStorage.end() &&
+			"Image hash not found in storage, don't try to unload images that aren't even loaded.");
+
+		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		unloadQueue[imageHash] = Time::now() + delay;
+	}
+
+	void removeFromQueue(Uint32 imageHash)
+	{
+// 		TS_ASSERT(unloadQueue.find(imageHash) != unloadQueue.end() &&
+// 			"Image hash not found in unload queue, don't try to cancel unloads.");
+
+		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		unloadQueue.erase(imageHash);
+	}
+
+	void entry()
+	{
+		while (running)
+		{
+			MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+			condition.waitFor(lock, 200_ms, [this]()
+			{
+				return !running;// || !unloadQueue.empty();
+			});
+			if (!running)
+				return;
+
+			std::vector<SharedPointer<Image>> unloadables;
+
+			for (auto it = unloadQueue.begin(); it != unloadQueue.end();)
+			{
+				if (Time::now() >= it->second)
+				{
+					unloadables.push_back(imageManager->imageStorage[it->first]);
+					it = unloadQueue.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
+
+			lock.unlock();
+
+			for (SharedPointer<Image> &image : unloadables)
+			{
+				if (image != nullptr && !image->isUnloaded())
+				{
+					TS_WPRINTF("---- Unloading image %s\n", image->getFilepath());
+					image->unload();
+				}
+			}
+		}
+	}
+
+};
 
 ImageManager::ImageManager()
 {
@@ -34,18 +129,31 @@ bool ImageManager::initialize()
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
 	currentImageChangedBind.connect(vsm.currentImageChangedSignal, &ThisClass::currentImageChanged, this);
 
+	backgroundUnloader.reset(new BackgroundImageUnloader(this));
+
 	return true;
 }
 
 void ImageManager::deinitialize()
 {
+	backgroundUnloader.reset();
+
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
-		UniquePointer<Image> &image = it->second;
+		SharedPointer<Image> &image = it->second;
 		if (image && !image->isUnloaded())
 			image->unload();
 	}
 	imageStorage.clear();
+}
+
+void ImageManager::update(const TimeSpan deltaTime)
+{
+// 	if (pendingImageUpdate && imageChangedTimer.getElapsedTime() >= 30_ms)
+// 	{
+// 		updateCurrentImage();
+// 		pendingImageUpdate = false;
+// 	}
 }
 
 std::wstring ImageManager::getStats()
@@ -54,7 +162,7 @@ std::wstring ImageManager::getStats()
 	
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
-		UniquePointer<Image> &image = it->second;
+		SharedPointer<Image> &image = it->second;
 		stats.push_back(image->getStats());
 	}
 
@@ -65,7 +173,7 @@ std::wstring ImageManager::getStats()
 
 Image *ImageManager::getCurrentImage() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 
 	ImageStorageList::const_iterator it = imageStorage.find(currentImageHash);
 	if (it != imageStorage.end())
@@ -103,26 +211,6 @@ void ImageManager::prepareShaders()
 	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert.frag"));
 }
 
-// bool ImageManager::loadDisplayShader(DisplayShaderTypes type, const std::string &handle, const std::string &filepath)
-// {
-// 	TS_ASSERT(displayShaders.find(type) == displayShaders.end() && "Attempting to load a display shader type again.");
-// 
-// 	resource::ResourceManager &rm = getGigaton<resource::ResourceManager>();
-// 
-// 	resource::ShaderResource *shaderResource = rm.loadShader(handle, filepath, true);
-// 	TS_ASSERT(shaderResource != nullptr && shaderResource->isLoaded());
-// 	if (shaderResource == nullptr)
-// 		return false;
-// 
-// 
-// 	TS_ASSERT(alphaCheckerPatternTexture);
-// 	shaderResource->getResource()->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
-// 
-// 	SharedPointer<DisplayShader> displayShader = makeShared<DisplayShader>(shaderResource);
-// 	displayShaders[type] = displayShader;
-// 	return true;
-// }
-
 SharedPointer<sf::Shader> ImageManager::loadDisplayShader(DisplayShaderTypes type)
 {
 	SharedPointer<sf::Shader> displayShader = makeShared<sf::Shader>();
@@ -144,45 +232,53 @@ SharedPointer<sf::Shader> ImageManager::loadDisplayShader(DisplayShaderTypes typ
 
 void ImageManager::currentImageChanged(SizeType imageIndex)
 {
-	std::unique_lock<std::mutex> lock(mutex);
+// 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 
 	currentImageIndex = imageIndex;
+// 	pendingImageUpdate = true;
+// 	imageChangedTimer.restart();
 
+	updateCurrentImage();
+}
+
+void ImageManager::updateCurrentImage()
+{
 	const PosType numForwardBuffered = 2;
-	const PosType numBackwardBuffered = 0;
+	const PosType numBackwardBuffered = 2;
 
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
 
 	std::vector<Uint32> activeImages;
+	std::vector<ImageEntry> imagesToLoad = vsm.getListSliceForBuffering(numForwardBuffered, numBackwardBuffered);
 
-	std::map<SizeType, std::wstring> imagesToLoad = vsm.getFileListSliceByOffsets(-numBackwardBuffered, numForwardBuffered);
-	for (auto &it : imagesToLoad)
+// 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	for (const ImageEntry &entry : imagesToLoad)
 	{
-		const SizeType index = it.first;
-		const std::wstring &filepath = it.second;
-
-		Uint32 imageHash = math::simpleHash32(filepath);
+		Uint32 imageHash = math::simpleHash32(entry.filepath);
 		activeImages.push_back(imageHash);
 
-		bool isCurrentImage = (index == currentImageIndex);
+		SharedPointer<Image> &image = imageStorage[imageHash];
+
+		bool isCurrentImage = (entry.index == currentImageIndex);
 		if (isCurrentImage)
 			currentImageHash = imageHash;
 
-		if (imageStorage[imageHash] == nullptr)
-			imageStorage[imageHash] = makeUnique<Image>(filepath);
-
-		UniquePointer<Image> &image = imageStorage[imageHash];
+		if (image == nullptr)
+			image = makeShared<Image>(entry.filepath);
 
 		if (image->isUnloaded())
 		{
-			TS_WPRINTF("--- Starting loading %s\n", filepath);
+// 			TS_WPRINTF("--- Starting loading %s\n", entry.filepath);
 			image->startLoading(!isCurrentImage);
 		}
-		else if (image->isSuspended())
+		else if (image->isSuspended() && isCurrentImage)
 		{
-			TS_WPRINTF("--- Resuming loading %s\n", filepath);
+// 			TS_WPRINTF("--- Resuming loading %s\n", entry.filepath);
 			image->resumeLoading();
 		}
+
+		if (image->hasError())
+			continue;
 
 		image->setActive(isCurrentImage);
 	}
@@ -190,24 +286,25 @@ void ImageManager::currentImageChanged(SizeType imageIndex)
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
 		Uint32 imageHash = it->first;
-		UniquePointer<Image> &image = it->second;
+		SharedPointer<Image> &image = it->second;
 
 		if (image->getState() == Image::Unloaded)
 			continue;
 
 		if (!ts::util::findIfContains(activeImages, imageHash))
 		{
-			TS_WPRINTF("--- Unloading %s\n", image->getFilepath());
-			image->unload();
+// 			TS_WPRINTF("--- Adding to unload queue %s\n", image->getFilepath());
+// 			image->unload();
+			image->suspendLoader();
+			backgroundUnloader->addToQueue(imageHash, TimeSpan::fromMilliseconds(2000));
 		}
-		else if (imageHash != currentImageHash && image->getCurrentFrameIndex() > 0)
+		else if (imageHash != currentImageHash)
 		{
-			TS_WPRINTF("--- Restarting playback %s\n", image->getFilepath());
+// 			TS_WPRINTF("--- Restarting playback %s\n", image->getFilepath());
 			image->restart(true);
+			backgroundUnloader->removeFromQueue(imageHash);
 		}
 	}
 }
 
 TS_END_PACKAGE2()
-
-

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <mutex>
+#include "ts/tessa/thread/Mutex.h"
+#include "ts/tessa/thread/MutexGuard.h"
+#include "ts/tessa/file/FileEntryW.h"
+#include "ts/tessa/file/FileListStyle.h"
+
 #include <string>
 #include <vector>
 #include <stack>
 #include <regex>
-
-#include "ts/tessa/file/FileEntryW.h"
-#include "ts/tessa/file/FileListStyle.h"
 
 TS_PACKAGE1(file)
 
@@ -32,7 +33,7 @@ public:
 	std::vector<FileEntryW> getFullListing();
 
 private:
-	mutable std::mutex mutex;
+	mutable Mutex mutex;
 
 	// Storing as void pointer to avoid having to include dirent.h in header
 	struct DirectoryFrame

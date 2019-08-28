@@ -3,18 +3,20 @@
 #include <thread>
 #include <atomic>
 
+#include "ts/tessa/thread/CurrentThread.h"
+
 #include "ts/tessa/time/TimeSpan.h"
 
-TS_DECLARE1(threading, BaseThreadEntry);
+TS_DECLARE1(thread, AbstractThreadEntry);
 
-TS_PACKAGE1(threading)
+TS_PACKAGE1(thread)
 
 class Thread
 {
-	friend class BaseThreadEntry;
+	friend class AbstractThreadEntry;
 
 public:
-	static Thread *createThread(BaseThreadEntry *entry, const std::string &threadName);
+	static Thread *createThread(AbstractThreadEntry *entry, const std::string &threadName);
 	static void joinThread(Thread *thread);
 
 // 	static std::string &getThreadName();
@@ -27,20 +29,10 @@ public:
 	static void sleep(TimeSpan time);
 
 	const std::string &getThreadName() const;
-	const SizeType getThreadId() const;
+	SizeType getThreadId() const;
 
 private:
 	static Thread &getExternalThread();
-
-	void startup();
-
-	bool running = false;
-	SizeType threadId = 0;
-
-	BaseThreadEntry *entry = nullptr;
-	std::string threadName;
-
-	std::thread *threadImpl = nullptr;
 
 	static thread_local Thread *currentThread;
 
@@ -48,8 +40,18 @@ private:
 	static Thread firstThread;
 	static Thread *mainThread;
 
+	void startup();
+
+	bool running = false;
+	SizeType threadId = 0;
+
+	AbstractThreadEntry *entry = nullptr;
+	std::string threadName;
+
+	std::thread *threadImpl = nullptr;
+
 	// Use createThread and joinThread to handle creation and destruction
-	Thread(BaseThreadEntry *entry, const std::string &threadName);
+	Thread(AbstractThreadEntry *entry, const std::string &threadName);
 	~Thread();
 };
 
@@ -57,6 +59,6 @@ TS_END_PACKAGE1()
 
 TS_PACKAGE0()
 
-using threading::Thread;
+using thread::Thread;
 
 TS_END_PACKAGE0()

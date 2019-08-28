@@ -20,6 +20,8 @@ public:
 	virtual bool initialize();
 	virtual void deinitialize();
 
+	virtual void update(const TimeSpan deltaTime);
+
 	std::wstring getStats();
 
 	Image *getCurrentImage() const;
@@ -38,18 +40,25 @@ private:
 	std::map<DisplayShaderTypes, std::string> displayShaderFiles;
 
 	void currentImageChanged(SizeType imageIndex);
+	void updateCurrentImage();
+
+	bool pendingImageUpdate = false;
+	Clock imageChangedTimer;
 
 	SizeType currentImageIndex = 0;
 	Uint32 currentImageHash = 0;
 
-	typedef std::map<Uint32, UniquePointer<Image>> ImageStorageList;
+	typedef std::map<Uint32, SharedPointer<Image>> ImageStorageList;
 	ImageStorageList imageStorage;
 
 	SharedPointer<sf::Texture> alphaCheckerPatternTexture;
 
+	class BackgroundImageUnloader;
+	ScopedPointer<BackgroundImageUnloader> backgroundUnloader;
+
 	lang::SignalBind currentImageChangedBind;
 
-	mutable std::mutex mutex;
+	mutable Mutex mutex;
 };
 
 TS_END_PACKAGE2()

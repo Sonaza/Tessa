@@ -36,7 +36,7 @@ void ViewerStateManager::deinitialize()
 void ViewerStateManager::nextImage()
 {
 	{
-		std::unique_lock<std::mutex> lock(mutex);
+		MutexGuard lock(mutex);
 
 		if (currentImageIndex + 1 >= (SizeType)currentFileList.size())
 			currentImageIndex = 0;
@@ -51,7 +51,7 @@ void ViewerStateManager::nextImage()
 void ViewerStateManager::previousImage()
 {
 	{
-		std::unique_lock<std::mutex> lock(mutex);
+		MutexGuard lock(mutex);
 
 		if (currentImageIndex == 0)
 			currentImageIndex = (SizeType)math::max(0, (int32_t)currentFileList.size() - 1);
@@ -67,7 +67,7 @@ void ViewerStateManager::previousImage()
 void ViewerStateManager::jumpToImage(SizeType index)
 {
 	{
-		std::unique_lock<std::mutex> lock(mutex);
+		MutexGuard lock(mutex);
 		index = math::clamp(index, 0U, (SizeType)currentFileList.size());
 
 		currentImageIndex = index;
@@ -79,7 +79,7 @@ void ViewerStateManager::jumpToImage(SizeType index)
 
 void ViewerStateManager::jumpToImageByFilename(const std::wstring &filename)
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	std::vector<std::wstring>::iterator it = std::find(currentFileList.begin(), currentFileList.end(), filename);
 	if (it != currentFileList.end())
 	{
@@ -94,13 +94,13 @@ void ViewerStateManager::jumpToImageByFilename(const std::wstring &filename)
 
 SizeType ViewerStateManager::getNumImages() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	return (SizeType)currentFileList.size();
 }
 
 void ViewerStateManager::setSorting(SortingStyle sorting)
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	if (currentSorting != sorting)
 	{
 		currentSorting = sorting;
@@ -124,77 +124,60 @@ void ViewerStateManager::setSorting(SortingStyle sorting)
 	}
 }
 
-std::vector<std::wstring> ViewerStateManager::getCurrentSortedFileList() const
+const std::vector<std::wstring> &ViewerStateManager::getCurrentSortedFileList() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	return currentFileList;
 }
 
-std::map<SizeType, std::wstring> ViewerStateManager::getFileListSlice(SizeType startIndex, SizeType endIndex)
+const std::vector<ImageEntry> ViewerStateManager::getListSliceForBuffering(SizeType numForward, SizeType numBackward)
 {
-	std::unique_lock<std::mutex> lock(mutex);
-	return getFileListSliceUnsafe(startIndex, endIndex);
-}
+	std::vector<ImageEntry> result;
 
-std::map<SizeType, std::wstring> ViewerStateManager::getFileListSliceUnsafe(SizeType startIndex, SizeType endIndex)
-{
-	std::map<SizeType, std::wstring> slice;
-	if (!(startIndex < currentFileList.size() && endIndex < currentFileList.size()))
-	{
-		TS_ASSERT(!"StartIndex and/or EndIndex is out of bounds.");
-		return slice;
-	}
-
-	const PosType fileListSize = currentFileList.size();
-	SizeType numEntries = (startIndex <= endIndex) ? endIndex - startIndex : (SizeType)fileListSize - startIndex + endIndex;
-
-	for (SizeType base = 0; base < numEntries; ++base)
-	{
-		SizeType index = (base + startIndex) % fileListSize;
-		slice[index] = currentFileList[index];
-	}
-
-// 	if (startIndex < endIndex)
-// 	{
-// 		slice.insert(slice.end(), currentFileList.begin() + startIndex, currentFileList.begin() + endIndex);
-// 	}
-// 	else
-// 	{
-// 		slice.insert(slice.end(), currentFileList.begin() + startIndex, currentFileList.end());
-// 		slice.insert(slice.end(), currentFileList.begin(), currentFileList.begin() + endIndex);
-// 	}
-
-	return slice;
-}
-
-std::map<SizeType, std::wstring> ViewerStateManager::getFileListSliceByOffsets(PosType startOffset, SizeType endOffset)
-{
-	TS_ASSERT(startOffset <= endOffset && "startOffset should be less than endOffset");
-	TS_ASSERT(startOffset <= 0 && "startOffset should be less than or equal to zero.");
-	TS_ASSERT(endOffset >= 1 && "endOffset should be greater than or equal to one.");
-
-	std::unique_lock<std::mutex> lock(mutex);
-
+	MutexGuard lock(mutex);
 	const SizeType fileListSize = (SizeType)currentFileList.size();
+	if (fileListSize == 0)
+		return result;
 
-	PosType startIndex = currentImageIndex + startOffset;
-	if (startIndex < 0)
-		startIndex += fileListSize;
+	// Always returns the current image
+	SizeType numEntries = math::min(fileListSize, 1 + numForward + numBackward);
+	result.reserve(numEntries);
 
-	SizeType endIndex = (currentImageIndex + endOffset) % fileListSize;
+	for (SizeType base = 0; base < numForward + 1; ++base)
+	{
+		SizeType index = (currentImageIndex + base) % fileListSize;
+		result.push_back(ImageEntry{ currentFileList[index], index, ImageEntry::Buffering_Forwards });
 
-	return getFileListSliceUnsafe((SizeType)startIndex, (SizeType)endIndex);
+		numEntries--;
+		if (numEntries == 0)
+			break;
+	}
+
+	if (numEntries > 0)
+	{
+		for (SizeType base = 0; base < numBackward; ++base)
+		{
+			SizeType index = (currentImageIndex + (fileListSize - 1 - (PosType)base)) % fileListSize;
+			result.push_back(ImageEntry{ currentFileList[index], index, ImageEntry::Buffering_Backwards });
+		
+			numEntries--;
+			if (numEntries == 0)
+				break;
+		}
+	}
+
+	return result;
 }
 
 SizeType ViewerStateManager::getCurrentImageIndex() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	return currentImageIndex;
 }
 
 const std::wstring &ViewerStateManager::getCurrentFilepath() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	return currentFilePath;
 }
 
@@ -202,7 +185,7 @@ void ViewerStateManager::updateFileList()
 {
 	viewer::BackgroundFileScanner &BackgroundFileScanner = getGigaton<viewer::BackgroundFileScanner>();
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	currentFileList = BackgroundFileScanner.getFileList();
 		
 	applySorting();

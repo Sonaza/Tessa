@@ -47,6 +47,8 @@ public:
 	void useApplicationView();
 	void useInterfaceView();
 
+	const WindowView &getApplicationView() const;
+	const WindowView &getInterfaceView() const;
 	const WindowView &getCurrentView() const;
 
 	sf::RenderWindow &getRenderWindow();

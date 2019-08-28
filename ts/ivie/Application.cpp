@@ -72,7 +72,7 @@ bool Application::createApplicationManagers()
 	std::wstring workingDirectory;
 	getCommando().getNthParameter(0, workingDirectory);
 
-	workingDirectory = file::utils::getDirname(workingDirectory);
+	workingDirectory = file::utils::isFile(workingDirectory) ? file::utils::getDirname(workingDirectory) : workingDirectory;
 	if (workingDirectory.empty())
 		workingDirectory = file::utils::getWorkingDirectoryWide();
 

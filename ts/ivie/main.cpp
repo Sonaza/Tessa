@@ -5,7 +5,7 @@
 #include <codecvt>
 #include <fstream>
 
-#include "ts/tessa/threading/Thread.h"
+#include "ts/tessa/thread/Thread.h"
 #include "ts/tessa/common/Log.h"
 #include "ts/tessa/file/FileUtils.h"
 
@@ -16,18 +16,19 @@
 
 using namespace ts;
 
-int asd()
+int asdfasd()
 {
 	
-	return 0;
+
+	return 1;
 }
 
 int wmain(int argc, const wchar_t **argv)
 {
-// 	if (asd())
+// 	if (asdfasd())
 // 		return 0;
 
-	threading::Thread::setMainThread(threading::Thread::getCurrentThread());
+	thread::Thread::setMainThread(thread::Thread::getCurrentThread());
 	
 	app::Application app(argc, argv);
 	int returnCode = app.launch();

@@ -46,7 +46,6 @@ OutputFile &OutputFile::operator=(OutputFile &&other)
 
 bool OutputFile::open(const std::string &filepath, OutputFileMode mode)
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr == nullptr && "OutputFile is already opened.");
 	if (_filePtr != nullptr)
 		return false;
@@ -77,7 +76,6 @@ bool OutputFile::open(const std::string &filepath, OutputFileMode mode)
 
 bool OutputFile::open(const std::wstring &filepath, OutputFileMode mode)
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr == nullptr && "OutputFile is already opened.");
 	if (_filePtr != nullptr)
 		return false;
@@ -108,7 +106,6 @@ bool OutputFile::open(const std::wstring &filepath, OutputFileMode mode)
 
 void OutputFile::close()
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	if (_filePtr != nullptr)
 	{
 		OutputFileStream *file = static_cast<OutputFileStream*>(_filePtr);
@@ -123,7 +120,6 @@ bool OutputFile::write(const char *inBuffer, BigSizeType size)
 {
 	TS_ASSERT(inBuffer != nullptr);
 
-// 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return false;
@@ -178,7 +174,6 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 
 PosType OutputFile::tell() const
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return -1;
@@ -195,7 +190,6 @@ PosType OutputFile::tell() const
 
 bool OutputFile::flush()
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "OutputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return false;
@@ -209,7 +203,6 @@ bool OutputFile::flush()
 
 bool OutputFile::isOpen() const
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	if (_filePtr != nullptr && _bad == false)
 	{
 		OutputFileStream *file = static_cast<OutputFileStream*>(_filePtr);
@@ -220,7 +213,6 @@ bool OutputFile::isOpen() const
 
 bool OutputFile::isBad() const
 {
-// 	std::lock_guard<std::mutex> mg(mutex);
 	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
 	if (_filePtr == nullptr || _bad == true)
 		return true;

@@ -23,7 +23,7 @@ FileListW::~FileListW()
 
 bool FileListW::open(const std::wstring &directoryPath, bool skipDotEntries, FileListStyle style)
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	MutexGuard lock(mutex);
 	TS_ASSERT(_dirStack.empty() && "FileListW is already opened.");
 	if (!_dirStack.empty())
 		return false;
@@ -46,7 +46,7 @@ bool FileListW::open(const std::wstring &directoryPath, bool skipDotEntries, Fil
 
 void FileListW::close()
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	MutexGuard lock(mutex);
 	while (!_dirStack.empty())
 	{
 		wclosedir((WDIR*)_dirStack.top().ptr);
@@ -56,7 +56,7 @@ void FileListW::close()
 
 bool FileListW::next(FileEntryW &entry)
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	MutexGuard lock(mutex);
 	TS_ASSERT(!_dirStack.empty() && "FileListW is not opened.");
 	if (_dirStack.empty() || _done == true)
 		return false;
@@ -125,7 +125,7 @@ bool FileListW::next(FileEntryW &entry)
 
 void FileListW::rewind()
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	MutexGuard lock(mutex);
 	TS_ASSERT(!_dirStack.empty() && "FileListW is not opened.");
 
 	// Close all other directories but the bottom-most
@@ -140,13 +140,13 @@ void FileListW::rewind()
 
 bool FileListW::isDone() const
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	MutexGuard lock(mutex);
 	return _done;
 }
 
 void FileListW::setGlobRegex(const std::wstring &pattern)
 {
-	std::lock_guard<std::mutex> mg(mutex);
+	MutexGuard lock(mutex);
 
 	GlobRegexType *regex = nullptr;
 	try

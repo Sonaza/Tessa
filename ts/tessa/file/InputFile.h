@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <mutex>
 
 TS_PACKAGE1(file)
 
@@ -103,7 +102,6 @@ public:
 	bool operator!() const;
 
 private:
-	mutable std::mutex mutex;
 	void *_filePtr = nullptr;
 	bool _eof = false;
 	mutable bool _bad = false;

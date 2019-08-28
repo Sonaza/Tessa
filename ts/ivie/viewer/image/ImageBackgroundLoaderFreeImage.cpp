@@ -1,7 +1,7 @@
 #include "Precompiled.h"
 #include "ImageBackgroundLoaderFreeImage.h"
 
-#include "ts/tessa/threading/Thread.h"
+#include "ts/tessa/thread/Thread.h"
 #include "ts/tessa/file/FileUtils.h"
 
 #include "ts/ivie/viewer/image/Image.h"
@@ -39,7 +39,7 @@ ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage
 
 ImageBackgroundLoaderFreeImage::~ImageBackgroundLoaderFreeImage()
 {
-	TS_WPRINTF("~ImageBackgroundLoaderFreeImage()  : Task ID %u [%s]\n", taskId, filepath);
+// 	TS_WPRINTF("~ImageBackgroundLoaderFreeImage()  : Task ID %u [%s]\n", taskId, filepath);
 
 	TS_ASSERTF(loaderIsPrepared == false, "Cleanup is incomplete. Task ID %u", taskId);
 	TS_ASSERT(stackingRenderTextureThreadId == -1 && "It should've been already freed.");
@@ -53,7 +53,7 @@ bool ImageBackgroundLoaderFreeImage::initialize()
 
 void ImageBackgroundLoaderFreeImage::deinitialize()
 {
-	TS_WPRINTF("ImageBackgroundLoaderFreeImage::deinitialize()  : Task ID %u [%s]\n", taskId, filepath);
+// 	TS_WPRINTF("ImageBackgroundLoaderFreeImage::deinitialize()  : Task ID %u [%s]\n", taskId, filepath);
 	cleanup();
 }
 
@@ -94,6 +94,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 	if (!fileHandle.open(filepath, file::InputFileMode_ReadBinary))
 	{
 		TS_WLOG_ERROR("Failed to open file. File: %s\n", filepath);
+		errorText = "Failed to open file. File doesn't exist?";
 		return false;
 	}
 
@@ -106,22 +107,26 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 	if (state.memory == nullptr)
 	{
 		TS_WLOG_ERROR("FreeImage_OpenMemory failed. File: %s\n", filepath);
+		errorText = "FreeImage_OpenMemory failed";
 		return false;
 	}
 
 	state.format = FreeImage_GetFileTypeFromMemory(state.memory);
-	if (state.format == FIF_UNKNOWN)
-	{
-		// Try to get file type from file name instead
-		state.format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
-	}
+// 	if (state.format == FIF_UNKNOWN)
+// 	{
+// 		// Try to get file type from file name instead
+// 		state.format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
+// 	}
 
 	Int32 flags = 0;
 
 	switch (state.format)
 	{
 		case FIF_UNKNOWN:
+		{
+			errorText = "Unknown or unsupported format.";
 			return false;
+		}
 
 		case FIF_GIF:
 // 		case FIF_MNG:
@@ -132,6 +137,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 			if (state.multibitmap == nullptr)
 			{
 				TS_WLOG_ERROR("FreeImage_LoadMultiBitmapFromMemory failed. File: %s", filepath);
+				errorText = "Unknown or unsupported format.";
 				return false;
 			}
 
@@ -147,6 +153,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 			if (state.bitmap == nullptr)
 			{
 				TS_WLOG_ERROR("FreeImage_LoadFromMemory failed. File: %s", filepath);
+				errorText = "Unknown or unsupported format.";
 				return false;
 			}
 		}
@@ -160,7 +167,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 
 void ImageBackgroundLoaderFreeImage::cleanup()
 {
-	TS_WPRINTF("ImageBackgroundLoaderFreeImage::cleanup()  : Task ID %u [%s]\n", taskId, filepath);
+// 	TS_WPRINTF("ImageBackgroundLoaderFreeImage::cleanup()  : Task ID %u [%s]\n", taskId, filepath);
 
 	switch (loaderFormat)
 	{
@@ -230,6 +237,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 	if (bits == nullptr)
 	{
 		TS_LOG_ERROR("FreeImage_GetBits returned null.");
+		errorText = "FreeImage_GetBits failed.";
 		return false;
 	}
 
@@ -240,6 +248,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 	if (imageSize.x > maxSize || imageSize.y > maxSize)
 	{
 		TS_LOG_ERROR("Image is too large.");
+		errorText = "Image is too large.";
 		return false;
 	}
 
@@ -272,6 +281,7 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 	if (lockedPage == nullptr)
 	{
 		TS_LOG_ERROR("Failed to lock multibitmap page index %u", currentPage);
+		errorText = "Failed to lock multibitmap page.";
 		return false;
 	}
 
@@ -339,6 +349,7 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 	if (bits == nullptr)
 	{
 		TS_LOG_ERROR("FreeImage_GetBits returned null.");
+		errorText = "FreeImage_GetBits failed.";
 		return false;
 	}
 
@@ -358,12 +369,6 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 		{
 			stackingRenderTexture->clear(sf::Color::Transparent);
 		}
-		
-// 		TS_PRINTF("Frame %u disposal method: %s\n", currentPage + 1, disposalToString(disposalMethod));
-// 		TS_PRINTF("  Image size (%u, %u)\n", imageSize.x, imageSize.y);
-// 		TS_PRINTF("  Frame size (%u, %u)\n", frameSize.x, frameSize.y);
-// 		TS_PRINTF("  Size diff  (%u, %u)\n", sizeDiff.x, sizeDiff.y);
-// 		TS_PRINTF("  Offsets    (%u, %u)\n", offset.x, offset.y);
 
 		const math::VC2U sizeDiff = imageSize - frameSize;
 		stackingRenderTexture->draw(util::makeQuadVertexArray(frameSize.x, frameSize.y, offset.x, sizeDiff.y - offset.y), &currentFrame);
@@ -375,13 +380,9 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 		if (bufferStorage.texture != nullptr)
 		{
 			if (disposalMethod != DisposalMethod_Previous)
-			{
-// 				TS_PRINTF("Storing frame %u as previous frame\n", currentPage + 1);
 				previousFrame = bufferStorage.texture;
-			}
 
 			bufferStorage.texture->setSmooth(true);
-// 	 		bufferStorage.texture->generateMipmap();
 
 			if (currentPage + 1 == numPagesTotal && numPagesTotal < ownerImage->frameBuffer.getMaxSize())
 				loaderIsComplete = true;

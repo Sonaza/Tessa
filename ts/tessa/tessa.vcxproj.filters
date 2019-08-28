@@ -71,9 +71,6 @@
     <ClCompile Include="system\AbstractSceneBase.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="threading\ThreadUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file\FileList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -125,12 +122,6 @@
     <ClCompile Include="system\BaseApplication.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="threading\Thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="threading\BaseThreadEntry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file\FileEntryW.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -138,9 +129,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="common\WindowsUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="threading\ThreadScheduler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="time\TimeSpan.cpp">
@@ -168,6 +156,36 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="system\WindowViewManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="profiling\SimpleScopedZoneTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\Thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\ThreadScheduler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\ThreadUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\AbstractThreadEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\CurrentThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\Mutex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\MutexGuard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\ConditionVariable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lang\CallStack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -254,9 +272,6 @@
       <Filter>Source Files\system</Filter>
     </ClInclude>
     <ClInclude Include="math\CommonMath.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="threading\ThreadUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="lang\UniquePointer.inl">
@@ -352,12 +367,6 @@
     <ClInclude Include="system\BaseApplication.h">
       <Filter>Source Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="threading\Thread.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="threading\BaseThreadEntry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="file\FileListStyle.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -368,9 +377,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="common\WindowsUtils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="threading\ThreadScheduler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="time\TimeSpan.h">
@@ -404,6 +410,36 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="system\WindowViewManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="profiling\SimpleScopedZoneTimer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\Thread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\ThreadScheduler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\ThreadUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\AbstractThreadEntry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\CurrentThread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\Mutex.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\MutexGuard.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\ConditionVariable.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\CallStack.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

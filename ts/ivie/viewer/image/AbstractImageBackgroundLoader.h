@@ -1,16 +1,16 @@
 #pragma once
 
-#include "ts/tessa/threading/BaseThreadEntry.h"
+#include "ts/tessa/thread/AbstractThreadEntry.h"
 
-#include "ts/tessa/threading/ThreadScheduler.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
 #include "ts/ivie/viewer/image/Image.h"
 
 TS_PACKAGE2(app, viewer)
 
-class AbstractImageBackgroundLoader : public threading::BaseThreadEntry
+class AbstractImageBackgroundLoader : public thread::AbstractThreadEntry
 {
 	typedef AbstractImageBackgroundLoader ThisClass;
-	typedef threading::BaseThreadEntry BaseClass;
+	typedef thread::AbstractThreadEntry BaseClass;
 
 public:
 	AbstractImageBackgroundLoader(Image *ownerImage, const std::wstring &filepath);
@@ -80,23 +80,23 @@ protected:
 	std::atomic<BackgroundLoaderState> loaderState = Inactive;
 	bool suspendAfterBufferFull = false;
 
-	math::VC2U imageSize;
+	std::string errorText;
 
 	Image *ownerImage = nullptr;
 	std::wstring filepath;
 
 	bool nextFrameRequested = false;
 
-	threading::Thread *thread = nullptr;
+	thread::Thread *thread = nullptr;
 
-	mutable std::mutex mutex;
-	std::condition_variable condition;
+	mutable Mutex mutex;
+	ConditionVariable condition;
 
-// 	threading::SchedulerTaskId getTaskId() const { return taskId; }
-	threading::SchedulerTaskId taskId;
+// 	thread::SchedulerTaskId getTaskId() const { return taskId; }
+	thread::SchedulerTaskId taskId;
 
 private:
-	threading::ThreadScheduler &threadScheduler;
+	thread::ThreadScheduler &threadScheduler;
 
 };
 

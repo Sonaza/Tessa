@@ -2,7 +2,7 @@
 
 #include <thread>
 
-TS_PACKAGE2(threading, utils)
+TS_PACKAGE2(thread, utils)
 
 extern void setThreadName(std::thread &thread, const std::string &threadName);
 extern void setCurrentThreadName(const std::string &threadName);

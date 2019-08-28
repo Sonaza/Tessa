@@ -1,5 +1,5 @@
 #include "Precompiled.h"
-#include "ts/tessa/threading/ThreadUtils.h"
+#include "ts/tessa/thread/ThreadUtils.h"
 
 #if TS_PLATFORM == TS_WINDOWS
 #include "ts/tessa/common/IncludeWindows.h"
@@ -7,7 +7,7 @@
 #pragma warning( disable : 4702 ) // Unreachable code warning, it's just the NYI asserts.
 #endif
 
-TS_PACKAGE2(threading, utils)
+TS_PACKAGE2(thread, utils)
 
 namespace
 {

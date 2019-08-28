@@ -26,9 +26,9 @@ bool BackgroundFileScanner::initialize()
 
 	updateFilelist();
 
-	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
+	thread::ThreadScheduler &tm = getGigaton<thread::ThreadScheduler>();
 	scannerTaskId = tm.scheduleWithInterval(
-		threading::Priority_Normal,
+		thread::Priority_Normal,
 		TimeSpan::fromMilliseconds(2000),
 		&BackgroundFileScanner::updateFilelist, this);
 
@@ -37,13 +37,13 @@ bool BackgroundFileScanner::initialize()
 
 void BackgroundFileScanner::deinitialize()
 {
-	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
+	thread::ThreadScheduler &tm = getGigaton<thread::ThreadScheduler>();
 	tm.cancelTask(scannerTaskId);
 }
 
 std::vector<std::wstring> BackgroundFileScanner::getFileList()
 {
-	std::lock_guard<std::mutex> lock(mutex);
+	MutexGuard lock(mutex);
 	return filelist;
 }
 
@@ -75,7 +75,7 @@ bool BackgroundFileScanner::updateFilelist()
 	if (listChanged)
 	{
 		{
-			std::lock_guard<std::mutex> mg(mutex);
+			MutexGuard lock(mutex);
 			filelist = std::move(templist);
 		}
 		filelistChangedSignal();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <atomic>
 
 TS_PACKAGE2(app, util)
 
@@ -53,16 +54,17 @@ public:
 	const BigSizeType getWritePositionIndex() const { return writePosition; }
 	const BigSizeType getReadPositionIndex() const { return readPosition; }
 
-
 	Type &operator[](BigSizeType index) { return buffer[index]; }
 	const Type &operator[](BigSizeType index) const { return buffer[index]; }
 
 private:
-	BigSizeType writePosition = 0;
-	BigSizeType readPosition = 0;
-	BigSizeType numBuffered = 0;
-	bool constrained = true;
+	std::atomic<BigSizeType> writePosition = 0;
+	std::atomic<BigSizeType> readPosition = 0;
+	std::atomic<BigSizeType> numBuffered = 0;
+	std::atomic_bool constrained = true;
 	std::vector<Type> buffer;
+
+	mutable Mutex mutex;
 
 	enum { ReadReservedAmount = 1 };
 };
@@ -70,6 +72,7 @@ private:
 template<class Type, BigSizeType capacity>
 void RingBuffer<Type, capacity>::reserveFullCapacity()
 {
+	MutexGuard lock(mutex);
 	if (buffer.size() < capacity)
 		buffer.resize(capacity);
 }
@@ -127,7 +130,7 @@ RingBuffer<Type, capacity> &RingBuffer<Type, capacity>::operator=(RingBuffer &&o
 template<class Type, BigSizeType capacity>
 TS_FORCEINLINE BigSizeType RingBuffer<Type, capacity>::getBufferedAmount() const
 {
-	return constrained ? numBuffered : getSize();
+	return constrained ? numBuffered.load() : getSize();
 }
 
 template<class Type, BigSizeType capacity>

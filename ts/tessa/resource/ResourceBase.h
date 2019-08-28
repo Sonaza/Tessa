@@ -2,9 +2,10 @@
 
 #include "ts/tessa/resource/AbstractResourceBase.h"
 #include "ts/tessa/resource/GUID.h"
+#include "ts/tessa/thread/Mutex.h"
+#include "ts/tessa/thread/MutexGuard.h"
 
 #include <atomic>
-#include <mutex>
 
 #define TS_DECLARE_RESOURCE_TYPE(__class_name) \
 	public: \
@@ -45,7 +46,7 @@ protected:
 
 	GUID resourceGuid;
 
-	mutable std::mutex resourceMutex;
+	mutable Mutex resourceMutex;
 };
 
 #include "ResourceBase.inl"

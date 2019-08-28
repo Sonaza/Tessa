@@ -1,8 +1,8 @@
 #include "Precompiled.h"
-#include "ts/tessa/threading/Thread.h"
+#include "ts/tessa/thread/Thread.h"
 
-#include "ts/tessa/threading/BaseThreadEntry.h"
-#include "ts/tessa/threading/ThreadUtils.h"
+#include "ts/tessa/thread/AbstractThreadEntry.h"
+#include "ts/tessa/thread/ThreadUtils.h"
 
 #include <atomic>
 
@@ -10,7 +10,7 @@
 #include "ts/tessa/common/IncludeWindows.h"
 #endif
 
-TS_PACKAGE1(threading)
+TS_PACKAGE1(thread)
 
 namespace
 {
@@ -30,7 +30,7 @@ Thread &Thread::getExternalThread()
 
 thread_local Thread *Thread::currentThread = nullptr;
 
-Thread *Thread::createThread(BaseThreadEntry *entryParam, const std::string &threadNameParam)
+Thread *Thread::createThread(AbstractThreadEntry *entryParam, const std::string &threadNameParam)
 {
 	Thread *thread = new Thread(entryParam, threadNameParam);
 	return thread;
@@ -84,7 +84,7 @@ const std::string &Thread::getThreadName() const
 	return threadName;
 }
 
-const SizeType Thread::getThreadId() const
+SizeType Thread::getThreadId() const
 {
 	return threadId;
 }
@@ -95,7 +95,7 @@ void Thread::startup()
 	running = true;
 }
 
-Thread::Thread(BaseThreadEntry *entryParam, const std::string &threadNameParam)
+Thread::Thread(AbstractThreadEntry *entryParam, const std::string &threadNameParam)
 {
 	entry = entryParam;
 	threadName = threadNameParam;
@@ -105,7 +105,7 @@ Thread::Thread(BaseThreadEntry *entryParam, const std::string &threadNameParam)
 	{
 		entry->thread = this;
 
-		threadImpl = new std::thread(&BaseThreadEntry::startup, entryParam);
+		threadImpl = new std::thread(&AbstractThreadEntry::startup, entryParam);
 		utils::setThreadName(*threadImpl, threadName);
 	}
 	else

@@ -16,7 +16,9 @@
 #include "ts/ivie/viewer/image/Image.h"
 
 #include "ts/ivie/util/RenderUtil.h"
-#include "ts/tessa/threading/ThreadScheduler.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
+
+#include "ts/tessa/system/WindowViewManager.h"
 
 TS_PACKAGE2(app, scenes)
 
@@ -70,34 +72,75 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 		case sf::Event::MouseButtonPressed:
 		{
-			if (event.mouseButton.button == sf::Mouse::XButton1)
+			switch (event.mouseButton.button)
 			{
-				viewerStateManager->previousImage();
+				case sf::Mouse::Left:
+				{
+					clickTimer.restart();
+					dragged = 0.f;
+				}
 				return true;
+
+				case sf::Mouse::Right:
+				{
+					targetImageScale = 1.f;
+				}
+				return true;
+
+				case sf::Mouse::XButton1:
+				{
+					viewerStateManager->previousImage();
+				}
+				return true;
+
+				case sf::Mouse::XButton2:
+				{
+					viewerStateManager->nextImage();
+				}
+				return true;
+
+				default: break;
 			}
-			if (event.mouseButton.button == sf::Mouse::XButton2)
+		}
+		break;
+
+		case sf::Event::MouseButtonReleased:
+		{
+			switch (event.mouseButton.button)
 			{
-				viewerStateManager->nextImage();
+				case sf::Mouse::Left:
+				{
+					if (clickTimer.getElapsedTime() < 150_ms && dragged <= 10.f)
+					{
+						targetImageScale = 1.f / defaultScale;
+					}
+				}
 				return true;
+
+				default: break;
 			}
+
+			
 		}
 		break;
 
 		case sf::Event::MouseMoved:
 		{
 			math::VC2I mousePosition(event.mouseMove.x, event.mouseMove.y);
-			math::VC2I mouseDelta = lastMousePosition - mousePosition;
+			math::VC2 mouseDelta = static_cast<math::VC2>(lastMousePosition - mousePosition);
 
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
-				targetPositionOffset.x = math::clamp(targetPositionOffset.x - (float)mouseDelta.x, -1000.f, 1000.f);
-				targetPositionOffset.y = math::clamp(targetPositionOffset.y - (float)mouseDelta.y, -1000.f, 1000.f);
+				dragged += mouseDelta.length();
+
+				targetPositionOffset.x = math::clamp(targetPositionOffset.x - mouseDelta.x, -1000.f, 1000.f);
+				targetPositionOffset.y = math::clamp(targetPositionOffset.y - mouseDelta.y, -1000.f, 1000.f);
 			}
 			else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 			{
 				// Scales image by holding down middle mouse: moving mouse pointer up or to the right enlarges, and vice versa
 				Int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? -math::sign(mouseDelta.x) : math::sign(mouseDelta.y);
-				float delta = static_cast<math::VC2>(mouseDelta).length() * deltaSign;
+				float delta = mouseDelta.length() * deltaSign;
 				targetImageScale += (delta / 140.f) * targetImageScale;
 				targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
 			}
@@ -123,8 +166,31 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 void ImageViewerScene::update(const TimeSpan deltaTime)
 {
 	imageScale += (targetImageScale - imageScale) * deltaTime.getSecondsAsFloat() * 15.f;
+	positionOffset += (targetPositionOffset - positionOffset) * deltaTime.getSecondsAsFloat() * 32.f;
 
-	positionOffset += (targetPositionOffset - positionOffset) * deltaTime.getSecondsAsFloat() * 20.f;
+	if (updateImageInfo)
+	{
+		viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
+		viewer::Image *currentImage = imageManager.getCurrentImage();
+		if (currentImage != nullptr)
+		{
+			imageSize = currentImage->getSize();
+
+			if (imageSize.y > 0)
+			{
+				system::WindowManager &wm = getGigaton<system::WindowManager>();
+				const system::WindowView &view = wm.getApplicationView();
+
+				defaultScale = math::min(1.f, (view.size.y - 30.f) / (float)imageSize.y);
+			}
+			else
+			{
+				defaultScale = 1.f;
+			}
+		}
+
+		updateImageInfo = false;
+	}
 }
 
 void ImageViewerScene::imageChanged(SizeType statusText)
@@ -133,6 +199,8 @@ void ImageViewerScene::imageChanged(SizeType statusText)
 	targetPositionOffset = math::VC2::zero;
 
 	frameTimer.restart();
+
+	updateImageInfo = true;
 }
 
 void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view)
@@ -160,7 +228,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 			math::VC2U size = currentImage->getSize();
 
-			float scale = math::min(1.f, (view.size.y - 30.f) / (float)size.y) * imageScale;
+			float scale = defaultScale * imageScale;
 
 // 			sf::VertexArray va = util::makeQuadVertexArray(size.x, size.y);
 			sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
@@ -184,6 +252,10 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 			renderTarget.draw(va, states);
 		}
+	}
+	else
+	{
+
 	}
 
 // 	sf::CircleShape shape(20.f);
@@ -212,6 +284,8 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 	system::WindowManager &wm = application->getManager<system::WindowManager>();
 	math::VC2U windowSize = wm.getSize();
 
+	bool hasError = false;
+
 	viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
 	viewer::Image *currentImage = imageManager.getCurrentImage();
 	if (currentImage != nullptr)
@@ -225,6 +299,36 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			asd.setScale(0.5f, 0.5f);
 			renderTarget.draw(asd);
 		}
+
+		hasError = currentImage->hasError();
+	}
+	else
+	{
+		hasError = true;
+	}
+	
+	if (hasError)
+	{
+		sf::Text errorText;
+		errorText.setOutlineThickness(2.f);
+		errorText.setFont(*font->getResource());
+
+		if (currentImage != nullptr)
+		{
+			errorText.setString(TS_FMT(
+				"Error: %s", currentImage->getErrorText()
+			));
+		}
+		else
+		{
+			errorText.setString("Image is null.");
+		}
+
+		sf::FloatRect bounds = errorText.getLocalBounds();
+		errorText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+		errorText.setPosition(view.size / 2.f);
+
+		renderTarget.draw(errorText);
 	}
 
 	sf::Text statusText;
@@ -257,9 +361,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 // 	}
 
 // 	{
-// 		threading::ThreadScheduler &ts = getGigaton<threading::ThreadScheduler>();
+// 		thread::ThreadScheduler &ts = getGigaton<thread::ThreadScheduler>();
 // 
-// 		threading::ThreadScheduler::SchedulerStats stats = ts.getStats();
+// 		thread::ThreadScheduler::SchedulerStats stats = ts.getStats();
 // 
 // 		statusText.setString(TS_FMT(
 // 			"Scheduler: %u / %u working  %u pending [%u interval]",

@@ -8,7 +8,11 @@
 
 #include "ts/ivie/viewer/image/ImageManager.h"
 #include "ts/ivie/viewer/image/ImageBackgroundLoaderFreeImage.h"
+
+#include "ts/tessa/thread/ThreadScheduler.h"
 // #include "ts/ivie/viewer/image/ImageBackgroundLoaderWebm.h"
+
+#include "ts/tessa/profiling/SimpleScopedZoneTimer.h"
 
 #include "FreeImage.h"
 // #include "nestegg/nestegg.h"
@@ -32,11 +36,11 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 	if (loaderState != Unloaded)
 		return false;
 
-	TS_WPRINTF("Starting to load file %s\n", filepath);
+// 	TS_SIMPLE_ZONE();
 
 	ImageManager &im = TS_GET_GIGATON().getGigaton<ImageManager>();
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 
 	LoaderType type = sniffLoaderType();
 	switch (type)
@@ -64,6 +68,8 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 			loaderState = Error;
 			TS_WLOG_ERROR("Unable to load file, unknown or unsupported type. File: %s", filepath);
 			
+			errorText = "Invalid image file or the format is unsupported.";
+
 			return false;
 		}
 		break;
@@ -80,11 +86,15 @@ void Image::unload()
 	if (loaderState == Unloaded)
 		return;
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+
+// 	TS_SIMPLE_ZONE();
 
 	loaderState = Unloading;
 
-	backgroundLoader->stop();
+	if (backgroundLoader != nullptr)
+		backgroundLoader->stop();
+
 	backgroundLoader.reset();
 
 	frameBuffer.clear();
@@ -96,27 +106,45 @@ void Image::unload()
 
 void Image::restart(bool suspend)
 {
-	if (loaderState == Error)
+	if (loaderState == Error || loaderState == Complete)
 		return;
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 
 	TS_ASSERT(backgroundLoader);
 
-	if (backgroundLoader->restart(true))
+	if (currentFrameIndex > 0)
 	{
-		currentFrameIndex = 0;
-		frameBuffer.clear();
+		if (backgroundLoader->restart(true))
+		{
+			currentFrameIndex = 0;
+			frameBuffer.clear();
+		}
 	}
+// 	else if (loaderState == Loading)
+// 	{
+// 		backgroundLoader->suspend();
+// 	}
+	
+}
+
+void Image::suspendLoader()
+{
+	if (loaderState == Unloaded || loaderState == Error)
+		return;
+
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+
+	TS_ASSERT(backgroundLoader);
+	backgroundLoader->suspend();
 }
 
 void Image::setActive(bool activeParam)
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	active = activeParam;
-	if (active)
+	if (active && backgroundLoader)
 	{
-		TS_ASSERT(backgroundLoader);
 		backgroundLoader->cancelPendingSuspension();
 	}
 }
@@ -142,21 +170,21 @@ void Image::resumeLoading()
 	if (loaderState != Suspended)
 		return;
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	TS_ASSERT(backgroundLoader);
 	backgroundLoader->resume();
 }
 
 const math::VC2U Image::getSize() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
-	TS_ASSERT(data.size.x > 0 && data.size.y > 0 && "Image size is not set.");
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+// 	TS_ASSERT(data.size.x > 0 && data.size.y > 0 && "Image size is not set.");
 	return data.size;
 }
 
 const FrameStorage *Image::getCurrentFrameStorage() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	if (!frameBuffer.isEmpty())
 		return &frameBuffer.getReadPtr();
 	return nullptr;
@@ -169,31 +197,31 @@ SharedPointer<sf::Shader> Image::getDisplayShader() const
 
 SizeType Image::getCurrentFrameIndex() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return currentFrameIndex;
 }
 
 SizeType Image::getNumFramesTotal() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return data.numFramesTotal;
 }
 
 SizeType Image::getNumFramesBuffered() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return (SizeType)frameBuffer.getBufferedAmount();
 }
 
 bool Image::getIsAnimated() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return data.numFramesTotal > 1;
 }
 
 bool Image::getHasAlpha() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return data.hasAlpha;
 }
 
@@ -201,7 +229,7 @@ bool Image::advanceToNextFrame()
 {
 	static SizeType lastFrameIndex = ~0U;
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 
 	backgroundLoader->requestNextFrame();
 
@@ -219,7 +247,7 @@ bool Image::isDisplayable() const
 	if (loaderState == Unloading)
 		return false;
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return loaderState != Error && !frameBuffer.isEmpty() && displayShader != nullptr;
 }
 
@@ -228,24 +256,29 @@ bool Image::hasError() const
 	return loaderState == Error;
 }
 
+const std::string &Image::getErrorText() const
+{
+	return errorText;
+}
+
 bool Image::hasThumbnail() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return thumbnail != nullptr;
 }
 
 SharedPointer<sf::Texture> Image::getThumbnail() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	return thumbnail;
 }
 
 void Image::setImageData(const ImageData &dataParam)
 {
 	if (loaderState == Unloading)
-		throw ImageUnloadingException();
+		return;
 
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	data = dataParam;
 }
 
@@ -254,11 +287,11 @@ Image::LoaderType Image::sniffLoaderType()
 	// Test FreeImage formats
 	{
 		FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(filepath.c_str());
-		if (format == FIF_UNKNOWN)
-		{
-			// Try to get file type from file name instead
-			format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
-		}
+// 		if (format == FIF_UNKNOWN)
+// 		{
+// 			// Try to get file type from file name instead
+// 			format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
+// 		}
 
 		if (FreeImage_FIFSupportsReading(format))
 			return LoaderFreeImage;
@@ -294,7 +327,7 @@ const std::wstring &Image::getFilepath() const
 
 std::wstring Image::getStats() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	std::wstring str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
 		file::utils::getBasename(filepath),
 		currentFrameIndex + 1,
@@ -314,52 +347,56 @@ void Image::setState(ImageLoaderState state)
 bool Image::getIsBufferFull() const
 {
 	if (loaderState == Unloading)
-		throw ImageUnloadingException();
+		return true;
 
-	std::unique_lock<std::mutex> lock(mutex);
 	return frameBuffer.isFull();
 }
 
-FrameStorage &Image::getNextBuffer()
+FrameStorage *Image::getNextBuffer()
 {
 	if (loaderState == Unloading)
-		throw ImageUnloadingException();
+		return nullptr;
 
-	std::unique_lock<std::mutex> lock(mutex);
-	return frameBuffer.getWritePtr();
+	return &frameBuffer.getWritePtr();
 }
 
 void Image::swapBuffer()
 {
 	if (loaderState == Unloading)
-		throw ImageUnloadingException();
+		return;
 
-	{
-		std::unique_lock<std::mutex> lock(mutex);
-		frameBuffer.incrementWrite();
-	}
+	frameBuffer.incrementWrite();
 
 	if (thumbnail == nullptr)
-		makeThumbnail(frameBuffer.getReadPtr(), 300);
+	{
+		const FrameStorage &storage = frameBuffer.getReadPtr();
+		TS_ASSERT(storage.texture != nullptr);
+
+		thread::ThreadScheduler &ts = TS_GET_GIGATON().getGigaton<thread::ThreadScheduler>();
+		ts.scheduleOnce(
+			thread::Priority_Normal, TimeSpan::zero,
+			&ThisClass::makeThumbnail, this,
+			storage.texture, 300);
+	}
 }
 
 void Image::finalizeBuffer()
 {
 	if (loaderState == Unloading)
-		throw ImageUnloadingException();
+		return;
 
-	std::unique_lock<std::mutex> lock(mutex);
+// 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	frameBuffer.removeReadConstraint();
 }
 
-bool Image::makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize)
+bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxSize)
 {
 	TS_ASSERT(maxSize > 0);
-	TS_ASSERT(bufferStorage.texture != nullptr);
-	if (bufferStorage.texture == nullptr)
+	TS_ASSERT(frameTexture != nullptr);
+	if (frameTexture == nullptr)
 		return false;
 
-	math::VC2U textureSize = bufferStorage.texture->getSize();
+	math::VC2U textureSize = frameTexture->getSize();
 	TS_ASSERT(textureSize.x != 0 && textureSize.y != 0);
 	if (textureSize.x == 0 || textureSize.y == 0)
 		return false;
@@ -383,7 +420,7 @@ bool Image::makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize)
 		return false;
 
 	sf::RenderStates states;
-	states.texture = bufferStorage.texture.get();
+	states.texture = frameTexture.get();
 
 	displayShader->setUniform("u_textureApparentSize", static_cast<math::VC2>(scaledSize));
 	displayShader->setUniform("u_useAlphaChecker", true);
@@ -395,10 +432,17 @@ bool Image::makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize)
 		states);
 	rt.display();
 
-	std::unique_lock<std::mutex> lock(mutex);
-	thumbnail = makeShared<sf::Texture>(rt.getTexture());
-	thumbnail->setSmooth(true);
-	thumbnail->generateMipmap();
+	sf::Texture *thumbnailTexture = new sf::Texture(rt.getTexture());
+	TS_ASSERT(thumbnailTexture != nullptr);
+	if (thumbnailTexture != nullptr)
+	{
+		thumbnailTexture->setSmooth(true);
+		thumbnailTexture->generateMipmap();
+
+		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		thumbnail.reset(thumbnailTexture);
+	}
+
 	return thumbnail != nullptr;
 }
 

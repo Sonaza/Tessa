@@ -216,6 +216,20 @@ void WindowManager::useInterfaceView()
 	renderWindow.setView(windowViewManager->getSFMLView(currentViewType));
 }
 
+const WindowView &WindowManager::getApplicationView() const
+{
+	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(windowViewManager);
+	return windowViewManager->getView(WindowViewManager::ViewType_Application);
+}
+
+const WindowView &WindowManager::getInterfaceView() const
+{
+	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(windowViewManager);
+	return windowViewManager->getView(WindowViewManager::ViewType_Interface);
+}
+
 const WindowView &WindowManager::getCurrentView() const
 {
 	TS_ASSERT(windowCreated && "Window should be created before using.");

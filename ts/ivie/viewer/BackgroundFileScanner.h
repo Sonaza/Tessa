@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ts/tessa/system/AbstractManagerBase.h"
-#include "ts/tessa/threading/ThreadScheduler.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
 
 TS_PACKAGE2(app, viewer)
 
@@ -30,9 +30,9 @@ private:
 	std::vector<std::wstring> allowedExtensions;
 	std::vector<std::wstring> filelist;
 
-	threading::SchedulerTaskId scannerTaskId;
+	thread::SchedulerTaskId scannerTaskId;
 
-	std::mutex mutex;
+	Mutex mutex;
 };
 
 TS_END_PACKAGE2()

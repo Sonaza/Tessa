@@ -4,6 +4,19 @@
 
 TS_PACKAGE2(app, viewer)
 
+struct ImageEntry 
+{
+	std::wstring filepath;
+	SizeType index;
+
+	enum Buffering
+	{
+		Buffering_Forwards,
+		Buffering_Backwards,
+	};
+	Buffering buffering;
+};
+
 class ViewerStateManager : public system::AbstractManagerBase
 {
 	TS_DECLARE_MANAGER_TYPE(app::viewer::ViewerStateManager);
@@ -32,17 +45,14 @@ public:
 	};
 	void setSorting(SortingStyle sorting);
 
-	std::vector<std::wstring> getCurrentSortedFileList() const;
+	const std::vector<std::wstring> &getCurrentSortedFileList() const;
 
-	// If startIndex > endIndex, it'll wrap around
-	std::map<SizeType, std::wstring> getFileListSlice(SizeType startIndex, SizeType endIndex);
-	std::map<SizeType, std::wstring> getFileListSliceByOffsets(PosType startOffset, SizeType endOffset);
+	// Retrieves a list of entries for buffering. 
+	const std::vector<ImageEntry> getListSliceForBuffering(SizeType numForward, SizeType numBackward);
 
 	lang::Signal<SizeType> currentImageChangedSignal;
 
 private:
-	std::map<SizeType, std::wstring> getFileListSliceUnsafe(SizeType startIndex, SizeType endIndex);
-
 	void updateFileList();
 
 	void applySorting();
@@ -55,7 +65,7 @@ private:
 	SizeType currentImageIndex;
 	std::wstring currentFilePath;
 
-	mutable std::mutex mutex;
+	mutable Mutex mutex;
 	std::vector<std::wstring> currentFileList;
 };
 

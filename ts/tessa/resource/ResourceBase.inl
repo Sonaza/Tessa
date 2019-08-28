@@ -19,7 +19,7 @@ bool ResourceBase<ResourceType, ResourceTypeIndex>::loadResource()
 	if (isLoaded())
 		return false;
 
-	std::lock_guard<std::mutex> lock(resourceMutex);
+	MutexGuard lock(resourceMutex);
 
 	resourceLoaded = false;
 
@@ -49,7 +49,7 @@ bool ResourceBase<ResourceType, ResourceTypeIndex>::loadResource()
 template <class ResourceType, SizeType ResourceTypeIndex>
 void ResourceBase<ResourceType, ResourceTypeIndex>::unloadResource()
 {
-	std::lock_guard<std::mutex> lock(resourceMutex);
+	MutexGuard lock(resourceMutex);
 	resource.reset();
 	resourceLoaded = false;
 	loadError = false;
@@ -59,6 +59,6 @@ template <class ResourceType, SizeType ResourceTypeIndex>
 SharedPointer<ResourceType> ResourceBase<ResourceType, ResourceTypeIndex>::getResource() const
 {
 	TS_ASSERT(resourceLoaded && "Resource is not loaded");
-	std::lock_guard<std::mutex> lock(resourceMutex);
+	MutexGuard lock(resourceMutex);
 	return resource;
 }

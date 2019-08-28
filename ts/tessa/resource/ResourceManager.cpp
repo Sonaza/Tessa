@@ -2,7 +2,7 @@
 #include "ts/tessa/resource/ResourceManager.h"
 
 #include "ts/tessa/system/BaseApplication.h"
-#include "ts/tessa/threading/ThreadScheduler.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
 
 #include "ts/tessa/resource/TextureResource.h"
 #include "ts/tessa/resource/FontResource.h"
@@ -189,8 +189,8 @@ void ResourceManager::addResourceToLoadQueue(SharedPointer<AbstractResourceBase>
 // 	if (ResourceManager::stop_flag.load(std::memory_order_relaxed))
 // 		return;
 
-	threading::ThreadScheduler &tm = getGigaton<threading::ThreadScheduler>();
-	tm.scheduleOnce(threading::Priority_Normal, TimeSpan::zero, &ResourceManager::loadResourceTask, resource);
+	thread::ThreadScheduler &tm = getGigaton<thread::ThreadScheduler>();
+	tm.scheduleOnce(thread::Priority_Normal, TimeSpan::zero, &ResourceManager::loadResourceTask, resource);
 }
 
 GUID ResourceManager::findFileGuid(const GUID &resourceGuid)

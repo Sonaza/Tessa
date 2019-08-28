@@ -28,6 +28,8 @@ public:
 	static TimeSpan fromMilliseconds(Int64 milliseconds);
 	static TimeSpan fromMicroseconds(Int64 microseconds);
 
+	const std::string getAsString() const;
+
 	TimeSpan &operator+=(TimeSpan rhs);
 	TimeSpan &operator-=(TimeSpan rhs);
 
@@ -44,5 +46,12 @@ bool operator>=(TimeSpan lhs, TimeSpan rhs);
 
 TimeSpan operator+(TimeSpan lhs, TimeSpan rhs);
 TimeSpan operator-(TimeSpan lhs, TimeSpan rhs);
+
+TimeSpan operator""_hrs(Uint64 value);
+TimeSpan operator""_min(Uint64 value);
+TimeSpan operator""_s(Uint64 value);
+TimeSpan operator""_sf(long double value);
+TimeSpan operator""_ms(Uint64 value);
+TimeSpan operator""_us(Uint64 value);
 
 TS_END_PACKAGE0()

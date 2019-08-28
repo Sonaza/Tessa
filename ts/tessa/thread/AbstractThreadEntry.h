@@ -7,15 +7,15 @@
 #include <queue>
 #include <future>
 
-TS_PACKAGE1(threading)
+TS_PACKAGE1(thread)
 
-class BaseThreadEntry
+class AbstractThreadEntry
 {
 	friend class Thread;
 
 public:
-	BaseThreadEntry();
-	virtual ~BaseThreadEntry();
+	AbstractThreadEntry();
+	virtual ~AbstractThreadEntry();
 
 	virtual void entry() = 0;
 

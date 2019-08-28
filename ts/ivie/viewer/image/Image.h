@@ -22,6 +22,8 @@ public:
 
 class Image
 {
+	typedef Image ThisClass;
+
 	friend class AbstractImageBackgroundLoader;
 	friend class ImageBackgroundLoaderFreeImage;
 	friend class ImageBackgroundLoaderWebm;
@@ -34,6 +36,7 @@ public:
 	void unload();
 
 	void restart(bool suspend);
+	void suspendLoader();
 
 	void setActive(bool active);
 
@@ -56,7 +59,9 @@ public:
 	bool advanceToNextFrame();
 
 	bool isDisplayable() const;
+
 	bool hasError() const;
+	const std::string &getErrorText() const;
 
 	bool hasThumbnail() const;
 	SharedPointer<sf::Texture> getThumbnail() const;
@@ -93,11 +98,11 @@ public:
 
 private:
 	bool getIsBufferFull() const;
-	FrameStorage &getNextBuffer();
+	FrameStorage *getNextBuffer();
 	void swapBuffer();
 	void finalizeBuffer();
 
-	bool makeThumbnail(const FrameStorage &bufferStorage, SizeType maxSize);
+	bool makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxSize);
 
 	std::wstring filepath;
 	bool active = false;
@@ -122,17 +127,20 @@ private:
 	void setState(ImageLoaderState state);
 	std::atomic<ImageLoaderState> loaderState = Unloaded;
 
+	std::string errorText;
+
 	SizeType currentFrameIndex = 0;
 
 	static const BigSizeType MaxFrameBufferCapacity = 30;
 	typedef util::RingBuffer<FrameStorage, MaxFrameBufferCapacity> FrameRingBuffer;
 	FrameRingBuffer frameBuffer;
+
 	SharedPointer<sf::Texture> thumbnail;
 	SharedPointer<sf::Shader> displayShader;
 
 	ScopedPointer<AbstractImageBackgroundLoader> backgroundLoader;
 	
-	mutable std::mutex mutex;
+	mutable Mutex mutex;
 };
 
 TS_END_PACKAGE2()

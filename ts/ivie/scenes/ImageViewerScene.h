@@ -6,7 +6,6 @@ TS_DECLARE2(app, viewer, ViewerStateManager);
 
 TS_DECLARE_STRUCT1(system, WindowView);
 
-
 TS_PACKAGE2(app, scenes)
 
 class ImageViewerScene : public system::AbstractSceneBase
@@ -33,6 +32,13 @@ protected:
 	lang::SignalBind imageChangedBind;
 
 	resource::FontResource *font = nullptr;
+
+	Clock clickTimer;
+
+	bool updateImageInfo = false;
+	math::VC2U imageSize;
+	float defaultScale = 1.f;
+	float dragged = 0.f;
 
 	Clock frameTimer;
 

@@ -8,9 +8,9 @@
 #include "ts/tessa/system/WindowViewManager.h"
 #include "ts/tessa/resource/ResourceManager.h"
 
-#include "ts/tessa/threading/Thread.h"
-#include "ts/tessa/threading/ThreadScheduler.h"
-#include "ts/tessa/threading/ThreadUtils.h"
+#include "ts/tessa/thread/Thread.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
+#include "ts/tessa/thread/ThreadUtils.h"
 
 #include "ts/tessa/resource/FontResource.h"
 
@@ -180,7 +180,7 @@ sf::Font &BaseApplication::getDebugFont()
 
 bool BaseApplication::createSystemManagers()
 {
-	if (!createManagerInstance<threading::ThreadScheduler>())
+	if (!createManagerInstance<thread::ThreadScheduler>())
 		return false;
 
 	if (!createManagerInstance<file::ArchivistFilesystem>())

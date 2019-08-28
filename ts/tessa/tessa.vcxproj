@@ -156,6 +156,7 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lang\CallStack.cpp" />
     <ClCompile Include="common\WindowsUtils.cpp" />
     <ClCompile Include="file\ArchivistFilesystem.cpp" />
     <ClCompile Include="file\ArchivistReader.cpp" />
@@ -179,6 +180,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="profiling\SimpleScopedZoneTimer.cpp" />
     <ClCompile Include="renderer\GpuPreference.cpp" />
     <ClCompile Include="resource\AbstractResourceBase.cpp" />
     <ClCompile Include="resource\ArchivistInputStream.cpp" />
@@ -189,15 +191,20 @@
     <ClCompile Include="resource\SoundResource.cpp" />
     <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="system\WindowViewManager.cpp" />
-    <ClCompile Include="threading\BaseThreadEntry.cpp" />
-    <ClCompile Include="threading\Thread.cpp" />
-    <ClCompile Include="threading\ThreadUtils.cpp" />
+    <ClCompile Include="thread\AbstractThreadEntry.cpp" />
+    <ClCompile Include="thread\ConditionVariable.cpp" />
+    <ClCompile Include="thread\CurrentThread.cpp" />
+    <ClCompile Include="thread\Mutex.cpp" />
+    <ClCompile Include="thread\MutexGuard.cpp" />
+    <ClCompile Include="thread\Thread.cpp" />
+    <ClCompile Include="thread\ThreadUtils.cpp" />
     <ClCompile Include="time\Clock.cpp" />
     <ClCompile Include="time\GlobalTimer.cpp" />
     <ClCompile Include="time\Time.cpp" />
     <ClCompile Include="time\TimeSpan.cpp" />
     <ClCompile Include="util\ContainerUtil.cpp" />
     <ClCompile Include="util\LZ4Compressor.cpp" />
+    <ClInclude Include="lang\CallStack.h" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
     <ClInclude Include="common\WindowsUtils.h" />
@@ -223,6 +230,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="math\CRC.h" />
     <ClInclude Include="net\Address.h" />
+    <ClInclude Include="profiling\SimpleScopedZoneTimer.h" />
     <ClInclude Include="resource\ArchivistInputStream.h" />
     <ClInclude Include="resource\MusicResource.h" />
     <ClInclude Include="resource\ResourceBase.inl">
@@ -237,15 +245,19 @@
     <ClCompile Include="system\ConfigReader.cpp" />
     <ClCompile Include="system\Gigaton.cpp" />
     <ClCompile Include="system\AbstractSceneBase.cpp" />
-    <ClCompile Include="threading\ThreadScheduler.cpp" />
+    <ClCompile Include="thread\ThreadScheduler.cpp" />
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="resource\ShaderResource.h" />
     <ClInclude Include="resource\SoundResource.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="system\WindowViewManager.h" />
-    <ClInclude Include="threading\BaseThreadEntry.h" />
-    <ClInclude Include="threading\Thread.h" />
-    <ClInclude Include="threading\ThreadUtils.h" />
+    <ClInclude Include="thread\AbstractThreadEntry.h" />
+    <ClInclude Include="thread\ConditionVariable.h" />
+    <ClInclude Include="thread\CurrentThread.h" />
+    <ClInclude Include="thread\Mutex.h" />
+    <ClInclude Include="thread\MutexGuard.h" />
+    <ClInclude Include="thread\Thread.h" />
+    <ClInclude Include="thread\ThreadUtils.h" />
     <ClInclude Include="time\Clock.h" />
     <ClInclude Include="time\GlobalTimer.h" />
     <ClInclude Include="time\Time.h" />
@@ -282,7 +294,7 @@
     <ClInclude Include="system\ConfigReader.h" />
     <ClInclude Include="system\Gigaton.h" />
     <ClInclude Include="system\AbstractSceneBase.h" />
-    <ClInclude Include="threading\ThreadScheduler.h" />
+    <ClInclude Include="thread\ThreadScheduler.h" />
     <ClInclude Include="system\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
