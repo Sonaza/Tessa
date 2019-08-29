@@ -75,7 +75,7 @@ public:
 		while (running)
 		{
 			MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
-			condition.waitFor(lock, 200_ms, [this]()
+			condition.waitFor(lock, 50_ms, [this]()
 			{
 				return !running;// || !unloadQueue.empty();
 			});
@@ -107,6 +107,8 @@ public:
 					image->unload();
 				}
 			}
+
+			Thread::sleep(10_ms);
 		}
 	}
 
@@ -127,7 +129,10 @@ bool ImageManager::initialize()
 	prepareShaders();
 
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
-	currentImageChangedBind.connect(vsm.currentImageChangedSignal, &ThisClass::currentImageChanged, this);
+	currentImageChangedBind.connect(
+		vsm.currentImageChangedSignal,
+		lang::SignalPriority_VeryHigh, 
+		&ThisClass::currentImageChanged, this);
 
 	backgroundUnloader.reset(new BackgroundImageUnloader(this));
 

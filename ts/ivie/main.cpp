@@ -9,16 +9,24 @@
 #include "ts/tessa/common/Log.h"
 #include "ts/tessa/file/FileUtils.h"
 
-#include "ts/ivie/util/RingBuffer.h"
-
-#include <functional>
-#include <future>
+#include "ts/tessa/lang/Signal.h"
 
 using namespace ts;
 
 int asdfasd()
 {
+// 	lang::Signal<> mysignal;
+// 	lang::SignalBind bind2;
+// 	bind2.connect(mysignal, lang::SignalPriority_Normal, []()
+// 	{
+// 		TS_PRINTF("This is Bind 2 callback!\n");
+// 	});
+
+// 	lang::SignalBind bind1;
+// 	bind1.connect(mysignal, lang::SignalPriority_Normal, &bind1function);
 	
+
+// 	mysignal();
 
 	return 1;
 }

@@ -12,8 +12,11 @@
     
     <Import Project="$(ExternalsDir)header_only_externals\header_only_externals.props" />
     
+    
     <!-- Debugging related externals -->
     <Import Project="$(ExternalsDir)vld\vld.props" />
-    <Import Project="$(ExternalsDir)StackWalker\StackWalker.props" />
+    <!-- <Import Project="$(ExternalsDir)StackWalker\StackWalker.props" /> -->
+    
+    <!-- <Import Project="$(ExternalsDir)boost\boost.props" /> -->
   </ImportGroup>
 </Project>

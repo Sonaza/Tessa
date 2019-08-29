@@ -59,10 +59,10 @@ const std::string TimeSpan::getAsString() const
 {
 	Int64 time = getMicroseconds();
 
-	if (time > 10000000)
+	if (math::abs(time) > 10000000)
 		return TS_FMT("%0.2fs", getSecondsAsFloat());
 
-	if (time > 1000)
+	if (math::abs(time) > 1000)
 		return TS_FMT("%0.1fms", time / 1000.f);
 
 	return TS_FMT("%lldus", time);

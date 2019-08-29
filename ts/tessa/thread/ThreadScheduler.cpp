@@ -9,8 +9,6 @@
 
 #include <type_traits>
 
-#pragma optimize("", off)
-
 TS_DEFINE_MANAGER_TYPE(thread::ThreadScheduler);
 
 TS_PACKAGE1(thread)
@@ -39,13 +37,13 @@ public:
 		while (true)
 		{
 			MutexGuard lock(scheduler->queueMutex, MUTEXGUARD_DEBUGINFO());
-			scheduler->schedulerCondition.waitFor(lock, TimeSpan::fromMilliseconds(10),
+			scheduler->schedulerCondition.waitFor(lock, 10_ms,
 			[this]()
 			{
 				return !scheduler->running || !scheduler->waitingTaskQueue.empty();
 			});
 
-			if (!scheduler->running)// && scheduler->pendingTaskQueue.empty())
+			if (!scheduler->running)// && scheduler->waitingTaskQueue.empty())
 				return;
 
 			if (scheduler->waitingTaskQueue.empty())
@@ -62,6 +60,12 @@ public:
 				// Notifies any waiting worker to start handling it
 				scheduler->workerCondition.notifyOne();
 			}
+			else
+			{
+				lock.unlock();
+			}
+
+			Thread::sleep(10_ms);
 		}
 	}
 };
@@ -152,7 +156,7 @@ ThreadScheduler::~ThreadScheduler()
 bool ThreadScheduler::initialize()
 {
 // 	const SizeType numWorkers = math::min(TS_MAX_THREAD_POOL_THREAD_COUNT, ThreadScheduler::numHardwareThreads());
-	const SizeType numWorkers = TS_MAX_THREAD_POOL_THREAD_COUNT + 15;
+	const SizeType numWorkers = TS_MAX_THREAD_POOL_THREAD_COUNT;
 	createBackgroundWorkers(numWorkers);
 
 	return true;

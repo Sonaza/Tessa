@@ -8,6 +8,25 @@ MutexGuard::MutexGuard(Mutex &mutexParam, const char *debugInfo)
 {
 	mutex->lock(debugInfo);
 	ownsLock = true;
+#if TS_MUTEX_PROFILING == TS_TRUE
+	savedDebugInfo = debugInfo;
+#endif
+}
+
+MutexGuard::MutexGuard(MutexGuard &&other)
+{
+	*this = std::move(other);
+}
+
+MutexGuard &MutexGuard::operator=(MutexGuard &&other)
+{
+	if (this != &other)
+	{
+		std::swap(mutex, other.mutex);
+		ownsLock = other.ownsLock.load();
+		other.ownsLock = false;
+	}
+	return *this;
 }
 
 MutexGuard::~MutexGuard()
@@ -21,7 +40,11 @@ MutexGuard::~MutexGuard()
 
 void MutexGuard::lock()
 {
-	mutex->lock("was manually locked");
+#if TS_MUTEX_PROFILING == TS_TRUE
+	mutex->lock(savedDebugInfo);
+#else
+	mutex->lock();
+#endif
 	ownsLock = true;
 }
 

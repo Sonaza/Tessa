@@ -35,7 +35,7 @@ protected:
 
 	Clock clickTimer;
 
-	bool updateImageInfo = false;
+	bool updateImageInfo = true;
 	math::VC2U imageSize;
 	float defaultScale = 1.f;
 	float dragged = 0.f;
@@ -49,6 +49,9 @@ protected:
 	math::VC2 targetPositionOffset;
 
 	math::VC2I lastMousePosition;
+
+	bool showManagerStatus = false;
+	bool showSchedulerStatus = false;
 
 	viewer::ViewerStateManager *viewerStateManager = nullptr;
 

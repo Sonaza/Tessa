@@ -54,16 +54,4 @@ void ConditionVariable::notifyAll()
 	condition.notify_all();
 }
 
-// void ConditionVariable::lock(MutexGuard &lock)
-// {
-// 	lock.ownsLock = true;
-// 	lock.mutex->owner = CurrentThread::getThreadId();
-// }
-// 
-// void ConditionVariable::unlock(MutexGuard &lock)
-// {
-// 	lock.ownsLock = false;
-// 	lock.mutex->owner = Mutex::InvalidOwner;
-// }
-
 TS_END_PACKAGE1()

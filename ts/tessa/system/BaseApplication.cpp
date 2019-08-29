@@ -225,11 +225,11 @@ void BaseApplication::mainloop()
 	Clock framerateClock;
 
 	Clock deltaClock;
-	Clock loopTimer;
+	Clock frameTimer;
 
 	while (applicationRunning)
 	{
-		loopTimer.restart();
+		frameTimer.restart();
 
 		if (pendingScene != nullptr)
 		{
@@ -252,10 +252,10 @@ void BaseApplication::mainloop()
 
 		TimeSpan deltaTime = deltaClock.restart();
 
-		for (InstancedManagersList::iterator it = managerInstances.begin();
-		     it != managerInstances.end(); ++it)
+		for (auto it = managerInstancingOrder.begin(); it != managerInstancingOrder.end(); ++it)
 		{
-			it->second->update(deltaTime);
+			const std::type_index &typeIndex = *it;
+			managerInstances[typeIndex]->update(deltaTime);
 		}
 
 		handleEvents();
@@ -269,12 +269,14 @@ void BaseApplication::mainloop()
 
 		handleRendering();
 
-		TimeSpan frameSleep = targetFrameTime - loopTimer.getElapsedTime();
-		if (frameSleep > TimeSpan::zero)
-			Thread::sleep(frameSleep);
+		TimeSpan elapsedFrameTime = frameTimer.getElapsedTime();
+		TimeSpan frameSleep = targetFrameTime - elapsedFrameTime;
+		frameSleep = math::max(4_ms, frameSleep);
+// 		TS_PRINTF("Frame Time %lldms / sleep %lldms\n", elapsedFrameTime.getMilliseconds(), frameSleep.getMilliseconds());
+		Thread::sleep(frameSleep);
 
 		frameCounter++;
-		if (framerateClock.getElapsedTime() > TimeSpan::fromMilliseconds(500))
+		if (framerateClock.getElapsedTime() > 500_ms)
 		{
 			float elapsedTime = framerateClock.restart().getSecondsAsFloat();
 			currentFramerate = (SizeType)(frameCounter / elapsedTime);

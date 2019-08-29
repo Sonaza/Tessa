@@ -35,7 +35,10 @@ bool ImageViewerScene::start()
 {
 	viewerStateManager = &getGigaton<viewer::ViewerStateManager>();
 
-	imageChangedBind.connect(viewerStateManager->currentImageChangedSignal, &ThisClass::imageChanged, this);
+	imageChangedBind.connect(
+		viewerStateManager->currentImageChangedSignal,
+		lang::SignalPriority_Normal,
+		&ThisClass::imageChanged, this);
 
 	return true;
 }
@@ -57,15 +60,32 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 	{
 		case sf::Event::KeyPressed:
 		{
-			if (event.key.code == sf::Keyboard::Left)
+			switch (event.key.code)
 			{
-				viewerStateManager->previousImage();
-				return true;
-			}
-			if (event.key.code == sf::Keyboard::Right)
-			{
-				viewerStateManager->nextImage();
-				return true;
+				case sf::Keyboard::Left:
+				{
+					viewerStateManager->previousImage();
+					return true;
+				}
+				case sf::Keyboard::Right:
+				{
+					viewerStateManager->nextImage();
+					return true;
+				}
+
+				case sf::Keyboard::F1:
+				{
+					showManagerStatus = !showManagerStatus;
+					return true;
+				}
+
+				case sf::Keyboard::F2:
+				{
+					showSchedulerStatus = !showSchedulerStatus;
+					return true;
+				}
+
+				default: /* bop */ break;
 			}
 		}
 		break;
@@ -84,6 +104,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				case sf::Mouse::Right:
 				{
 					targetImageScale = 1.f;
+					targetPositionOffset = math::VC2::zero;
 				}
 				return true;
 
@@ -174,22 +195,31 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 		viewer::Image *currentImage = imageManager.getCurrentImage();
 		if (currentImage != nullptr)
 		{
-			imageSize = currentImage->getSize();
-
-			if (imageSize.y > 0)
+			if (currentImage->isDisplayable())
 			{
-				system::WindowManager &wm = getGigaton<system::WindowManager>();
-				const system::WindowView &view = wm.getApplicationView();
+				imageSize = currentImage->getSize();
 
-				defaultScale = math::min(1.f, (view.size.y - 30.f) / (float)imageSize.y);
+				if (imageSize.y > 0)
+				{
+					system::WindowManager &wm = getGigaton<system::WindowManager>();
+					const system::WindowView &view = wm.getApplicationView();
+
+					defaultScale = math::min(1.f, (view.size.y - 30.f) / (float)imageSize.y);
+				}
+				else
+				{
+					defaultScale = 1.f;
+					TS_ASSERT(!"poop");
+				}
+
+				updateImageInfo = false;
 			}
-			else
+			else if (currentImage->hasError())
 			{
 				defaultScale = 1.f;
+				updateImageInfo = false;
 			}
 		}
-
-		updateImageInfo = false;
 	}
 }
 
@@ -214,7 +244,12 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 	viewer::Image *currentImage = imageManager.getCurrentImage();
 	if (currentImage != nullptr)
 	{
-		if (currentImage->isDisplayable())
+		math::VC2U size = currentImage->getSize();
+		float scale = defaultScale * imageScale;
+
+		math::VC2 scaledSize = static_cast<math::VC2>(size) * scale;
+
+		if (currentImage->isDisplayable() && !sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 		{
 			const viewer::FrameStorage frame = *currentImage->getCurrentFrameStorage();
 			if (currentImage->getIsAnimated())
@@ -226,22 +261,14 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 				}
 			}
 
-			math::VC2U size = currentImage->getSize();
-
-			float scale = defaultScale * imageScale;
-
-// 			sf::VertexArray va = util::makeQuadVertexArray(size.x, size.y);
 			sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
 				size.x, size.y, size.x, size.y, 3, sf::Color(0, 0, 0, 170));
 
 			sf::RenderStates states;
 			states.texture = frame.texture.get();
 
-			math::VC2 scaledSize = static_cast<math::VC2>(size) * scale;
-
 			sf::Transform transform;
 			transform.translate(scaledSize / -2.f + positionOffset);
-//	 		transform.translate(positionOffset);
 			transform.scale(scale, scale);
 			states.transform = transform;
 
@@ -252,10 +279,29 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 			renderTarget.draw(va, states);
 		}
-	}
-	else
-	{
+		else
+		{
+			SharedPointer<sf::Texture> thumbnail = currentImage->getThumbnail();
+			if (thumbnail != nullptr)
+			{
+				math::VC2U thumbnailSize = thumbnail->getSize();
 
+				sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
+					size.x, size.y,
+					thumbnailSize.x, thumbnailSize.y,
+					3, sf::Color(0, 0, 0, 170));
+
+				sf::RenderStates states;
+				states.texture = thumbnail.get();
+
+				sf::Transform transform;
+				transform.translate(scaledSize / -2.f + positionOffset);
+				transform.scale(scale, scale);
+				states.transform = transform;
+
+				renderTarget.draw(va, states);
+			}
+		}
 	}
 
 // 	sf::CircleShape shape(20.f);
@@ -301,6 +347,21 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		}
 
 		hasError = currentImage->hasError();
+
+		if (!hasError && (!currentImage->isDisplayable() || sf::Keyboard::isKeyPressed(sf::Keyboard::Space)))
+		{
+			sf::Text loadingText;
+			loadingText.setOutlineThickness(2.f);
+			loadingText.setFont(*font->getResource());
+
+			loadingText.setString("Loading...");
+
+			sf::FloatRect bounds = loadingText.getLocalBounds();
+			loadingText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+			loadingText.setPosition(view.size / 2.f);
+
+			renderTarget.draw(loadingText);
+		}
 	}
 	else
 	{
@@ -349,34 +410,36 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		renderTarget.draw(statusText);
 	}
 
-// 	{
-// 		std::wstring stats = imageManager.getStats();
-// 		statusText.setString(stats);
-// 
-// 		statusText.setPosition(10.f, 300.f);
-// 		statusText.setOutlineThickness(2.f);
-// 		statusText.setScale(0.7f, 0.7f);
-// 
-// 		renderTarget.draw(statusText);
-// 	}
+	if (showManagerStatus)
+	{
+		std::wstring stats = imageManager.getStats();
+		statusText.setString(stats);
 
-// 	{
-// 		thread::ThreadScheduler &ts = getGigaton<thread::ThreadScheduler>();
-// 
-// 		thread::ThreadScheduler::SchedulerStats stats = ts.getStats();
-// 
-// 		statusText.setString(TS_FMT(
-// 			"Scheduler: %u / %u working  %u pending [%u interval]",
-// 			stats.numWorkedTasks, stats.numBackgroundWorkers,
-// 			stats.numQueuedTasks, stats.numIntervalTasks
-// 		));
-// 
-// 		statusText.setPosition(10.f, 240.f);
-// 		statusText.setOutlineThickness(2.f);
-// 		statusText.setScale(0.7f, 0.7f);
-// 
-// 		renderTarget.draw(statusText);
-// 	}
+		statusText.setPosition(10.f, 300.f);
+		statusText.setOutlineThickness(2.f);
+		statusText.setScale(0.7f, 0.7f);
+
+		renderTarget.draw(statusText);
+	}
+
+	if (showSchedulerStatus)
+	{
+		thread::ThreadScheduler &ts = getGigaton<thread::ThreadScheduler>();
+
+		thread::ThreadScheduler::SchedulerStats stats = ts.getStats();
+
+		statusText.setString(TS_FMT(
+			"Scheduler: %u / %u working  %u pending [%u interval]",
+			stats.numWorkedTasks, stats.numBackgroundWorkers,
+			stats.numQueuedTasks, stats.numIntervalTasks
+		));
+
+		statusText.setPosition(10.f, 200.f);
+		statusText.setOutlineThickness(2.f);
+		statusText.setScale(0.7f, 0.7f);
+
+		renderTarget.draw(statusText);
+	}
 }
 
 TS_END_PACKAGE2()

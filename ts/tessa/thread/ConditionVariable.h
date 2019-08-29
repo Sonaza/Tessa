@@ -3,6 +3,8 @@
 #include "ts/tessa/thread/Mutex.h"
 #include "ts/tessa/thread/MutexGuard.h"
 
+#include "ts/tessa/time/TimeSpan.h"
+
 #include <condition_variable>
 #include <functional>
 
@@ -28,9 +30,6 @@ public:
 	void notifyAll();
 
 private:
-// 	void lock(MutexGuard &lock);
-// 	void unlock(MutexGuard &lock);
-
 	std::condition_variable_any condition;
 };
 

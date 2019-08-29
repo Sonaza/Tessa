@@ -8,13 +8,14 @@
 
 TS_PACKAGE1(thread)
 
-class MutexGuard : public lang::NoncopyableAndNonmovable
+class MutexGuard : public lang::Noncopyable
 {
-	friend class ConditionVariable;
-
 public:
 	MutexGuard(Mutex &mutex, const char *debugInfo = nullptr);
 	~MutexGuard();
+
+	MutexGuard(MutexGuard &&other);
+	MutexGuard &operator=(MutexGuard &&other);
 
 	void lock();
 	void unlock();
@@ -24,6 +25,10 @@ public:
 private:
 	Mutex *mutex = nullptr;
 	std::atomic_bool ownsLock;
+
+#if TS_MUTEX_PROFILING == TS_TRUE
+	const char *savedDebugInfo = nullptr;
+#endif
 };
 
 TS_END_PACKAGE1()

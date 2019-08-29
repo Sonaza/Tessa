@@ -156,7 +156,6 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="lang\CallStack.cpp" />
     <ClCompile Include="common\WindowsUtils.cpp" />
     <ClCompile Include="file\ArchivistFilesystem.cpp" />
     <ClCompile Include="file\ArchivistReader.cpp" />
@@ -203,8 +202,6 @@
     <ClCompile Include="time\Time.cpp" />
     <ClCompile Include="time\TimeSpan.cpp" />
     <ClCompile Include="util\ContainerUtil.cpp" />
-    <ClCompile Include="util\LZ4Compressor.cpp" />
-    <ClInclude Include="lang\CallStack.h" />
     <ClInclude Include="common\Debugging.h" />
     <ClInclude Include="common\IncludeSFML.h" />
     <ClInclude Include="common\WindowsUtils.h" />
@@ -264,7 +261,6 @@
     <ClInclude Include="time\TimeSpan.h" />
     <ClInclude Include="util\ContainerUtil.h" />
     <ClInclude Include="util\PriorityQueue.h" />
-    <ClInclude Include="util\LZ4Compressor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\Common.h" />

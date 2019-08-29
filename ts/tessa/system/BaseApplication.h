@@ -90,7 +90,7 @@ private:
 
 	// Fixed delta of all logic updates, independent of frame rate
 	const TimeSpan fixedDeltaTime = TimeSpan::fromMilliseconds(16);
-	// Target frame time affects framerate, a single update per 16 milliseconds roughly results in 60 fps
+	// Target frame time affects framerate, a single update per 8 milliseconds roughly results in 120 fps
 	TimeSpan targetFrameTime = TimeSpan::fromMilliseconds(8);
 	SizeType currentFramerate = 0;
 

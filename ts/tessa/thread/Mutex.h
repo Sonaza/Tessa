@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#define TS_MUTEX_PROFILING TS_TRUE
+#define TS_MUTEX_PROFILING TS_FALSE
 
 #if TS_MUTEX_PROFILING == TS_TRUE
 	#include "ts/tessa/time/Time.h"
@@ -13,8 +13,6 @@ TS_PACKAGE1(thread)
 
 class Mutex : public lang::NoncopyableAndNonmovable
 {
-	friend class ConditionVariable;
-
 public:
 	Mutex();
 	~Mutex();

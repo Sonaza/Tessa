@@ -95,9 +95,6 @@
     <ClCompile Include="file\FileEntry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util\LZ4Compressor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file\ArchivistWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,9 +180,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="thread\ConditionVariable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="lang\CallStack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -337,9 +331,6 @@
     <ClInclude Include="file\FileEntry.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="util\LZ4Compressor.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="file\ArchivistCommon.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -437,9 +428,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="thread\ConditionVariable.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lang\CallStack.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

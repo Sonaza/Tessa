@@ -74,7 +74,10 @@ bool Application::createApplicationManagers()
 
 	workingDirectory = file::utils::isFile(workingDirectory) ? file::utils::getDirname(workingDirectory) : workingDirectory;
 	if (workingDirectory.empty())
+	{
 		workingDirectory = file::utils::getWorkingDirectoryWide();
+		workingDirectory = file::utils::joinPaths(workingDirectory, L"img");
+	}
 
 	createManagerInstance<viewer::BackgroundFileScanner>(workingDirectory, viewer::SupportedFormats::getSupportedFormatExtensions());
 	createManagerInstance<viewer::ViewerStateManager>();
