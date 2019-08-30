@@ -10,7 +10,7 @@ TS_PACKAGE1(game)
 class GameApplication : public system::BaseApplication
 {
 public:
-	GameApplication(Int32 argc, const char **argv);
+	GameApplication(int32 argc, const char **argv);
 	virtual ~GameApplication();
 
 protected:

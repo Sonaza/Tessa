@@ -22,11 +22,11 @@ TS_PACKAGE1(system)
 class BaseApplication
 {
 public:
-	BaseApplication(Int32 argc, const char **argv);
-	BaseApplication(Int32 argc, const wchar_t **argv);
+	BaseApplication(int32 argc, const char **argv);
+	BaseApplication(int32 argc, const wchar_t **argv);
 	~BaseApplication();
 
-	Int32 launch();
+	int32 launch();
 
 	void setFramerateLimit(SizeType framerateLimit);
 	SizeType getCurrentFramerate() const;

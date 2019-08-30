@@ -12,23 +12,21 @@
 
 TS_PACKAGE1(file)
 
-typedef std::vector<FileEntry> FileEntryList;
-
 class FileList : public lang::Noncopyable
 {
 public:
 	FileList();
-	FileList(const std::string &directoryPath, bool skipDotEntries = true, FileListStyle style = FileListStyle_All);
+	FileList(const String &directoryPath, bool skipDotEntries = true, FileListStyle style = FileListStyle_All);
 	~FileList();
 
-	bool open(const std::string &directoryPath, bool skipDotEntries = true, FileListStyle style = FileListStyle_All);
+	bool open(const String &directoryPath, bool skipDotEntries = true, FileListStyle style = FileListStyle_All);
 	void close();
 
 	bool next(FileEntry &entry);
 	void rewind();
 
 	bool isDone() const;
-	void setGlobRegex(const std::string &pattern);
+	void setGlobRegex(const String &pattern);
 
 	std::vector<FileEntry> getFullListing();
 
@@ -38,21 +36,20 @@ private:
 	// Storing as void pointer to avoid having to include dirent.h in header
 	struct DirectoryFrame
 	{
-		DirectoryFrame(void *ptr, const std::string &path)
+		DirectoryFrame(void *ptr, const String &path)
 			: ptr(ptr), rootPath(std::move(path)) {}
 
 		void *ptr = nullptr;
-		std::string rootPath;
+		String rootPath;
 	};
-	std::stack<DirectoryFrame> _dirStack;
+	std::stack<DirectoryFrame> directoryStack;
 	
-	std::string _directoryPath;
-	FileListStyle _style = FileListStyle_All;
-	bool _skipDotEntries = true;
-	bool _done = false;
+	String directoryPath;
+	FileListStyle style = FileListStyle_All;
+	bool skipDotEntries = true;
+	bool done = false;
 
-	typedef std::regex GlobRegexType;
-	UniquePointer<GlobRegexType> _glob;
+	void *globRegex = nullptr;
 };
 
 TS_END_PACKAGE1()

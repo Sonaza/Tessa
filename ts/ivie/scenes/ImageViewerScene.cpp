@@ -1,10 +1,7 @@
 #include "Precompiled.h"
 #include "ts/ivie/scenes/ImageViewerScene.h"
 
-#include "ts/tessa/file/ArchivistFilesystem.h"
-#include "ts/tessa/file/InputFile.h"
 #include "ts/tessa/file/FileUtils.h"
-#include "ts/tessa/file/FileListW.h"
 
 #include "FreeImage.h"
 
@@ -33,6 +30,10 @@ ImageViewerScene::~ImageViewerScene()
 
 bool ImageViewerScene::start()
 {
+	windowManager = &getGigaton<system::WindowManager>();
+	
+	screenResizedBind.connect(windowManager->screenSizeChangedSignal, &ThisClass::screenResized, this);
+	
 	viewerStateManager = &getGigaton<viewer::ViewerStateManager>();
 
 	imageChangedBind.connect(
@@ -156,11 +157,41 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 				targetPositionOffset.x = math::clamp(targetPositionOffset.x - mouseDelta.x, -1000.f, 1000.f);
 				targetPositionOffset.y = math::clamp(targetPositionOffset.y - mouseDelta.y, -1000.f, 1000.f);
+
+				const system::WindowView &view = windowManager->getApplicationView();
+
+				float scale = defaultScale * imageScale;
+				math::VC2 scaledSize = static_cast<math::VC2>(imageSize) * scale;
+
+				if (scaledSize.x > view.size.x)
+				{
+// 					targetPositionOffset.x framePadding
+				}
+				else
+				{
+					targetPositionOffset.x = 0.f;
+				}
+
+				if (scaledSize.y > view.size.y)
+				{
+// 					targetPositionOffset.x 
+				}
+				else
+				{
+					targetPositionOffset.y = 0.f;
+				}
+
+// 				sf::FloatRect bounds(
+// 					targetPositionOffset / -2.f,
+// 					scaledSize
+// 				);
+
+// 				math::VC2 minClamp = 
 			}
 			else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 			{
 				// Scales image by holding down middle mouse: moving mouse pointer up or to the right enlarges, and vice versa
-				Int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? -math::sign(mouseDelta.x) : math::sign(mouseDelta.y);
+				int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? -math::sign(mouseDelta.x) : math::sign(mouseDelta.y);
 				float delta = mouseDelta.length() * deltaSign;
 				targetImageScale += (delta / 140.f) * targetImageScale;
 				targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
@@ -186,6 +217,12 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 void ImageViewerScene::update(const TimeSpan deltaTime)
 {
+	const system::WindowView &view = windowManager->getApplicationView();
+
+	framePadding = math::max(20.f, view.size.x * 0.02f);
+
+	defaultScale += (targetDefaultScale - defaultScale) * deltaTime.getSecondsAsFloat() * 8.f;
+
 	imageScale += (targetImageScale - imageScale) * deltaTime.getSecondsAsFloat() * 15.f;
 	positionOffset += (targetPositionOffset - positionOffset) * deltaTime.getSecondsAsFloat() * 32.f;
 
@@ -198,25 +235,26 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 			if (currentImage->isDisplayable())
 			{
 				imageSize = currentImage->getSize();
-
-				if (imageSize.y > 0)
+				if (imageSize.x > 0 && imageSize.y > 0)
 				{
-					system::WindowManager &wm = getGigaton<system::WindowManager>();
-					const system::WindowView &view = wm.getApplicationView();
-
-					defaultScale = math::min(1.f, (view.size.y - 30.f) / (float)imageSize.y);
+					targetDefaultScale = math::min(
+						math::min(1.f, (view.size.x - framePadding) / (float)imageSize.x),
+						math::min(1.f, (view.size.y - framePadding) / (float)imageSize.y)
+					);
 				}
 				else
 				{
-					defaultScale = 1.f;
-					TS_ASSERT(!"poop");
+					targetDefaultScale = 1.f;
 				}
+
+				defaultScale = targetDefaultScale;
 
 				updateImageInfo = false;
 			}
 			else if (currentImage->hasError())
 			{
 				defaultScale = 1.f;
+				targetDefaultScale = 1.f;
 				updateImageInfo = false;
 			}
 		}
@@ -233,12 +271,19 @@ void ImageViewerScene::imageChanged(SizeType statusText)
 	updateImageInfo = true;
 }
 
+void ImageViewerScene::screenResized(const math::VC2U &size)
+{
+	const system::WindowView &view = windowManager->getApplicationView();
+
+	targetDefaultScale = math::min(
+		math::min(1.f, (view.size.x - framePadding) / (float)imageSize.x),
+		math::min(1.f, (view.size.y - framePadding) / (float)imageSize.y)
+	);
+}
+
 void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view)
 {
 	renderTarget.clear(sf::Color(30, 30, 30));
-
-// 	system::WindowManager &wm = application->getManager<system::WindowManager>();
-// 	math::VC2U windowSize = wm.getSize();
 
 	viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
 	viewer::Image *currentImage = imageManager.getCurrentImage();
@@ -272,9 +317,9 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 			transform.scale(scale, scale);
 			states.transform = transform;
 
-			SharedPointer<sf::Shader> shader = currentImage->getDisplayShader();
-			shader->setUniform("u_textureApparentSize", scaledSize);
-			shader->setUniform("u_useAlphaChecker", true);
+			SharedPointer<sf::Shader> shader = currentImage->getDisplayShader(scaledSize, true);
+// 			shader->setUniform("u_textureApparentSize", scaledSize);
+// 			shader->setUniform("u_useAlphaChecker", true);
 			states.shader = shader.get();
 
 			renderTarget.draw(va, states);
@@ -327,9 +372,6 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const system::WindowView &view)
 {
-	system::WindowManager &wm = application->getManager<system::WindowManager>();
-	math::VC2U windowSize = wm.getSize();
-
 	bool hasError = false;
 
 	viewer::ImageManager &imageManager = getGigaton<viewer::ImageManager>();
@@ -341,7 +383,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		{
 			sf::Sprite asd;
 			asd.setTexture(*thumbnail);
-			asd.setPosition(windowSize.x - 180.f, 30.f);
+			asd.setPosition(view.size.x - 180.f, 30.f);
 			asd.setScale(0.5f, 0.5f);
 			renderTarget.draw(asd);
 		}
@@ -400,7 +442,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		statusText.setString(TS_WFMT("%u / %u\n%s",
 			viewerStateManager->getCurrentImageIndex() + 1,
 			viewerStateManager->getNumImages(),
-			file::utils::getBasename(viewerStateManager->getCurrentFilepath())
+			file::getBasename(viewerStateManager->getCurrentFilepath())
 		));
 
 		statusText.setPosition(10.f, 50.f);

@@ -3,7 +3,7 @@
 
 #include "ts/tessa/util/ContainerUtil.h"
 #include "ts/tessa/math/Hash.h"
-#include "ts/tessa/lang/StringUtils.h"
+#include "ts/tessa/string/StringUtils.h"
 
 #include "ts/ivie/viewer/BackgroundFileScanner.h"
 #include "ts/ivie/viewer/ViewerStateManager.h"
@@ -33,7 +33,7 @@ class ImageManager::BackgroundImageUnloader : public thread::AbstractThreadEntry
 	Mutex mutex;
 	ConditionVariable condition;
 
-	std::map<Uint32, Time> unloadQueue;
+	std::map<uint32, Time> unloadQueue;
 
 public:
 	BackgroundImageUnloader(ImageManager *imageManager)
@@ -52,7 +52,7 @@ public:
 			Thread::joinThread(thread);
 	}
 
-	void addToQueue(Uint32 imageHash, TimeSpan delay)
+	void addToQueue(uint32 imageHash, TimeSpan delay)
 	{
 		TS_ASSERT(imageManager->imageStorage.find(imageHash) != imageManager->imageStorage.end() &&
 			"Image hash not found in storage, don't try to unload images that aren't even loaded.");
@@ -61,7 +61,7 @@ public:
 		unloadQueue[imageHash] = Time::now() + delay;
 	}
 
-	void removeFromQueue(Uint32 imageHash)
+	void removeFromQueue(uint32 imageHash)
 	{
 // 		TS_ASSERT(unloadQueue.find(imageHash) != unloadQueue.end() &&
 // 			"Image hash not found in unload queue, don't try to cancel unloads.");
@@ -161,9 +161,9 @@ void ImageManager::update(const TimeSpan deltaTime)
 // 	}
 }
 
-std::wstring ImageManager::getStats()
+String ImageManager::getStats()
 {
-	std::vector<std::wstring> stats;
+	std::vector<String> stats;
 	
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
@@ -173,7 +173,7 @@ std::wstring ImageManager::getStats()
 
 	std::sort(stats.begin(), stats.end());
 
-	return lang::utils::joinString(stats, L"\n");
+	return string::joinString(stats, "\n");
 }
 
 Image *ImageManager::getCurrentImage() const
@@ -213,7 +213,8 @@ void ImageManager::prepareShaders()
 		}
 	}
 
-	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert.frag"));
+	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert_freeimage.frag"));
+	displayShaderFiles.insert(std::make_pair(DisplayShader_Webm, "shader/convert_webm.frag"));
 }
 
 SharedPointer<sf::Shader> ImageManager::loadDisplayShader(DisplayShaderTypes type)
@@ -229,8 +230,11 @@ SharedPointer<sf::Shader> ImageManager::loadDisplayShader(DisplayShaderTypes typ
 	if (!displayShader->loadFromFile(filepath, sf::Shader::Fragment))
 		return nullptr;
 
-	TS_ASSERT(alphaCheckerPatternTexture);
-	displayShader->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
+	if (type == DisplayShader_FreeImage)
+	{
+		TS_ASSERT(alphaCheckerPatternTexture);
+		displayShader->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
+	}
 	
 	return displayShader;
 }
@@ -253,13 +257,13 @@ void ImageManager::updateCurrentImage()
 
 	ViewerStateManager &vsm = getGigaton<ViewerStateManager>();
 
-	std::vector<Uint32> activeImages;
+	std::vector<uint32> activeImages;
 	std::vector<ImageEntry> imagesToLoad = vsm.getListSliceForBuffering(numForwardBuffered, numBackwardBuffered);
 
 // 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	for (const ImageEntry &entry : imagesToLoad)
 	{
-		Uint32 imageHash = math::simpleHash32(entry.filepath);
+		uint32 imageHash = math::simpleHash32(entry.filepath);
 		activeImages.push_back(imageHash);
 
 		SharedPointer<Image> &image = imageStorage[imageHash];
@@ -290,7 +294,7 @@ void ImageManager::updateCurrentImage()
 
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
-		Uint32 imageHash = it->first;
+		uint32 imageHash = it->first;
 		SharedPointer<Image> &image = it->second;
 
 		if (image->getState() == Image::Unloaded)

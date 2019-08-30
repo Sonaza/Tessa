@@ -306,7 +306,7 @@ PosType ArchivistReaderExtractor::decompressFullBlock()
 
 	decompressedBuffer.resize(header.filesize);
 
-	const Int32 bytesDecompressed = LZ4_decompress_safe(&srcBuffer[0], &decompressedBuffer[0], blockCompressedSize, header.filesize);
+	const int32 bytesDecompressed = LZ4_decompress_safe(&srcBuffer[0], &decompressedBuffer[0], blockCompressedSize, header.filesize);
 	if (bytesDecompressed < (PosType)header.filesize)
 	{
 		TS_LOG_ERROR("Decompression encountered an error, full file was not decompressed.\n");
@@ -421,7 +421,7 @@ PosType ArchivistReaderExtractor::decompressStreamingBlocks(SizeType numBlocksTo
 		PosType dstBytesRemaining = bytesToDecompress - (dstPtr - dstPtrStart);
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
 
-		const Int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, inputBuffer, dstPtr, (Int32)blockCompressedSize, (Int32)dstBytesRemaining);
+		const int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, inputBuffer, dstPtr, (int32)blockCompressedSize, (int32)dstBytesRemaining);
 		if (decompressedBytes <= 0)
 		{
 			TS_LOG_ERROR("Decompression encountered an error.\n");

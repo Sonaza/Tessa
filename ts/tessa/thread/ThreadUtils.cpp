@@ -12,7 +12,7 @@ TS_PACKAGE2(thread, utils)
 namespace
 {
 
-Int32 convertToSystemThreadPriority(ThreadPriority priority)
+int32 convertToSystemThreadPriority(ThreadPriority priority)
 {
 #if TS_PLATFORM == TS_WINDOWS
 	switch(priority)

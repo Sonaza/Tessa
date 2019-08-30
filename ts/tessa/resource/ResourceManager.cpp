@@ -158,8 +158,8 @@ const std::string &ResourceManager::getResourceRootDirectory()
 
 std::string ResourceManager::getAbsoluteResourcePath(const std::string &filepath)
 {
-	if (!file::utils::isAbsolutePath(filepath))
-		return file::utils::joinPaths(ResourceManager::resourceRootDirectory, filepath);
+	if (!file::isAbsolutePath(filepath))
+		return file::joinPaths(ResourceManager::resourceRootDirectory, filepath);
 
 	return filepath;
 }

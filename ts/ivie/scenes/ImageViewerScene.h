@@ -31,13 +31,21 @@ protected:
 	void imageChanged(SizeType imageIndex);
 	lang::SignalBind imageChangedBind;
 
+	void screenResized(const math::VC2U &size);
+	lang::SignalBind screenResizedBind;
+
 	resource::FontResource *font = nullptr;
 
+	float framePadding = 20.f;
+	
 	Clock clickTimer;
 
 	bool updateImageInfo = true;
 	math::VC2U imageSize;
+	
 	float defaultScale = 1.f;
+	float targetDefaultScale = 1.f;
+
 	float dragged = 0.f;
 
 	Clock frameTimer;
@@ -53,6 +61,7 @@ protected:
 	bool showManagerStatus = false;
 	bool showSchedulerStatus = false;
 
+	system::WindowManager *windowManager = nullptr;
 	viewer::ViewerStateManager *viewerStateManager = nullptr;
 
 	sf::Sprite sprite;

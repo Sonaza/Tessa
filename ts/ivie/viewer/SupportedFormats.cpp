@@ -5,12 +5,12 @@ TS_PACKAGE2(app, viewer)
 
 SupportedFormats SupportedFormats::instance;
 
-const std::vector<std::wstring> &SupportedFormats::getSupportedFormatExtensions()
+const std::vector<String> &SupportedFormats::getSupportedFormatExtensions()
 {
 	return SupportedFormats::instance.supportedFormatExtensions;
 }
 
-const bool SupportedFormats::isFormatAnimated(const std::wstring &extension)
+const bool SupportedFormats::isFormatAnimated(const String &extension)
 {
 	FormatInfoList::const_iterator it = SupportedFormats::instance.supportedFormatInfo.find(extension);
 	return it != SupportedFormats::instance.supportedFormatInfo.end() ? it->second.animated : false;
@@ -21,105 +21,105 @@ SupportedFormats::SupportedFormats()
 	supportedFormatInfo = FormatInfoList
 	{
 		// BMP files
-		{ L"bmp",   { false } },
+		{ "bmp",   { false } },
 		// Dr. Halo CUT files (grayscale only)
-		{ L"cut",   { false } },
+		{ "cut",   { false } },
 		// DDS files
-		{ L"dds",   { false } },
+		{ "dds",   { false } },
 		// EXR files
-		{ L"exr",   { false } },
+		{ "exr",   { false } },
 		// Raw Fax G3 files
-		{ L"g3",    { false } },
+		{ "g3",    { false } },
 		// GIF files (animated)
-		{ L"gif",   { true } },
+		{ "gif",   { true } },
 		// HDR files
-		{ L"hdr",   { false } },
+		{ "hdr",   { false } },
 		// ICO files (can support multiple layers)
-		{ L"ico",   { false } },
+		{ "ico",   { false } },
 		// IFF files
-		{ L"iff",   { false } },
+		{ "iff",   { false } },
 		// JNG files
-		{ L"jng",   { false } },
+		{ "jng",   { false } },
 		// JPEG/JIF files
-		{ L"jpeg",  { false } },
-		{ L"jpg",   { false } },
-		{ L"jpe",   { false } },
-		{ L"jif",   { false } },
-		{ L"jfif",  { false } },
-		{ L"jfi",   { false } },
+		{ "jpeg",  { false } },
+		{ "jpg",   { false } },
+		{ "jpe",   { false } },
+		{ "jif",   { false } },
+		{ "jfif",  { false } },
+		{ "jfi",   { false } },
 		// JPEG-2000 File Format
-		{ L"jpf",   { false } },
-		{ L"jpx",   { false } },
-		{ L"jp2",   { false } },
-		{ L"jpm",   { false } },
-		{ L"mj2",   { false } },
+		{ "jpf",   { false } },
+		{ "jpx",   { false } },
+		{ "jp2",   { false } },
+		{ "jpm",   { false } },
+		{ "mj2",   { false } },
 		// JPEG-2000 codestream
-		{ L"j2c",   { false } },
-		{ L"j2k",   { false } },
-		{ L"jpc",   { false } },
+		{ "j2c",   { false } },
+		{ "j2k",   { false } },
+		{ "jpc",   { false } },
 		// JPEG-XR files
-		{ L"jxr",   { false } },
-		{ L"hdp",   { false } },
-		{ L"wdp",   { false } },
+		{ "jxr",   { false } },
+		{ "hdp",   { false } },
+		{ "wdp",   { false } },
 		// KOALA files (http://fileformats.archiveteam.org/wiki/Atari_graphics_formats)
-		{ L"pic",   { false } },
+		{ "pic",   { false } },
 		// Kodak PhotoCD files
-		{ L"pcd",   { false } },
+		{ "pcd",   { false } },
 		// MNG files (sort of an animated "PNG")
-		{ L"mng",   { true } },
+		{ "mng",   { true } },
 		// PCX files
-		{ L"pcx",   { false } },
-		{ L"pcc",   { false } },
+		{ "pcx",   { false } },
+		{ "pcc",   { false } },
 		// PBM/PGM/PPM files
-		{ L"pbm",   { false } },
-		{ L"pgm",   { false } },
-		{ L"ppm",   { false } },
-		{ L"pnm",   { false } },
+		{ "pbm",   { false } },
+		{ "pgm",   { false } },
+		{ "ppm",   { false } },
+		{ "pnm",   { false } },
 		// PFM files
-		{ L"pfm",   { false } },
+		{ "pfm",   { false } },
 		// PNG files
-		{ L"png",   { false } },
+		{ "png",   { false } },
 		// Macintosh PICT files
-		{ L"pict",  { false } },
-		{ L"pct",   { false } },
+		{ "pict",  { false } },
+		{ "pct",   { false } },
 		// Photoshop PSD files
-		{ L"psd",   { false } },
+		{ "psd",   { false } },
 		// RAW camera files
-		{ L"raw",   { false } },
+		{ "raw",   { false } },
 		// Sun RAS files
-		{ L"sun",   { false } },
-		{ L"ras",   { false } },
-		{ L"rast",  { false } },
-		{ L"rs",    { false } },
-		{ L"sr",    { false } },
-		{ L"scr",   { false } },
-		{ L"im1",   { false } },
-		{ L"im8",   { false } },
-		{ L"im24",  { false } },
-		{ L"im32",  { false } },
+		{ "sun",   { false } },
+		{ "ras",   { false } },
+		{ "rast",  { false } },
+		{ "rs",    { false } },
+		{ "sr",    { false } },
+		{ "scr",   { false } },
+		{ "im1",   { false } },
+		{ "im8",   { false } },
+		{ "im24",  { false } },
+		{ "im32",  { false } },
 		// SGI files
-		{ L"sgi",   { false } },
+		{ "sgi",   { false } },
 		// TARGA files
-		{ L"tga",   { false } },
-		{ L"icb",   { false } },
-		{ L"vda",   { false } },
-		{ L"vst",   { false } },
+		{ "tga",   { false } },
+		{ "icb",   { false } },
+		{ "vda",   { false } },
+		{ "vst",   { false } },
 		// TIFF files
-		{ L"tif",   { false } },
-		{ L"tiff",  { false } },
+		{ "tif",   { false } },
+		{ "tiff",  { false } },
 		// WBMP files
-		{ L"wbmp",  { false } },
+		{ "wbmp",  { false } },
 		// WebP files
-		{ L"webp",  { false } },
+		{ "webp",  { false } },
 		// XBM files
-		{ L"xbm",   { false } },
-		{ L"bm",    { false } },
+		{ "xbm",   { false } },
+		{ "bm",    { false } },
 		// XPM files
-		{ L"xpm",   { false } },
-		{ L"pm",    { false } },
+		{ "xpm",   { false } },
+		{ "pm",    { false } },
 
 		// WEBM video files
-// 		{ L"webm",  { true } }
+		{ "webm",  { true } }
 	};
 
 	supportedFormatExtensions.reserve(supportedFormatInfo.size());

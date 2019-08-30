@@ -1,14 +1,14 @@
 #include "Precompiled.h"
 #include "BackgroundFileScanner.h"
 
-#include "ts/tessa/file/FileListW.h"
+#include "ts/tessa/file/FileList.h"
 #include "ts/tessa/file/FileUtils.h"
 
 TS_DEFINE_MANAGER_TYPE(app::viewer::BackgroundFileScanner);
 
 TS_PACKAGE2(app, viewer)
 
-BackgroundFileScanner::BackgroundFileScanner(const std::wstring &directoryPath, const std::vector<std::wstring> &allowedExtensions)
+BackgroundFileScanner::BackgroundFileScanner(const String &directoryPath, const std::vector<String> &allowedExtensions)
 	: directoryPath(directoryPath)
 	, allowedExtensions(allowedExtensions)
 {
@@ -41,26 +41,26 @@ void BackgroundFileScanner::deinitialize()
 	tm.cancelTask(scannerTaskId);
 }
 
-std::vector<std::wstring> BackgroundFileScanner::getFileList()
+std::vector<String> BackgroundFileScanner::getFileList()
 {
 	MutexGuard lock(mutex);
 	return filelist;
 }
 
-bool BackgroundFileScanner::isExtensionAllowed(const std::wstring &filename)
+bool BackgroundFileScanner::isExtensionAllowed(const String &filename)
 {
-	std::wstring ext = file::utils::getExtension(filename);
+	String ext = file::getExtension(filename);
 	return std::find(allowedExtensions.begin(), allowedExtensions.end(), ext) != allowedExtensions.end();
 }
 
 bool BackgroundFileScanner::updateFilelist()
 {
-	file::FileListW lister(directoryPath, true, file::FileListStyle_Files);
-	std::vector<file::FileEntryW> files = lister.getFullListing();
+	file::FileList lister(directoryPath, true, file::FileListStyle_Files);
+	std::vector<file::FileEntry> files = lister.getFullListing();
 
-	std::vector<std::wstring> templist;
+	std::vector<String> templist;
 	templist.reserve(files.size());
-	for (file::FileEntryW &file : files)
+	for (file::FileEntry &file : files)
 	{
 		if (isExtensionAllowed(file.getFilepath()))
 			templist.push_back(file.getFullFilepath());

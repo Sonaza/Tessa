@@ -30,8 +30,8 @@ protected:
 
 	std::unique_ptr<gameplay::NonogramPuzzle> puzzle;
 
-	void swapTexture(Int32 dir);
-	Int32 currentIndex = 0;
+	void swapTexture(int32 dir);
+	int32 currentIndex = 0;
 
 	resource::MusicResource *music = nullptr;
 	std::vector<resource::TextureResource *> textures;

@@ -10,25 +10,25 @@ class BackgroundFileScanner : public system::AbstractManagerBase
 	TS_DECLARE_MANAGER_TYPE(viewer::BackgroundFileScanner);
 
 public:
-	BackgroundFileScanner(const std::wstring &directoryPath, const std::vector<std::wstring> &allowedExtensions);
+	BackgroundFileScanner(const String &directoryPath, const std::vector<String> &allowedExtensions);
 	~BackgroundFileScanner();
 
 	virtual bool initialize();
 	virtual void deinitialize();
 
-	std::vector<std::wstring> getFileList();
+	std::vector<String> getFileList();
 
-	bool isExtensionAllowed(const std::wstring &filename);
+	bool isExtensionAllowed(const String &filename);
 
 	bool updateFilelist();
 
 	lang::Signal<> filelistChangedSignal;
 
 private:
-	std::wstring directoryPath;
+	String directoryPath;
 
-	std::vector<std::wstring> allowedExtensions;
-	std::vector<std::wstring> filelist;
+	std::vector<String> allowedExtensions;
+	std::vector<String> filelist;
 
 	thread::SchedulerTaskId scannerTaskId;
 

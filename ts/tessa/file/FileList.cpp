@@ -3,7 +3,32 @@
 
 #include "ts/tessa/file/FileUtils.h"
 
+#if TS_PLATFORM == TS_WINDOWS
+
 #include "ext/dirent.h"
+
+#define _dirent    wdirent
+#define _DIR       WDIR
+#define _opendir   wopendir
+#define _readdir   wreaddir
+#define _closedir  wclosedir
+#define _rewinddir wrewinddir
+#define _toString  toWideString
+
+typedef std::wregex GlobRegexType;
+
+#else
+
+#define _dirent    dirent
+#define _opendir   opendir
+#define _readdir   readdir
+#define _closedir  closedir
+#define _rewinddir rewinddir
+#define _toString  toUtf8
+
+typedef std::regex GlobRegexType;
+
+#endif
 
 TS_PACKAGE1(file)
 
@@ -11,9 +36,9 @@ FileList::FileList()
 {
 }
 
-FileList::FileList(const std::string &directoryPath, bool skipDotEntries, FileListStyle style)
+FileList::FileList(const String &pathParam, bool skipDotEntriesParam, FileListStyle styleParam)
 {
-	open(directoryPath, skipDotEntries, style);
+	open(pathParam, skipDotEntries, style);
 }
 
 FileList::~FileList()
@@ -21,22 +46,25 @@ FileList::~FileList()
 	close();
 }
 
-bool FileList::open(const std::string &directoryPath, bool skipDotEntries, FileListStyle style)
+bool FileList::open(const String &pathParam, bool skipDotEntriesParam, FileListStyle styleParam)
 {
 	MutexGuard lock(mutex);
-	TS_ASSERT(_dirStack.empty() && "FileList is already opened.");
-	if (!_dirStack.empty())
+
+	TS_ASSERT(!pathParam.isEmpty());
+
+	TS_ASSERT(directoryStack.empty() && "FileList is already opened.");
+	if (!directoryStack.empty())
 		return false;
 
-	DIR *dir = opendir(directoryPath.c_str());
+	_DIR *dir = _opendir(pathParam._toString().c_str());
 	if (dir == nullptr)
 		return false;
 
-	_directoryPath = directoryPath;
-	_style = style;
-	_skipDotEntries = skipDotEntries;
+	directoryPath = pathParam;
+	style = styleParam;
+	skipDotEntries = skipDotEntriesParam;
 
-	_dirStack.push(DirectoryFrame(dir, directoryPath));
+	directoryStack.push(DirectoryFrame(dir, pathParam));
 
 	return true;
 }
@@ -44,58 +72,68 @@ bool FileList::open(const std::string &directoryPath, bool skipDotEntries, FileL
 void FileList::close()
 {
 	MutexGuard lock(mutex);
-	while (!_dirStack.empty())
+	while (!directoryStack.empty())
 	{
-		closedir((DIR*)_dirStack.top().ptr);
-		_dirStack.pop();
+		_closedir((_DIR*)directoryStack.top().ptr);
+		directoryStack.pop();
+	}
+
+	if (globRegex != nullptr)
+	{
+		GlobRegexType *regex = static_cast<GlobRegexType *>(globRegex);
+		delete regex;
+		globRegex = nullptr;
 	}
 }
 
 bool FileList::next(FileEntry &entry)
 {
 	MutexGuard lock(mutex);
-	TS_ASSERT(!_dirStack.empty() && "FileList is not opened.");
-	if (_dirStack.empty() || _done == true)
+
+	TS_ASSERT(!directoryStack.empty() && "FileList is not opened.");
+	if (directoryStack.empty() || done == true)
 		return false;
 
-	dirent *ent;
+	_dirent *ent;
 	while (true)
 	{
-		const size_t depth = _dirStack.size();
+		const size_t depth = directoryStack.size();
 
-		DirectoryFrame &frame = _dirStack.top();
-		ent = readdir((DIR*)frame.ptr);
+		DirectoryFrame &frame = directoryStack.top();
+		ent = _readdir((_DIR*)frame.ptr);
 		if (ent != nullptr)
 		{
-			const char *filename = ent->d_name;
-			std::string currentPath = depth > 1 ? (frame.rootPath + "/" + filename) : filename;
+			String filename(ent->d_name);
+
+			String currentPath = depth > 1 ? (frame.rootPath + "/" + filename) : filename;
 
 			const bool isDir = (ent->d_type & DT_DIR) > 0;
 			if (isDir == true)
 			{
-				if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0)
+				if (filename == "." || filename == "..")
 				{
-					if (_skipDotEntries == true)
+					if (skipDotEntries == true)
 						continue;
 				}
-				else if ((_style & priv::ListStyleBits_Recursive) > 0)
+				else if ((style & priv::ListStyleBits_Recursive) > 0)
 				{
-					DIR *dirPtr = opendir(currentPath.c_str());
+					_DIR *dirPtr = _opendir(currentPath._toString().c_str());
 					if (dirPtr != nullptr)
-						_dirStack.push(DirectoryFrame(dirPtr, currentPath));
+						directoryStack.push(DirectoryFrame(dirPtr, currentPath));
 				}
 
-				if ((_style & priv::ListStyleBits_Directories) == 0)
+				if ((style & priv::ListStyleBits_Directories) == 0)
 					continue;
 			}
 			else
 			{
-				if ((_style & priv::ListStyleBits_Files) == 0)
+				if ((style & priv::ListStyleBits_Files) == 0)
 					continue;
 
-				if (_glob != nullptr)
+				if (globRegex != nullptr)
 				{
-					if (!std::regex_search(filename, *_glob))
+					GlobRegexType &regex = *static_cast<GlobRegexType *>(globRegex);
+					if (!std::regex_search(filename._toString(), regex))
 					{
 						TS_PRINTF("File %s does not match the glob.\n", filename);
 						continue;
@@ -103,52 +141,52 @@ bool FileList::next(FileEntry &entry)
 				}
 			}
 
-			entry._filepath = std::move(currentPath);
-			entry._rootDirectory = frame.rootPath;
-			entry._isDir = isDir;
+			entry.filepath = std::move(currentPath);
+			entry.rootDirectory = frame.rootPath;
+			entry.isDir = isDir;
 			return true;
 		}
 		if (depth > 1)
 		{
-			closedir((DIR*)frame.ptr);
-			_dirStack.pop();
+			_closedir((_DIR*)frame.ptr);
+			directoryStack.pop();
 			continue;
 		}
 		break;
 	}
-	_done = true;
+	done = true;
 	return false;
 }
 
 void FileList::rewind()
 {
 	MutexGuard lock(mutex);
-	TS_ASSERT(!_dirStack.empty() && "FileList is not opened.");
+	TS_ASSERT(!directoryStack.empty() && "FileList is not opened.");
 
 	// Close all other directories but the bottom-most
-	while (_dirStack.size() > 1)
+	while (directoryStack.size() > 1)
 	{
-		closedir((DIR*)_dirStack.top().ptr);
-		_dirStack.pop();
+		_closedir((_DIR*)directoryStack.top().ptr);
+		directoryStack.pop();
 	}
-	rewinddir((DIR*)_dirStack.top().ptr);
-	_done = false;
+	_rewinddir((_DIR*)directoryStack.top().ptr);
+	done = false;
 }
 
 bool FileList::isDone() const
 {
 	MutexGuard lock(mutex);
-	return _done;
+	return done;
 }
 
-void FileList::setGlobRegex(const std::string &pattern)
+void FileList::setGlobRegex(const String &pattern)
 {
 	MutexGuard lock(mutex);
 
 	GlobRegexType *regex = nullptr;
 	try
 	{
-		regex = new GlobRegexType(pattern, std::regex_constants::ECMAScript);
+		regex = new GlobRegexType(pattern._toString(), std::regex_constants::ECMAScript);
 	}
 	catch (std::regex_error &e)
 	{
@@ -157,7 +195,7 @@ void FileList::setGlobRegex(const std::string &pattern)
 		return;
 	}
 
-	_glob.reset(regex);
+	globRegex = regex;
 }
 
 std::vector<FileEntry> FileList::getFullListing()

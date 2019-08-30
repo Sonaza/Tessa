@@ -122,8 +122,8 @@ Vec3<T> cross(const Vec3<T> &a, const Vec3<T> &b);
 #include "Vec3.inl"
 
 typedef Vec3<float>		VC3;
-typedef Vec3<Int32>		VC3I;
-typedef Vec3<Uint32>	VC3U;
+typedef Vec3<int32>		VC3I;
+typedef Vec3<uint32>	VC3U;
 
 const Vec3<float> Vec3<float>::zero(0.f, 0.f, 0.f);
 const Vec3<float> Vec3<float>::up(0.f, 1.f, 0.f);

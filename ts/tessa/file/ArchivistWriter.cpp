@@ -33,13 +33,13 @@ bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &
 		return false;
 	}
 
-	if (!utils::exists(filepath))
+	if (!exists(filepath))
 	{
 		TS_LOG_ERROR("File to be staged does not exist. File: %s\n", filepath);
 		return false;
 	}
 
-	if (!utils::isFile(filepath))
+	if (!isFile(filepath))
 	{
 		TS_LOG_ERROR("File path to be staged is not a file (directories are not supported). File: %s\n", filepath);
 		return false;
@@ -71,7 +71,7 @@ bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &
 
 	Stagefile &file = _stagefiles[hash];
 	file.filepath = std::move(filepath);
-	file.archiveFilepath = utils::normalizePath(archiveFilepath, '/');
+	file.archiveFilepath = normalizePath(archiveFilepath, '/');
 	file.filesize = (SizeType)filesize; // Casting is fine, file size is less than the limits
 	file.compression = compression;
 
@@ -82,7 +82,7 @@ bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &
 
 bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwriteExisting)
 {
-	if (utils::exists(archiveFilename) && overwriteExisting == false)
+	if (exists(archiveFilename) && overwriteExisting == false)
 	{
 		TS_LOG_ERROR("Archive file already exists with the same name. File: %s", archiveFilename);
 		return false;
@@ -191,7 +191,7 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const std::string &fi
 	PosType filesize = input.getSize();
 	ByteBuffer srcBuffer(filesize);
 
-	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((Int32)filesize);
+	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((int32)filesize);
 	dstBuffer.resize(blockSizeMax);
 
 	PosType bytesRead = input.read(&srcBuffer[0], filesize);
@@ -210,7 +210,7 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const std::string &fi
 	SizeType *blockCRC = reinterpret_cast<SizeType*>(dstPtr);
 	dstPtr += sizeof(SizeType);
 
-	const Int32 compressedBytes = LZ4_compress_fast(&srcBuffer[0], dstPtr, (SizeType)bytesRead, blockSizeMax, 1);
+	const int32 compressedBytes = LZ4_compress_fast(&srcBuffer[0], dstPtr, (SizeType)bytesRead, blockSizeMax, 1);
 	if (compressedBytes < 0)
 	{
 		TS_LOG_ERROR("Compression encountered an error.\n");
@@ -239,7 +239,7 @@ PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const std::string &fil
 	const SizeType blockSizeMax = LZ4_compressBound(ArchivistConstants::CompressionBlockSize);
 
 	SizeType numBlocks = (SizeType)math::ceil(filesize / (float)blockSizeMax) +1;
-	Int32 dstBoundSize = numBlocks * (blockSizeMax + ArchivistConstants::OverheadPerBlock) + sizeof(SizeType);
+	int32 dstBoundSize = numBlocks * (blockSizeMax + ArchivistConstants::OverheadPerBlock) + sizeof(SizeType);
 	dstBuffer.resize(dstBoundSize);
 
 	char *TS_RESTRICT dstPtrStart = &dstBuffer[0];
@@ -280,7 +280,7 @@ PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const std::string &fil
 
 // 		TS_PRINTF("  data offset       : %lld\n", dstPtr - dstPtrStart);
 
-		const Int32 compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (Int32)srcBytesRead, (Int32)dstBytesRemaining, 1);
+		const int32 compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (int32)srcBytesRead, (int32)dstBytesRemaining, 1);
 		if (compressedBytes <= 0)
 		{
 			TS_LOG_ERROR("Compression encountered an error.\n");

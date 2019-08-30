@@ -31,8 +31,8 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -121,6 +121,9 @@
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -149,6 +152,9 @@
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -182,6 +188,7 @@
     <ClCompile Include="viewer\image\FreeImageStaticInitializer.cpp" />
     <ClCompile Include="viewer\image\Image.cpp" />
     <ClCompile Include="viewer\image\ImageBackgroundLoaderFreeImage.cpp" />
+    <ClCompile Include="viewer\image\ImageBackgroundLoaderWebm.cpp" />
     <ClCompile Include="viewer\image\ImageManager.cpp" />
     <ClCompile Include="viewer\SupportedFormats.cpp" />
     <ClCompile Include="viewer\ViewerStateManager.cpp" />
@@ -207,6 +214,7 @@
     <ClInclude Include="viewer\image\FreeImageStaticInitializer.h" />
     <ClInclude Include="viewer\image\Image.h" />
     <ClInclude Include="viewer\image\ImageBackgroundLoaderFreeImage.h" />
+    <ClInclude Include="viewer\image\ImageBackgroundLoaderWebm.h" />
     <ClInclude Include="viewer\image\ImageManager.h" />
     <ClInclude Include="viewer\SupportedFormats.h" />
     <ClInclude Include="viewer\ViewerStateManager.h" />

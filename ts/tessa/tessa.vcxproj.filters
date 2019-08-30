@@ -77,9 +77,6 @@
     <ClCompile Include="file\FileUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lang\StringUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="net\Address.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -118,12 +115,6 @@
     </ClCompile>
     <ClCompile Include="system\BaseApplication.cpp">
       <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="file\FileEntryW.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="file\FileListW.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="common\WindowsUtils.cpp">
       <Filter>Source Files</Filter>
@@ -180,6 +171,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="thread\ConditionVariable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string\StringUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string\String.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -361,12 +358,6 @@
     <ClInclude Include="file\FileListStyle.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="file\FileEntryW.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="file\FileListW.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="common\WindowsUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -383,9 +374,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="system\AbstractManagerBase.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lang\StringUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="lang\Signal.h">
@@ -430,9 +418,21 @@
     <ClInclude Include="thread\ConditionVariable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="string\StringUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string\Utf.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string\String.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Windows.props" />
+    <None Include="string\Utf.inl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Tessa.natvis" />

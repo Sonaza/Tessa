@@ -6,7 +6,7 @@ TS_PACKAGE2(app, viewer)
 
 struct ImageEntry 
 {
-	std::wstring filepath;
+	String filepath;
 	SizeType index;
 
 	enum Buffering
@@ -29,13 +29,13 @@ public:
 	virtual void deinitialize();
 
 	SizeType getCurrentImageIndex() const;
-	const std::wstring &getCurrentFilepath() const;
+	const String &getCurrentFilepath() const;
 
 	void nextImage();
 	void previousImage();
 
 	void jumpToImage(SizeType index);
-	void jumpToImageByFilename(const std::wstring &filename);
+	void jumpToImageByFilename(const String &filename);
 	SizeType getNumImages() const;
 
 	enum SortingStyle
@@ -45,7 +45,7 @@ public:
 	};
 	void setSorting(SortingStyle sorting);
 
-	const std::vector<std::wstring> &getCurrentSortedFileList() const;
+	const std::vector<String> &getCurrentSortedFileList() const;
 
 	// Retrieves a list of entries for buffering. 
 	const std::vector<ImageEntry> getListSliceForBuffering(SizeType numForward, SizeType numBackward);
@@ -56,17 +56,17 @@ private:
 	void updateFileList();
 
 	void applySorting();
-	PosType findFileIndexByName(const std::wstring &filepath, const std::vector<std::wstring> &filelist);
+	PosType findFileIndexByName(const String &filepath, const std::vector<String> &filelist);
 
 	SortingStyle currentSorting = SortByName;
 
 	lang::SignalBind filelistChangedBind;
 
 	SizeType currentImageIndex;
-	std::wstring currentFilePath;
+	String currentFilePath;
 
 	mutable Mutex mutex;
-	std::vector<std::wstring> currentFileList;
+	std::vector<String> currentFileList;
 };
 
 TS_END_PACKAGE2()

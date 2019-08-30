@@ -50,7 +50,8 @@ public:
 	const math::VC2U getSize() const;
 
 	const FrameStorage *getCurrentFrameStorage() const;
-	SharedPointer<sf::Shader> getDisplayShader() const;
+
+	SharedPointer<sf::Shader> getDisplayShader(const math::VC2 &apparentSize, bool useAlphaChecker);
 
 	SizeType getCurrentFrameIndex() const;
 	SizeType getNumFramesTotal() const;
@@ -123,6 +124,7 @@ private:
 		LoaderWebm,
 	};
 	LoaderType sniffLoaderType();
+	LoaderType currentLoaderType = LoaderUnknown;
 
 	void setState(ImageLoaderState state);
 	std::atomic<ImageLoaderState> loaderState = Unloaded;
@@ -131,10 +133,11 @@ private:
 
 	SizeType currentFrameIndex = 0;
 
-	static const BigSizeType MaxFrameBufferCapacity = 30;
+	static const BigSizeType MaxFrameBufferCapacity = 20;
 	typedef util::RingBuffer<FrameStorage, MaxFrameBufferCapacity> FrameRingBuffer;
 	FrameRingBuffer frameBuffer;
 
+	bool makingThumbnail = false;
 	SharedPointer<sf::Texture> thumbnail;
 	SharedPointer<sf::Shader> displayShader;
 

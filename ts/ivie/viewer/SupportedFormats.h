@@ -13,18 +13,18 @@ struct FormatInfo
 class SupportedFormats
 {
 public:
-	static const std::vector<std::wstring> &getSupportedFormatExtensions();
+	static const std::vector<String> &getSupportedFormatExtensions();
 
-	static const bool isFormatAnimated(const std::wstring &extension);
+	static const bool isFormatAnimated(const String &extension);
 
 private:
 	static SupportedFormats instance;
 	SupportedFormats();
 
-	typedef std::map<std::wstring, FormatInfo> FormatInfoList;
+	typedef std::map<String, FormatInfo> FormatInfoList;
 	FormatInfoList supportedFormatInfo;
 
-	std::vector<std::wstring> supportedFormatExtensions;
+	std::vector<String> supportedFormatExtensions;
 };
 
 TS_END_PACKAGE2()

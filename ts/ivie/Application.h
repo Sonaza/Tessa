@@ -12,7 +12,7 @@ TS_PACKAGE1(app)
 class Application : public system::BaseApplication
 {
 public:
-	Application(Int32 argc, const wchar_t **argv);
+	Application(int32 argc, const wchar_t **argv);
 	virtual ~Application();
 
 	virtual bool start();

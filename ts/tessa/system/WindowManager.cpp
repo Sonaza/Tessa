@@ -85,39 +85,40 @@ void WindowManager::create(const math::VC2U &videomode, const std::string &windo
 	settings.majorVersion = 3;
 	settings.minorVersion = 0;
 
-	renderWindow.create(sf::VideoMode(videomode.x, videomode.y), windowTitle, style, settings);
-	
-	screenSizeChangedSignal(videomode);
+	renderWindow.reset(new sf::RenderWindow(sf::VideoMode(videomode.x, videomode.y), windowTitle, style, settings));
 
-	renderWindow.clear();
-	renderWindow.display();
+	if (renderWindow != nullptr)
+	{
+		screenSizeChangedSignal(videomode);
+
+		renderWindow->clear();
+		renderWindow->display();
 
 #if TS_PLATFORM == TS_WINDOWS
-	SystemEventCallbackWrapper::windowManager = this;
-	renderWindow.setCustomSystemEventCallback((void*)&SystemEventCallbackWrapper::windowsSystemEventCallback);
+		SystemEventCallbackWrapper::windowManager = this;
+		renderWindow->setCustomSystemEventCallback((void*)&SystemEventCallbackWrapper::windowsSystemEventCallback);
 #endif
-
-	windowCreated = true;
+	}
 }
 
 void WindowManager::close()
 {
-	windowCreated = false;
-	renderWindow.close();
+	renderWindow->close();
+	renderWindow.reset();
 }
 
 void WindowManager::setVSyncEnabled(const bool enabled)
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
-	renderWindow.setVerticalSyncEnabled(enabled);
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
+	renderWindow->setVerticalSyncEnabled(enabled);
 }
 
 void WindowManager::setWindowState(WindowState state)
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
 #if TS_PLATFORM == TS_WINDOWS
-	Int32 flags = SW_NORMAL;
+	int32 flags = SW_NORMAL;
 	switch (state)
 	{
 		case WindowState_Normal:    flags = SW_RESTORE;  break;
@@ -125,23 +126,23 @@ void WindowManager::setWindowState(WindowState state)
 		case WindowState_Minimized: flags = SW_MINIMIZE; break;
 		default: TS_ASSERT(!"Unhandled window state"); break;
 	}
-	ShowWindow(renderWindow.getSystemHandle(), flags);
+	ShowWindow(renderWindow->getSystemHandle(), flags);
 #else
 	TS_ASSERT(!"Not implemented on this platform.");
 #endif
 
-	renderWindow.clear();
-	renderWindow.display();
+	renderWindow->clear();
+	renderWindow->display();
 }
 
 WindowManager::WindowState WindowManager::getWindowState() const
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
 #if TS_PLATFORM == TS_WINDOWS
 	WINDOWPLACEMENT placement;
 	placement.length = sizeof(WINDOWPLACEMENT);
-	if (GetWindowPlacement(renderWindow.getSystemHandle(), &placement))
+	if (GetWindowPlacement(renderWindow->getSystemHandle(), &placement))
 	{
 		switch (placement.showCmd)
 		{
@@ -162,9 +163,9 @@ WindowManager::WindowState WindowManager::getWindowState() const
 
 bool WindowManager::pollEvent(sf::Event &eventParam)
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
-	bool hasEvent = renderWindow.pollEvent(eventParam);
+	bool hasEvent = renderWindow->pollEvent(eventParam);
 	if (hasEvent)
 	{
 		switch (eventParam.type)
@@ -182,57 +183,57 @@ bool WindowManager::pollEvent(sf::Event &eventParam)
 
 bool WindowManager::isInFocus() const
 {
-	return renderWindow.hasFocus();
+	return renderWindow->hasFocus();
 }
 
 bool WindowManager::isOpen() const
 {
-	return renderWindow.isOpen();
+	return renderWindow->isOpen();
 }
 
 math::VC2U WindowManager::getSize() const
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
-	return static_cast<math::VC2U>(renderWindow.getSize());
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
+	return static_cast<math::VC2U>(renderWindow->getSize());
 }
 
 void WindowManager::useApplicationView()
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	TS_VERIFY_POINTERS(windowViewManager);
 
 	currentViewType = WindowViewManager::ViewType_Application;
-	renderWindow.setView(windowViewManager->getSFMLView(currentViewType));
+	renderWindow->setView(windowViewManager->getSFMLView(currentViewType));
 }
 
 void WindowManager::useInterfaceView()
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	TS_VERIFY_POINTERS(windowViewManager);
 
 	currentViewType = WindowViewManager::ViewType_Interface;
-	renderWindow.setView(windowViewManager->getSFMLView(currentViewType));
+	renderWindow->setView(windowViewManager->getSFMLView(currentViewType));
 }
 
 const WindowView &WindowManager::getApplicationView() const
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	return windowViewManager->getView(WindowViewManager::ViewType_Application);
 }
 
 const WindowView &WindowManager::getInterfaceView() const
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	return windowViewManager->getView(WindowViewManager::ViewType_Interface);
 }
 
 const WindowView &WindowManager::getCurrentView() const
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	if (windowViewManager == nullptr)
 	{
@@ -281,7 +282,7 @@ bool WindowManager::systemEventCallback(SystemEventCallbackParams *params)
 
 bool WindowManager::setWindowIcon(const std::string &filepath)
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
 	sf::Image icon;
 	std::string fp = resource::ResourceManager::getAbsoluteResourcePath(filepath);
@@ -290,14 +291,14 @@ bool WindowManager::setWindowIcon(const std::string &filepath)
 		TS_LOG_ERROR("Unable to set window icon, file load failed. File: %s", filepath);
 		return false;
 	}
-	renderWindow.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+	renderWindow->setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 	return true;
 }
 
 sf::RenderWindow &WindowManager::getRenderWindow()
 {
-	TS_ASSERT(windowCreated && "Window should be created before using.");
-	return renderWindow;
+	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
+	return *renderWindow;
 }
 
 std::vector<math::VC2U> WindowManager::getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize)

@@ -11,17 +11,17 @@ Commando::Commando()
 {
 }
 
-Commando::Commando(Int32 argc, const char **argv)
+Commando::Commando(int32 argc, const char **argv)
 {
 	parse(argc, argv);
 }
 
-Commando::Commando(Int32 argc, const wchar_t **argv)
+Commando::Commando(int32 argc, const wchar_t **argv)
 {
 	parse(argc, argv);
 }
 
-void Commando::parse(Int32 argc, const char **argv)
+void Commando::parse(int32 argc, const char **argv)
 {
 	flags.clear();
 	parameters.clear();
@@ -40,7 +40,7 @@ void Commando::parse(Int32 argc, const char **argv)
 		return;
 
 	std::string currentFlag;
-	for (Int32 i = 1; i < argc; ++i)
+	for (int32 i = 1; i < argc; ++i)
 	{
 		// Flags are considered to be tokens that start with a dash
 		if (argv[i][0] == '-')
@@ -53,7 +53,7 @@ void Commando::parse(Int32 argc, const char **argv)
 				++i;
 			}
 			
-			Uint32 flagHash = math::simpleHash32(flag);
+			uint32 flagHash = math::simpleHash32(flag);
 			flags.emplace(flagHash, std::move(parameter));
 		}
 		else
@@ -65,7 +65,7 @@ void Commando::parse(Int32 argc, const char **argv)
 	}
 }
 
-void Commando::parse(Int32 argc, const wchar_t **argv)
+void Commando::parse(int32 argc, const wchar_t **argv)
 {
 	flags.clear();
 	parameters.clear();
@@ -84,7 +84,7 @@ void Commando::parse(Int32 argc, const wchar_t **argv)
 		return;
 
 	std::wstring currentFlag;
-	for (Int32 i = 1; i < argc; ++i)
+	for (int32 i = 1; i < argc; ++i)
 	{
 		// Flags are considered to be tokens that start with a dash
 		if (argv[i][0] == '-')
@@ -98,7 +98,7 @@ void Commando::parse(Int32 argc, const wchar_t **argv)
 			}
 
 			// Always make flag name hashes with utf8
-			Uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
+			uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
 			flags.emplace(flagHash, convertU16toU8(parameter));
 		}
 		else
@@ -110,19 +110,19 @@ void Commando::parse(Int32 argc, const wchar_t **argv)
 
 bool Commando::hasFlag(const std::string &flag) const
 {
-	Uint32 flagHash = math::simpleHash32(flag);
+	uint32 flagHash = math::simpleHash32(flag);
 	return flags.find(flagHash) != flags.end();
 }
 
 bool Commando::hasFlag(const std::wstring &flag) const
 {
-	Uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
+	uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
 	return flags.find(flagHash) != flags.end();
 }
 
 bool Commando::hasFlagParameter(const std::string &flag) const
 {
-	Uint32 flagHash = math::simpleHash32(flag);
+	uint32 flagHash = math::simpleHash32(flag);
 	FlagsList::const_iterator iter = flags.find(flagHash);
 	if (iter == flags.end())
 		return 0;
@@ -131,7 +131,7 @@ bool Commando::hasFlagParameter(const std::string &flag) const
 
 bool Commando::hasFlagParameter(const std::wstring &flag) const
 {
-	Uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
+	uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
 	FlagsList::const_iterator iter = flags.find(flagHash);
 	if (iter == flags.end())
 		return 0;
@@ -140,7 +140,7 @@ bool Commando::hasFlagParameter(const std::wstring &flag) const
 
 bool Commando::getFlagParameter(const std::string &flag, std::string &outParam) const
 {
-	Uint32 flagHash = math::simpleHash32(flag);
+	uint32 flagHash = math::simpleHash32(flag);
 	FlagsList::const_iterator iter = flags.find(flagHash);
 	if (iter == flags.end() && !iter->second.empty())
 		return false;
@@ -151,7 +151,7 @@ bool Commando::getFlagParameter(const std::string &flag, std::string &outParam) 
 
 bool Commando::getFlagParameter(const std::wstring &flag, std::wstring &outParam) const
 {
-	Uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
+	uint32 flagHash = math::simpleHash32(convertU16toU8(flag));
 	FlagsList::const_iterator iter = flags.find(flagHash);
 	if (iter == flags.end() && !iter->second.empty())
 		return false;

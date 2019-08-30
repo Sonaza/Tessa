@@ -76,7 +76,7 @@ private:
 	class SharedPointerImpl
 	{
 	public:
-		std::atomic<Int32> refcount;
+		std::atomic<int32> refcount;
 		void (*destructor)(void *) = nullptr;
 	};
 

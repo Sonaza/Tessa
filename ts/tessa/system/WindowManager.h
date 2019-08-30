@@ -65,7 +65,7 @@ private:
 
 	bool windowCreated = false;
 
-	sf::RenderWindow renderWindow;
+	ScopedPointer<sf::RenderWindow> renderWindow;
 	WindowViewManager::ViewType currentViewType;
 
 	system::WindowViewManager *windowViewManager = nullptr;

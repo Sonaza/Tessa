@@ -10,10 +10,15 @@ class Time
 {
 	friend class TimeSpan;
 public:
-	static const Time zero;
+	typedef std::chrono::system_clock system_clock;
+	typedef std::chrono::high_resolution_clock highres_clock;
 
+	typedef highres_clock::time_point internal_time_point;
+	
+	static const Time zero;
+	
 	Time();
-	explicit Time(std::chrono::system_clock::time_point time_point);
+	explicit Time(internal_time_point time_point);
 
 	TimeSpan fromEpoch();
 
@@ -39,7 +44,7 @@ public:
 	TimeSpan operator-(Time rhs) const;
 
 private:
-	std::chrono::system_clock::time_point time_point;
+	internal_time_point time_point;
 };
 
 TS_END_PACKAGE0()

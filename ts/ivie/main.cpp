@@ -3,30 +3,22 @@
 
 #include <locale>
 #include <codecvt>
-#include <fstream>
-
-#include "ts/tessa/thread/Thread.h"
-#include "ts/tessa/common/Log.h"
-#include "ts/tessa/file/FileUtils.h"
-
-#include "ts/tessa/lang/Signal.h"
 
 using namespace ts;
 
 int asdfasd()
 {
-// 	lang::Signal<> mysignal;
-// 	lang::SignalBind bind2;
-// 	bind2.connect(mysignal, lang::SignalPriority_Normal, []()
-// 	{
-// 		TS_PRINTF("This is Bind 2 callback!\n");
-// 	});
+// 	std::locale locale;
+// // 	locale.
+// 
+// 	wchar_t input = L'ä';
+// 
+// 	// Get the facet of the locale which deals with character conversion
+// 	const std::ctype<wchar_t>& facet = std::use_facet< std::ctype<wchar_t> >(locale);
 
-// 	lang::SignalBind bind1;
-// 	bind1.connect(mysignal, lang::SignalPriority_Normal, &bind1function);
-	
-
-// 	mysignal();
+	// Use the facet to convert each character of the input string
+// 	uint32 widened = static_cast<uint32>(facet.widen(input));
+// 	(void)widened;
 
 	return 1;
 }
@@ -35,8 +27,6 @@ int wmain(int argc, const wchar_t **argv)
 {
 // 	if (asdfasd())
 // 		return 0;
-
-	thread::Thread::setMainThread(thread::Thread::getCurrentThread());
 	
 	app::Application app(argc, argv);
 	int returnCode = app.launch();

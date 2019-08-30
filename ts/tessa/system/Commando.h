@@ -12,11 +12,11 @@ class Commando
 {
 public:
 	Commando();
-	Commando(Int32 argc, const char **argv);
-	Commando(Int32 argc, const wchar_t **argv);
+	Commando(int32 argc, const char **argv);
+	Commando(int32 argc, const wchar_t **argv);
 
-	void parse(Int32 argc, const char **argv);
-	void parse(Int32 argc, const wchar_t **argv);
+	void parse(int32 argc, const char **argv);
+	void parse(int32 argc, const wchar_t **argv);
 
 	bool hasFlag(const std::string &flag) const;
 	bool hasFlag(const std::wstring &flag) const;
@@ -43,7 +43,7 @@ protected:
 	std::string executablePath_utf8;
 	std::wstring executablePath_utf16;
 
-	typedef std::unordered_map<Uint32, std::string> FlagsList;
+	typedef std::unordered_map<uint32, std::string> FlagsList;
 	FlagsList flags;
 
 	typedef std::vector<std::string> ParameterList;

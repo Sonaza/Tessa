@@ -64,6 +64,9 @@
     <ClCompile Include="util\RenderUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="viewer\image\ImageBackgroundLoaderWebm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -112,6 +115,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\image\ImageBackgroundLoaderWebm.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

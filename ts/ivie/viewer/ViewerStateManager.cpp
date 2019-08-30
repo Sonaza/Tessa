@@ -66,6 +66,9 @@ void ViewerStateManager::previousImage()
 
 void ViewerStateManager::jumpToImage(SizeType index)
 {
+	if (currentFileList.empty())
+		return;
+
 	{
 		MutexGuard lock(mutex);
 		index = math::clamp(index, 0U, (SizeType)currentFileList.size());
@@ -77,10 +80,10 @@ void ViewerStateManager::jumpToImage(SizeType index)
 	currentImageChangedSignal(currentImageIndex);
 }
 
-void ViewerStateManager::jumpToImageByFilename(const std::wstring &filename)
+void ViewerStateManager::jumpToImageByFilename(const String &filename)
 {
 	MutexGuard lock(mutex);
-	std::vector<std::wstring>::iterator it = std::find(currentFileList.begin(), currentFileList.end(), filename);
+	std::vector<String>::iterator it = std::find(currentFileList.begin(), currentFileList.end(), filename);
 	if (it != currentFileList.end())
 	{
 		currentImageIndex = (SizeType)std::distance(currentFileList.begin(), it);
@@ -124,7 +127,7 @@ void ViewerStateManager::setSorting(SortingStyle sorting)
 	}
 }
 
-const std::vector<std::wstring> &ViewerStateManager::getCurrentSortedFileList() const
+const std::vector<String> &ViewerStateManager::getCurrentSortedFileList() const
 {
 	MutexGuard lock(mutex);
 	return currentFileList;
@@ -175,7 +178,7 @@ SizeType ViewerStateManager::getCurrentImageIndex() const
 	return currentImageIndex;
 }
 
-const std::wstring &ViewerStateManager::getCurrentFilepath() const
+const String &ViewerStateManager::getCurrentFilepath() const
 {
 	MutexGuard lock(mutex);
 	return currentFilePath;
@@ -183,10 +186,10 @@ const std::wstring &ViewerStateManager::getCurrentFilepath() const
 
 void ViewerStateManager::updateFileList()
 {
-	viewer::BackgroundFileScanner &BackgroundFileScanner = getGigaton<viewer::BackgroundFileScanner>();
+	viewer::BackgroundFileScanner &backgroundFileScanner = getGigaton<viewer::BackgroundFileScanner>();
 
 	MutexGuard lock(mutex);
-	currentFileList = BackgroundFileScanner.getFileList();
+	currentFileList = backgroundFileScanner.getFileList();
 		
 	applySorting();
 
@@ -221,11 +224,11 @@ void ViewerStateManager::applySorting()
 	}
 }
 
-PosType ViewerStateManager::findFileIndexByName(const std::wstring &filepath, const std::vector<std::wstring> &filelist)
+PosType ViewerStateManager::findFileIndexByName(const String &filepath, const std::vector<String> &filelist)
 {
 	PosType imageIndex = -1;
 
-	std::vector<std::wstring>::const_iterator it = std::find(filelist.begin(), filelist.end(), filepath);
+	std::vector<String>::const_iterator it = std::find(filelist.begin(), filelist.end(), filepath);
 	if (it != filelist.end())
 		imageIndex = std::distance(filelist.begin(), it);
 

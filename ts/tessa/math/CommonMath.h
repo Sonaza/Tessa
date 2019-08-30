@@ -41,7 +41,7 @@ T abs(T value)
 }
 
 template<class T>
-Int32 sign(T value)
+int32 sign(T value)
 {
 	return value >= 0 ? 1 : -1;
 }

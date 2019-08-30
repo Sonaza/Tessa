@@ -17,6 +17,8 @@
 #include "ts/ivie/viewer/image/FreeImageStaticInitializer.h"
 #include "ts/ivie/viewer/image/ImageManager.h"
 
+#include "ts/tessa/string/String.h"
+
 #if TS_PLATFORM == TS_WINDOWS //&& TS_BUILD != TS_FINALRELEASE
 #include "ts/tessa/common/IncludeWindows.h"
 #else
@@ -25,7 +27,7 @@ bool IsDebuggerPresent() { return false; }
 
 TS_PACKAGE1(app)
 
-Application::Application(Int32 argc, const wchar_t **argv)
+Application::Application(int32 argc, const wchar_t **argv)
 	: system::BaseApplication(argc, argv)
 {
 	viewer::FreeImageStaticInitializer::staticInitialize();
@@ -39,18 +41,18 @@ bool Application::start()
 {
 	if (IsDebuggerPresent())
 	{
-		resource::ResourceManager::setResourceRootDirectory(file::utils::getWorkingDirectory());
+		resource::ResourceManager::setResourceRootDirectory(file::getWorkingDirectory());
 	}
 	else
 	{
-		resource::ResourceManager::setResourceRootDirectory(file::utils::getExecutableDirectory());
+		resource::ResourceManager::setResourceRootDirectory(file::getExecutableDirectory());
 	}
 
 	viewer::ViewerStateManager &vsm = getManager<viewer::ViewerStateManager>();
 
 	std::wstring filepath;
 	getCommando().getNthParameter(0, filepath);
-	if (!filepath.empty() && file::utils::exists(filepath) && file::utils::isFile(filepath))
+	if (!filepath.empty() && file::exists(filepath) && file::isFile(filepath))
 	{
 		vsm.jumpToImageByFilename(filepath);
 	}
@@ -58,6 +60,9 @@ bool Application::start()
 	{
 		vsm.jumpToImage(0);
 	}
+
+	SizeType maxsize = sf::Texture::getMaximumSize();
+	TS_PRINTF("Texture max size %u\n", maxsize);
 
 	return true;
 }
@@ -72,11 +77,11 @@ bool Application::createApplicationManagers()
 	std::wstring workingDirectory;
 	getCommando().getNthParameter(0, workingDirectory);
 
-	workingDirectory = file::utils::isFile(workingDirectory) ? file::utils::getDirname(workingDirectory) : workingDirectory;
+	workingDirectory = file::isFile(workingDirectory) ? file::getDirname(workingDirectory) : workingDirectory;
 	if (workingDirectory.empty())
 	{
-		workingDirectory = file::utils::getWorkingDirectoryWide();
-		workingDirectory = file::utils::joinPaths(workingDirectory, L"img");
+		workingDirectory = file::getWorkingDirectory();
+		workingDirectory = file::joinPaths(workingDirectory, "img");
 	}
 
 	createManagerInstance<viewer::BackgroundFileScanner>(workingDirectory, viewer::SupportedFormats::getSupportedFormatExtensions());

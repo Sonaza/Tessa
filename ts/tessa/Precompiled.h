@@ -23,6 +23,8 @@
 
 #include "ts/tessa/lang/Signal.h"
 
+#include "ts/tessa/string/String.h"
+
 #include <memory>
 
 #include <map>

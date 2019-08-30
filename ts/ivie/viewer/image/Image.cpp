@@ -10,12 +10,9 @@
 #include "ts/ivie/viewer/image/ImageBackgroundLoaderFreeImage.h"
 
 #include "ts/tessa/thread/ThreadScheduler.h"
-// #include "ts/ivie/viewer/image/ImageBackgroundLoaderWebm.h"
+#include "ts/ivie/viewer/image/ImageBackgroundLoaderWebm.h"
 
 #include "ts/tessa/profiling/SimpleScopedZoneTimer.h"
-
-#include "FreeImage.h"
-// #include "nestegg/nestegg.h"
 
 TS_PACKAGE2(app, viewer)
 
@@ -59,7 +56,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 			displayShader = im.loadDisplayShader(ImageManager::DisplayShader_Webm);
 
 			loaderState = Loading;
-// 			backgroundLoader.reset(new ImageBackgroundLoaderWebm(this, filepath));
+			backgroundLoader.reset(new ImageBackgroundLoaderWebm(this, filepath));
 		}
 		break;
 
@@ -74,6 +71,8 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 		}
 		break;
 	}
+
+	currentLoaderType = type;
 
 	TS_ASSERT(backgroundLoader);
 	backgroundLoader->start(suspendAfterBufferFull);
@@ -190,8 +189,28 @@ const FrameStorage *Image::getCurrentFrameStorage() const
 	return nullptr;
 }
 
-SharedPointer<sf::Shader> Image::getDisplayShader() const
+SharedPointer<sf::Shader> Image::getDisplayShader(const math::VC2 &apparentSize, bool useAlphaChecker)
 {
+	if (displayShader)
+	{
+		switch (currentLoaderType)
+		{
+			case LoaderFreeImage:
+			{
+				displayShader->setUniform("u_textureApparentSize", apparentSize);
+				displayShader->setUniform("u_useAlphaChecker", true);
+			}
+			break;
+			case LoaderWebm:
+			{
+// 				displayShader->setUniform("u_textureApparentSize", apparentSize);
+// 				displayShader->setUniform("u_useAlphaChecker", true);
+			}
+			break;
+			default: TS_ASSERT(!"Unknown type"); break;
+		}
+	}
+
 	return displayShader;
 }
 
@@ -285,31 +304,12 @@ void Image::setImageData(const ImageData &dataParam)
 Image::LoaderType Image::sniffLoaderType()
 {
 	// Test FreeImage formats
-	{
-		FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(filepath.c_str());
-// 		if (format == FIF_UNKNOWN)
-// 		{
-// 			// Try to get file type from file name instead
-// 			format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
-// 		}
-
-		if (FreeImage_FIFSupportsReading(format))
-			return LoaderFreeImage;
-	}
+	if (ImageBackgroundLoaderFreeImage::isValidFreeImageFile(filepath))
+		return LoaderFreeImage;
 
 	// Test Nestegg format (webm)
-	/*{
-		static const BigSizeType nesteggSniffBytesAmount = 512;
-
-		file::InputFile file(filepath, file::InputFileMode_ReadBinary);
-
-		unsigned char frameBuffer[nesteggSniffBytesAmount] = { 0 };
-		file.read(&frameBuffer[0], nesteggSniffBytesAmount);
-		file.close();
-
-		if (nestegg_sniff(&frameBuffer[0], nesteggSniffBytesAmount) == 1)
-			return LoaderWebm;
-	}*/
+	if (ImageBackgroundLoaderWebm::isValidWebmFile(filepath))
+		return LoaderWebm;
 
 	return LoaderUnknown;
 }
@@ -329,7 +329,7 @@ std::wstring Image::getStats() const
 {
 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	std::wstring str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
-		file::utils::getBasename(filepath),
+		file::getBasename(filepath),
 		currentFrameIndex + 1,
 		math::max(1U, data.numFramesTotal),
 		frameBuffer.getBufferedAmount(),
@@ -367,7 +367,7 @@ void Image::swapBuffer()
 
 	frameBuffer.incrementWrite();
 
-	if (thumbnail == nullptr)
+	if (makingThumbnail == false)
 	{
 		const FrameStorage &storage = frameBuffer.getReadPtr();
 		TS_ASSERT(storage.texture != nullptr);
@@ -377,6 +377,8 @@ void Image::swapBuffer()
 			thread::Priority_Normal, TimeSpan::zero,
 			&ThisClass::makeThumbnail, this,
 			storage.texture, 300);
+
+		makingThumbnail = true;
 	}
 }
 
@@ -406,13 +408,13 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 	{
 		float factor = maxSize / (float)textureSize.x;
 		scaledSize.x = maxSize;
-		scaledSize.y = (Uint32)(textureSize.y * factor);
+		scaledSize.y = (uint32)(textureSize.y * factor);
 	}
 	else
 	{
 		float factor = maxSize / (float)textureSize.y;
 		scaledSize.y = maxSize;
-		scaledSize.x = (Uint32)(textureSize.x * factor);
+		scaledSize.x = (uint32)(textureSize.x * factor);
 	}
 
 	sf::RenderTexture rt;
@@ -422,9 +424,7 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 	sf::RenderStates states;
 	states.texture = frameTexture.get();
 
-	displayShader->setUniform("u_textureApparentSize", static_cast<math::VC2>(scaledSize));
-	displayShader->setUniform("u_useAlphaChecker", true);
-	states.shader = displayShader.get();
+	states.shader = getDisplayShader(static_cast<math::VC2>(scaledSize), true).get();
 
 	rt.clear(sf::Color::White);
 	rt.draw(

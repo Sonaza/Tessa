@@ -18,6 +18,7 @@
     <ProjectGuid>{DE986E68-23C8-446B-9562-846CACF157D2}</ProjectGuid>
     <RootNamespace>tessa</RootNamespace>
     <ProjectName>00 tessa</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -30,8 +31,8 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -118,6 +119,8 @@
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -143,6 +146,9 @@
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -162,14 +168,13 @@
     <ClCompile Include="file\ArchivistReaderExtractor.cpp" />
     <ClCompile Include="file\ArchivistWriter.cpp" />
     <ClCompile Include="file\FileEntry.cpp" />
-    <ClCompile Include="file\FileEntryW.cpp" />
     <ClCompile Include="file\FileList.cpp" />
-    <ClCompile Include="file\FileListW.cpp" />
     <ClCompile Include="file\FileUtils.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
-    <ClCompile Include="lang\StringUtils.cpp" />
+    <ClCompile Include="string\String.cpp" />
+    <ClCompile Include="string\StringUtils.cpp" />
     <ClCompile Include="math\Angle.cpp" />
     <ClCompile Include="math\CRC.cpp" />
     <ClCompile Include="math\Hash.cpp" />
@@ -211,10 +216,8 @@
     <ClInclude Include="file\ArchivistWriter.h" />
     <ClInclude Include="file\ArchivistCommon.h" />
     <ClInclude Include="file\FileEntry.h" />
-    <ClInclude Include="file\FileEntryW.h" />
     <ClInclude Include="file\FileList.h" />
     <ClInclude Include="file\FileListStyle.h" />
-    <ClInclude Include="file\FileListW.h" />
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
     <ClInclude Include="file\OutputFile.h" />
@@ -222,7 +225,8 @@
     <ClInclude Include="lang\ScopedPointer.h" />
     <ClInclude Include="lang\SharedPointer.h" />
     <ClInclude Include="lang\Signal.h" />
-    <ClInclude Include="lang\StringUtils.h" />
+    <ClInclude Include="string\String.h" />
+    <ClInclude Include="string\StringUtils.h" />
     <ClInclude Include="lang\UniquePointer.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="math\CRC.h" />
@@ -246,6 +250,7 @@
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="resource\ShaderResource.h" />
     <ClInclude Include="resource\SoundResource.h" />
+    <ClInclude Include="string\Utf.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="system\WindowViewManager.h" />
     <ClInclude Include="thread\AbstractThreadEntry.h" />
@@ -315,6 +320,7 @@
     <ClInclude Include="math\Vec4.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <None Include="string\Utf.inl" />
     <None Include="Windows.props" />
   </ItemGroup>
   <ItemGroup>

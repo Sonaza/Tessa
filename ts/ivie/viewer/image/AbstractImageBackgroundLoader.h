@@ -13,7 +13,7 @@ class AbstractImageBackgroundLoader : public thread::AbstractThreadEntry
 	typedef thread::AbstractThreadEntry BaseClass;
 
 public:
-	AbstractImageBackgroundLoader(Image *ownerImage, const std::wstring &filepath);
+	AbstractImageBackgroundLoader(Image *ownerImage, const String &filepath);
 	virtual ~AbstractImageBackgroundLoader();
 
 	void start(bool suspendAfterBufferFull = false);
@@ -43,18 +43,18 @@ public:
 	};
 	BackgroundLoaderState getState() const;
 
-	std::wstring getStateString(BackgroundLoaderState state) const
+	String getStateString(BackgroundLoaderState state) const
 	{
 		switch (state)
 		{
-			case Inactive: return L"Inactive";
-			case Uninitialized: return L"Uninitialized";
-			case Running: return L"Running";
-			case Resuming: return L"Resuming";
-			case Suspended: return L"Suspended";
-			case Finished: return L"Finished";
+			case Inactive: return "Inactive";
+			case Uninitialized: return "Uninitialized";
+			case Running: return "Running";
+			case Resuming: return "Resuming";
+			case Suspended: return "Suspended";
+			case Finished: return "Finished";
 		}
-		return L"Unknown";
+		return "Unknown";
 	}
 
 	virtual std::string getDebugString() const
@@ -83,7 +83,7 @@ protected:
 	std::string errorText;
 
 	Image *ownerImage = nullptr;
-	std::wstring filepath;
+	String filepath;
 
 	bool nextFrameRequested = false;
 

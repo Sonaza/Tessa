@@ -27,8 +27,7 @@ class InputFile : public lang::Noncopyable
 {
 public:
 	InputFile();
-	InputFile(const std::string &filepath, InputFileMode mode);
-	InputFile(const std::wstring &filepath, InputFileMode mode);
+	InputFile(const String &filepath, InputFileMode mode);
 	~InputFile();
 
 	// Move constructor and assignment
@@ -38,8 +37,7 @@ public:
 	/* Opens file for reading, according to mode.
 	 * Returns: true if file open succeeded. In case of failure the reason is output to the log.
 	 */
-	bool open(const std::string &filepath, InputFileMode mode);
-	bool open(const std::wstring &filepath, InputFileMode mode);
+	bool open(const String &filepath, InputFileMode mode);
 	
 	/* Closes opened file, also clearing flags.
 	 */
@@ -47,7 +45,10 @@ public:
 
 	/* Reads size bytes to the outBuffer.
 	 * Buffer must already be allocated and have at least size bytes of space.
-	 * Returns: number of bytes read, or 0 on failure or bad.
+	 * Returns one of these:
+	 *    number of bytes read (may be less than bytes requested),
+	 *    0 if already eof,
+     *    or -1 on failure or bad.
 	 */
 	PosType read(char *outBuffer, BigSizeType size);
 	PosType read(unsigned char *outBuffer, BigSizeType size);
@@ -92,6 +93,10 @@ public:
 	/* Returns: true if a failure has been encountered and the internal stream is bad.
 	 */
 	bool isBad() const;
+
+	/* Clears flags.
+	 */
+	void clearFlags();
 	
 	/* Returns: true if file is open and readable.
 	 */
@@ -102,10 +107,10 @@ public:
 	bool operator!() const;
 
 private:
-	void *_filePtr = nullptr;
-	bool _eof = false;
-	mutable bool _bad = false;
-	PosType _filesize = -1;
+	void *filePtr = nullptr;
+	bool eof = false;
+	mutable bool bad = false;
+	PosType filesize = -1;
 };
 
 template <class Type>

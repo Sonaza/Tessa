@@ -108,20 +108,22 @@
 
 TS_PACKAGE0()
 
-typedef std::int8_t Int8;
-typedef std::int16_t Int16;
-typedef std::int32_t Int32;
-typedef std::int64_t Int64;
+typedef std::int8_t int8;
+typedef std::int16_t int16;
+typedef std::int32_t int32;
+typedef std::int64_t int64;
 
-typedef std::uint8_t Uint8;
-typedef std::uint16_t Uint16;
-typedef std::uint32_t Uint32;
-typedef std::uint64_t Uint64;
+typedef std::uint8_t uint8;
+typedef std::uint16_t uint16;
+typedef std::uint32_t uint32;
+typedef std::uint64_t uint64;
 
-typedef Uint32 SizeType;
-typedef Uint64 BigSizeType;
+typedef uint8 Byte;
 
-typedef Int64 PosType;
+typedef uint32 SizeType;
+typedef uint64 BigSizeType;
+
+typedef int64 PosType;
 
 // Template hack to get readable type names for classes
 template<typename T>

@@ -12,7 +12,7 @@ TS_PACKAGE2(app, viewer)
 namespace
 {
 
-BYTE* convertToRGBA(Uint32 width, Uint32 height, BYTE* bits)
+BYTE* convertToRGBA(uint32 width, uint32 height, BYTE* bits)
 {
 	// Image byte format is BGRA when endianness is little endian
 #if !defined(FREEIMAGE_BIGENDIAN)
@@ -31,7 +31,7 @@ BYTE* convertToRGBA(Uint32 width, Uint32 height, BYTE* bits)
 
 }
 
-ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage, const std::wstring &filepath)
+ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage, const String &filepath)
 	: AbstractImageBackgroundLoader(ownerImage, filepath)
 {
 	
@@ -66,7 +66,7 @@ void ImageBackgroundLoaderFreeImage::onResume()
 		stackingRenderTexture->draw(imageVertexArray, savedRenderTexture.get());
 		savedRenderTexture.reset();
 
-		stackingRenderTextureThreadId = (Int32)Thread::getCurrentThread().getThreadId();
+		stackingRenderTextureThreadId = (int32)Thread::getCurrentThread().getThreadId();
 	}
 }
 
@@ -74,7 +74,7 @@ void ImageBackgroundLoaderFreeImage::onSuspend()
 {
 	if (stackingRenderTexture != nullptr)
 	{
-		Int32 threadId = (Int32)Thread::getCurrentThread().getThreadId();
+		int32 threadId = (int32)Thread::getCurrentThread().getThreadId();
 		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
 			"Thread ID mismatch. Got: %d  Expected: %d", threadId, stackingRenderTextureThreadId);
 
@@ -118,7 +118,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 // 		state.format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
 // 	}
 
-	Int32 flags = 0;
+	int32 flags = 0;
 
 	switch (state.format)
 	{
@@ -205,7 +205,7 @@ void ImageBackgroundLoaderFreeImage::cleanup()
 
 	if(stackingRenderTexture)
 	{
-		Int32 threadId = (Int32)Thread::getCurrentThread().getThreadId();
+		int32 threadId = (int32)Thread::getCurrentThread().getThreadId();
 		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
 			"Thread ID mismatch. Got: %d  Expected: %d", threadId, stackingRenderTextureThreadId);
 
@@ -255,22 +255,20 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 	imageData.size = imageSize;
 	imageData.hasAlpha = true;
 
-	sf::Image image;
-	image.create(imageSize.x, imageSize.y, bits);
-
-	if (bufferStorage.texture == nullptr)
-		bufferStorage.texture = makeShared<sf::Texture>();
-
-	bool success = bufferStorage.texture->loadFromImage(image);
-	if (success)
+	bufferStorage.texture = makeShared<sf::Texture>();
+	if (bufferStorage.texture != nullptr && bufferStorage.texture->create(imageSize.x, imageSize.y))
 	{
+		bufferStorage.texture->update(bits);
+
 		bufferStorage.texture->setSmooth(true);
 		bufferStorage.texture->generateMipmap();
 
 		loaderIsComplete = true;
+
+		return true;
 	}
 
-	return success;
+	return false;
 }
 
 bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &bufferStorage)
@@ -302,7 +300,7 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 
 			stackingRenderTexture = makeUnique<sf::RenderTexture>();
 			stackingRenderTexture->create(imageSize.x, imageSize.y);
-			stackingRenderTextureThreadId = (Int32)Thread::getCurrentThread().getThreadId();
+			stackingRenderTextureThreadId = (int32)Thread::getCurrentThread().getThreadId();
 
 			imageVertexArray = util::makeQuadVertexArray(imageSize.x, imageSize.y);
 
@@ -316,10 +314,10 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 
 	FITAG *tag = nullptr;
 
-	Uint32 frametime = 100;
+	uint32 frametime = 100;
 	if (FreeImage_GetMetadata(FIMD_ANIMATION, lockedPage, "FrameTime", &tag))
 	{
-		frametime = *(Uint32*)FreeImage_GetTagValue(tag);
+		frametime = *(uint32*)FreeImage_GetTagValue(tag);
 
 		// Use 100ms as a default if a proper value wasn't stored
 		if (frametime == 0)
@@ -355,12 +353,11 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 
 	bool success = false;
 
-	sf::Image image;
-	image.create(frameSize.x, frameSize.y, bits);
-
 	sf::Texture currentFrame;
-	if (currentFrame.loadFromImage(image))
+	if (currentFrame.create(frameSize.x, frameSize.y))
 	{
+		currentFrame.update(bits);
+
 		if (disposalMethod == DisposalMethod_Previous && previousFrame != nullptr)
 		{
 			stackingRenderTexture->draw(imageVertexArray, previousFrame.get());
@@ -371,7 +368,9 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 		}
 
 		const math::VC2U sizeDiff = imageSize - frameSize;
-		stackingRenderTexture->draw(util::makeQuadVertexArray(frameSize.x, frameSize.y, offset.x, sizeDiff.y - offset.y), &currentFrame);
+		stackingRenderTexture->draw(
+			util::makeQuadVertexArray(frameSize.x, frameSize.y, offset.x, sizeDiff.y - offset.y),
+			&currentFrame);
 		stackingRenderTexture->display();
 
 		const sf::Texture &stackedTexture = stackingRenderTexture->getTexture();
@@ -404,6 +403,21 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 bool ImageBackgroundLoaderFreeImage::isLoadingComplete() const
 {
 	return BaseClass::isLoadingComplete() && loaderIsComplete;
+}
+
+bool ImageBackgroundLoaderFreeImage::isValidFreeImageFile(const String &filepath)
+{
+#if TS_PLATFORM == TS_WINDOWS
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(filepath.toWideString().c_str());
+#else
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filepath.toUtf8().c_str());
+#endif
+// 	if (format == FIF_UNKNOWN)
+// 	{
+// 		// Try to get file type from file name instead
+// 		format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
+// 	}
+	return FreeImage_FIFSupportsReading(format) == 1;
 }
 
 bool ImageBackgroundLoaderFreeImage::restartImpl()

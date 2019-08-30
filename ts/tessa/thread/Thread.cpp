@@ -14,8 +14,8 @@ TS_PACKAGE1(thread)
 
 namespace
 {
-static const std::string mainThreadName = "MainThread";
-static const std::string externalThreadName = "ExternalThread";
+static const std::string mainThreadName = "Main Thread";
+static const std::string externalThreadName = "External Thread";
 }
 
 std::atomic<SizeType> Thread::nextThreadId;

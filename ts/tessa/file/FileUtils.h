@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #if TS_PLATFORM == TS_WINDOWS
 	#define TS_SYSTEM_PATH_DELIMITER '\\'
 #elif TS_PLATFORM == TS_LINUX
@@ -12,59 +10,72 @@
 
 #define TS_ALL_PATH_DELIMITERS "/\\"
 
-#define TS_SYSTEM_PATH_DELIMITER_WIDE L'\\'
-#define TS_ALL_PATH_DELIMITERS_WIDE L"/\\"
+TS_PACKAGE1(file)
 
-TS_PACKAGE2(file, utils)
+/* Returns true if the given path is an absolute path.
+ * Windows: checks if the path has drive letter or is prefixed with two backslashes (network share).
+ * Other: checks if the first character of the path is a forward slash.
+ */
+extern bool isAbsolutePath(const String &path);
 
-extern bool isAbsolutePath(const std::string &path);
-extern bool isAbsolutePath(const std::wstring &path);
+/* Returns true if the given path has trailing slashes (checks for both forward and backslashes)
+ */
+extern bool hasTrailingSlash(const String &path);
 
-extern bool hasTrailingSlash(const std::string &path);
-extern bool hasTrailingSlash(const std::wstring &path);
+/* Removes all trailing slashes, modifying the given path in place.
+ */
+extern void removeTrailingSlashes(String &path);
 
-extern void removeTrailingSlashes(std::string &path);
-extern std::string removeTrailingSlashesCopy(const std::string &path);
+/* Returns the the two sections joined together, while making sure there aren't duplicate path delimiters.
+ */
+extern String joinPaths(const String &left, const String &right, string::Character delimiter = TS_SYSTEM_PATH_DELIMITER);
 
-extern void removeTrailingSlashes(std::wstring &path);
-extern std::wstring removeTrailingSlashesCopy(const std::wstring &path);
+/* Returns a normalized path by collapsing all relational segments to their simplest form.
+ * Additionally all path delimiters are replaced with the one given.
+ */
+extern String normalizePath(const String &path, string::Character delimiter = TS_SYSTEM_PATH_DELIMITER);
 
-extern std::string joinPaths(const std::string &left, const std::string &right, char delimiter = TS_SYSTEM_PATH_DELIMITER);
-extern std::wstring joinPaths(const std::wstring &left, const std::wstring &right, wchar_t delimiter = TS_SYSTEM_PATH_DELIMITER_WIDE);
+/* Returns the directory path without file name.
+ * Simply removes everything past the last path delimiter (does not confirm if path was a file or a directory).
+ */
+extern String getDirname(const String &path, const String &delimiters = TS_ALL_PATH_DELIMITERS);
 
-extern std::string normalizePath(const std::string &path, char delimiter = TS_SYSTEM_PATH_DELIMITER);
-extern std::wstring normalizePath(const std::wstring &path, wchar_t delimiter = TS_SYSTEM_PATH_DELIMITER_WIDE);
+/* Returns file's name with directory path stripped.
+ * Optionally file extension can also be removed (removes everything past the last period (.))
+ */
+extern String getBasename(const String &path, bool stripExtension = false, const String &delimiters = TS_ALL_PATH_DELIMITERS);
 
-extern std::string getDirname(const std::string &path, const std::string &delimiters = TS_ALL_PATH_DELIMITERS);
-extern std::wstring getDirname(const std::wstring &path, const std::wstring &delimiters = TS_ALL_PATH_DELIMITERS_WIDE);
+/* Returns the substring after the last period (.)
+ * or empty if not found before the last path delimiter (does not confirm if path was a file or a directory).
+ */
+extern String getExtension(const String &path);
 
-extern std::string getBasename(const std::string &path, bool stripExtension = false, const std::string &delimiters = TS_ALL_PATH_DELIMITERS);
-extern std::wstring getBasename(const std::wstring &path, bool stripExtension = false, const std::wstring &delimiters = TS_ALL_PATH_DELIMITERS_WIDE);
+/* Returns true if given file path exists.
+ */
+extern bool exists(const String &path);
 
-// Returns the substring after the last period (.) or empty if not found before the last path delimiter
-// Does not check if the given path is a directory or file
-extern std::string getExtension(const std::string &path);
-extern std::wstring getExtension(const std::wstring &path);
+/* Returns true if the given path is a file.
+ */
+extern bool isFile(const String &path);
 
-extern bool exists(const std::string &path);
-extern bool exists(const std::wstring &path);
+/* Returns true if the given path is a directory.
+*/
+extern bool isDirectory(const String &path);
 
-extern bool isFile(const std::string &path);
-extern bool isFile(const std::wstring &path);
+/* Attempts to remove the given file and returns true if the operation was successful.
+ */
+extern bool removeFile(const String &path);
 
-extern bool isDirectory(const std::string &path);
-extern bool isDirectory(const std::wstring &path);
+/* Returns the base directory path where the current executable is located.
+ */
+extern String getExecutableDirectory();
 
-extern bool removeFile(const std::string &path);
-extern bool removeFile(const std::wstring &path);
+/* Returns the current working directory
+ */
+extern String getWorkingDirectory();
 
-extern std::string getExecutableDirectory();
-extern std::wstring getExecutableDirectoryWide();
+/* Changes the current working directory to the given path.
+ */
+extern void setWorkingDirectory(const String &path);
 
-extern std::string getWorkingDirectory();
-extern std::wstring getWorkingDirectoryWide();
-
-extern void setWorkingDirectory(const std::string &path);
-extern void setWorkingDirectory(const std::wstring &path);
-
-TS_END_PACKAGE2()
+TS_END_PACKAGE1()

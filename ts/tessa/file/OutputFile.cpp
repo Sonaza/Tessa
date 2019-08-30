@@ -54,7 +54,7 @@ bool OutputFile::open(const std::string &filepath, OutputFileMode mode)
 	if (file == nullptr)
 		return false;
 
-	Int32 modeBits = std::ios_base::out;
+	int32 modeBits = std::ios_base::out;
 	if ((mode & priv::Out_ModeBinary) > 0)
 		modeBits |= std::ios_base::binary;
 	if ((mode & priv::Out_ModeTruncate) > 0)
@@ -84,7 +84,7 @@ bool OutputFile::open(const std::wstring &filepath, OutputFileMode mode)
 	if (file == nullptr)
 		return false;
 
-	Int32 modeBits = std::ios_base::out;
+	int32 modeBits = std::ios_base::out;
 	if ((mode & priv::Out_ModeBinary) > 0)
 		modeBits |= std::ios_base::binary;
 	if ((mode & priv::Out_ModeTruncate) > 0)

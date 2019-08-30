@@ -20,14 +20,16 @@
 
 TS_PACKAGE1(system)
 
-BaseApplication::BaseApplication(Int32 argc, const char **argv)
+BaseApplication::BaseApplication(int32 argc, const char **argv)
 	: gigaton(TS_GET_GIGATON())
 	, _commando(argc, argv)
 {
+	thread::Thread::setMainThread(thread::Thread::getCurrentThread());
+
 	gigaton.registerClass(this);
 }
 
-BaseApplication::BaseApplication(Int32 argc, const wchar_t **argv)
+BaseApplication::BaseApplication(int32 argc, const wchar_t **argv)
 	: gigaton(TS_GET_GIGATON())
 	, _commando(argc, argv)
 {
@@ -39,13 +41,13 @@ BaseApplication::~BaseApplication()
 	gigaton.unregisterClass(this);
 }
 
-Int32 BaseApplication::launch()
+int32 BaseApplication::launch()
 {
 	initializeConfigDefaults(_config);
 
 	if (!_config.open(TS_CONFIG_FILE_NAME))
 	{
-		if (!file::utils::exists(TS_CONFIG_FILE_NAME))
+		if (!file::exists(TS_CONFIG_FILE_NAME))
 		{
 			// Config doesn't exist, create a default.
 			_config.save(TS_CONFIG_FILE_NAME);

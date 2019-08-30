@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 14.00
-# Visual Studio 2015
-VisualStudioVersion = 12.0.40629.0
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01 ivie", "app.vcxproj", "{02C16045-DEC1-45D1-90D6-7DB760C1ED9D}"
 EndProject
@@ -20,12 +20,12 @@ Global
 		{02C16045-DEC1-45D1-90D6-7DB760C1ED9D}.FinalRelease|x64.Build.0 = FinalRelease|x64
 		{02C16045-DEC1-45D1-90D6-7DB760C1ED9D}.Release|x64.ActiveCfg = Release|x64
 		{02C16045-DEC1-45D1-90D6-7DB760C1ED9D}.Release|x64.Build.0 = Release|x64
-		{DE986E68-23C8-446B-9562-846CACF157D2}.Debug|x64.Build.0 = Debug|x64
 		{DE986E68-23C8-446B-9562-846CACF157D2}.Debug|x64.ActiveCfg = Debug|x64
-		{DE986E68-23C8-446B-9562-846CACF157D2}.FinalRelease|x64.Build.0 = FinalRelease|x64
+		{DE986E68-23C8-446B-9562-846CACF157D2}.Debug|x64.Build.0 = Debug|x64
 		{DE986E68-23C8-446B-9562-846CACF157D2}.FinalRelease|x64.ActiveCfg = FinalRelease|x64
-		{DE986E68-23C8-446B-9562-846CACF157D2}.Release|x64.Build.0 = Release|x64
+		{DE986E68-23C8-446B-9562-846CACF157D2}.FinalRelease|x64.Build.0 = FinalRelease|x64
 		{DE986E68-23C8-446B-9562-846CACF157D2}.Release|x64.ActiveCfg = Release|x64
+		{DE986E68-23C8-446B-9562-846CACF157D2}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

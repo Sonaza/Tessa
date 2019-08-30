@@ -115,19 +115,19 @@ float dot(const Vec2<T> &a, const Vec2<T> &b);
 #include "Vec2.inl"
 
 typedef Vec2<float>		VC2;
-typedef Vec2<Int32>		VC2I;
-typedef Vec2<Uint32>	VC2U;
+typedef Vec2<int32>		VC2I;
+typedef Vec2<uint32>	VC2U;
 
 const Vec2<float> Vec2<float>::zero(0.f, 0.f);
 const Vec2<float> Vec2<float>::up(0.f, 1.f);
 const Vec2<float> Vec2<float>::right(1.f, 0.f);
 
-const Vec2<Int32> Vec2<Int32>::zero(0, 0);
-const Vec2<Int32> Vec2<Int32>::up(0, 1);
-const Vec2<Int32> Vec2<Int32>::right(1, 0);
+const Vec2<int32> Vec2<int32>::zero(0, 0);
+const Vec2<int32> Vec2<int32>::up(0, 1);
+const Vec2<int32> Vec2<int32>::right(1, 0);
 
-const Vec2<Uint32> Vec2<Uint32>::zero(0, 0);
-const Vec2<Uint32> Vec2<Uint32>::up(0, 1);
-const Vec2<Uint32> Vec2<Uint32>::right(1, 0);
+const Vec2<uint32> Vec2<uint32>::zero(0, 0);
+const Vec2<uint32> Vec2<uint32>::up(0, 1);
+const Vec2<uint32> Vec2<uint32>::right(1, 0);
 
 TS_END_PACKAGE1()

@@ -14,7 +14,7 @@ enum FileListStyleBits
 
 }
 
-enum FileListStyle : Uint8
+enum FileListStyle : uint8
 {
 	FileListStyle_Directories           = priv::ListStyleBits_Directories,
 	FileListStyle_Directories_Recursive = FileListStyle_Directories | priv::ListStyleBits_Recursive,

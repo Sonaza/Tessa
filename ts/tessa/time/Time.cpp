@@ -12,14 +12,14 @@ Time::Time()
 {
 }
 
-Time::Time(std::chrono::system_clock::time_point time_point)
+Time::Time(internal_time_point time_point)
 	: time_point(time_point)
 {
 }
 
 Time Time::now()
 {
-	return Time(std::chrono::system_clock::now());
+	return Time(highres_clock::now());
 }
 
 TimeSpan Time::fromEpoch()

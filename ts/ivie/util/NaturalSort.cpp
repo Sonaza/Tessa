@@ -18,8 +18,8 @@ extern bool NaturalSort(const std::wstring &lhs, const std::wstring &rhs)
 
 extern bool NaturalSortByExtension(const std::wstring &lhs, const std::wstring &rhs)
 {
-	std::wstring extl = file::utils::getExtension(lhs);
-	std::wstring extr = file::utils::getExtension(rhs);
+	std::wstring extl = file::getExtension(lhs);
+	std::wstring extr = file::getExtension(rhs);
 
 	if (extl != extr)
 		return NaturalSort(extl, extr);

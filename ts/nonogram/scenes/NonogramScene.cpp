@@ -70,11 +70,11 @@ bool NonogramScene::handleEvent(const sf::Event event)
 	return false;
 }
 
-void NonogramScene::swapTexture(Int32 dir)
+void NonogramScene::swapTexture(int32 dir)
 {
 	currentIndex += dir;
 	if (currentIndex < 0)
-		currentIndex = (Int32)(textures.size() - 1);
+		currentIndex = (int32)(textures.size() - 1);
 	if (currentIndex >= textures.size())
 		currentIndex = 0;
 

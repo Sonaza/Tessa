@@ -28,7 +28,10 @@ bool WindowViewManager::initialize()
 	windowManager = gigaton.getGigatonOptional<system::WindowManager>();
 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, windowManager);
 
-	screenSizeChangedBind.connect(windowManager->screenSizeChangedSignal, &ThisClass::screenSizeChanged, this);
+	screenSizeChangedBind.connect(
+		windowManager->screenSizeChangedSignal,
+		lang::SignalPriority_VeryHigh,
+		&ThisClass::screenSizeChanged, this);
 
 	return true;
 }

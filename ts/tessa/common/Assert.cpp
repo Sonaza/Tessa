@@ -6,7 +6,7 @@
 	#include <sstream>
 #endif
 
-#include "ts/tessa/lang/StringUtils.h"
+#include "ts/tessa/string/StringUtils.h"
 
 TS_PACKAGE0()
 
@@ -33,9 +33,9 @@ DialogAction dialog(const char *expression, const char *message, const char *fil
 	msg << "Expression: " << expression << "\n"
 		<< "File: " << filepath << "\n"
 		<< "Line: " << line << "\n"
-		<< "\n(Press 'Retry' to debug break)\n";
+		<< "\n(Press 'Retry' for debug break)\n";
 
-	Int32 button = MessageBoxW(nullptr, msg.str().c_str(), L"Assertion failure", MB_ABORTRETRYIGNORE | MB_ICONERROR);
+	int32 button = MessageBoxW(nullptr, msg.str().c_str(), L"Assertion failure", MB_ABORTRETRYIGNORE | MB_ICONERROR);
 	switch (button)
 	{
 		case IDABORT: return Abort;
@@ -52,9 +52,10 @@ extern bool _assert_impl(const char *expression, const char *message, const char
 {
 	if (message != nullptr)
 	{
-		std::string messageNoLinebreaks = message;
-		lang::utils::replaceCharacter(messageNoLinebreaks, '\n', ' ');
-		TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n", messageNoLinebreaks, expression, filepath, line);
+		String messageNoLinebreaks = message;
+		string::replaceCharacter(messageNoLinebreaks, '\n', ' ');
+		TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n",
+			messageNoLinebreaks, expression, filepath, line);
 	}
 	else
 	{

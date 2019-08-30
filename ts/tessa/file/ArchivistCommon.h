@@ -2,7 +2,7 @@
 
 TS_PACKAGE1(file)
 
-enum ArchivistCompressionMode : Uint16
+enum ArchivistCompressionMode : uint16
 {
 	CompressionType_NoCompression  = 0,
 	CompressionType_LZ4FullBlock   = 1,
@@ -14,7 +14,7 @@ struct ArchivistFileHeader
 	char filename[96];
 	SizeType filesize;
 	SizeType offset;
-	Uint16 compression;
+	uint16 compression;
 };
 
 struct ArchivistFileFormat

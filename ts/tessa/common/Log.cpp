@@ -8,7 +8,7 @@
 
 #include <streambuf>
 
-#include "ts/tessa/lang/StringUtils.h"
+#include "ts/tessa/string/StringUtils.h"
 #include "ts/tessa/Config.h"
 
 #include <array>
@@ -33,7 +33,7 @@ public:
 	}
 
 protected:
-	virtual Int32 overflow(Int32 ch) override
+	virtual int32 overflow(int32 ch) override
 	{
 		if (ch != traits_type::eof())
 		{
@@ -44,14 +44,14 @@ protected:
 		return traits_type::eof();
 	}
 
-	Int32 sync()
+	int32 sync()
 	{
 		if (pbase() != pptr())
 		{
-			std::string str(pbase(), pptr());
+			String str(pbase(), pptr());
 			setp(pbase(), epptr());
 
-			lang::utils::trimWhitespace(str);
+			string::trimWhitespace(str);
 
 			std::string message = TS_FMT("[%s] %s\n", _messageTag, str);
 			TS_PRINTF(message);

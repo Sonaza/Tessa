@@ -6,16 +6,16 @@ TS_PACKAGE0()
 const TimeSpan TimeSpan::zero = TimeSpan();
 
 TimeSpan::TimeSpan()
-	: duration(std::chrono::system_clock::duration::zero())
+	: duration(internal_duration::zero())
 {
 }
 
-TimeSpan::TimeSpan(std::chrono::system_clock::duration duration)
+TimeSpan::TimeSpan(internal_duration duration)
 	: duration(duration)
 {
 }
 
-const Int64 TimeSpan::getSeconds() const
+const int64 TimeSpan::getSeconds() const
 {
 	return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 }
@@ -25,39 +25,49 @@ const float TimeSpan::getSecondsAsFloat() const
 	return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000.f;
 }
 
-const Int64 TimeSpan::getMilliseconds() const
+const int64 TimeSpan::getMilliseconds() const
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
-const Int64 TimeSpan::getMicroseconds() const
+const int64 TimeSpan::getMicroseconds() const
 {
 	return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 }
 
-TimeSpan TimeSpan::fromSeconds(Int64 seconds)
+const int64 TimeSpan::getNanoseconds() const
+{
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+}
+
+TimeSpan TimeSpan::fromSeconds(int64 seconds)
 {
 	return TimeSpan(std::chrono::seconds(seconds));
 }
 
 TimeSpan TimeSpan::fromSecondsFloat(float seconds)
 {
-	return TimeSpan(std::chrono::milliseconds(static_cast<Int64>(seconds * 1000)));
+	return TimeSpan(std::chrono::milliseconds(static_cast<int64>(seconds * 1000)));
 }
 
-TimeSpan TimeSpan::fromMilliseconds(Int64 milliseconds)
+TimeSpan TimeSpan::fromMilliseconds(int64 milliseconds)
 {
 	return TimeSpan(std::chrono::milliseconds(milliseconds));
 }
 
-TimeSpan TimeSpan::fromMicroseconds(Int64 microseconds)
+TimeSpan TimeSpan::fromMicroseconds(int64 microseconds)
 {
 	return TimeSpan(std::chrono::microseconds(microseconds));
 }
 
+TimeSpan TimeSpan::fromNanoseconds(int64 nanoseconds)
+{
+	return TimeSpan(std::chrono::nanoseconds(nanoseconds));
+}
+
 const std::string TimeSpan::getAsString() const
 {
-	Int64 time = getMicroseconds();
+	int64 time = getMicroseconds();
 
 	if (math::abs(time) > 10000000)
 		return TS_FMT("%0.2fs", getSecondsAsFloat());
@@ -66,6 +76,11 @@ const std::string TimeSpan::getAsString() const
 		return TS_FMT("%0.1fms", time / 1000.f);
 
 	return TS_FMT("%lldus", time);
+}
+
+const TimeSpan::internal_duration &TimeSpan::getDuration() const
+{
+	return duration;
 }
 
 TimeSpan &TimeSpan::operator+=(TimeSpan rhs)
@@ -120,19 +135,19 @@ TimeSpan operator-(TimeSpan lhs, TimeSpan rhs)
 	return TimeSpan::fromMicroseconds(lhs.getMicroseconds() - rhs.getMicroseconds());
 }
 
-TimeSpan operator""_hrs(Uint64 value)
+TimeSpan operator""_hrs(uint64 value)
 {
-	return TimeSpan::fromSeconds((Int64)value * 3600);
+	return TimeSpan::fromSeconds((int64)value * 3600);
 }
 
-TimeSpan operator""_min(Uint64 value)
+TimeSpan operator""_min(uint64 value)
 {
-	return TimeSpan::fromSeconds((Int64)value * 60);
+	return TimeSpan::fromSeconds((int64)value * 60);
 }
 
-TimeSpan operator""_s(Uint64 value)
+TimeSpan operator""_s(uint64 value)
 {
-	return TimeSpan::fromSeconds((Int64)value);
+	return TimeSpan::fromSeconds((int64)value);
 }
 
 TimeSpan operator""_sf(long double value)
@@ -140,12 +155,12 @@ TimeSpan operator""_sf(long double value)
 	return TimeSpan::fromSecondsFloat((float)value);
 }
 
-TimeSpan operator""_ms(Uint64 value)
+TimeSpan operator""_ms(uint64 value)
 {
-	return TimeSpan::fromMilliseconds((Int64)value);
+	return TimeSpan::fromMilliseconds((int64)value);
 }
 
-TimeSpan operator""_us(Uint64 value)
+TimeSpan operator""_us(uint64 value)
 {
 	return TimeSpan::fromMicroseconds(value);
 }

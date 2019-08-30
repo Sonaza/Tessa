@@ -3,20 +3,17 @@
 
 #include <fstream>
 
+#include <cstdlib>
+
 TS_PACKAGE1(file)
 
-typedef std::ifstream InputFileStream;
+typedef FILE InputFileStream;
 
 InputFile::InputFile()
 {
 }
 
-InputFile::InputFile(const std::string &filepath, InputFileMode mode)
-{
-	open(filepath, mode);
-}
-
-InputFile::InputFile(const std::wstring &filepath, InputFileMode mode)
+InputFile::InputFile(const String &filepath, InputFileMode mode)
 {
 	open(filepath, mode);
 }
@@ -35,105 +32,80 @@ InputFile &InputFile::operator=(InputFile &&other)
 {
 	if (this != &other)
 	{
-		_filePtr = other._filePtr;
-		_eof = other._eof;
-		_bad = other._bad;
-		_filesize = other._filesize;
-
-		other._filePtr = nullptr;
-		other._eof = false;
-		other._bad = false;
-		other._filesize = -1;
+		std::swap(filePtr, other.filePtr);
+		std::swap(eof, other.eof);
+		std::swap(bad, other.bad);
+		std::swap(filesize, other.filesize);
 	}
 	return *this;
 }
 
-bool InputFile::open(const std::string &filepath, InputFileMode mode)
+bool InputFile::open(const String &filepath, InputFileMode modeParam)
 {
-	TS_ASSERT(_filePtr == nullptr && "InputFile is already opened.");
-	if (_filePtr != nullptr)
+	TS_ASSERT(filePtr == nullptr && "InputFile is already opened.");
+	if (filePtr != nullptr)
 		return false;
 
-	InputFileStream *file = new InputFileStream;
+	String mode;
+	switch (modeParam)
+	{
+		case InputFileMode_Read:       mode = "r";  break;
+		case InputFileMode_ReadBinary: mode = "rb"; break;
+		default: TS_ASSERT(!"Unhandled mode"); return false;
+	}
+
+#if TS_PLATFORM == TS_WINDOWS
+	InputFileStream *file = _wfopen(filepath.toWideString().c_str(), mode.toWideString().c_str());
+#else
+	InputFileStream *file = fopen(filepath.toAnsiString().c_str(), mode.toAnsiString().c_str());
+#endif
 	if (file == nullptr)
-		return false;
-
-	Int32 modeBits = std::ios_base::in;
-	if ((mode & priv::InputFileModeBits::In_ModeBinary) > 0)
-		modeBits |= std::ios_base::binary;
-
-	file->open(filepath.c_str(), modeBits);
-	if (!(*file))
 	{
 		TS_LOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, strerror(errno));
-		delete file;
 		return false;
 	}
 
-	_filePtr = file;
-	return true;
-}
-
-bool InputFile::open(const std::wstring &filepath, InputFileMode mode)
-{
-	TS_ASSERT(_filePtr == nullptr && "InputFile is already opened.");
-	if (_filePtr != nullptr)
-		return false;
-
-	InputFileStream *file = new InputFileStream;
-	if (file == nullptr)
-		return false;
-
-	Int32 modeBits = std::ios_base::in;
-	if ((mode & priv::InputFileModeBits::In_ModeBinary) > 0)
-		modeBits |= std::ios_base::binary;
-
-	file->open(filepath.c_str(), modeBits);
-	if (!(*file))
-	{
-		TS_WLOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, _wcserror(errno));
-		delete file;
-		return false;
-	}
-
-	_filePtr = file;
+	filePtr = file;
 	return true;
 }
 
 void InputFile::close()
 {
-	if (_filePtr != nullptr)
+	if (filePtr != nullptr)
 	{
-		InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-		file->close();
-		delete file;
+		InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+		fclose(file);
 	}
-	_filePtr = nullptr;
-	_eof = false;
-	_bad = false;
-	_filesize = -1;
+	filePtr = nullptr;
+	eof = false;
+	bad = false;
+	filesize = -1;
 }
 
 PosType InputFile::read(char *outBuffer, BigSizeType size)
 {
 	TS_ASSERT(outBuffer != nullptr);
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
 
-	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
-	if (_filePtr == nullptr || _bad == true || _eof == true)
+	if (filePtr == nullptr || bad == true)
+		return -1;
+
+	if (eof == true)
 		return 0;
 
-	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-	file->read(outBuffer, size);
-	if (!file->bad())
-	{
-		PosType bytesRead = file->gcount();
-		if (file->eof())
-			_eof = true;
-		return bytesRead;
-	}
+	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
 
-	_bad = true;
-	return 0;
+	PosType numBytesRead = fread(outBuffer, sizeof(decltype(*outBuffer)), size, file);
+
+	if (ferror(file))
+	{
+		bad = true;
+		return -1;
+	}
+	
+	eof = (feof(file) != 0);
+
+	return numBytesRead;
 }
 
 PosType InputFile::read(unsigned char *outBuffer, BigSizeType size)
@@ -148,102 +120,88 @@ PosType InputFile::seek(PosType pos)
 
 PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 {
-	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
-	if (_filePtr == nullptr || _bad == true)
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
+	if (filePtr == nullptr || bad == true)
 		return -1;
 
-	std::ios_base::seek_dir origin;
+	int32 origin;
 	switch (seekOrigin)
 	{
 		default:
-		case SeekFromBeginning: origin = std::ios_base::beg; break;
-		case SeekFromCurrent:   origin = std::ios_base::cur; break;
-		case SeekFromEnd:       origin = std::ios_base::end; break;
+		case SeekFromBeginning: origin = SEEK_SET; break;
+		case SeekFromCurrent:   origin = SEEK_CUR; break;
+		case SeekFromEnd:       origin = SEEK_END; break;
 	}
 
-	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-	if (!file->seekg(pos, origin))
+	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	if (fseek(file, (long)pos, origin) == 0)
 	{
-		_bad = true;
-		return -1;
+		eof = (feof(file) != 0);
+		return ftell(file);
 	}
-	_eof = file->eof();
-	return pos;
+
+	return -1;
 }
 
 PosType InputFile::tell() const
 {
-	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
-	if (_filePtr == nullptr || _bad == true)
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
+	if (filePtr == nullptr || bad == true)
 		return -1;
 
-	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-	PosType pos = file->tellg();
-	if (!(*file))
-	{
-		_bad = true;
-		return -1;
-	}
-	return pos;
+	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	return ftell(file);
 }
 
 PosType InputFile::getSize()
 {
-	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
-	if (_filePtr == nullptr || _bad == true)
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
+	if (filePtr == nullptr || bad == true)
 		return -1;
 
 	// Return cached file size
-	if (_filesize != -1)
-		return _filesize;
-
-	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
+	if (filesize != -1)
+		return filesize;
 	
-	BigSizeType pos = file->tellg();
-	if (file->seekg(0, std::ios_base::end))
+	BigSizeType originalPosition = tell();
+
+	if (seek(0, SeekFromEnd) > 0)
 	{
-		BigSizeType size = file->tellg();
-		if (*file)
-		{
-			if (!file->seekg(pos))
-			{
-				_bad = true;
-				return -1;
-			}
-			// Store cached file size so don't need to do this again
-			_filesize = size;
-			return size;
-		}
+		BigSizeType size = tell();
+		seek(originalPosition, SeekFromBeginning);
+		return size;
 	}
 
-	_bad = true;
+// 	bad = true;
 	return -1;
 }
 
 bool InputFile::isOpen() const
 {
-	if (_filePtr != nullptr && _bad == false)
-	{
-		InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-		return file->is_open() && (*file);
-	}
-	return false;
+	return filePtr != nullptr && bad == false;
 }
 
 bool InputFile::isEOF() const
 {
-	return _eof;
+	return eof;
 }
 
 bool InputFile::isBad() const
 {
-	//MutexGuard lock(mutex);
-	TS_ASSERT(_filePtr != nullptr && "InputFile is not opened.");
-	if (_filePtr == nullptr || _bad == true)
-		return true;
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
+	return filePtr == nullptr || bad == true;
+}
 
-	InputFileStream *file = static_cast<InputFileStream*>(_filePtr);
-	return file->bad();
+void InputFile::clearFlags()
+{
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
+	if (filePtr == nullptr)
+		return;
+
+	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	clearerr(file);
+	eof = false;
+	bad = false;
 }
 
 InputFile::operator bool() const

@@ -19,7 +19,7 @@ public:
 	{
 		TS_PRINTF("Doing a thing! Number %d\n", number);
 	}
-	ts::Int32 number = 1337;
+	ts::int32 number = 1337;
 };
 
 class Poopoo
@@ -29,7 +29,7 @@ public:
 	{
 		TS_PRINTF("Doing a somtin else! Number %d\n", number);
 	}
-	ts::Int32 number;
+	ts::int32 number;
 };
 
 class CustomDeleter
@@ -241,7 +241,7 @@ void lz4_streaming_compress()
 
 		output.write(reinterpret_cast<const char*>(&compressedBytes), sizeof(compressedBytes));
 
-		uint32_t crc = ts::math::crc32((const ts::Uint8*)inputBufferPtr, (size_t)bytesRead);
+		uint32_t crc = ts::math::crc32((const ts::uint8*)inputBufferPtr, (size_t)bytesRead);
 		output.write(reinterpret_cast<const char*>(&crc), sizeof(crc));
 		
 		output.write(compressBuffer, (size_t)compressedBytes);
@@ -330,7 +330,7 @@ void lz4_streaming_uncompress()
 
 		TS_PRINTF("Block %u:\n", blockCounter);
 
-		uint32_t decompressedCRC = ts::math::crc32((const ts::Uint8*)compressBuffer, (size_t)decompressedBytes);
+		uint32_t decompressedCRC = ts::math::crc32((const ts::uint8*)compressBuffer, (size_t)decompressedBytes);
 		TS_PRINTF("  Original     CRC32 0x%08llX\n", crc);
 		TS_PRINTF("  Decompressed CRC32 0x%08llX\n", decompressedCRC);
 		if (crc != decompressedCRC)
@@ -441,7 +441,7 @@ bool loadImageRaw(const std::string &filepath, sf::Texture &texture)
 	TS_ASSERT(bytesRead == pixelsize);
 
 	sf::Image image;
-	image.create(width, height, (sf::Uint8*)&dstBuffer[0]);
+	image.create(width, height, (sf::uint8*)&dstBuffer[0]);
 
 	return texture.loadFromImage(image);
 }
@@ -469,7 +469,7 @@ PosType loadImageRawCompressed(const std::string &filepath, sf::Texture &texture
 	TS_ASSERT(decompressSize == pixelsize);
 
 	sf::Image image;
-	image.create(width, height, (sf::Uint8*)&dstBuffer[0]);
+	image.create(width, height, (sf::uint8*)&dstBuffer[0]);
 
 	return texture.loadFromImage(image) ? 0 : -1;
 }
@@ -520,7 +520,7 @@ PosType loadImageRawStreamingCompressed(const std::string &filepath, sf::Texture
 		PosType dstBytesRemaining = pixelsize - (dstPtr - dstPtrStart);
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
 
-		const Int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, inputBuffer, dstPtr, (Int32)blockCompressedSize, (Int32)dstBytesRemaining);
+		const int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, inputBuffer, dstPtr, (int32)blockCompressedSize, (int32)dstBytesRemaining);
 		if (decompressedBytes <= 0)
 		{
 			TS_LOG_ERROR("Decompression encountered an error.\n");
@@ -541,7 +541,7 @@ PosType loadImageRawStreamingCompressed(const std::string &filepath, sf::Texture
 	TS_ASSERT(dstBytesWritten == pixelsize);
 
 	sf::Image image;
-	image.create(width, height, (sf::Uint8*)dstPtrStart);
+	image.create(width, height, (sf::uint8*)dstPtrStart);
 
 	return texture.loadFromImage(image) ? 0 : -1;
 }

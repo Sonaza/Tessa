@@ -22,7 +22,7 @@ public:
 
 	virtual void update(const TimeSpan deltaTime);
 
-	std::wstring getStats();
+	String getStats();
 
 	Image *getCurrentImage() const;
 
@@ -46,9 +46,9 @@ private:
 	Clock imageChangedTimer;
 
 	SizeType currentImageIndex = 0;
-	Uint32 currentImageHash = 0;
+	uint32 currentImageHash = 0;
 
-	typedef std::map<Uint32, SharedPointer<Image>> ImageStorageList;
+	typedef std::map<uint32, SharedPointer<Image>> ImageStorageList;
 	ImageStorageList imageStorage;
 
 	SharedPointer<sf::Texture> alphaCheckerPatternTexture;

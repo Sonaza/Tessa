@@ -28,29 +28,29 @@ public:
 	const std::string &getString(const std::string &section_dot_key, const std::string &defaultValue) const;
 	void setString(const std::string &section_dot_key, const std::string &value);
 
-	Int32 getInt32(const std::string &section_dot_key, const Int32 defaultValue) const;
-	void setInt32(const std::string &section_dot_key, const Int32 value);
+	int32 getInt32(const std::string &section_dot_key, const int32 defaultValue) const;
+	void setInt32(const std::string &section_dot_key, const int32 value);
 
-	Uint32 getUint32(const std::string &section_dot_key, const Uint32 defaultValue) const;
-	void setUint32(const std::string &section_dot_key, const Uint32 value);
+	uint32 getUint32(const std::string &section_dot_key, const uint32 defaultValue) const;
+	void setUint32(const std::string &section_dot_key, const uint32 value);
 
 	float getFloat(const std::string &section_dot_key, const float defaultValue) const;
-	void setFloat(const std::string &section_dot_key, const float value, Int32 precision = 3);
+	void setFloat(const std::string &section_dot_key, const float value, int32 precision = 3);
 
 	bool getBoolean(const std::string &section_dot_key, const bool defaultValue) const;
 	void setBoolean(const std::string &section_dot_key, const bool value);
 
 protected:
 	static int parserHandler(void *userdata, const char *section, const char *key, const char *value);
-	static Uint32 makeHash(const std::string &token);
+	static uint32 makeHash(const std::string &token);
 
 	void setValue(const std::string &section_dot_key, const std::string &value);
 
 	bool parseSectionAndKey(const std::string &section_dot_key, std::string &outSection, std::string &outKey);
 
 	std::set<std::string> sections;
-	std::unordered_map<Uint32, std::set<std::string>> sectionKeys;
-	std::unordered_map<Uint32, std::string> values;
+	std::unordered_map<uint32, std::set<std::string>> sectionKeys;
+	std::unordered_map<uint32, std::string> values;
 
 	static const std::set<std::string> emptySet;
 
