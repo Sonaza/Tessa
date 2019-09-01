@@ -37,7 +37,7 @@ public:
 
 private:
 	void prepareShaders();
-	std::map<DisplayShaderTypes, std::string> displayShaderFiles;
+	std::map<DisplayShaderTypes, String> displayShaderFiles;
 
 	void currentImageChanged(SizeType imageIndex);
 	void updateCurrentImage();

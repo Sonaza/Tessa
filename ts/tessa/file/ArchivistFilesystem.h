@@ -24,27 +24,27 @@ public:
 
 	virtual void update(const TimeSpan deltaTime);
 
-	bool addArchive(const std::string &archivePath);
+	bool addArchive(const String &archivePath);
 
-	bool fileExists(const std::string &filepath);
-	PosType getFileSize(const std::string &filepath);
+	bool fileExists(const String &filepath);
+	PosType getFileSize(const String &filepath);
 
-	const std::vector<std::string> &getFileList() const;
-	bool getFileExtractor(const std::string &filepath, ArchivistReaderExtractor &extractor);
+	const std::vector<String> &getFileList() const;
+	bool getFileExtractor(const String &filepath, ArchivistReaderExtractor &extractor);
 
-// 	void setFallbackPath(const std::string &fallbackPath);
-// 	void setOverridePath(const std::string &overridePath);
+// 	void setFallbackPath(const String &fallbackPath);
+// 	void setOverridePath(const String &overridePath);
 
 private:
-// 	std::string fallbackPath;
-// 	std::string overridePath;
+// 	String fallbackPath;
+// 	String overridePath;
 
 	std::map<SizeType, UniquePointer<ArchivistReader>> archives;
 
 	// Maps file hash to archive hash
 	std::map<SizeType, SizeType> fileToArchiveMapping;
 
-	std::vector<std::string> filelist;
+	std::vector<String> filelist;
 };
 
 TS_END_PACKAGE1()

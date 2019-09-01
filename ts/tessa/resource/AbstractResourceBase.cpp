@@ -5,7 +5,7 @@
 
 TS_PACKAGE1(resource)
 
-AbstractResourceBase::AbstractResourceBase(const std::string &filepath)
+AbstractResourceBase::AbstractResourceBase(const String &filepath)
 	: filepath(filepath)
 {
 
@@ -16,7 +16,7 @@ AbstractResourceBase::~AbstractResourceBase()
 
 }
 
-std::string AbstractResourceBase::getAbsolutePath()
+String AbstractResourceBase::getAbsolutePath()
 {
 	return ResourceManager::getAbsoluteResourcePath(filepath);
 }

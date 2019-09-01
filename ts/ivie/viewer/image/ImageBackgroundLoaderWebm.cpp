@@ -144,37 +144,38 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 	ne_io.tell = &io_tell;
 	ne_io.userdata = (void *)&fileHandle;
 
-	int result;
+	
 
-	result = nestegg_init(&state.context, ne_io, &nestegg_log_callback, -1);
-	TS_ASSERT(result == 0);
-	TS_PRINTF("nestegg_init = %d\n", result);
-	if (result == -1)
+	if (nestegg_init(&state.context, ne_io, &nestegg_log_callback, -1) == -1)
+	{
+		errorText = "Failed to initialize demuxer.";
 		return false;
+	}
 
 	TS_ASSERT(state.context != nullptr);
 
-	uint64 totalDuration = 0;
-	result = nestegg_duration(state.context, &totalDuration);
-	TS_ASSERT(result == 0);
-	if (result == -1)
+	uint64 streamTotalDuration = 0;
+	if (nestegg_duration(state.context, &streamTotalDuration) == -1)
+	{
+		errorText = "Failed to retrieve duration.";
 		return false;
-	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration / 1000000U);
+	}
+
+	totalDuration = TimeSpan::fromNanoseconds(streamTotalDuration);
+
+	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration.getMilliseconds());
 
 	SizeType numTracks = 0;
-	result = nestegg_track_count(state.context, &numTracks);
-	TS_ASSERT(result == 0);
-	if (result == -1)
+	if (nestegg_track_count(state.context, &numTracks) == -1)
+	{
+		errorText = "Failed to retrieve track count.";
 		return false;
-	TS_PRINTF("  Tracks: %u\n", numTracks);
+	}
 
 	nestegg_video_params vparams;
 	memset(&vparams, 0, sizeof(vparams));
 
 	bool hasVideoTrack = false;
-
-	uint64 frametime = 0;
-	float framerate = 0;
 
 // 	vpx_codec_iface_t *interface = nullptr;
 	for (SizeType track = 0; track < numTracks; ++track)
@@ -192,35 +193,41 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 				case NESTEGG_CODEC_VP8: state.interface = &vpx_codec_vp8_dx_algo; break;
 				case NESTEGG_CODEC_VP9: state.interface = &vpx_codec_vp9_dx_algo; break;
 				default:
+					errorText = "Unsupported codec.";
 					TS_ASSERTF(false, "Unsupported codec id: %d", codec_id);
-					return false;
+				return false;
 			}
 			TS_ASSERT(state.interface != nullptr);
 
-			TS_PRINTF("Video Track %u codec id: %d\n", track, codec_id);
-			TS_PRINTF("Using codec interface %s\n", vpx_codec_iface_name(state.interface));
+// 			TS_PRINTF("Video Track %u codec id: %d\n", track, codec_id);
+// 			TS_PRINTF("Using codec interface %s\n", vpx_codec_iface_name(state.interface));
 
-			result = nestegg_track_video_params(state.context, track, &vparams);
-			TS_ASSERT(result == 0);
+			if (nestegg_track_video_params(state.context, track, &vparams) == -1)
+			{
+				errorText = "Failed to retrieve video parameters.";
+				return false;
+			}
 
-			uint64 duration = 0;
-			result = nestegg_track_default_duration(state.context, track, &duration);
-			TS_ASSERT(result == 0);
+			uint64 defaultDuration = 0;
+			if (nestegg_track_default_duration(state.context, track, &defaultDuration) == -1)
+			{
+// 				defaultDuration = 33000000;
+				frameTime = 33_ms;
+			}
+			else
+			{
+				frameTime = TimeSpan::fromNanoseconds(defaultDuration);
+			}
+			
+			numTotalFrames = (uint32)(totalDuration / frameTime);
 
-			frameTime = TimeSpan::fromNanoseconds(duration);
-			framerate = 1.f / frameTime.getSecondsAsFloat();
+// 			TS_PRINTF("Video has about %u frames\n", numTotalFrames);
 
-			// TODO: Fix! It's not actually accurate
-			numTotalFrames = static_cast<uint32_t>(totalDuration / duration);
-			TS_PRINTF("Video has about %u frames\n", numTotalFrames);
-
-			// Convert nanoseconds to milliseconds
-			frametime = frameTime.getMilliseconds();
-
-			TS_PRINTF("  Frame time: %ums\n", frametime);
-			TS_PRINTF("  FPS: %0.2f\n", framerate);
-			TS_PRINTF("  Size: %u x %u\n", vparams.width, vparams.height);
-			TS_PRINTF("  Display size: %u x %u\n", vparams.display_width, vparams.display_height);
+// 			float framerate = 1.f / frameTime.getSecondsAsFloat();
+// 			TS_PRINTF("  Frame time: %ums\n", frametime);
+// 			TS_PRINTF("  FPS: %0.2f\n", framerate);
+// 			TS_PRINTF("  Size: %u x %u\n", vparams.width, vparams.height);
+// 			TS_PRINTF("  Display size: %u x %u\n", vparams.display_width, vparams.display_height);
 
 			hasVideoTrack = true;
 			break;
@@ -229,7 +236,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 
 	if (!hasVideoTrack)
 	{
-		TS_PRINTF("File does not have video track\n");
+		errorText = "File does not contain a video track.";
 		return false;
 	}
 
@@ -238,15 +245,26 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 		vparams.display_height
 	);
 
+	imageData.hasAlpha = (vparams.alpha_mode == 1);
 	imageData.size = imageSize;
 	imageData.numFramesTotal = numTotalFrames;
 
 	state.codec = new vpx_codec_ctx_t;
+	if (state.codec == nullptr)
+	{
+		errorText = "Failed to initialize codec.";
+		return false;
+	}
+
+// 	vpx_codec_dec_cfg_t cfg;
+// 	memset(&cfg, 0, sizeof(cfg));
+// 	cfg.threads = 4;
 
 	int32 flags = 0;
 	vpx_codec_err_t error = vpx_codec_dec_init(state.codec, state.interface, nullptr, flags);
 	if (error != VPX_CODEC_OK)
 	{
+		errorText = "Failed to initialize codec.";
 		TS_PRINTF("vpx_codec_dec_init failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
 		return false;
 	}
@@ -286,6 +304,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 	enum ProcessingResult
 	{
 		Undefined,
+		Skipping,
 		Success,
 		Error,
 	};
@@ -299,8 +318,11 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 		}
 	};
 
-	while (!packetEof)
+	while (true)
 	{
+		if (processingResult == Skipping)
+			processingResult = Undefined;
+
 		ScopedPointer<nestegg_packet, NesteggPacketDeleter> nesteggPacketDeleter;
 
 		nestegg_packet *packet = nullptr;
@@ -310,22 +332,28 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 			nesteggPacketDeleter.reset(packet);
 
 		if (result == 1 && packet == nullptr)
-		{
-			TS_PRINTF("  Packet needs additional data.\n");
 			continue;
-		}
 
+		// If result is 0, the stream has reached eof, can just seek back to the beginning.
 		if (result == 0)
 		{
-			TS_PRINTF("  Packet eof.\n");
-			packetEof = true;
-			processingResult = Success;
-			break;
+			result = nestegg_track_seek(state.context, state.trackIndex, 0);
+			if (result == -1)
+			{
+				TS_PRINTF("  Track seek error.\n");
+				errorText = "Track seek error.";
+				processingResult = Error;
+				break;
+			}
+
+			numFrames = 0;
+			continue;
 		}
 
 		if (result < 0)
 		{
 			TS_PRINTF("  Packet read error.\n");
+			errorText = "Stream packet read error.";
 			processingResult = Error;
 			break;
 		}
@@ -342,7 +370,6 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 
 		TS_ASSERT(nestegg_track_type(state.context, trackIndex) == NESTEGG_TRACK_VIDEO);
 
-		// TODO: workaround bug
 		if (nestegg_track_type(state.context, trackIndex) == NESTEGG_TRACK_VIDEO)
 		{
 // 			if (numFrames == 0)
@@ -372,6 +399,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 				TS_ASSERT(result == 0);
 				if (result == -1)
 				{
+					errorText = "Stream packet read error.";
 					processingResult = Error;
 					break;
 				}
@@ -381,12 +409,16 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 				streamInfo.sz = sizeof(streamInfo);
 
 				vpx_codec_err_t error;
+				error = vpx_codec_get_stream_info(state.codec, &streamInfo);
+				if (error != VPX_CODEC_OK)
+				{
+					TS_PRINTF("vpx_codec_get_stream_info failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
+				}
+
 				error = vpx_codec_peek_stream_info(state.interface, data, (uint32)length, &streamInfo);
 				if (error != VPX_CODEC_OK)
 				{
 // 					TS_PRINTF("vpx_codec_peek_stream_info failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
-// 					TS_ASSERT(false);
-// 
 // 					processingResult = Error;
 // 					break;
 				}
@@ -396,26 +428,42 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 				if (error != VPX_CODEC_OK)
 				{
 					TS_PRINTF("vpx_codec_decode failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
-					return false;
+					errorText = "Video stream is corrupted.";
+					processingResult = Error;
+					break;
 				}
 
 				vpx_codec_iter_t iter = nullptr;
-				while (vpx_image_t *decoded = vpx_codec_get_frame(state.codec, &iter))
+				while (vpx_image_t *image = vpx_codec_get_frame(state.codec, &iter))
 				{
 // 					TS_PRINTF("  numFrames %u / %u\n", ++numFrames, numTotalFrames);
 
 					std::vector<Byte> framedata;
-					framedata.resize(decoded->d_w * decoded->d_h * 4);
+					framedata.resize(image->d_w * image->d_h * 4, 255);
 
 					uint32 i = 0;
-					for (uint32 y = 0; y < decoded->d_h; ++y)
+					for (uint32 y = 0; y < image->d_h; ++y)
 					{
-						for (uint32 x = 0; x < decoded->d_w; ++x)
+						for (uint32 x = 0; x < image->d_w; ++x)
 						{
-							framedata[i + 0] = decoded->planes[VPX_PLANE_Y][y       * decoded->stride[VPX_PLANE_Y] + x];
-							framedata[i + 1] = decoded->planes[VPX_PLANE_U][(y / 2) * decoded->stride[VPX_PLANE_U] + (x / 2)];
-							framedata[i + 2] = decoded->planes[VPX_PLANE_V][(y / 2) * decoded->stride[VPX_PLANE_V] + (x / 2)];
-							framedata[i + 3] = 255;
+							framedata[i + 0] = image->planes[VPX_PLANE_Y][y       * image->stride[VPX_PLANE_Y] + x];
+
+							if ((image->fmt & VPX_IMG_FMT_UV_FLIP) == 0)
+							{
+								framedata[i + 1] = image->planes[VPX_PLANE_U][(y / 2) * image->stride[VPX_PLANE_U] + (x / 2)];
+								framedata[i + 2] = image->planes[VPX_PLANE_V][(y / 2) * image->stride[VPX_PLANE_V] + (x / 2)];
+							}
+							else
+							{
+								framedata[i + 1] = image->planes[VPX_PLANE_V][(y / 2) * image->stride[VPX_PLANE_V] + (x / 2)];
+								framedata[i + 2] = image->planes[VPX_PLANE_U][(y / 2) * image->stride[VPX_PLANE_U] + (x / 2)];
+							}
+
+							if ((image->fmt & VPX_IMG_FMT_HAS_ALPHA) > 0)
+								framedata[i + 3] = image->planes[VPX_PLANE_ALPHA][y * image->stride[VPX_PLANE_ALPHA] + x];
+// 							else
+// 								framedata[i + 3] = 255;
+
 							i += 4;
 						}
 					}
@@ -423,15 +471,14 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 					BufferedFrame frame;
 
 					frame.texture = makeShared<sf::Texture>();
-
 					if (frame.texture == nullptr)
 					{
-						TS_PRINTF("loadFromImage failed.\n");
-						TS_ASSERT(!"loadFromImage failed.");
-						return false;
+						processingResult = Error;
+						errorText = "Failed to create texture.";
+						break;
 					}
 
-					frame.texture->create(decoded->d_w, decoded->d_h);
+					frame.texture->create(image->d_w, image->d_h);
 					frame.texture->update(&framedata[0]);
 					
 					frame.texture->setRepeated(true);
@@ -441,31 +488,28 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 
 					bufferedFrames.push_back(std::move(frame));
 				}
+
+				if (processingResult != Undefined)
+					break;
 			}
+
+			if (processingResult == Skipping)
+				continue;
+
+			if (processingResult == Error)
+				break;
 		}
 
 		processingResult = Success;
-
 		break;
 	}
 
-	TS_ASSERT(processingResult != Undefined);
+	TS_ASSERT(processingResult != Undefined && processingResult != Skipping);
 
 	if (processingResult == Error)
 	{
 		TS_PRINTF("Processing result error!\n");
 		return false;
-	}
-
-	if (packetEof)
-	{
-		result = nestegg_track_seek(state.context, state.trackIndex, 0);
-		TS_PRINTF("result = %d\n", result);
-		TS_ASSERT(result == 0);
-
-		packetEof = false;
-		numFrames = 0;
-		return true;
 	}
 
 	if (!bufferedFrames.empty())
@@ -500,13 +544,18 @@ bool ImageBackgroundLoaderWebm::isValidWebmFile(const String &filepath)
 	return nestegg_sniff(&buffer[0], nesteggSniffBytesAmount) == 1;
 }
 
-bool ImageBackgroundLoaderWebm::restartImpl()
+bool ImageBackgroundLoaderWebm::restartImpl(bool *shouldRestart)
 {
-	int result = nestegg_track_seek(state.context, state.trackIndex, 0);
-	TS_PRINTF("result = %d\n", result);
-	TS_ASSERT(result == 0);
+	TS_ASSERT(shouldRestart != nullptr);
 
-	packetEof = false;
+	if (nestegg_track_seek(state.context, state.trackIndex, 0) == -1)
+	{
+		errorText = "Track seek error.";
+		return false;
+	}
+
+	*shouldRestart = true;
+
 	numFrames = 0;
 	return true;
 }

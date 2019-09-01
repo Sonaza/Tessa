@@ -65,7 +65,7 @@ TimeSpan TimeSpan::fromNanoseconds(int64 nanoseconds)
 	return TimeSpan(std::chrono::nanoseconds(nanoseconds));
 }
 
-const std::string TimeSpan::getAsString() const
+const String TimeSpan::getAsString() const
 {
 	int64 time = getMicroseconds();
 
@@ -103,6 +103,12 @@ bool operator==(TimeSpan lhs, TimeSpan rhs)
 bool operator!=(TimeSpan lhs, TimeSpan rhs)
 {
 	return lhs.getMicroseconds() != rhs.getMicroseconds();
+}
+
+int64 operator/(TimeSpan lhs, TimeSpan rhs)
+{
+	TS_ASSERT(rhs != TimeSpan::zero && "Division by zero.");
+	return lhs.getNanoseconds() / rhs.getNanoseconds();
 }
 
 bool operator<(TimeSpan lhs, TimeSpan rhs)
@@ -163,6 +169,11 @@ TimeSpan operator""_ms(uint64 value)
 TimeSpan operator""_us(uint64 value)
 {
 	return TimeSpan::fromMicroseconds(value);
+}
+
+TimeSpan operator""_ns(uint64 value)
+{
+	return TimeSpan::fromNanoseconds(value);
 }
 
 TS_END_PACKAGE0()

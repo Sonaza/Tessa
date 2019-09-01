@@ -53,6 +53,9 @@ public:
 	PosType read(char *outBuffer, BigSizeType size);
 	PosType read(unsigned char *outBuffer, BigSizeType size);
 
+	PosType readLine(char *outBuffer, BigSizeType size, const char linebreak = '\n');
+	PosType readLine(unsigned char *outBuffer, BigSizeType size, const char linebreak = '\n');
+
 	/* Reads variable directly.
 	 */
 	template <class Type>
@@ -94,7 +97,7 @@ public:
 	 */
 	bool isBad() const;
 
-	/* Clears flags.
+	/* Clears eof and error flags.
 	 */
 	void clearFlags();
 	

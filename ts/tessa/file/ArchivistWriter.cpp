@@ -15,7 +15,7 @@ TS_PACKAGE1(file)
 namespace
 {
 
-const SizeType ArchivistWriterFormatVersion = 2;
+const SizeType ArchivistWriterFormatVersion = 3;
 
 }
 
@@ -24,7 +24,7 @@ ArchivistWriter::ArchivistWriter()
 
 }
 
-bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &archiveFilepath, ArchivistCompressionMode compression)
+bool ArchivistWriter::stageFile(const String &filepath, const String &archiveFilepath, ArchivistCompressionMode compression)
 {
 	const SizeType hash = math::simpleHash32(filepath);
 	if (_stagefiles.count(hash) > 0)
@@ -80,7 +80,7 @@ bool ArchivistWriter::stageFile(const std::string &filepath, const std::string &
 	return true;
 }
 
-bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwriteExisting)
+bool ArchivistWriter::saveToFile(const String &archiveFilename, bool overwriteExisting)
 {
 	if (exists(archiveFilename) && overwriteExisting == false)
 	{
@@ -96,7 +96,8 @@ bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwr
 		ArchivistFileHeader header;
 		memset(&header, 0, sizeof(ArchivistFileHeader));
 		
-		memcpy(header.filename, (void*)file.archiveFilepath.c_str(), file.archiveFilepath.size());
+		std::string ansiFilename = file.archiveFilepath.toAnsiString();
+		memcpy(header.filename, (void*)ansiFilename.c_str(), ansiFilename.size());
 		header.filesize = (SizeType)file.filesize;
 		header.compression = file.compression;
 
@@ -164,7 +165,7 @@ bool ArchivistWriter::saveToFile(const std::string &archiveFilename, bool overwr
 	return false;
 }
 
-PosType ArchivistWriter::copyFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer)
+PosType ArchivistWriter::copyFileToBuffer(const String &filepath, ByteBuffer &dstBuffer)
 {
 	InputFile input;
 	if (!input.open(filepath, InputFileMode_ReadBinary))
@@ -182,7 +183,7 @@ PosType ArchivistWriter::copyFileToBuffer(const std::string &filepath, ByteBuffe
 	return bytesRead;
 }
 
-PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer)
+PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const String &filepath, ByteBuffer &dstBuffer)
 {
 	InputFile input;
 	if (!input.open(filepath, InputFileMode_ReadBinary))
@@ -228,7 +229,7 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const std::string &fi
 	return dstBytesWritten;
 }
 
-PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer)
+PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const String &filepath, ByteBuffer &dstBuffer)
 {
 	InputFile input;
 	if (!input.open(filepath, InputFileMode_ReadBinary))

@@ -9,7 +9,7 @@ class TextureResource : public resource::ResourceBase<sf::Texture, TS_FOURCC('t'
 	TS_DECLARE_RESOURCE_TYPE(resource::TextureResource);
 
 public:
-	TextureResource(const std::string &filepath);
+	TextureResource(const String &filepath);
 	~TextureResource();
 
 	void setSmooth(const bool enabledParam);

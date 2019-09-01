@@ -1,13 +1,11 @@
 #include "Precompiled.h"
 #include "ts/tessa/file/InputFile.h"
 
-#include <fstream>
-
-#include <cstdlib>
+#include <cstdio>
 
 TS_PACKAGE1(file)
 
-typedef FILE InputFileStream;
+typedef FILE FileHandle;
 
 InputFile::InputFile()
 {
@@ -55,9 +53,9 @@ bool InputFile::open(const String &filepath, InputFileMode modeParam)
 	}
 
 #if TS_PLATFORM == TS_WINDOWS
-	InputFileStream *file = _wfopen(filepath.toWideString().c_str(), mode.toWideString().c_str());
+	FileHandle *file = _wfopen(filepath.toWideString().c_str(), mode.toWideString().c_str());
 #else
-	InputFileStream *file = fopen(filepath.toAnsiString().c_str(), mode.toAnsiString().c_str());
+	FileHandle *file = fopen(filepath.toUtf8().c_str(), mode.toUtf8().c_str());
 #endif
 	if (file == nullptr)
 	{
@@ -73,7 +71,7 @@ void InputFile::close()
 {
 	if (filePtr != nullptr)
 	{
-		InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+		FileHandle *file = static_cast<FileHandle*>(filePtr);
 		fclose(file);
 	}
 	filePtr = nullptr;
@@ -93,9 +91,9 @@ PosType InputFile::read(char *outBuffer, BigSizeType size)
 	if (eof == true)
 		return 0;
 
-	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	FileHandle *file = static_cast<FileHandle*>(filePtr);
 
-	PosType numBytesRead = fread(outBuffer, sizeof(decltype(*outBuffer)), size, file);
+	PosType numBytesRead = fread(outBuffer, sizeof(outBuffer[0]), size, file);
 
 	if (ferror(file))
 	{
@@ -111,6 +109,42 @@ PosType InputFile::read(char *outBuffer, BigSizeType size)
 PosType InputFile::read(unsigned char *outBuffer, BigSizeType size)
 {
 	return read(reinterpret_cast<char*>(outBuffer), size);
+}
+
+PosType InputFile::readLine(char *outBuffer, BigSizeType size, const char linebreak)
+{
+	TS_ASSERT(outBuffer != nullptr);
+	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
+	TS_ASSERT(size > 0 && "Size must be greater than 0.");
+
+	if (filePtr == nullptr || bad == true || size == 0)
+		return -1;
+
+	if (eof == true)
+		return 0;
+
+	char c;
+	char *ptr = outBuffer;
+
+	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	while (size-- > 0)
+	{
+		if (fread(&c, sizeof(char), 1, file) == 0)
+			break;
+
+		*ptr++ = c;
+
+		if (feof(file) != 0 || c == linebreak)
+			break;
+	}
+
+	*ptr = '\0';
+	return (ptr - outBuffer);
+}
+
+PosType InputFile::readLine(unsigned char *outBuffer, BigSizeType size, const char linebreak)
+{
+	return readLine(reinterpret_cast<char*>(outBuffer), size, linebreak);
 }
 
 PosType InputFile::seek(PosType pos)
@@ -133,7 +167,7 @@ PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 		case SeekFromEnd:       origin = SEEK_END; break;
 	}
 
-	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	FileHandle *file = static_cast<FileHandle*>(filePtr);
 	if (fseek(file, (long)pos, origin) == 0)
 	{
 		eof = (feof(file) != 0);
@@ -149,7 +183,7 @@ PosType InputFile::tell() const
 	if (filePtr == nullptr || bad == true)
 		return -1;
 
-	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	FileHandle *file = static_cast<FileHandle*>(filePtr);
 	return ftell(file);
 }
 
@@ -198,7 +232,7 @@ void InputFile::clearFlags()
 	if (filePtr == nullptr)
 		return;
 
-	InputFileStream *file = static_cast<InputFileStream*>(filePtr);
+	FileHandle *file = static_cast<FileHandle*>(filePtr);
 	clearerr(file);
 	eof = false;
 	bad = false;

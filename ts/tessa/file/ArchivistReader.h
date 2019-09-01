@@ -18,21 +18,21 @@ class ArchivistReader : public lang::Noncopyable
 public:
 	ArchivistReader();
 
-	bool openArchive(const std::string &filepath);
+	bool openArchive(const String &filepath);
 
-	bool fileExists(const std::string &filename) const;
-	PosType getFileSize(const std::string &filename);
+	bool fileExists(const String &filename) const;
+	PosType getFileSize(const String &filename);
 
-	std::vector<std::string> getFileList() const;
+	std::vector<String> getFileList() const;
 	SizeType getNumFiles() const;
 
-	bool getFileExtractor(const std::string &filename, ArchivistReaderExtractor &extractor);
-	bool extractToFile(const std::string &filename, const std::string &targetFilepath);
+	bool getFileExtractor(const String &filename, ArchivistReaderExtractor &extractor);
+	bool extractToFile(const String &filename, const String &targetFilepath);
 
 private:
 	typedef std::map<SizeType, ArchivistFileHeader> ArchivistFileHeaders;
 	ArchivistFileHeaders headers;
-	std::string archiveFilepath;
+	String archiveFilepath;
 };
 
 TS_END_PACKAGE1()

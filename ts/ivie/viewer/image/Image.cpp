@@ -16,10 +16,10 @@
 
 TS_PACKAGE2(app, viewer)
 
-Image::Image(const std::wstring &filepath)
+Image::Image(const String &filepath)
 	: filepath(filepath)
 {
-	TS_ASSERT(!filepath.empty());
+	TS_ASSERT(!filepath.isEmpty());
 }
 
 Image::~Image()
@@ -38,6 +38,8 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 	ImageManager &im = TS_GET_GIGATON().getGigaton<ImageManager>();
 
 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+
+	errorText = "Unknown error.";
 
 	LoaderType type = sniffLoaderType();
 	switch (type)
@@ -65,7 +67,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 			loaderState = Error;
 			TS_WLOG_ERROR("Unable to load file, unknown or unsupported type. File: %s", filepath);
 			
-			errorText = "Invalid image file or the format is unsupported.";
+			errorText = "File format is unsupported or the file is corrupted.";
 
 			return false;
 		}
@@ -98,6 +100,8 @@ void Image::unload()
 
 	frameBuffer.clear();
 
+	errorText.clear();
+
 	data = ImageData();
 	currentFrameIndex = 0;
 	loaderState = Unloaded;
@@ -129,10 +133,9 @@ void Image::restart(bool suspend)
 
 void Image::suspendLoader()
 {
+	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 	if (loaderState == Unloaded || loaderState == Error)
 		return;
-
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
 
 	TS_ASSERT(backgroundLoader);
 	backgroundLoader->suspend();
@@ -275,7 +278,7 @@ bool Image::hasError() const
 	return loaderState == Error;
 }
 
-const std::string &Image::getErrorText() const
+const String &Image::getErrorText() const
 {
 	return errorText;
 }
@@ -319,16 +322,16 @@ Image::ImageLoaderState Image::getState() const
 	return loaderState;
 }
 
-const std::wstring &Image::getFilepath() const
+const String &Image::getFilepath() const
 {
 	// No mutexing because value doesn't ever change after creation, reads should always be ok
 	return filepath;
 }
 
-std::wstring Image::getStats() const
+String Image::getStats() const
 {
 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
-	std::wstring str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
+	String str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
 		file::getBasename(filepath),
 		currentFrameIndex + 1,
 		math::max(1U, data.numFramesTotal),

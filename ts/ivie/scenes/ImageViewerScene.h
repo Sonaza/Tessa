@@ -46,12 +46,13 @@ protected:
 	float defaultScale = 1.f;
 	float targetDefaultScale = 1.f;
 
+	bool beingScaled = false;
+	float imageScale = 1.f;
+	float targetImageScale = 1.f;
+
 	float dragged = 0.f;
 
 	Clock frameTimer;
-
-	float imageScale = 1.f;
-	float targetImageScale = 1.f;
 
 	math::VC2 positionOffset;
 	math::VC2 targetPositionOffset;

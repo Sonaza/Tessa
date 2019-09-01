@@ -11,7 +11,7 @@ TS_PACKAGE1(file)
 namespace
 {
 
-const SizeType ArchivistReaderSupportedFormatVersion = 2;
+const SizeType ArchivistReaderSupportedFormatVersion = 3;
 
 }
 
@@ -20,7 +20,7 @@ ArchivistReader::ArchivistReader()
 
 }
 
-bool ArchivistReader::openArchive(const std::string &filepath)
+bool ArchivistReader::openArchive(const String &filepath)
 {
 	archiveFilepath = filepath;
 
@@ -66,28 +66,28 @@ bool ArchivistReader::openArchive(const std::string &filepath)
 			return false;
 		}
 
-		const SizeType hash = math::simpleHash32(std::string(header.filename));
+		const SizeType hash = math::simpleHash32(String(header.filename));
 		headers.emplace(hash, header);
 	}
 
 	return true;
 }
 
-bool ArchivistReader::fileExists(const std::string &filename) const
+bool ArchivistReader::fileExists(const String &filename) const
 {
 	const SizeType hash = math::simpleHash32(filename);
 	return headers.count(hash) > 0;
 }
 
-PosType ArchivistReader::getFileSize(const std::string &filename)
+PosType ArchivistReader::getFileSize(const String &filename)
 {
 	SizeType hash = math::simpleHash32(filename);
 	return headers.count(hash) > 0 ? headers[hash].filesize : -1;
 }
 
-std::vector<std::string> ArchivistReader::getFileList() const
+std::vector<String> ArchivistReader::getFileList() const
 {
-	std::vector<std::string> filelist;
+	std::vector<String> filelist;
 	ArchivistFileHeaders::const_iterator it = headers.begin();
 	for (; it != headers.end(); ++it)
 	{
@@ -101,7 +101,7 @@ SizeType ArchivistReader::getNumFiles() const
 	return (SizeType)headers.size();
 }
 
-bool ArchivistReader::getFileExtractor(const std::string &filename, ArchivistReaderExtractor &extractor)
+bool ArchivistReader::getFileExtractor(const String &filename, ArchivistReaderExtractor &extractor)
 {
 	const SizeType hash = math::simpleHash32(filename);
 	if (headers.count(hash) == 0)
@@ -113,7 +113,7 @@ bool ArchivistReader::getFileExtractor(const std::string &filename, ArchivistRea
 	return extractor.initialize(headers[hash], archiveFilepath);
 }
 
-bool ArchivistReader::extractToFile(const std::string &filename, const std::string &targetFilepath)
+bool ArchivistReader::extractToFile(const String &filename, const String &targetFilepath)
 {
 	ArchivistReaderExtractor extractor;
 	if (!getFileExtractor(filename, extractor))

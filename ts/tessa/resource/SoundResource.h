@@ -11,7 +11,7 @@ class SoundResource : public resource::ResourceBase<sf::SoundBuffer, TS_FOURCC('
 	TS_DECLARE_RESOURCE_TYPE(resource::SoundResource);
 
 public:
-	SoundResource(const std::string &filepath);
+	SoundResource(const String &filepath);
 	~SoundResource();
 
 protected:

@@ -33,7 +33,7 @@ public:
 	static TimeSpan fromMicroseconds(int64 microseconds);
 	static TimeSpan fromNanoseconds(int64 microseconds);
 
-	const std::string getAsString() const;
+	const String getAsString() const;
 
 	TimeSpan &operator+=(TimeSpan rhs);
 	TimeSpan &operator-=(TimeSpan rhs);
@@ -43,6 +43,8 @@ public:
 private:
 	internal_duration duration;
 };
+
+int64 operator/(TimeSpan lhs, TimeSpan rhs);
 
 bool operator==(TimeSpan lhs, TimeSpan rhs);
 bool operator!=(TimeSpan lhs, TimeSpan rhs);

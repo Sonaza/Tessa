@@ -57,7 +57,7 @@ public:
 		return "Unknown";
 	}
 
-	virtual std::string getDebugString() const
+	virtual String getDebugString() const
 	{
 		return TS_FMT("Task ID %u", taskId);
 	}
@@ -71,8 +71,11 @@ protected:
 	virtual void onResume() = 0;
 	virtual void onSuspend() = 0;
 
-	// Returns if loader was restarted (still images don't need to be)
-	virtual bool restartImpl() = 0;
+	/* Returns if restart was successful.
+	 * shouldRestart will be set to determine if restart was required
+	 * since loader does not need to be restarted for still images.
+	 */
+	virtual bool restartImpl(bool *shouldRestart) = 0;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) = 0;
 	virtual bool wasLoadingCompleted() const = 0;
@@ -80,7 +83,7 @@ protected:
 	std::atomic<BackgroundLoaderState> loaderState = Inactive;
 	bool suspendAfterBufferFull = false;
 
-	std::string errorText;
+	String errorText;
 
 	Image *ownerImage = nullptr;
 	String filepath;

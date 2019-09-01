@@ -4,8 +4,13 @@
 #include "ext/INIReader.h"
 #include "ts/tessa/math/Hash.h"
 #include "ts/tessa/file/FileUtils.h"
+#include "ts/tessa/file/InputFile.h"
 #include "ts/tessa/file/OutputFile.h"
+
+#include "ts/tessa/string/StringUtils.h"
+
 #include <sstream>
+#include <cstdio>
 
 TS_PACKAGE1(system)
 
@@ -13,10 +18,10 @@ namespace
 {
 
 template<class T>
-T convert(const std::string &from)
+T convert(const String &from)
 {
 	std::stringstream ss;
-	ss << from;
+	ss << from.toAnsiString(); // For converting numeric values, they should always be ansi
 	T out;
 	ss >> out;
 	return out;
@@ -24,13 +29,13 @@ T convert(const std::string &from)
 
 }
 
-const std::set<std::string> ConfigReader::emptySet;
+const std::set<String> ConfigReader::emptySet;
 
 ConfigReader::ConfigReader()
 {
 }
 
-ConfigReader::ConfigReader(const std::string &configFilePath)
+ConfigReader::ConfigReader(const String &configFilePath)
 {
 	open(configFilePath);
 }
@@ -40,28 +45,41 @@ ConfigReader::~ConfigReader()
 
 }
 
-bool ConfigReader::open(const std::string &configFilePath)
+bool ConfigReader::open(const String &configFilePath)
 {
-	if (configFilePath.empty())
+	if (configFilePath.isEmpty())
 		return false;
 
 	if (!file::exists(configFilePath))
 		return false;
 
-	filepath = configFilePath;
+	file::InputFile file(configFilePath, file::InputFileMode_ReadBinary);
+	if (!file.isOpen())
+		return false;
 
-	if (ini_parse(filepath.c_str(), &ConfigReader::parserHandler, this) < 0)
+	if (ini_parse_stream(&ConfigReader::customIniReader, &file, &ConfigReader::parserHandler, this) < 0)
 	{
 		TS_LOG_ERROR("Parsing config file failed. File: %s", filepath);
 		return false;
 	}
 
+	filepath = configFilePath;
+
 	return true;
+}
+
+char *ConfigReader::customIniReader(char *str, int count, void *stream)
+{
+	file::InputFile &file = *(file::InputFile*)stream;
+	PosType bytesRead = file.readLine(str, count);
+	if (bytesRead <= 0)
+		return nullptr;
+	return str;
 }
 
 bool ConfigReader::save()
 {
-	if (filepath.empty())
+	if (filepath.isEmpty())
 	{
 		TS_LOG_ERROR("Cannot save config because filepath is not set (config has not been not opened)");
 		return false;
@@ -69,14 +87,14 @@ bool ConfigReader::save()
 
 	file::OutputFile output(filepath, file::OutputFileMode_WriteBinaryTruncate);
 
-	for (const std::string &section : sections)
+	for (const String &section : sections)
 	{
 		output.writeString(TS_FMT("[%s]\n", section));
 
 		const uint32 sectionHash = makeHash(section);
-		for (const std::string &key : sectionKeys[sectionHash])
+		for (const String &key : sectionKeys[sectionHash])
 		{
-			std::string section_dot_key = section + "." + key;
+			String section_dot_key = section + "." + key;
 			const uint32 hash = makeHash(section_dot_key);
 			output.writeString(TS_FMT("%s = %s\n", key, values[hash]));
 		}
@@ -89,7 +107,7 @@ bool ConfigReader::save()
 	return true;
 }
 
-bool ConfigReader::save(const std::string &configFilePath)
+bool ConfigReader::save(const String &configFilePath)
 {
 	filepath = configFilePath;
 	return save();
@@ -104,12 +122,12 @@ void ConfigReader::clear()
 	filepath.clear();
 }
 
-const std::set<std::string> &ConfigReader::getSections() const
+const std::set<String> &ConfigReader::getSections() const
 {
 	return sections;
 }
 
-const std::set<std::string> &ConfigReader::getKeys(const std::string &section)
+const std::set<String> &ConfigReader::getKeys(const String &section)
 {
 	auto it = sectionKeys.find(makeHash(section));
 	if (it != sectionKeys.end())
@@ -117,7 +135,7 @@ const std::set<std::string> &ConfigReader::getKeys(const std::string &section)
 	return ConfigReader::emptySet;
 }
 
-const std::string &ConfigReader::getString(const std::string &section_dot_key, const std::string &defaultValue) const
+const String &ConfigReader::getString(const String &section_dot_key, const String &defaultValue) const
 {
 	auto it = values.find(makeHash(section_dot_key));
 	if (it == values.end())
@@ -125,12 +143,12 @@ const std::string &ConfigReader::getString(const std::string &section_dot_key, c
 	return it->second;
 }
 
-void ConfigReader::setString(const std::string &section_dot_key, const std::string &value)
+void ConfigReader::setString(const String &section_dot_key, const String &value)
 {
 	setValue(section_dot_key, value);
 }
 
-int32 ConfigReader::getInt32(const std::string &section_dot_key, const int32 defaultValue) const
+int32 ConfigReader::getInt32(const String &section_dot_key, const int32 defaultValue) const
 {
 	auto it = values.find(makeHash(section_dot_key));
 	if (it == values.end())
@@ -138,12 +156,12 @@ int32 ConfigReader::getInt32(const std::string &section_dot_key, const int32 def
 	return convert<int32>(it->second);
 }
 
-void ConfigReader::setInt32(const std::string &section_dot_key, const int32 value)
+void ConfigReader::setInt32(const String &section_dot_key, const int32 value)
 {
 	setValue(section_dot_key, TS_FMT("%d", value));
 }
 
-uint32 ConfigReader::getUint32(const std::string &section_dot_key, const uint32 defaultValue) const
+uint32 ConfigReader::getUint32(const String &section_dot_key, const uint32 defaultValue) const
 {
 	auto it = values.find(makeHash(section_dot_key));
 	if (it == values.end())
@@ -151,12 +169,12 @@ uint32 ConfigReader::getUint32(const std::string &section_dot_key, const uint32 
 	return convert<uint32>(it->second);
 }
 
-void ConfigReader::setUint32(const std::string &section_dot_key, const uint32 value)
+void ConfigReader::setUint32(const String &section_dot_key, const uint32 value)
 {
 	setValue(section_dot_key, TS_FMT("%u", value));
 }
 
-float ConfigReader::getFloat(const std::string &section_dot_key, const float defaultValue) const
+float ConfigReader::getFloat(const String &section_dot_key, const float defaultValue) const
 {
 	auto it = values.find(makeHash(section_dot_key));
 	if (it == values.end())
@@ -164,14 +182,14 @@ float ConfigReader::getFloat(const std::string &section_dot_key, const float def
 	return convert<float>(it->second);
 }
 
-void ConfigReader::setFloat(const std::string &section_dot_key, const float value, int32 precision)
+void ConfigReader::setFloat(const String &section_dot_key, const float value, int32 precision)
 {
 	setValue(section_dot_key, TS_FMT("%.*f", math::max(0, precision), value));
 }
 
-bool ConfigReader::getBoolean(const std::string &section_dot_key, const bool defaultValue) const
+bool ConfigReader::getBoolean(const String &section_dot_key, const bool defaultValue) const
 {
-	std::string value = getString(section_dot_key, "");
+	String value = getString(section_dot_key, "");
 	std::transform(value.begin(), value.end(), value.begin(), ::tolower);
 
 	if (value == "1" || value == "true" || value == "yes" || value == "on")
@@ -182,7 +200,7 @@ bool ConfigReader::getBoolean(const std::string &section_dot_key, const bool def
 	return defaultValue;
 }
 
-void ConfigReader::setBoolean(const std::string &section_dot_key, const bool value)
+void ConfigReader::setBoolean(const String &section_dot_key, const bool value)
 {
 	setValue(section_dot_key, value ? "true" : "false");
 }
@@ -191,33 +209,33 @@ int ConfigReader::parserHandler(void *userdata, const char *sectionParam, const 
 {
 	ConfigReader &cfg = *(ConfigReader*)userdata;
 
-	std::string section(sectionParam);
-	std::string key(keyParam);
-	std::string value(valueParam);
+	String section(sectionParam);
+	String key(keyParam);
+	String value(valueParam);
 
 	cfg.sections.emplace(section);
 
 	const uint32 sectionHash = makeHash(section);
 	cfg.sectionKeys[sectionHash].emplace(key);
 
-	std::string section_dot_key = section + "." + key;
+	String section_dot_key = section + "." + key;
 	const uint32 hash = makeHash(section_dot_key);
 	cfg.values[hash] = value;
 
 	return 1;
 }
 
-uint32 ConfigReader::makeHash(const std::string &tokenParam)
+uint32 ConfigReader::makeHash(const String &tokenParam)
 {
-	std::string token = tokenParam;
+	String token = tokenParam;
 	std::transform(token.begin(), token.end(), token.begin(), ::tolower);
 	return math::simpleHash32(token);
 }
 
-void ConfigReader::setValue(const std::string &section_dot_key, const std::string &value)
+void ConfigReader::setValue(const String &section_dot_key, const String &value)
 {
-	std::string section;
-	std::string key;
+	String section;
+	String key;
 	if (!parseSectionAndKey(section_dot_key, section, key))
 		return;
 
@@ -230,15 +248,16 @@ void ConfigReader::setValue(const std::string &section_dot_key, const std::strin
 	values[hash] = value;
 }
 
-bool ConfigReader::parseSectionAndKey(const std::string &section_dot_key, std::string &outSection, std::string &outKey)
+bool ConfigReader::parseSectionAndKey(const String &section_dot_key, String &outSection, String &outKey)
 {
-	size_t pos = section_dot_key.find_first_of('.', 0);
-	if (pos == std::string::npos)
-		return false;
-
-	outSection = section_dot_key.substr(0, pos);
-	outKey = section_dot_key.substr(pos + 1);
-	return true;
+	std::vector<String> parts = string::splitString(section_dot_key, ".");
+	if (parts.size() >= 2)
+	{
+		outSection = parts[0];
+		outKey = parts[1];
+		return true;
+	}
+	return false;
 }
 
 TS_END_PACKAGE1()

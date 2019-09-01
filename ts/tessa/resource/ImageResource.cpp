@@ -1,27 +1,24 @@
 #include "Precompiled.h"
-#include "ts/tessa/resource/FontResource.h"
+#include "ts/tessa/resource/ImageResource.h"
 
 #include "ts/tessa/system/Gigaton.h"
 #include "ts/tessa/file/ArchivistFilesystem.h"
 #include "ts/tessa/resource/ArchivistInputStream.h"
 
-TS_DEFINE_RESOURCE_TYPE(resource::FontResource);
+TS_DEFINE_RESOURCE_TYPE(resource::ImageResource);
 
 TS_PACKAGE1(resource)
 
-FontResource::FontResource(const String &filepath)
+ImageResource::ImageResource(const String &filepath)
 	: ResourceBase(filepath)
 {
-	
 }
 
-FontResource::~FontResource()
+ImageResource::~ImageResource()
 {
-	if (strm != nullptr)
-		strm.reset();
 }
 
-bool FontResource::loadResourceImpl()
+bool ImageResource::loadResourceImpl()
 {
 	bool success = ([&]()
 	{
@@ -33,15 +30,14 @@ bool FontResource::loadResourceImpl()
 			file::ArchivistReaderExtractor extractor;
 			if (afs.getFileExtractor(filepath, extractor))
 			{
-				// Font continues to use the stream on demand, so allocate a longer lasting instance of it
-				strm.reset(new ArchivistInputStream(extractor));
-				if (resource->loadFromStream(*strm))
+				ArchivistInputStream strm(extractor);
+				if (resource->loadFromStream(strm))
 				{
 					return true;
 				}
 				else
 				{
-					TS_LOG_ERROR("Failed to load the font from archivist input stream. File: %s", filepath);
+					TS_LOG_ERROR("Failed to load a texture from archivist input stream. File: %s", filepath);
 				}
 			}
 			else
@@ -57,13 +53,16 @@ bool FontResource::loadResourceImpl()
 		}
 		else
 		{
-			TS_LOG_ERROR("Failed to load the font from disk. File: %s", filepath);
+			TS_LOG_ERROR("Failed to load a texture from disk. File: %s", filepath);
 		}
 
 		return false;
 	})();
 
-	return success;
+	if (!success)
+		return false;
+
+	return true;
 }
 
 TS_END_PACKAGE1()

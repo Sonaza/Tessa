@@ -155,40 +155,11 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 			{
 				dragged += mouseDelta.length();
 
-				targetPositionOffset.x = math::clamp(targetPositionOffset.x - mouseDelta.x, -1000.f, 1000.f);
-				targetPositionOffset.y = math::clamp(targetPositionOffset.y - mouseDelta.y, -1000.f, 1000.f);
-
-				const system::WindowView &view = windowManager->getApplicationView();
-
-				float scale = defaultScale * imageScale;
-				math::VC2 scaledSize = static_cast<math::VC2>(imageSize) * scale;
-
-				if (scaledSize.x > view.size.x)
-				{
-// 					targetPositionOffset.x framePadding
-				}
-				else
-				{
-					targetPositionOffset.x = 0.f;
-				}
-
-				if (scaledSize.y > view.size.y)
-				{
-// 					targetPositionOffset.x 
-				}
-				else
-				{
-					targetPositionOffset.y = 0.f;
-				}
-
-// 				sf::FloatRect bounds(
-// 					targetPositionOffset / -2.f,
-// 					scaledSize
-// 				);
-
-// 				math::VC2 minClamp = 
+				targetPositionOffset.x = targetPositionOffset.x - mouseDelta.x;
+				targetPositionOffset.y = targetPositionOffset.y - mouseDelta.y;
 			}
-			else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
+			
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 			{
 				// Scales image by holding down middle mouse: moving mouse pointer up or to the right enlarges, and vice versa
 				int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? -math::sign(mouseDelta.x) : math::sign(mouseDelta.y);
@@ -221,10 +192,13 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 
 	framePadding = math::max(20.f, view.size.x * 0.02f);
 
-	defaultScale += (targetDefaultScale - defaultScale) * deltaTime.getSecondsAsFloat() * 8.f;
+	if (!sf::Mouse::isButtonPressed(sf::Mouse::Middle))
+	{
+		targetImageScale = math::max(1.f, targetImageScale);
+	}
 
+	defaultScale += (targetDefaultScale - defaultScale) * deltaTime.getSecondsAsFloat() * 8.f;
 	imageScale += (targetImageScale - imageScale) * deltaTime.getSecondsAsFloat() * 15.f;
-	positionOffset += (targetPositionOffset - positionOffset) * deltaTime.getSecondsAsFloat() * 32.f;
 
 	if (updateImageInfo)
 	{
@@ -259,6 +233,49 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 			}
 		}
 	}
+
+	{
+		float scale = defaultScale * imageScale;
+		math::VC2 scaledSize = static_cast<math::VC2>(imageSize) * scale;
+
+		math::VC2 oversize = (scaledSize - view.size) / 2.f;
+		oversize.x = math::max(0.f, oversize.x);
+		oversize.y = math::max(0.f, oversize.y);
+
+		targetPositionOffset.x = math::clamp(targetPositionOffset.x, -oversize.x, oversize.x);
+		targetPositionOffset.y = math::clamp(targetPositionOffset.y, -oversize.y, oversize.y);
+
+		positionOffset.x = math::clamp(positionOffset.x, -oversize.x, oversize.x);
+		positionOffset.y = math::clamp(positionOffset.y, -oversize.y, oversize.y);
+
+// 		if (oversize.x > 0.f)
+// 		{
+// 		}
+// 		else
+// 		{
+// 			targetPositionOffset.x = 0.f;
+// 		}
+// 
+// 		if (scaledSize.y > view.size.y)
+// 		{
+// 			float limit = scaledSize.y - view.size.y;
+// 			targetPositionOffset.y = math::clamp(targetPositionOffset.y, -limit, limit);
+// 		}
+// 		else
+// 		{
+// 			targetPositionOffset.y = 0.f;
+// 		}
+	}
+
+	positionOffset += (targetPositionOffset - positionOffset) * deltaTime.getSecondsAsFloat() * 32.f;
+	
+
+// 	sf::FloatRect bounds(
+// 		targetPositionOffset / -2.f,
+// 		scaledSize
+// 	);
+// 
+// 	math::VC2 minClamp = 
 }
 
 void ImageViewerScene::imageChanged(SizeType statusText)
@@ -418,8 +435,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 
 		if (currentImage != nullptr)
 		{
-			errorText.setString(TS_FMT(
-				"Error: %s", currentImage->getErrorText()
+			const String &errorStr = currentImage->getErrorText();
+			errorText.setString(TS_WFMT(
+				"Error: %s", (!errorStr.isEmpty() ? errorStr : "error has error.")
 			));
 		}
 		else
@@ -433,54 +451,103 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 
 		renderTarget.draw(errorText);
 	}
-
-	sf::Text statusText;
-	statusText.setOutlineThickness(2.f);
-	statusText.setFont(*font->getResource());
-
+	else
 	{
-		statusText.setString(TS_WFMT("%u / %u\n%s",
-			viewerStateManager->getCurrentImageIndex() + 1,
-			viewerStateManager->getNumImages(),
-			file::getBasename(viewerStateManager->getCurrentFilepath())
-		));
-
-		statusText.setPosition(10.f, 50.f);
+		sf::Text statusText;
 		statusText.setOutlineThickness(2.f);
-		statusText.setScale(0.9f, 0.9f);
+		statusText.setFont(*font->getResource());
 
-		renderTarget.draw(statusText);
+		{
+			statusText.setString(TS_WFMT("%u / %u",
+				viewerStateManager->getCurrentImageIndex() + 1,
+				viewerStateManager->getNumImages()
+			));
+
+			statusText.setPosition(10.f, 35.f);
+			statusText.setScale(0.9f, 0.9f);
+
+			renderTarget.draw(statusText);
+		}
+
+		{
+			String filename = file::getBasename(viewerStateManager->getCurrentFilepath());
+
+			statusText.setString(
+				filename
+			);
+
+			statusText.setPosition(10.f, 75.f);
+
+			float filenameScale = math::clamp(60.f / (float)filename.getSize(), 0.5f, 1.f);
+			statusText.setScale(0.9f * filenameScale, 0.9f * filenameScale);
+
+			renderTarget.draw(statusText);
+		}
+
+		{
+			float scale = defaultScale * imageScale;
+
+			if (math::abs(scale - 1.f) < 0.001f)
+			{
+				statusText.setString(TS_FMT("%.1f%%\n%u x %u",
+					scale * 100.f,
+					imageSize.x, imageSize.y
+				));
+			}
+			else
+			{
+				math::VC2U scaledSize = static_cast<math::VC2U>(
+					static_cast<math::VC2>(imageSize) * scale + math::VC2(0.5f, 0.5f));
+
+				statusText.setString(TS_FMT("%.1f%%\n%u x %u (%u x %u)",
+					scale * 100.f,
+					imageSize.x, imageSize.y,
+					scaledSize.x, scaledSize.y
+				));
+			}
+
+			statusText.setPosition(10.f, 115.f);
+			statusText.setScale(0.7f, 0.7f);
+
+			renderTarget.draw(statusText);
+		}
 	}
 
-	if (showManagerStatus)
 	{
-		std::wstring stats = imageManager.getStats();
-		statusText.setString(stats);
+		sf::Text debugText;
+		debugText.setOutlineThickness(2.f);
+		debugText.setFont(*font->getResource());
 
-		statusText.setPosition(10.f, 300.f);
-		statusText.setOutlineThickness(2.f);
-		statusText.setScale(0.7f, 0.7f);
+		if (showManagerStatus)
+		{
+			std::wstring stats = imageManager.getStats();
+			debugText.setString(stats);
 
-		renderTarget.draw(statusText);
-	}
+			debugText.setPosition(10.f, 300.f);
+			debugText.setOutlineThickness(2.f);
+			debugText.setScale(0.5f, 0.5f);
 
-	if (showSchedulerStatus)
-	{
-		thread::ThreadScheduler &ts = getGigaton<thread::ThreadScheduler>();
+			renderTarget.draw(debugText);
+		}
 
-		thread::ThreadScheduler::SchedulerStats stats = ts.getStats();
+		if (showSchedulerStatus)
+		{
+			thread::ThreadScheduler &ts = getGigaton<thread::ThreadScheduler>();
 
-		statusText.setString(TS_FMT(
-			"Scheduler: %u / %u working  %u pending [%u interval]",
-			stats.numWorkedTasks, stats.numBackgroundWorkers,
-			stats.numQueuedTasks, stats.numIntervalTasks
-		));
+			thread::ThreadScheduler::SchedulerStats stats = ts.getStats();
 
-		statusText.setPosition(10.f, 200.f);
-		statusText.setOutlineThickness(2.f);
-		statusText.setScale(0.7f, 0.7f);
+			debugText.setString(TS_FMT(
+				"Scheduler: %u / %u working  %u pending [%u interval]",
+				stats.numWorkedTasks, stats.numBackgroundWorkers,
+				stats.numQueuedTasks, stats.numIntervalTasks
+			));
 
-		renderTarget.draw(statusText);
+			debugText.setPosition(10.f, 200.f);
+			debugText.setOutlineThickness(2.f);
+			debugText.setScale(0.7f, 0.7f);
+
+			renderTarget.draw(debugText);
+		}
 	}
 }
 

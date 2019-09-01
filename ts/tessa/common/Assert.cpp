@@ -1,5 +1,7 @@
 #include "Precompiled.h"
 
+#include "ts/tessa/string/String.h"
+
 #if TS_PLATFORM == TS_WINDOWS
 	#include "ts/tessa/common/IncludeWindows.h"
 	#include <codecvt>
@@ -20,14 +22,14 @@ enum DialogAction
 	Abort,
 };
 
-DialogAction dialog(const char *expression, const char *message, const char *filepath, const unsigned int line)
+DialogAction dialog(const String &expression, const String &message, const String &filepath, const unsigned int line)
 {
 #if TS_PLATFORM == TS_WINDOWS
 	std::wstringstream msg;
 
 	msg << "Assertion failure!\n\n";
 	
-	if (message)
+	if (!message.isEmpty())
 		msg << message << "\n\n";
 
 	msg << "Expression: " << expression << "\n"
@@ -48,9 +50,9 @@ DialogAction dialog(const char *expression, const char *message, const char *fil
 
 }
 
-extern bool _assert_impl(const char *expression, const char *message, const char *filepath, const unsigned int line)
+extern bool _assert_impl(const String &expression, const String &message, const String &filepath, const unsigned int line)
 {
-	if (message != nullptr)
+	if (!message.isEmpty())
 	{
 		String messageNoLinebreaks = message;
 		string::replaceCharacter(messageNoLinebreaks, '\n', ' ');

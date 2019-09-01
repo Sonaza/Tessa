@@ -215,11 +215,11 @@ void ViewerStateManager::applySorting()
 	switch (currentSorting)
 	{
 		case SortByName:
-			std::sort(currentFileList.begin(), currentFileList.end(), util::NaturalSort);
+			std::sort(currentFileList.begin(), currentFileList.end(), util::naturalSort);
 		break;
 
 		case SortByExtension:
-			std::sort(currentFileList.begin(), currentFileList.end(), util::NaturalSortByExtension);
+			std::sort(currentFileList.begin(), currentFileList.end(), util::naturalSortByExtension);
 		break;
 	}
 }

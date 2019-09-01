@@ -14,20 +14,20 @@ class ArchivistWriter : public lang::Noncopyable
 public:
 	ArchivistWriter();
 
-	bool stageFile(const std::string &filepath, const std::string &archiveFilepath, ArchivistCompressionMode compression);
-	bool saveToFile(const std::string &filename, bool overwriteExisting = true);
+	bool stageFile(const String &filepath, const String &archiveFilepath, ArchivistCompressionMode compression);
+	bool saveToFile(const String &filename, bool overwriteExisting = true);
 
 private:
 	typedef std::vector<char> ByteBuffer;
 
-	PosType copyFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
-	PosType lz4_compressFullBlockFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
-	PosType lz4_compressStreamedFileToBuffer(const std::string &filepath, ByteBuffer &dstBuffer);
+	PosType copyFileToBuffer(const String &filepath, ByteBuffer &dstBuffer);
+	PosType lz4_compressFullBlockFileToBuffer(const String &filepath, ByteBuffer &dstBuffer);
+	PosType lz4_compressStreamedFileToBuffer(const String &filepath, ByteBuffer &dstBuffer);
 
 	struct Stagefile
 	{
-		std::string filepath;
-		std::string archiveFilepath;
+		String filepath;
+		String archiveFilepath;
 		SizeType filesize;
 		ArchivistCompressionMode compression;
 	};

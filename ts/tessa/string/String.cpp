@@ -105,6 +105,11 @@ String::String(const char *ansiString, const std::locale &locale)
 	}
 }
 
+String::String(const char *first, BigSizeType size, const std::locale &locale)
+	: String(std::string(first, size), locale)
+{
+}
+
 String::String(const char *first, const char *last, const std::locale &locale)
 	: String(std::string(first, last), locale)
 {
@@ -129,6 +134,11 @@ String::String(const wchar_t *wideString)
 	}
 }
 
+String::String(const wchar_t *first, BigSizeType size)
+	: String(std::wstring(first, size))
+{
+}
+
 String::String(const wchar_t *first, const wchar_t *last)
 	: String(std::wstring(first, last))
 {
@@ -144,6 +154,11 @@ String::String(const char32_t *utf32String)
 {
 	if (utf32String)
 		buffer = utf32String;
+}
+
+String::String(const char32_t *utf32String, BigSizeType size)
+	: buffer(utf32String, size)
+{
 }
 
 String::String(const std::basic_string<char32_t> &utf32String)
@@ -185,6 +200,15 @@ String::operator std::wstring() const
 {
 	return toWideString();
 }
+
+#if defined(SFML_VERSION_MAJOR)
+
+String::operator sf::String() const
+{
+	return sf::String(reinterpret_cast<const uint32 *>(getData()));
+}
+
+#endif
 
 std::string String::toAnsiString(const std::locale &locale) const
 {

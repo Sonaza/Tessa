@@ -154,16 +154,16 @@ bool ArchivistReaderExtractor::isEOF() const
 	return eof;
 }
 
-const std::string ArchivistReaderExtractor::getFilename() const
+const String ArchivistReaderExtractor::getFilename() const
 {
-	return std::string(header.filename);
+	return String(header.filename);
 }
 
-bool ArchivistReaderExtractor::initialize(const ArchivistFileHeader &headerParam, const std::string &archiveFilepath)
+bool ArchivistReaderExtractor::initialize(const ArchivistFileHeader &headerParam, const String &archiveFilepath)
 {
 	TS_ASSERT(initialized == false && "Extractor is being reinitialized without a call to close first.");
 	TS_ASSERT(archiveFile.isOpen() == false);
-	TS_ASSERT(archiveFilepath.empty() == false);
+	TS_ASSERT(archiveFilepath.isEmpty() == false);
 
 	if (!archiveFile.open(archiveFilepath, InputFileMode_ReadBinary))
 	{
@@ -254,6 +254,8 @@ PosType ArchivistReaderExtractor::readLZ4FullBlockCompressed(char *outBuffer, Bi
 
 	PosType bytesRemaining = header.filesize - currentPosition;
 	TS_ASSERT(bytesRemaining >= 0 && "read overflow");
+	if (bytesRemaining < 0)
+		return 0;
 
 	BigSizeType numBytesToRead = math::min((BigSizeType)bytesRemaining, size);
 	if (numBytesToRead == 0)

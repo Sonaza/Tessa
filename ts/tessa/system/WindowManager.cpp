@@ -2,6 +2,7 @@
 #include "ts/tessa/system/WindowManager.h"
 
 #include "ts/tessa/resource/ResourceManager.h"
+#include "ts/tessa/resource/ImageResource.h"
 
 #if TS_PLATFORM == TS_WINDOWS
 	#include "ts/tessa/common/IncludeWindows.h"
@@ -68,7 +69,7 @@ void WindowManager::update(const TimeSpan deltaTime)
 
 }
 
-void WindowManager::create(const math::VC2U &videomode, const std::string &windowTitle, const bool resizable, const bool fullscreen)
+void WindowManager::create(const math::VC2U &videomode, const String &windowTitle, const bool resizable, const bool fullscreen)
 {
 	uint32_t style = sf::Style::Titlebar | sf::Style::Close;
 	if (fullscreen)
@@ -85,7 +86,10 @@ void WindowManager::create(const math::VC2U &videomode, const std::string &windo
 	settings.majorVersion = 3;
 	settings.minorVersion = 0;
 
-	renderWindow.reset(new sf::RenderWindow(sf::VideoMode(videomode.x, videomode.y), windowTitle, style, settings));
+	renderWindow.reset(new sf::RenderWindow(
+		sf::VideoMode(videomode.x, videomode.y),
+		windowTitle, style, settings
+	));
 
 	if (renderWindow != nullptr)
 	{
@@ -191,6 +195,13 @@ bool WindowManager::isOpen() const
 	return renderWindow->isOpen();
 }
 
+void WindowManager::setMinMaxSize(const math::VC2U &minSizeParam, const math::VC2U &maxSizeParam)
+{
+	TS_ASSERT(minSizeParam.x <= maxSizeParam.x && minSizeParam.y <= maxSizeParam.y);
+	minSize = minSizeParam;
+	maxSize = maxSizeParam;
+}
+
 math::VC2U WindowManager::getSize() const
 {
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
@@ -251,10 +262,10 @@ bool WindowManager::systemEventCallback(SystemEventCallbackParams *params)
 		case WM_GETMINMAXINFO:
 		{
 			MINMAXINFO *info = reinterpret_cast<MINMAXINFO *>(params->lParam);
-			info->ptMinTrackSize.x = 800;
-			info->ptMinTrackSize.y = 600;
-			info->ptMaxTrackSize.x = 50000;
-			info->ptMaxTrackSize.y = 50000;
+			info->ptMinTrackSize.x = minSize.x;
+			info->ptMinTrackSize.y = minSize.y;
+			info->ptMaxTrackSize.x = maxSize.x;
+			info->ptMaxTrackSize.y = maxSize.y;
 			return true; // override default
 		}
 		break;
@@ -280,17 +291,17 @@ bool WindowManager::systemEventCallback(SystemEventCallbackParams *params)
 	return false;
 }
 
-bool WindowManager::setWindowIcon(const std::string &filepath)
+bool WindowManager::setWindowIcon(const String &filepath)
 {
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
-	sf::Image icon;
-	std::string fp = resource::ResourceManager::getAbsoluteResourcePath(filepath);
-	if (!icon.loadFromFile(fp))
-	{
-		TS_LOG_ERROR("Unable to set window icon, file load failed. File: %s", filepath);
+	resource::ResourceManager &rm = getGigaton<resource::ResourceManager>();
+	resource::ImageResource *iconResource = rm.reloadResource<resource::ImageResource>(
+		"primary_window_icon", filepath, true);
+	if (iconResource == nullptr)
 		return false;
-	}
+
+	sf::Image &icon = *iconResource->getResource();
 	renderWindow->setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 	return true;
 }

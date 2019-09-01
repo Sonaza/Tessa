@@ -16,13 +16,9 @@ void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
 		TS_PRINTF("%s Format: ", FreeImage_GetFormatFromFIF(fif));
 	}
 	TS_PRINTF("%s ***\n", message);
-
-// 	FreeImageStaticInitializer::lastErrorMessage = std::string(message);
 }
 
 }
-
-std::string FreeImageStaticInitializer::lastErrorMessage;
 
 FreeImageStaticInitializer::FreeImageStaticInitializer()
 {

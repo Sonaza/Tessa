@@ -21,10 +21,10 @@ public:
 
 	virtual void update(const TimeSpan deltaTime);
 
-	void create(const math::VC2U &videomode, const std::string &windowTitle, const bool resizable, const bool fullscreen);
+	void create(const math::VC2U &videomode, const String &windowTitle, const bool resizable, const bool fullscreen);
 	void close();
 
-	bool setWindowIcon(const std::string &filepath);
+	bool setWindowIcon(const String &filepath);
 
 	bool pollEvent(sf::Event &eventParam);
 
@@ -42,6 +42,7 @@ public:
 	bool isOpen() const;
 	bool isInFocus() const;
 
+	void setMinMaxSize(const math::VC2U &minSize, const math::VC2U &maxSize = math::VC2U(50000, 50000));
 	math::VC2U getSize() const;
 
 	void useApplicationView();
@@ -64,6 +65,9 @@ private:
 	bool systemEventCallback(SystemEventCallbackParams *params);
 
 	bool windowCreated = false;
+
+	math::VC2U minSize = math::VC2U(800, 600);
+	math::VC2U maxSize = math::VC2U(50000, 50000);
 
 	ScopedPointer<sf::RenderWindow> renderWindow;
 	WindowViewManager::ViewType currentViewType;

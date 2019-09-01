@@ -18,46 +18,36 @@ public:
 	void parse(int32 argc, const char **argv);
 	void parse(int32 argc, const wchar_t **argv);
 
-	bool hasFlag(const std::string &flag) const;
-	bool hasFlag(const std::wstring &flag) const;
+	bool hasFlag(const String &flag) const;
 
-	bool hasFlagParameter(const std::string &flag) const;
-	bool hasFlagParameter(const std::wstring &flag) const;
+	bool hasFlagParameter(const String &flag) const;
 
 	template<class Type>
-	bool getFlagParameter(const std::string &flag, Type &outParam) const;
-	bool getFlagParameter(const std::string &flag, std::string &outParam) const;
-	bool getFlagParameter(const std::wstring &flag, std::wstring &outParam) const;
+	bool getFlagParameter(const String &flag, Type &outParam) const;
+	bool getFlagParameter(const String &flag, String &outParam) const;
 
 	SizeType getNumParameters() const;
 
 	template<class Type>
 	bool getNthParameter(SizeType index, Type &outParam) const;
-	bool getNthParameter(SizeType index, std::string &outParam) const;
-	bool getNthParameter(SizeType index, std::wstring &outParam) const;
+	bool getNthParameter(SizeType index, String &outParam) const;
 
-	const std::string &getExecutablePath() const;
-	const std::wstring &getExecutablePathWide() const;
+	const String &getExecutablePath() const;
 
 protected:
-	std::string executablePath_utf8;
-	std::wstring executablePath_utf16;
+	String executablePath;
 
-	typedef std::unordered_map<uint32, std::string> FlagsList;
+	typedef std::unordered_map<uint32, String> FlagsList;
 	FlagsList flags;
 
-	typedef std::vector<std::string> ParameterList;
+	typedef std::vector<String> ParameterList;
 	ParameterList parameters;
 
-	std::wstring convertU8toU16(const std::string &str) const;
-	std::string convertU16toU8(const std::wstring &str) const;
-
-	std::vector<std::string> rawArgumentsList;
-	std::vector<std::wstring> rawArgumentsListW;
+	std::vector<String> rawArgumentsList;
 };
 
 template<class Type>
-bool Commando::getFlagParameter(const std::string &flag, Type &outParam) const
+bool Commando::getFlagParameter(const String &flag, Type &outParam) const
 {
 	static_assert(std::is_integral<Type>::value || std::is_floating_point<Type>::value, "Commando::getParameter can realistically only handle strings, integers and floating point values.");
 
@@ -65,7 +55,7 @@ bool Commando::getFlagParameter(const std::string &flag, Type &outParam) const
 	if (iter == flags.end() || iter->second.empty())
 		return false;
 	
-	std::stringstream ss;
+	Stringstream ss;
 	ss << iter->second;
 	ss >> outParam;
 	return true;
@@ -79,7 +69,7 @@ bool Commando::getNthParameter(SizeType index, Type &outParam) const
 	if (index >= parameters.size())
 		return false;
 
-	std::stringstream ss;
+	Stringstream ss;
 	ss << parameters[index];
 	ss >> outParam;
 	return true;

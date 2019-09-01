@@ -226,7 +226,7 @@ SharedPointer<sf::Shader> ImageManager::loadDisplayShader(DisplayShaderTypes typ
 
 	TS_ASSERT(displayShaderFiles.find(type) != displayShaderFiles.end() && "Attempting to load an undefined display shader.");
 	
-	std::string filepath = resource::ResourceManager::getAbsoluteResourcePath(displayShaderFiles[type]);
+	String filepath = resource::ResourceManager::getAbsoluteResourcePath(displayShaderFiles[type]);
 	if (!displayShader->loadFromFile(filepath, sf::Shader::Fragment))
 		return nullptr;
 
@@ -275,6 +275,9 @@ void ImageManager::updateCurrentImage()
 		if (image == nullptr)
 			image = makeShared<Image>(entry.filepath);
 
+		if (image->hasError())
+			continue;
+
 		if (image->isUnloaded())
 		{
 // 			TS_WPRINTF("--- Starting loading %s\n", entry.filepath);
@@ -287,7 +290,10 @@ void ImageManager::updateCurrentImage()
 		}
 
 		if (image->hasError())
+		{
+			TS_WPRINTF("Couldn't load image: %s\n", image->getErrorText());
 			continue;
+		}
 
 		image->setActive(isCurrentImage);
 	}

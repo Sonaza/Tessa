@@ -9,7 +9,7 @@ class ShaderResource : public resource::ResourceBase<sf::Shader, TS_FOURCC('s','
 	TS_DECLARE_RESOURCE_TYPE(resource::ShaderResource);
 
 public:
-	ShaderResource(const std::string &filepath);
+	ShaderResource(const String &filepath);
 	~ShaderResource();
 
 protected:

@@ -10,6 +10,7 @@
 
 TS_DECLARE1(system, BaseApplication);
 
+TS_DECLARE1(resource, ImageResource);
 TS_DECLARE1(resource, TextureResource);
 TS_DECLARE1(resource, FontResource);
 TS_DECLARE1(resource, ShaderResource);
@@ -31,11 +32,18 @@ public:
 
 	virtual void update(const TimeSpan deltaTime);
 
+	// Loads resource anonymously, the unique handle is generated on the fly.
 	template<class ResourceType>
-	ResourceType *loadResource(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+	ResourceType *loadResource(const String &filepath, const bool immediate = false);
 
 	template<class ResourceType>
-	ResourceType *getResource(const std::string &uniqueResourceHandle) const;
+	ResourceType *loadResource(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+
+	template<class ResourceType>
+	ResourceType *reloadResource(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+
+	template<class ResourceType>
+	ResourceType *getResource(const String &uniqueResourceHandle) const;
 
 	template<class ResourceType>
 	ResourceType *getResource(const GUID &resourceGuid) const;
@@ -43,36 +51,38 @@ public:
 	template<class ResourceType>
 	ResourceType *getResourceByFileGuid(const GUID &fileGuid) const;
 
-	TextureResource *loadTexture(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
-	FontResource *loadFont(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
-	ShaderResource *loadShader(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
-	MusicResource *loadMusic(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
-	SoundResource *loadSound(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate = false);
+	ImageResource *loadImage(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+	TextureResource *loadTexture(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+	FontResource *loadFont(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+	ShaderResource *loadShader(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+	MusicResource *loadMusic(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
+	SoundResource *loadSound(const String &uniqueResourceHandle, const String &filepath, const bool immediate = false);
 
-	TextureResource *getTexture(const std::string &uniqueResourceHandle) const;
-	FontResource *getFont(const std::string &uniqueResourceHandle) const;
-	ShaderResource *getShader(const std::string &uniqueResourceHandle) const;
-	MusicResource *getMusic(const std::string &uniqueResourceHandle) const;
-	SoundResource *getSound(const std::string &uniqueResourceHandle) const;
+	ImageResource *getImage(const String &uniqueResourceHandle) const;
+	TextureResource *getTexture(const String &uniqueResourceHandle) const;
+	FontResource *getFont(const String &uniqueResourceHandle) const;
+	ShaderResource *getShader(const String &uniqueResourceHandle) const;
+	MusicResource *getMusic(const String &uniqueResourceHandle) const;
+	SoundResource *getSound(const String &uniqueResourceHandle) const;
 
 	void unloadAll();
 
-	bool unloadResource(const std::string &uniqueResourceHandle);
-	bool unloadResource(const GUID &resourceGuid);
-	bool unloadResourceByFilePath(const std::string &filepath);
+	bool unloadResource(const String &uniqueResourceHandle);
+	bool unloadResourceByGuid(const GUID &resourceGuid);
+	bool unloadResourceByFilePath(const String &filepath);
 	bool unloadResourceByFileGuid(const GUID &fileGuid);
 
-	// Change the resource root directory, by default it uses working directory
-	// through releative paths but that may not always be correct.
-	static void setResourceRootDirectory(const std::string &rootDirectory);
-	static const std::string &getResourceRootDirectory();
+	// Change the resource root directory, if not set the resource root is
+	// current working directory but that may not always be correct.
+	static void setResourceRootDirectory(const String &rootDirectory);
+	static const String &getResourceRootDirectory();
 
 	// Converts the given filepath to an absolute resource path, relative to the resource root.
-	static std::string getAbsoluteResourcePath(const std::string &filepath);
+	static String getAbsoluteResourcePath(const String &filepath);
 
 private:
 	static std::atomic_bool stop_flag;
-	static std::string resourceRootDirectory;
+	static String resourceRootDirectory;
 
 	static void loadResourceTask(SharedPointer<AbstractResourceBase> resource);
 	void addResourceToLoadQueue(SharedPointer<AbstractResourceBase> resource);
@@ -84,8 +94,8 @@ private:
 	GuidList resourceGuids;
 
 #if TS_BUILD != TS_FINALRELEASE
-	std::map<const GUID, std::string> debugResourceHandles;
-	std::map<SizeType, std::string> debugResourceTypeNames;
+	std::map<const GUID, String> debugResourceHandles;
+	std::map<SizeType, String> debugResourceTypeNames;
 #endif
 
 	// Abstract resource list holds any type of resource
@@ -103,7 +113,22 @@ private:
 };
 
 template<class ResourceType>
-ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+ResourceType *ResourceManager::loadResource(const String &filepath, const bool immediate)
+{
+	static int32 counter = 0;
+	String anonymousHandle = TS_FMT("__anonymous_%x", counter++);
+	return loadResource<ResourceType>(anonymousHandle, filepath, immediate);
+}
+
+template<class ResourceType>
+ResourceType *ResourceManager::reloadResource(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
+{
+	unloadResource(uniqueResourceHandle);
+	return loadResource<ResourceType>(uniqueResourceHandle, filepath, immediate);
+}
+
+template<class ResourceType>
+ResourceType *ResourceManager::loadResource(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
 {
 	ResourceType *resource = nullptr;
 
@@ -117,7 +142,7 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 	if (resource != nullptr)
 	{
 #if TS_BUILD != TS_FINALRELEASE
-		const std::string &debugHandle = debugResourceHandles[fileGuid];
+		const String &debugHandle = debugResourceHandles[fileGuid];
 		const GUID debugGUID(debugHandle);
 		TS_ASSERTF(false, "Duplicate loading of a resource file, already loaded using a different resource handle.\n\nResource file: %s\nExisting handle: %s %s", filepath, debugHandle, debugGUID.getString());
 #endif
@@ -160,7 +185,7 @@ ResourceType *ResourceManager::loadResource(const std::string &uniqueResourceHan
 }
 
 template<class ResourceType>
-ResourceType *ResourceManager::getResource(const std::string &uniqueResourceHandle) const
+ResourceType *ResourceManager::getResource(const String &uniqueResourceHandle) const
 {
 	return getResource<ResourceType>(GUID(uniqueResourceHandle));
 }
@@ -185,7 +210,7 @@ ResourceType *ResourceManager::getResourceByFileGuid(const GUID &fileGuid) const
 
 #if TS_BUILD != TS_FINALRELEASE
 		TS_ASSERTF(rc != nullptr && rc->isValid(), "AbstractResourceContainer is nullptr or invalid.");
-		const std::string &debugHandle = debugResourceHandles.at(fileGuid);
+		const String &debugHandle = debugResourceHandles.at(fileGuid);
 		const GUID debugGUID(debugHandle);
 		TS_ASSERTF(rc->typeId == ResourceType::TypeId,
 			"Resource types don't match, requested resource handle is already used by a different resource type.\n\n"

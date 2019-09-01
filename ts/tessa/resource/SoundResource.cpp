@@ -9,7 +9,7 @@ TS_DEFINE_RESOURCE_TYPE(resource::SoundResource);
 
 TS_PACKAGE1(resource)
 
-SoundResource::SoundResource(const std::string &filepath)
+SoundResource::SoundResource(const String &filepath)
 	: ResourceBase(filepath)
 {
 }

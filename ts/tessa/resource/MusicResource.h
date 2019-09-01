@@ -13,7 +13,7 @@ class MusicResource : public ResourceBase<sf::Music, TS_FOURCC('m','s','c','r')>
 	TS_DECLARE_RESOURCE_TYPE(resource::MusicResource);
 
 public:
-	MusicResource(const std::string &filepath);
+	MusicResource(const String &filepath);
 	~MusicResource();
 
 protected:

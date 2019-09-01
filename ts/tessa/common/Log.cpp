@@ -8,6 +8,7 @@
 
 #include <streambuf>
 
+#include "ts/tessa/common/Assert.h"
 #include "ts/tessa/string/StringUtils.h"
 #include "ts/tessa/Config.h"
 
@@ -78,7 +79,7 @@ public:
 	}
 };
 
-std::string Log::filepathToBeOpened = TS_DEFAULT_LOG_FILE_NAME;
+String Log::filepathToBeOpened = TS_DEFAULT_LOG_FILE_NAME;
 
 Log &Log::getSingleton()
 {
@@ -86,9 +87,9 @@ Log &Log::getSingleton()
 	return instance;
 }
 
-bool Log::setLogFile(const std::string &filepathParam)
+bool Log::setLogFile(const String &filepathParam)
 {
-	if (filepathToBeOpened.empty())
+	if (filepathToBeOpened.isEmpty())
 		return false;
 
 	Log::filepathToBeOpened = filepathParam;
@@ -121,7 +122,7 @@ Log::~Log()
 
 bool Log::openLogfile()
 {
-	TS_ASSERT(!Log::filepathToBeOpened.empty());
+	TS_ASSERT(!Log::filepathToBeOpened.isEmpty());
 
 	// Check that the requested file isn't already opened
 	if (Log::filepathToBeOpened == currentFilepath && isLogFileOpen())
@@ -131,7 +132,12 @@ bool Log::openLogfile()
 
 	static const std::locale utf8_locale = std::locale(std::locale(), new std::codecvt_utf8<wchar_t>());
 	fileStream.imbue(utf8_locale);
-	fileStream.open(Log::filepathToBeOpened, std::ios::out | std::ios::trunc);
+
+#if TS_PLATFORM == TS_WINDOWS
+	fileStream.open(Log::filepathToBeOpened.toWideString(), std::ios::out | std::ios::trunc);
+#else
+	fileStream.open(Log::filepathToBeOpened.toUtf8().c_str(), std::ios::out | std::ios::trunc);
+#endif
 
 	if (!isLogFileOpen())
 	{
@@ -150,37 +156,23 @@ void Log::closeLogfile()
 		fileStream.close();
 }
 
-void Log::write(const std::string &str)
+void Log::write(const String &str)
 {
-	std::cout << str;
-
-#if defined(_MSC_VER)
-	OutputDebugStringA(str.c_str());
-#endif
-
-	if (isLogFileOpen())
-	{
-		fileStream << makeTimestampStringWide() << " " << str.c_str();
-		fileStream.flush();
-	}
-}
-
-void Log::write(const std::wstring &str)
-{
+#if TS_PLATFORM == TS_WINDOWS
 	std::wcout << str;
-
-#if defined(_MSC_VER)
-	OutputDebugStringW(str.c_str());
+	OutputDebugStringW(str.toWideString().c_str());
+#else
+	std::cout << str.toUtf8().c_str();
 #endif
 
 	if (isLogFileOpen())
 	{
-		fileStream << makeTimestampStringWide() << " " << str.c_str();
+		fileStream << makeTimestampString() << " " << str.toUtf8().c_str();
 		fileStream.flush();
 	}
 }
 
-const std::string Log::makeTimestampString() const
+String Log::makeTimestampString()
 {
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
@@ -192,7 +184,7 @@ const std::string Log::makeTimestampString() const
 	std::tm time;
 	localtime_r(&rawtime, &time);
 
-	return fmt::sprintf("[%04u-%02u-%02u %02u:%02u:%02u.%03u]",
+	return String(fmt::sprintf("[%04u-%02u-%02u %02u:%02u:%02u.%03u]",
 		time.tm_year + 1900,
 		time.tm_mon + 1,
 		time.tm_mday,
@@ -200,13 +192,8 @@ const std::string Log::makeTimestampString() const
 		time.tm_min,
 		time.tm_sec,
 		std::chrono::duration_cast<std::chrono::milliseconds>(epoch).count()
-	);
+	));
 }
 
-const std::wstring Log::makeTimestampStringWide() const
-{
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	return std::wstring(converter.from_bytes(makeTimestampString().c_str()));
-}
 
 TS_END_PACKAGE1()

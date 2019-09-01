@@ -27,6 +27,13 @@
 
 #pragma once
 
+ // Don't care about warnings in third-party code
+#pragma warning( push, 3 )
+#include <fmt/format.h>
+#include <fmt/printf.h>
+#pragma warning( pop )
+
+#include "ts/tessa/common/Assert.h"
 #include "ts/tessa/string/Utf.h"
 
 #include <iterator>
@@ -69,14 +76,17 @@ public:
 	explicit String(char32_t utf32Char);
 
 	String(const char *ansiString, const std::locale &locale = std::locale());
+	String(const char *ansiString, BigSizeType size, const std::locale &locale = std::locale());
 	String(const char *first, const char *last, const std::locale &locale = std::locale());
 	String(const std::string &ansiString, const std::locale &locale = std::locale());
 	
 	String(const wchar_t *wideString);
+	String(const wchar_t *wideString, BigSizeType size);
 	String(const wchar_t *first, const wchar_t *last);
 	String(const std::wstring &wideString);
 	
 	String(const char32_t *utf32String);
+	String(const char32_t *utf32String, BigSizeType size);
 	String(const std::basic_string<char32_t> &utf32String);
 
 	String(const String &other);
@@ -97,8 +107,28 @@ public:
 	operator std::string() const;
 	operator std::wstring() const;
 
+#if defined(SFML_VERSION_MAJOR)
+	operator sf::String() const;
+#endif
+
 	std::string toAnsiString(const std::locale &locale = std::locale()) const;
 	std::wstring toWideString() const;
+
+	/* String formatting as provided by fmt-library.
+	 * sprintf is the old school POSIX style formatting.
+	 * format is the new school Python style formatting.
+	*/ 
+	template<class... Args>
+	String &sprintf(const std::string &formatStr, const Args&... args);
+
+	template<class... Args>
+	String &sprintf(const std::wstring &formatStr, const Args&... args);
+
+	template<class... Args>
+	String &format(const std::string &formatStr, const Args&... args);
+
+	template<class... Args>
+	String &format(const std::wstring &formatStr, const Args&... args);
 
 	std::basic_string<uint8> toUtf8() const;
 	std::basic_string<uint16> toUtf16() const;
@@ -205,6 +235,73 @@ String String::fromUtf32(T begin, T end)
 	string.buffer.assign(begin, end);
 	return string;
 }
+
+template<class... Args>
+String &String::sprintf(const std::string &formatStr, const Args&... args)
+{
+	try
+	{
+		*this = String(fmt::sprintf(formatStr, args...));
+	}
+	catch (const fmt::format_error &e)
+	{
+		TS_UNUSED_VARIABLE(e);
+		TS_ASSERTF(false, "String formatting error: %s", e.what());
+		*this = String("<formatting error>");
+	}
+	return *this;
+}
+
+template<class... Args>
+String &String::sprintf(const std::wstring &formatStr, const Args&... args)
+{
+	try
+	{
+		*this = String(fmt::sprintf(formatStr, args...));
+	}
+	catch (const fmt::format_error &e)
+	{
+		TS_UNUSED_VARIABLE(e);
+		TS_ASSERTF(false, "String formatting error: %s", e.what());
+		*this = String("<formatting error>");
+	}
+	return *this;
+}
+
+template<class... Args>
+String &String::format(const std::string &formatStr, const Args&... args)
+{
+	try
+	{
+		*this = String(fmt::format(formatStr, args...));
+	}
+	catch (const fmt::format_error &e)
+	{
+		TS_UNUSED_VARIABLE(e);
+		TS_ASSERTF(false, "String formatting error: %s", e.what());
+	}
+	*this = String("<formatting error>");
+
+	return *this;
+}
+
+template<class... Args>
+String &String::format(const std::wstring &formatStr, const Args&... args)
+{
+	try
+	{
+		*this = String(fmt::format(formatStr, args...));
+	}
+	catch (const fmt::format_error &e)
+	{
+		TS_UNUSED_VARIABLE(e);
+		TS_ASSERTF(false, "String formatting error: %s", e.what());
+	}
+	*this = String("<formatting error>");
+
+	return *this;
+}
+
 
 TS_END_PACKAGE1()
 

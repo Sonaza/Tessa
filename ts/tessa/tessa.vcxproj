@@ -173,6 +173,7 @@
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
+    <ClCompile Include="resource\ImageResource.cpp" />
     <ClCompile Include="string\String.cpp" />
     <ClCompile Include="string\StringUtils.cpp" />
     <ClCompile Include="math\Angle.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="lang\ScopedPointer.h" />
     <ClInclude Include="lang\SharedPointer.h" />
     <ClInclude Include="lang\Signal.h" />
+    <ClInclude Include="resource\ImageResource.h" />
     <ClInclude Include="string\String.h" />
     <ClInclude Include="string\StringUtils.h" />
     <ClInclude Include="lang\UniquePointer.h" />

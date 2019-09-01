@@ -420,17 +420,24 @@ bool ImageBackgroundLoaderFreeImage::isValidFreeImageFile(const String &filepath
 	return FreeImage_FIFSupportsReading(format) == 1;
 }
 
-bool ImageBackgroundLoaderFreeImage::restartImpl()
+bool ImageBackgroundLoaderFreeImage::restartImpl(bool *shouldRestart)
 {
+	TS_ASSERT(shouldRestart != nullptr);
+
 	// Only restart for multibitmaps
 	if (loaderFormat == MultiBitmapFormat)
 	{
 		loaderIsComplete = false;
 		currentPage = 0;
-		return true;
+
+		*shouldRestart = true;
+	}
+	else
+	{
+		*shouldRestart = false;
 	}
 
-	return false;
+	return true;
 }
 
 bool ImageBackgroundLoaderFreeImage::loadNextFrame(FrameStorage &bufferStorage)

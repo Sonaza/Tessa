@@ -38,7 +38,7 @@ protected:
 	virtual void onResume() override;
 	virtual void onSuspend() override;
 
-	virtual bool restartImpl() override;
+	virtual bool restartImpl(bool *shouldRestart) override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
 	virtual bool wasLoadingCompleted() const override;
@@ -67,9 +67,8 @@ private:
 	uint32 numFrames = 0;
 	uint32 numTotalFrames = 0;
 
-	bool packetEof = false;
-
 	TimeSpan frameTime;
+	TimeSpan totalDuration;
 
 	struct BufferedFrame
 	{

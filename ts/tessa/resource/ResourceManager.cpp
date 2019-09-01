@@ -4,6 +4,7 @@
 #include "ts/tessa/system/BaseApplication.h"
 #include "ts/tessa/thread/ThreadScheduler.h"
 
+#include "ts/tessa/resource/ImageResource.h"
 #include "ts/tessa/resource/TextureResource.h"
 #include "ts/tessa/resource/FontResource.h"
 #include "ts/tessa/resource/SoundResource.h"
@@ -16,7 +17,7 @@ TS_DEFINE_MANAGER_TYPE(resource::ResourceManager);
 
 TS_PACKAGE1(resource)
 
-std::string ResourceManager::resourceRootDirectory = "";
+String ResourceManager::resourceRootDirectory = "";
 
 std::atomic_bool ResourceManager::stop_flag;
 
@@ -46,52 +47,62 @@ void ResourceManager::update(const TimeSpan deltaTime)
 
 }
 
-TextureResource *ResourceManager::loadTexture(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+ImageResource *ResourceManager::loadImage(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
+{
+	return loadResource<ImageResource>(uniqueResourceHandle, filepath, immediate);
+}
+
+TextureResource *ResourceManager::loadTexture(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
 {
 	return loadResource<TextureResource>(uniqueResourceHandle, filepath, immediate);
 }
 
-FontResource *ResourceManager::loadFont(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+FontResource *ResourceManager::loadFont(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
 {
 	return loadResource<FontResource>(uniqueResourceHandle, filepath, immediate);
 }
 
-ShaderResource *ResourceManager::loadShader(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+ShaderResource *ResourceManager::loadShader(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
 {
 	return loadResource<ShaderResource>(uniqueResourceHandle, filepath, immediate);
 }
 
-MusicResource *ResourceManager::loadMusic(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+MusicResource *ResourceManager::loadMusic(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
 {
 	return loadResource<MusicResource>(uniqueResourceHandle, filepath, immediate);
 }
 
-SoundResource *ResourceManager::loadSound(const std::string &uniqueResourceHandle, const std::string &filepath, const bool immediate)
+SoundResource *ResourceManager::loadSound(const String &uniqueResourceHandle, const String &filepath, const bool immediate)
 {
 	return loadResource<SoundResource>(uniqueResourceHandle, filepath, immediate);
 }
 
-TextureResource *ResourceManager::getTexture(const std::string &uniqueResourceHandle) const
+ImageResource *ResourceManager::getImage(const String &uniqueResourceHandle) const
+{
+	return getResource<ImageResource>(uniqueResourceHandle);
+}
+
+TextureResource *ResourceManager::getTexture(const String &uniqueResourceHandle) const
 {
 	return getResource<TextureResource>(uniqueResourceHandle);
 }
 
-FontResource *ResourceManager::getFont(const std::string &uniqueResourceHandle) const
+FontResource *ResourceManager::getFont(const String &uniqueResourceHandle) const
 {
 	return getResource<FontResource>(uniqueResourceHandle);
 }
 
-ShaderResource *ResourceManager::getShader(const std::string &uniqueResourceHandle) const
+ShaderResource *ResourceManager::getShader(const String &uniqueResourceHandle) const
 {
 	return getResource<ShaderResource>(uniqueResourceHandle);
 }
 
-MusicResource *ResourceManager::getMusic(const std::string &uniqueResourceHandle) const
+MusicResource *ResourceManager::getMusic(const String &uniqueResourceHandle) const
 {
 	return getResource<MusicResource>(uniqueResourceHandle);
 }
 
-SoundResource *ResourceManager::getSound(const std::string &uniqueResourceHandle) const
+SoundResource *ResourceManager::getSound(const String &uniqueResourceHandle) const
 {
 	return getResource<SoundResource>(uniqueResourceHandle);
 }
@@ -101,12 +112,12 @@ void ResourceManager::unloadAll()
 	resources.clear();
 }
 
-bool ResourceManager::unloadResource(const std::string &uniqueResourceHandle)
+bool ResourceManager::unloadResource(const String &uniqueResourceHandle)
 {
-	return unloadResource(GUID(uniqueResourceHandle));
+	return unloadResourceByGuid(GUID(uniqueResourceHandle));
 }
 
-bool ResourceManager::unloadResource(const GUID &resourceGuid)
+bool ResourceManager::unloadResourceByGuid(const GUID &resourceGuid)
 {
 	GuidList::iterator guidIter = resourceGuids.find(resourceGuid);
 	if (guidIter == resourceGuids.end())
@@ -122,7 +133,7 @@ bool ResourceManager::unloadResource(const GUID &resourceGuid)
 	return true;
 }
 
-bool ResourceManager::unloadResourceByFilePath(const std::string &filepath)
+bool ResourceManager::unloadResourceByFilePath(const String &filepath)
 {
 	return unloadResourceByFileGuid(GUID(filepath));
 }
@@ -146,17 +157,17 @@ bool ResourceManager::unloadResourceByFileGuid(const GUID &fileGuid)
 	return true;
 }
 
-void ResourceManager::setResourceRootDirectory(const std::string &rootDirectory)
+void ResourceManager::setResourceRootDirectory(const String &rootDirectory)
 {
 	ResourceManager::resourceRootDirectory = rootDirectory;
 }
 
-const std::string &ResourceManager::getResourceRootDirectory()
+const String &ResourceManager::getResourceRootDirectory()
 {
 	return ResourceManager::resourceRootDirectory;
 }
 
-std::string ResourceManager::getAbsoluteResourcePath(const std::string &filepath)
+String ResourceManager::getAbsoluteResourcePath(const String &filepath)
 {
 	if (!file::isAbsolutePath(filepath))
 		return file::joinPaths(ResourceManager::resourceRootDirectory, filepath);

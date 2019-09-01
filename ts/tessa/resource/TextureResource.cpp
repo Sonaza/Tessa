@@ -9,7 +9,7 @@ TS_DEFINE_RESOURCE_TYPE(resource::TextureResource);
 
 TS_PACKAGE1(resource)
 
-TextureResource::TextureResource(const std::string &filepath)
+TextureResource::TextureResource(const String &filepath)
 	: ResourceBase(filepath)
 {
 }

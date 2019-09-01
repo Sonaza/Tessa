@@ -50,9 +50,9 @@ bool Application::start()
 
 	viewer::ViewerStateManager &vsm = getManager<viewer::ViewerStateManager>();
 
-	std::wstring filepath;
+	String filepath;
 	getCommando().getNthParameter(0, filepath);
-	if (!filepath.empty() && file::exists(filepath) && file::isFile(filepath))
+	if (!filepath.isEmpty() && file::exists(filepath) && file::isFile(filepath))
 	{
 		vsm.jumpToImageByFilename(filepath);
 	}
@@ -60,9 +60,6 @@ bool Application::start()
 	{
 		vsm.jumpToImage(0);
 	}
-
-	SizeType maxsize = sf::Texture::getMaximumSize();
-	TS_PRINTF("Texture max size %u\n", maxsize);
 
 	return true;
 }
@@ -74,14 +71,13 @@ void Application::stop()
 
 bool Application::createApplicationManagers()
 {
-	std::wstring workingDirectory;
+	String workingDirectory;
 	getCommando().getNthParameter(0, workingDirectory);
 
 	workingDirectory = file::isFile(workingDirectory) ? file::getDirname(workingDirectory) : workingDirectory;
-	if (workingDirectory.empty())
+	if (workingDirectory.isEmpty())
 	{
-		workingDirectory = file::getWorkingDirectory();
-		workingDirectory = file::joinPaths(workingDirectory, "img");
+		workingDirectory = file::joinPaths(file::getWorkingDirectory(), "img");
 	}
 
 	createManagerInstance<viewer::BackgroundFileScanner>(workingDirectory, viewer::SupportedFormats::getSupportedFormatExtensions());

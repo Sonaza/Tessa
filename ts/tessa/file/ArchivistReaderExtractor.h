@@ -33,12 +33,12 @@ public:
 	bool isGood() const;
 	bool isEOF() const;
 
-	const std::string getFilename() const;
+	const String getFilename() const;
 
 private:
 	typedef std::vector<char> ByteBuffer;
 
-	bool initialize(const ArchivistFileHeader &header, const std::string &archiveFilepath);
+	bool initialize(const ArchivistFileHeader &header, const String &archiveFilepath);
 
 	PosType readNoCompressed(char *outBuffer, BigSizeType size);
 

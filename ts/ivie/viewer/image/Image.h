@@ -2,8 +2,6 @@
 
 #include "ts/ivie/util/RingBuffer.h"
 
-#include <exception>
-
 TS_DECLARE2(app, viewer, AbstractImageBackgroundLoader);
 
 TS_PACKAGE2(app, viewer)
@@ -12,12 +10,6 @@ struct FrameStorage
 {
 	SharedPointer<sf::Texture> texture;
 	TimeSpan frameTime;
-};
-
-class ImageUnloadingException : public std::exception
-{
-public:
-	ImageUnloadingException() = default;
 };
 
 class Image
@@ -29,7 +21,7 @@ class Image
 	friend class ImageBackgroundLoaderWebm;
 
 public:
-	Image(const std::wstring &filepath);
+	Image(const String &filepath);
 	~Image();
 
 	bool startLoading(bool suspendAfterBufferFull);
@@ -62,7 +54,7 @@ public:
 	bool isDisplayable() const;
 
 	bool hasError() const;
-	const std::string &getErrorText() const;
+	const String &getErrorText() const;
 
 	bool hasThumbnail() const;
 	SharedPointer<sf::Texture> getThumbnail() const;
@@ -78,7 +70,7 @@ public:
 	};
 	ImageLoaderState getState() const;
 
-	std::wstring getStateString(ImageLoaderState state) const
+	String getStateString(ImageLoaderState state) const
 	{
 		switch (state)
 		{
@@ -93,9 +85,9 @@ public:
 		return L"Unknown";
 	}
 
-	const std::wstring &getFilepath() const;
+	const String &getFilepath() const;
 
-	std::wstring getStats() const;
+	String getStats() const;
 
 private:
 	bool getIsBufferFull() const;
@@ -105,7 +97,7 @@ private:
 
 	bool makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxSize);
 
-	std::wstring filepath;
+	String filepath;
 	bool active = false;
 
 	struct ImageData
@@ -129,7 +121,7 @@ private:
 	void setState(ImageLoaderState state);
 	std::atomic<ImageLoaderState> loaderState = Unloaded;
 
-	std::string errorText;
+	String errorText;
 
 	SizeType currentFrameIndex = 0;
 

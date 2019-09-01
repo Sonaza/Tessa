@@ -1,11 +1,6 @@
 #pragma once
 
-// Don't care about warnings in third-party code
-#pragma warning( push, 3 )
-#include <fmt/printf.h>
-#pragma warning( pop )
-
-#include "ts/tessa/common/Assert.h"
+#include "ts/tessa/string/String.h"
 
 #include <ostream>
 #include <cstdarg>
@@ -61,7 +56,6 @@
 	#define TS_WLOG_DEBUG(__message, ...) ((void)0)
 #endif
 
-
 #include "ts/tessa/common/Package.h"
 
 TS_PACKAGE1(common)
@@ -71,75 +65,70 @@ class Log
 public:
 	static Log &getSingleton();
 
-	static bool setLogFile(const std::string &filepath);
+	static bool setLogFile(const String &filepath);
 
 	bool isLogFileOpen() const;
 
-	void write(const std::string &str);
-	void write(const std::wstring &str);
-
-	template<class FormatType, class... Args>
-	void write(FormatType format, Args... args);
-	
-	template<class... Args>
-	std::string format(const std::string &format, Args... args);
+	void write(const String &str);
 
 	template<class... Args>
-	std::wstring format(const std::wstring &format, Args... args);
+	void write(const std::string &format, const Args&... args);
 
-	const std::string makeTimestampString() const;
-	const std::wstring makeTimestampStringWide() const;
+	template<class... Args>
+	void write(const std::wstring &format, const Args&... args);
+
+	template<class... Args>
+	String format(const std::string &format, const Args&... args);
+
+	template<class... Args>
+	String format(const std::wstring &format, const Args&... args);
+
+	String makeTimestampString();
 
 private:
 	Log();
 	~Log();
 
-	Log(Log const&) = delete;
-	void operator=(Log const&) = delete;
+	Log(const Log&) = delete;
+	void operator=(const Log&) = delete;
 
 	bool openLogfile();
 	void closeLogfile();
 	
-	std::string currentFilepath;
-	std::wofstream fileStream;
+	String currentFilepath;
+	std::ofstream fileStream;
 
-	static std::string filepathToBeOpened;
+	static String filepathToBeOpened;
 };
 
-template<class FormatType, class... Args>
-TS_FORCEINLINE void Log::write(FormatType formatStr, Args... args)
+// template<class FormatType, class... Args>
+// TS_FORCEINLINE void Log::write(FormatType formatStr, const Args&... args)
+// {
+// 	write(format(formatStr, args...));
+// }
+
+template<class... Args>
+TS_FORCEINLINE void Log::write(const std::string &formatStr, const Args&... args)
 {
 	write(format(formatStr, args...));
 }
 
 template<class... Args>
-std::string Log::format(const std::string &formatStr, Args... args)
+TS_FORCEINLINE void Log::write(const std::wstring &formatStr, const Args&... args)
 {
-	try
-	{
-		return fmt::sprintf(formatStr, args...);
-	}
-	catch (const fmt::v5::format_error &e)
-	{
-		TS_UNUSED_VARIABLE(e);
-		TS_ASSERTF(false, "String formatting error: %s", e.what());
-		return "<formatting error>";
-	}
+	write(format(formatStr, args...));
 }
 
 template<class... Args>
-std::wstring Log::format(const std::wstring &formatStr, Args... args)
+String Log::format(const std::string &formatStr, const Args&... args)
 {
-	try
-	{
-		return fmt::sprintf(formatStr, args...);
-	}
-	catch (const fmt::v5::format_error &e)
-	{
-		TS_UNUSED_VARIABLE(e);
-		TS_ASSERTF(false, "String formatting error: %s", e.what());
-		return L"<formatting error>";
-	}
+	return String().sprintf(formatStr, args...);
+}
+
+template<class... Args>
+String Log::format(const std::wstring &formatStr, const Args&... args)
+{
+	return String().sprintf(formatStr, args...);
 }
 
 TS_END_PACKAGE1()

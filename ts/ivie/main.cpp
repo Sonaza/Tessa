@@ -4,6 +4,12 @@
 #include <locale>
 #include <codecvt>
 
+#pragma warning( push, 3 )
+#include <fmt/printf.h>
+#pragma warning( pop )
+
+#include "ts/tessa/file/InputFile.h"
+
 using namespace ts;
 
 int asdfasd()
@@ -27,7 +33,7 @@ int wmain(int argc, const wchar_t **argv)
 {
 // 	if (asdfasd())
 // 		return 0;
-	
+
 	app::Application app(argc, argv);
 	int returnCode = app.launch();
 	return returnCode;

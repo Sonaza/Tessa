@@ -20,7 +20,7 @@ GUID::GUID(uint32 guid)
 
 }
 
-GUID::GUID(const std::string &str)
+GUID::GUID(const String &str)
 	: guid(math::simpleHash32(str))
 {
 }
@@ -36,11 +36,12 @@ uint32 GUID::getUint32() const
 	return guid;
 }
 
-const std::string GUID::getString() const
+const String GUID::getString() const
 {
-	char buffer[20] = { 0 };
-	sprintf(buffer, sizeof(buffer), "GUID('%" PRIX32 "','%" PRIX32 "')", (guid >> 16) & 0xFFFF, guid & 0xFFFF);
-	return std::string(buffer);
+	return TS_FMT(
+		"GUID('%" PRIX32 "','%" PRIX32 "')",
+		(guid >> 16) & 0xFFFF, guid & 0xFFFF
+	);
 }
 
 void GUID::offset(uint32 value)

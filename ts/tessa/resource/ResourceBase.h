@@ -22,10 +22,10 @@ class ResourceBase : public AbstractResourceBase
 public:
 	enum { TypeId = ResourceTypeIndex };
 
-	explicit ResourceBase(const std::string &filepath);
+	explicit ResourceBase(const String &filepath);
 	virtual ~ResourceBase();
 
-	const std::string &getFilepath() const { return filepath; }
+	const String &getFilepath() const { return filepath; }
 	GUID getGuid() const { return resourceGuid; }
 
 	bool isLoaded() const { return resourceLoaded; }

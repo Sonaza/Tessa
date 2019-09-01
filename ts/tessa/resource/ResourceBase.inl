@@ -1,10 +1,10 @@
 
 template <class ResourceType, SizeType ResourceTypeIndex>
-ts::resource::ResourceBase<ResourceType, ResourceTypeIndex>::ResourceBase(const std::string &filepath)
+ts::resource::ResourceBase<ResourceType, ResourceTypeIndex>::ResourceBase(const String &filepath)
 	: AbstractResourceBase(filepath)
 	, resourceGuid(filepath)
 {
-	TS_ASSERT(!filepath.empty() && "Resource filepath is not set.");
+	TS_ASSERT(!filepath.isEmpty() && "Resource filepath is not set.");
 }
 
 template <class ResourceType, SizeType ResourceTypeIndex>

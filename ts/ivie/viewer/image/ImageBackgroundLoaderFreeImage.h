@@ -31,7 +31,7 @@ protected:
 	virtual void onResume() override;
 	virtual void onSuspend() override;
 
-	virtual bool restartImpl() override;
+	virtual bool restartImpl(bool *shouldRestart) override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
 	virtual bool wasLoadingCompleted() const override;
@@ -97,19 +97,6 @@ private:
 		DisposalMethod_NotSet = 255,
 	};
 	DisposalMethod lastDisposalMethod = DisposalMethod_NotSet;
-
-	std::string disposalToString(DisposalMethod dm)
-	{
-		switch (dm)
-		{
-			case DisposalMethod_Unspecified: return "Unspecified";
-			case DisposalMethod_Leave: return "Leave";
-			case DisposalMethod_Background: return "Background";
-			case DisposalMethod_Previous: return "Previous";
-		}
-		return "Not set";
-	}
-
 };
 
 TS_END_PACKAGE2()

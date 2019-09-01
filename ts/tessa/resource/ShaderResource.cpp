@@ -9,7 +9,7 @@ TS_DEFINE_RESOURCE_TYPE(resource::ShaderResource);
 
 TS_PACKAGE1(resource)
 
-ShaderResource::ShaderResource(const std::string &filepath)
+ShaderResource::ShaderResource(const String &filepath)
 	: ResourceBase(filepath)
 {
 }

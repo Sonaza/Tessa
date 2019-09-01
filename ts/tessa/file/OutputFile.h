@@ -19,17 +19,18 @@ enum OutputFileModeBits
 
 enum OutputFileMode
 {
-	// Basic write mode
+	// Open file for writing without truncating, write position is at the beginning.
 	OutputFileMode_Write               = priv::Out_ModeWrite,
-	// Truncate after open
+	// Open file for writing truncating existing contents.
 	OutputFileMode_WriteTruncate       = OutputFileMode_Write | priv::Out_ModeTruncate,
-	// Sets pointer at end
+	// Open file for writing, without truncating, write position is at the end.
 	OutputFileMode_WriteAppend         = OutputFileMode_Write | priv::Out_ModeAppend,
-	// Write in binary
-	OutputFileMode_WriteBinary         = OutputFileMode_Write | priv::Out_ModeBinary,
-	// Write in binary, truncate after open
+
+	// Open file for writing in binary without truncating, write position is at the beginning.
+	OutputFileMode_WriteBinary = OutputFileMode_Write | priv::Out_ModeBinary,
+	// Open file for writing in binary truncating existing contents.
 	OutputFileMode_WriteBinaryTruncate = OutputFileMode_WriteBinary | priv::Out_ModeTruncate,
-	// Write in binary, sets pointer at end
+	// Open file for writing in binary without truncating, write position is at the end.
 	OutputFileMode_WriteBinaryAppend   = OutputFileMode_WriteBinary | priv::Out_ModeAppend,
 };
 
@@ -37,8 +38,7 @@ class OutputFile : public lang::Noncopyable
 {
 public:
 	OutputFile();
-	OutputFile(const std::string &filepath, OutputFileMode mode);
-	OutputFile(const std::wstring &filepath, OutputFileMode mode);
+	OutputFile(const String &filepath, OutputFileMode mode);
 	~OutputFile();
 
 	// Move constructor and assignment
@@ -48,8 +48,7 @@ public:
 	/* Opens file for writing, according to mode.
 	 * Returns: full file size in bytes, or -1 if failure or bad.
 	 */
-	bool open(const std::string &filepath, OutputFileMode mode);
-	bool open(const std::wstring &filepath, OutputFileMode mode);
+	bool open(const String &filepath, OutputFileMode mode);
 
 	/* Closes opened file, flushing the write buffer and also clearing flags. 
 	*/
@@ -69,7 +68,7 @@ public:
 	template <class Type>
 	bool writeVariable(const Type &value);
 
-	bool writeString(const std::string &str);
+	bool writeString(const String &str);
 	
 	/* Sets file position to given position relative to beginning
 	 * Returns: new position, or -1 if failure or bad.
@@ -77,8 +76,8 @@ public:
 	PosType seek(PosType pos);
 
 	/* Sets file position to given position relative to the seek origin.
-	* Returns: new position, or -1 if failure/bad.
-	*/
+	 * Returns: new position, or -1 if failure/bad.
+	 */
 	enum SeekOrigin
 	{
 		SeekFromBeginning = 0,
@@ -103,6 +102,10 @@ public:
 	/* Returns: true if a failure has been encountered and the internal stream is bad.
 	 */
 	bool isBad() const;
+
+	/* Clears error flags.
+	*/
+	void clearFlags();
 	
 	/* Returns: true if file is open and writable.
 	 */
@@ -113,14 +116,14 @@ public:
 	bool operator!() const;
 
 private:
-	void *_filePtr = nullptr;
-	mutable bool _bad = false;
+	void *filePtr = nullptr;
+	mutable bool bad = false;
 };
 
 template <>
-TS_FORCEINLINE bool OutputFile::writeVariable<std::string>(const std::string &value)
+TS_FORCEINLINE bool OutputFile::writeVariable<String>(const String &value)
 {
-	return write(value.c_str(), value.size());
+	return write(value.toUtf8().c_str(), value.toUtf8().size());
 }
 
 template <class Type>

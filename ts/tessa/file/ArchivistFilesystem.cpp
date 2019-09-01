@@ -38,7 +38,7 @@ void ArchivistFilesystem::update(const TimeSpan deltaTime)
 
 }
 
-bool ArchivistFilesystem::addArchive(const std::string &archivePath)
+bool ArchivistFilesystem::addArchive(const String &archivePath)
 {
 	const SizeType archiveHash = math::simpleHash32(archivePath);
 	if (archives.count(archiveHash) > 0)
@@ -58,8 +58,8 @@ bool ArchivistFilesystem::addArchive(const std::string &archivePath)
 
 	// Updates and overrides the file mapping so that any time
 	// a file is requested it is loaded from the latest archive.
-	std::vector<std::string> list = reader->getFileList();
-	for (std::string &filepath : list)
+	std::vector<String> list = reader->getFileList();
+	for (String &filepath : list)
 	{
 		const SizeType fileHash = math::simpleHash32(filepath);
 
@@ -77,22 +77,22 @@ bool ArchivistFilesystem::addArchive(const std::string &archivePath)
 	return true;
 }
 
-bool ArchivistFilesystem::fileExists(const std::string &filepath)
+bool ArchivistFilesystem::fileExists(const String &filepath)
 {
-// 	if (!overridePath.empty() && utils::exists(utils::joinPaths(overridePath, filepath)))
+// 	if (!overridePath.empty() && exists(joinPaths(overridePath, filepath)))
 // 		return true;
 
 	const SizeType fileHash = math::simpleHash32(filepath);
 	if (fileToArchiveMapping.count(fileHash) > 0)
 		return true;
 
-// 	if (!fallbackPath.empty() && utils::exists(utils::joinPaths(fallbackPath, filepath)))
+// 	if (!fallbackPath.empty() && exists(joinPaths(fallbackPath, filepath)))
 // 		return true;
 
 	return false;
 }
 
-PosType ArchivistFilesystem::getFileSize(const std::string &filepath)
+PosType ArchivistFilesystem::getFileSize(const String &filepath)
 {
 	const SizeType fileHash = math::simpleHash32(filepath);
 	if (fileToArchiveMapping.count(fileHash) > 0)
@@ -103,12 +103,12 @@ PosType ArchivistFilesystem::getFileSize(const std::string &filepath)
 	return 0;
 }
 
-const std::vector<std::string> &ArchivistFilesystem::getFileList() const 
+const std::vector<String> &ArchivistFilesystem::getFileList() const 
 {
 	return filelist;
 }
 
-bool ArchivistFilesystem::getFileExtractor(const std::string &filepath, ArchivistReaderExtractor &extractor)
+bool ArchivistFilesystem::getFileExtractor(const String &filepath, ArchivistReaderExtractor &extractor)
 {
 	const SizeType fileHash = math::simpleHash32(filepath);
 	if (fileToArchiveMapping.count(fileHash) > 0)
@@ -119,12 +119,12 @@ bool ArchivistFilesystem::getFileExtractor(const std::string &filepath, Archivis
 	return false;
 }
 
-// void ArchivistFilesystem::setFallbackPath(const std::string &fallbackPathParam)
+// void ArchivistFilesystem::setFallbackPath(const String &fallbackPathParam)
 // {
 // 	fallbackPath = fallbackPathParam;
 // }
 // 
-// void ArchivistFilesystem::setOverridePath(const std::string &overridePathParam)
+// void ArchivistFilesystem::setOverridePath(const String &overridePathParam)
 // {
 // 	overridePath = overridePathParam;
 // }

@@ -3,28 +3,35 @@
 
 #include "ts/tessa/file/FileUtils.h"
 
+// #pragma warning( push, 3 )
+// #include "ext/naturalorder.h"
+// #pragma warning( pop )
+
 #if TS_PLATFORM == TS_WINDOWS
 	#include <shlwapi.h>
-#else
-	
 #endif
 
 TS_PACKAGE2(app, util)
 
-extern bool NaturalSort(const std::wstring &lhs, const std::wstring &rhs)
+extern bool naturalSort(const String &lhs, const String &rhs)
 {
-	return StrCmpLogicalW(lhs.c_str(), rhs.c_str()) < 0;
+	return StrCmpLogicalW(lhs.toWideString().c_str(), rhs.toWideString().c_str()) < 0;
 }
 
-extern bool NaturalSortByExtension(const std::wstring &lhs, const std::wstring &rhs)
+// extern bool naturalSort(const String &lhs, const String &rhs)
+// {
+// 	return natural_compare(lhs, rhs) < 0;
+// }
+
+extern bool naturalSortByExtension(const String &lhs, const String &rhs)
 {
-	std::wstring extl = file::getExtension(lhs);
-	std::wstring extr = file::getExtension(rhs);
+	String extl = file::getExtension(lhs);
+	String extr = file::getExtension(rhs);
 
 	if (extl != extr)
-		return NaturalSort(extl, extr);
+		return naturalSort(extl, extr);
 
-	return NaturalSort(lhs, rhs);
+	return naturalSort(lhs, rhs);
 }
 
 TS_END_PACKAGE2()

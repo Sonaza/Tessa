@@ -19,15 +19,15 @@
 #define __TS_ASSERT_IMPL(__expression) \
 	do { \
 		if (!(__expression)) { \
-			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), nullptr)) TS_DEBUG_BREAK; \
+			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), "")) TS_DEBUG_BREAK; \
 		} \
 	} while(false)
 
 #define __TS_ASSERTF_IMPL(__expression, __message, ...) \
 	do { \
 		if (!(__expression)) { \
-			const std::string &__fmt_message = TS_FMT(__message, ##__VA_ARGS__); \
-			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), __fmt_message.c_str())) TS_DEBUG_BREAK; \
+			String __fmt_message; __fmt_message.sprintf(__message, ##__VA_ARGS__); \
+			if (__TS_ASSERT_IMPL_IMPL(TS_STRINGIFY(__expression), __fmt_message)) TS_DEBUG_BREAK; \
 		} \
 	} while(false)
 
@@ -56,8 +56,14 @@
 
 #include "ts/tessa/common/Package.h"
 
+TS_DECLARE1(string, String);
+
 TS_PACKAGE0()
 
-extern bool _assert_impl(const char *expression, const char *message, const char *filepath, const unsigned int line);
+extern bool _assert_impl(
+	const string::String &expression,
+	const string::String &message,
+	const string::String &filepath,
+	const unsigned int line);
 
 TS_END_PACKAGE0()

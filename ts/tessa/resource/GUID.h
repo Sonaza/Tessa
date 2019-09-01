@@ -6,11 +6,11 @@ class GUID
 {
 public:
 	GUID(uint32 guid);
-	GUID(const std::string &str);
+	GUID(const String &str);
 	GUID(const GUID &guid);
 
 	uint32 getUint32() const;
-	const std::string getString() const;
+	const String getString() const;
 
 	void offset(uint32 value);
 
