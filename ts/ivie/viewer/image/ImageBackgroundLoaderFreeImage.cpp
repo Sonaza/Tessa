@@ -7,34 +7,14 @@
 #include "ts/ivie/viewer/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
+#include "ts/tessa/profiling/ScopedZoneTimer.h"
+
 TS_PACKAGE2(app, viewer)
-
-namespace
-{
-
-BYTE* convertToRGBA(uint32 width, uint32 height, BYTE* bits)
-{
-	// Image byte format is BGRA when endianness is little endian
-#if !defined(FREEIMAGE_BIGENDIAN)
-	BYTE* cur = bits;
-	for (size_t y = 0; y < height; ++y)
-	{
-		for (size_t x = 0; x < width; ++x)
-		{
-			std::swap(cur[FI_RGBA_RED], cur[FI_RGBA_BLUE]);
-			cur += 4;
-		}
-	}
-#endif
-	return bits;
-}
-
-}
 
 ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage, const String &filepath)
 	: AbstractImageBackgroundLoader(ownerImage, filepath)
 {
-	
+	TS_ZONE();
 }
 
 ImageBackgroundLoaderFreeImage::~ImageBackgroundLoaderFreeImage()
@@ -88,6 +68,8 @@ void ImageBackgroundLoaderFreeImage::onSuspend()
 
 bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 {
+	TS_ZONE();
+
 	TS_ASSERT(loaderIsPrepared == false && "Loader is already prepared.");
 
 	file::InputFile fileHandle;
@@ -165,7 +147,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 	return true;
 }
 
-void ImageBackgroundLoaderFreeImage::cleanup()
+void ImageBackgroundLoaderFreeImage::cleanup(bool soft)
 {
 // 	TS_WPRINTF("ImageBackgroundLoaderFreeImage::cleanup()  : Task ID %u [%s]\n", taskId, filepath);
 
@@ -203,7 +185,7 @@ void ImageBackgroundLoaderFreeImage::cleanup()
 
 	previousFrame.reset();
 
-	if(stackingRenderTexture)
+	if (stackingRenderTexture)
 	{
 		int32 threadId = (int32)Thread::getCurrentThread().getThreadId();
 		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
@@ -214,8 +196,11 @@ void ImageBackgroundLoaderFreeImage::cleanup()
 		stackingRenderTextureThreadId = -1;
 	}
 
-	loaderIsPrepared = false;
-	loaderIsComplete = false;
+	if (soft == false)
+	{
+		loaderIsPrepared = false;
+		loaderIsComplete = false;
+	}
 
 // 	TS_PRINTF("Cleanup complete.\n");
 }
@@ -223,6 +208,17 @@ void ImageBackgroundLoaderFreeImage::cleanup()
 bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorage)
 {
 	TS_ASSERT(state.bitmap != nullptr);
+
+	imageSize.x = FreeImage_GetWidth(state.bitmap);
+	imageSize.y = FreeImage_GetHeight(state.bitmap);
+
+	SizeType maxSize = sf::Texture::getMaximumSize();
+	if (imageSize.x > maxSize || imageSize.y > maxSize)
+	{
+		TS_LOG_ERROR("Image is too large.");
+		errorText = "Image is too large.";
+		return false;
+	}
 
 	if (FreeImage_GetBPP(state.bitmap) != 32)
 	{
@@ -241,34 +237,30 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 		return false;
 	}
 
-	imageSize.x = FreeImage_GetWidth(state.bitmap);
-	imageSize.y = FreeImage_GetHeight(state.bitmap);
-
-	SizeType maxSize = sf::Texture::getMaximumSize();
-	if (imageSize.x > maxSize || imageSize.y > maxSize)
-	{
-		TS_LOG_ERROR("Image is too large.");
-		errorText = "Image is too large.";
-		return false;
-	}
-
 	imageData.size = imageSize;
 	imageData.hasAlpha = true;
 
+	bool success = false;
+
 	bufferStorage.texture = makeShared<sf::Texture>();
+
 	if (bufferStorage.texture != nullptr && bufferStorage.texture->create(imageSize.x, imageSize.y))
 	{
-		bufferStorage.texture->update(bits);
+		bufferStorage.texture->update(bits, imageSize.x, imageSize.y, 0, 0, sf::Texture::BGRA);
 
-		bufferStorage.texture->setSmooth(true);
-		bufferStorage.texture->generateMipmap();
+		if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+			bufferStorage.texture->generateMipmap();
+
+// 		bufferStorage.texture->setSmooth(true);
 
 		loaderIsComplete = true;
 
-		return true;
+		success = true;
 	}
 
-	return false;
+	cleanup(true);
+	
+	return success;
 }
 
 bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &bufferStorage)
@@ -356,7 +348,7 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 	sf::Texture currentFrame;
 	if (currentFrame.create(frameSize.x, frameSize.y))
 	{
-		currentFrame.update(bits);
+		currentFrame.update(bits, sf::Texture::BGRA);
 
 		if (disposalMethod == DisposalMethod_Previous && previousFrame != nullptr)
 		{

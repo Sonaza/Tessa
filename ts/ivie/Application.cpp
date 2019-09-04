@@ -12,10 +12,8 @@
 #include "ts/ivie/scenes/ImageViewerScene.h"
 #include "ts/ivie/viewer/SupportedFormats.h"
 
-#include "ts/ivie/viewer/BackgroundFileScanner.h"
-#include "ts/ivie/viewer/ViewerStateManager.h"
+#include "ts/ivie/viewer/ViewerManager.h"
 #include "ts/ivie/viewer/image/FreeImageStaticInitializer.h"
-#include "ts/ivie/viewer/image/ImageManager.h"
 
 #include "ts/tessa/string/String.h"
 
@@ -48,41 +46,37 @@ bool Application::start()
 		resource::ResourceManager::setResourceRootDirectory(file::getExecutableDirectory());
 	}
 
-	viewer::ViewerStateManager &vsm = getManager<viewer::ViewerStateManager>();
+	viewer::ViewerManager &viewerManager = getManager<viewer::ViewerManager>();
 
-	String filepath;
-	getCommando().getNthParameter(0, filepath);
-	if (!filepath.isEmpty() && file::exists(filepath) && file::isFile(filepath))
-	{
-		vsm.jumpToImageByFilename(filepath);
-	}
-	else
-	{
-		vsm.jumpToImage(0);
-	}
+	String pathParameter;
+	getCommando().getNthParameter(0, pathParameter);
+
+// 	String workingDirectory = file::isFile(pathParameter) ? file::getDirname(pathParameter) : pathParameter;
+// 	if (workingDirectory.isEmpty())
+// 		workingDirectory = file::joinPaths(file::getWorkingDirectory(), "img");
+
+	viewerManager.setFilepath(pathParameter);
+
+// 	if (!pathParameter.isEmpty() && file::exists(pathParameter) && file::isFile(pathParameter))
+// 	{
+// 		viewerManager.jumpToImageByFilename(pathParameter);
+// 	}
+// 	else
+// 	{
+// 		viewerManager.jumpToImage(0);
+// 	}
 
 	return true;
 }
 
 void Application::stop()
 {
-	BackgroundFileScanner.reset();
+	
 }
 
 bool Application::createApplicationManagers()
 {
-	String workingDirectory;
-	getCommando().getNthParameter(0, workingDirectory);
-
-	workingDirectory = file::isFile(workingDirectory) ? file::getDirname(workingDirectory) : workingDirectory;
-	if (workingDirectory.isEmpty())
-	{
-		workingDirectory = file::joinPaths(file::getWorkingDirectory(), "img");
-	}
-
-	createManagerInstance<viewer::BackgroundFileScanner>(workingDirectory, viewer::SupportedFormats::getSupportedFormatExtensions());
-	createManagerInstance<viewer::ViewerStateManager>();
-	createManagerInstance<viewer::ImageManager>();
+	createManagerInstance<viewer::ViewerManager>();
 
 	return true;
 }
@@ -140,6 +134,8 @@ bool Application::createWindow(system::WindowManager &windowManager)
 
 	windowManager.setWindowIcon(APP_WINDOW_ICON_PATH);
 	windowManager.setVSyncEnabled(vsyncEnabled);
+
+	windowManager.setAcceptDropfiles(true);
 
 // 	sf::RenderWindow &renderwindow = windowManager.getRenderWindow();
 // 	renderwindow.getSystemHandle()

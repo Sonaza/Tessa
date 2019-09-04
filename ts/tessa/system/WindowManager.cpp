@@ -5,7 +5,10 @@
 #include "ts/tessa/resource/ImageResource.h"
 
 #if TS_PLATFORM == TS_WINDOWS
-	#include "ts/tessa/common/IncludeWindows.h"
+
+#include "ts/tessa/common/IncludeWindows.h"
+#include "shellapi.h"
+
 #endif
 
 TS_DEFINE_MANAGER_TYPE(system::WindowManager);
@@ -195,6 +198,15 @@ bool WindowManager::isOpen() const
 	return renderWindow->isOpen();
 }
 
+void WindowManager::setAcceptDropfiles(bool enabled)
+{
+#if TS_PLATFORM == TS_WINDOWS
+	DragAcceptFiles(renderWindow->getSystemHandle(), enabled);
+#else
+	TS_ASSERT(!"Not implemented on this platform.");
+#endif
+}
+
 void WindowManager::setMinMaxSize(const math::VC2U &minSizeParam, const math::VC2U &maxSizeParam)
 {
 	TS_ASSERT(minSizeParam.x <= maxSizeParam.x && minSizeParam.y <= maxSizeParam.y);
@@ -267,6 +279,42 @@ bool WindowManager::systemEventCallback(SystemEventCallbackParams *params)
 			info->ptMaxTrackSize.x = maxSize.x;
 			info->ptMaxTrackSize.y = maxSize.y;
 			return true; // override default
+		}
+		break;
+
+		case WM_DROPFILES:
+		{
+			HDROP hDrop = (HDROP)params->wParam;
+
+			// 0xFFFFFFFF as the second parameter returns the count of files dropped
+			SizeType numFilesDropped = DragQueryFileW(hDrop, 0xFFFFFFFF, 0, 0);
+
+			TS_PRINTF("numFilesDropped %u\n", numFilesDropped);
+			
+			if (filesDroppedSignal.hasConnections())
+			{
+				std::vector<DroppedFile> files;
+
+				wchar_t dropFilename[MAX_PATH];
+				for (SizeType index = 0; index < numFilesDropped; ++index)
+				{
+					if (DragQueryFileW(hDrop, index, dropFilename, MAX_PATH))
+					{
+						POINT dropPoint;
+						memset(&dropPoint, 0, sizeof(dropPoint));
+						DragQueryPoint(hDrop, &dropPoint);
+
+						files.push_back({
+							String(dropFilename),
+							math::VC2I(dropPoint.x, dropPoint.y)
+						});
+					}
+				}
+
+				filesDroppedSignal(files);
+			}
+
+			DragFinish(hDrop);
 		}
 		break;
 

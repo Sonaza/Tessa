@@ -38,7 +38,7 @@ FileList::FileList()
 
 FileList::FileList(const String &pathParam, bool skipDotEntriesParam, FileListStyle styleParam)
 {
-	open(pathParam, skipDotEntries, style);
+	open(pathParam, skipDotEntriesParam, styleParam);
 }
 
 FileList::~FileList()
@@ -48,8 +48,6 @@ FileList::~FileList()
 
 bool FileList::open(const String &pathParam, bool skipDotEntriesParam, FileListStyle styleParam)
 {
-	MutexGuard lock(mutex);
-
 	TS_ASSERT(!pathParam.isEmpty());
 
 	TS_ASSERT(directoryStack.empty() && "FileList is already opened.");
@@ -64,14 +62,13 @@ bool FileList::open(const String &pathParam, bool skipDotEntriesParam, FileListS
 	style = styleParam;
 	skipDotEntries = skipDotEntriesParam;
 
-	directoryStack.push(DirectoryFrame(dir, pathParam));
+	directoryStack.push(DirectoryFrame(dir, directoryPath, ""));
 
 	return true;
 }
 
 void FileList::close()
 {
-	MutexGuard lock(mutex);
 	while (!directoryStack.empty())
 	{
 		_closedir((_DIR*)directoryStack.top().ptr);
@@ -88,8 +85,6 @@ void FileList::close()
 
 bool FileList::next(FileEntry &entry)
 {
-	MutexGuard lock(mutex);
-
 	TS_ASSERT(!directoryStack.empty() && "FileList is not opened.");
 	if (directoryStack.empty() || done == true)
 		return false;
@@ -105,7 +100,7 @@ bool FileList::next(FileEntry &entry)
 		{
 			String filename(ent->d_name);
 
-			String currentPath = depth > 1 ? (frame.rootPath + "/" + filename) : filename;
+			String relativePath = joinPaths(frame.relativePath, filename);
 
 			const bool isDir = (ent->d_type & DT_DIR) > 0;
 			if (isDir == true)
@@ -117,9 +112,12 @@ bool FileList::next(FileEntry &entry)
 				}
 				else if ((style & priv::ListStyleBits_Recursive) > 0)
 				{
-					_DIR *dirPtr = _opendir(currentPath._toString().c_str());
+					String absolutePath = joinPaths(frame.absolutePath, relativePath);
+
+					_DIR *dirPtr = _opendir(absolutePath._toString().c_str());
+					TS_ASSERT(dirPtr != nullptr);
 					if (dirPtr != nullptr)
-						directoryStack.push(DirectoryFrame(dirPtr, currentPath));
+						directoryStack.push(DirectoryFrame(dirPtr, frame.absolutePath, relativePath));
 				}
 
 				if ((style & priv::ListStyleBits_Directories) == 0)
@@ -141,8 +139,8 @@ bool FileList::next(FileEntry &entry)
 				}
 			}
 
-			entry.filepath = std::move(currentPath);
-			entry.rootDirectory = frame.rootPath;
+			entry.filepath = std::move(relativePath);
+			entry.rootDirectory = frame.absolutePath;
 			entry.isDir = isDir;
 			return true;
 		}
@@ -160,7 +158,6 @@ bool FileList::next(FileEntry &entry)
 
 void FileList::rewind()
 {
-	MutexGuard lock(mutex);
 	TS_ASSERT(!directoryStack.empty() && "FileList is not opened.");
 
 	// Close all other directories but the bottom-most
@@ -175,14 +172,11 @@ void FileList::rewind()
 
 bool FileList::isDone() const
 {
-	MutexGuard lock(mutex);
 	return done;
 }
 
 void FileList::setGlobRegex(const String &pattern)
 {
-	MutexGuard lock(mutex);
-
 	GlobRegexType *regex = nullptr;
 	try
 	{

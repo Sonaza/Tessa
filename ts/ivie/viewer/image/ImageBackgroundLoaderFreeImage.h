@@ -38,7 +38,7 @@ protected:
 
 private:
 	bool prepareForLoading();
-	void cleanup();
+	void cleanup(bool soft = false);
 
 	bool processNextStill(FrameStorage &bufferStorage);
 	bool processNextMultiBitmap(FrameStorage &bufferStorage);

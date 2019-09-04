@@ -68,6 +68,8 @@ public:
 	template <class Type>
 	bool writeVariable(const Type &value);
 
+	bool writeString(const char *str);
+	bool writeString(const std::string &str);
 	bool writeString(const String &str);
 	
 	/* Sets file position to given position relative to beginning
@@ -121,9 +123,16 @@ private:
 };
 
 template <>
+TS_FORCEINLINE bool OutputFile::writeVariable<std::string>(const std::string &value)
+{
+	return write(value.c_str(), value.size());
+}
+
+template <>
 TS_FORCEINLINE bool OutputFile::writeVariable<String>(const String &value)
 {
-	return write(value.toUtf8().c_str(), value.toUtf8().size());
+	const std::basic_string<uint8> utf8str = value.toUtf8();
+	return write(utf8str.c_str(), utf8str.size());
 }
 
 template <class Type>

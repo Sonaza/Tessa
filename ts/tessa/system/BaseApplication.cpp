@@ -18,6 +18,8 @@
 
 #include "ts/tessa/system/Gigaton.h"
 
+#include "ts/tessa/profiling/ScopedZoneTimer.h"
+
 TS_PACKAGE1(system)
 
 BaseApplication::BaseApplication(int32 argc, const char **argv)
@@ -217,6 +219,8 @@ void BaseApplication::destroyManagerInstances()
 
 void BaseApplication::mainloop()
 {
+// 	TS_ZONE_NAMED_VARIABLE(baseMainLoop, "Base Main Loop");
+
 	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
 	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "selawk.ttf", true);
 	TS_ASSERT(debugFont != nullptr && debugFont->isLoaded() && "Loading debug font failed.");
@@ -231,6 +235,8 @@ void BaseApplication::mainloop()
 
 	while (applicationRunning)
 	{
+		TS_ZONE_NAMED("Main Loop");
+
 		frameTimer.restart();
 
 		if (pendingScene != nullptr)
@@ -262,20 +268,31 @@ void BaseApplication::mainloop()
 
 		handleEvents();
 
-		deltaAccumulator += deltaTime;
-		while (deltaAccumulator >= fixedDeltaTime)
+		SizeType updates = 0;
+
 		{
-			handleUpdate(fixedDeltaTime);
-			deltaAccumulator -= fixedDeltaTime;
+			TS_ZONE_NAMED("Main Loop Updates");
+			deltaAccumulator += deltaTime;
+			while (deltaAccumulator >= fixedDeltaTime)
+			{
+				handleUpdate(fixedDeltaTime);
+				deltaAccumulator -= fixedDeltaTime;
+				updates++;
+			}
+// 			if (updates > 1)
+// 				TS_PRINTF("Update lagged, catched up by updating %u times\n", updates);
 		}
 
 		handleRendering();
 
-		TimeSpan elapsedFrameTime = frameTimer.getElapsedTime();
-		TimeSpan frameSleep = targetFrameTime - elapsedFrameTime;
-		frameSleep = math::max(4_ms, frameSleep);
-// 		TS_PRINTF("Frame Time %lldms / sleep %lldms\n", elapsedFrameTime.getMilliseconds(), frameSleep.getMilliseconds());
-		Thread::sleep(frameSleep);
+		{
+			TS_ZONE_NAMED("Main Loop Sleep");
+			TimeSpan elapsedFrameTime = frameTimer.getElapsedTime();
+			TimeSpan frameSleep = targetFrameTime - elapsedFrameTime;
+			frameSleep = math::max(2_ms, frameSleep);
+//	 		TS_PRINTF("Frame Time %lldms / sleep %lldms\n", elapsedFrameTime.getMilliseconds(), frameSleep.getMilliseconds());
+			Thread::sleep(frameSleep);
+		}
 
 		frameCounter++;
 		if (framerateClock.getElapsedTime() > 500_ms)
@@ -284,6 +301,8 @@ void BaseApplication::mainloop()
 			currentFramerate = (SizeType)(frameCounter / elapsedTime);
 			frameCounter = 0;
 		}
+
+// 		baseMainLoop.commit();
 	}
 
 	if (currentScene != nullptr)
@@ -294,6 +313,8 @@ void BaseApplication::mainloop()
 
 void BaseApplication::handleEvents()
 {
+	TS_ZONE();
+
 	system::WindowManager &windowManager = getManager<system::WindowManager>();
 	if (!windowManager.isOpen())
 		return;
@@ -318,9 +339,41 @@ void BaseApplication::handleEvents()
 
 			case sf::Event::KeyPressed:
 			{
-				if (event.key.code == sf::Keyboard::Escape)
+				switch (event.key.code)
 				{
-					applicationRunning = false;
+					case sf::Keyboard::Escape:
+					{
+						applicationRunning = false;
+					}
+					break;
+
+					case sf::Keyboard::F9:
+					{
+						showFPS = !showFPS;
+					}
+					break;
+
+					case sf::Keyboard::F10:
+					{
+						bool enabled = !profiling::ZoneProfiler::isEnabled();
+						profiling::ZoneProfiler::setEnabled(enabled);
+
+						TS_PRINTF("Zone profiler is now %s\n", enabled ? "enabled" : "disabled");
+					}
+					break;
+
+					case sf::Keyboard::F11:
+					{
+						if (profiling::ZoneProfiler::isEnabled())
+						{
+							profiling::ZoneProfiler::save("profile.xml");
+						}
+						else
+						{
+							TS_PRINTF("Zone Profiler is not enabled.\n");
+						}
+					}
+					break;
 				}
 			}
 			break;
@@ -338,6 +391,8 @@ void BaseApplication::handleUpdate(const TimeSpan deltaTime)
 
 void BaseApplication::handleRendering()
 {
+	TS_ZONE();
+
 	if (currentScene == nullptr)
 		return;
 	
@@ -356,20 +411,25 @@ void BaseApplication::handleRendering()
 	windowManager.useInterfaceView();
 	currentScene->renderInterface(renderWindow, windowManager.getCurrentView());
 
-	if (debugFont != nullptr && debugFont->isLoaded())
+	if (showFPS && debugFont != nullptr && debugFont->isLoaded())
 	{
-		sf::Text fps;
-		fps.setCharacterSize(20);
-		fps.setFillColor(sf::Color::White);
-		fps.setOutlineColor(sf::Color::Black);
-		fps.setOutlineThickness(1.f);
-		fps.setFont(*debugFont->getResource());
-		fps.setString(TS_FMT("FPS %u", getCurrentFramerate()));
+		sf::Text fps(
+			TS_FMT("FPS %u", getCurrentFramerate()), *debugFont->getResource(), 30
+		);
+		fps.setScale(0.75f, 0.75f);
+// 		fps.setCharacterSize(30);
+// 		fps.setFillColor(sf::Color::White);
+// 		fps.setOutlineColor(sf::Color::Black);
+// 		fps.setOutlineThickness(1.f);
 
+		TS_ZONE_NAMED("FPS Draw");
 		renderWindow.draw(fps);
 	}
 
-	renderWindow.display();
+	{
+		TS_ZONE_NAMED("renderWindow.display");
+		renderWindow.display();
+	}
 }
 
 TS_END_PACKAGE1()

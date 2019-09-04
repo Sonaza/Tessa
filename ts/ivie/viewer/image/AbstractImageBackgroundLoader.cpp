@@ -3,6 +3,8 @@
 
 #include "ts/tessa/thread/Thread.h"
 
+#include "ts/tessa/profiling/ScopedZoneTimer.h"
+
 TS_PACKAGE2(app, viewer)
 
 AbstractImageBackgroundLoader::AbstractImageBackgroundLoader(Image *ownerImage, const String &filepath)
@@ -19,6 +21,8 @@ AbstractImageBackgroundLoader::~AbstractImageBackgroundLoader()
 
 void AbstractImageBackgroundLoader::start(bool suspendAfterBufferFullParam)
 {
+	TS_ZONE();
+
 	TS_ASSERT(loaderState == Inactive);
 	if (loaderState != Inactive)
 		return;
@@ -48,6 +52,8 @@ void AbstractImageBackgroundLoader::stop()
 
 void AbstractImageBackgroundLoader::suspend(bool waitUntilBufferIsFull)
 {
+	TS_ZONE();
+
 	if (loaderState != Running)
 		return;
 
@@ -68,6 +74,8 @@ void AbstractImageBackgroundLoader::suspend(bool waitUntilBufferIsFull)
 
 void AbstractImageBackgroundLoader::resume()
 {
+	TS_ZONE();
+
 	TS_ASSERT(loaderState == Suspended);
 	if (loaderState == Suspended)
 	{
@@ -96,6 +104,8 @@ bool AbstractImageBackgroundLoader::isLoadingComplete() const
 
 void AbstractImageBackgroundLoader::entry()
 {
+	TS_ZONE();
+
 	{
 		MutexGuard lock(mutex);
 		if (loaderState == Uninitialized)
@@ -122,6 +132,7 @@ void AbstractImageBackgroundLoader::entry()
 		else
 		{
 			TS_ASSERT(!"This shouldn't ever happen.");
+			return;
 		}
 	}
 
@@ -136,7 +147,7 @@ void AbstractImageBackgroundLoader::entry()
 
 	while (loaderState == Running)
 	{
-		while (!ownerImage->getIsBufferFull() && !ownerImage->isUnloading() && loaderState == Running)
+		while (!ownerImage->getIsBufferFull() && loaderState == Running)
 		{
 			nextFrameRequested = false;
 
@@ -149,6 +160,8 @@ void AbstractImageBackgroundLoader::entry()
 			FrameStorage *storage = ownerImage->getNextBuffer();
 			if (storage != nullptr)
 			{
+				TS_ZONE_NAMED("loadNextFrame");
+
 				bool success = loadNextFrame(*storage);
 				if (success)
 				{

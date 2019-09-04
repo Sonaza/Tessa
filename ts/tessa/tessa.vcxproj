@@ -173,6 +173,7 @@
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
+    <ClCompile Include="math\Vec2.cpp" />
     <ClCompile Include="resource\ImageResource.cpp" />
     <ClCompile Include="string\String.cpp" />
     <ClCompile Include="string\StringUtils.cpp" />
@@ -185,7 +186,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="profiling\SimpleScopedZoneTimer.cpp" />
+    <ClCompile Include="profiling\ScopedZoneTimer.cpp" />
     <ClCompile Include="renderer\GpuPreference.cpp" />
     <ClCompile Include="resource\AbstractResourceBase.cpp" />
     <ClCompile Include="resource\ArchivistInputStream.cpp" />
@@ -218,7 +219,6 @@
     <ClInclude Include="file\ArchivistCommon.h" />
     <ClInclude Include="file\FileEntry.h" />
     <ClInclude Include="file\FileList.h" />
-    <ClInclude Include="file\FileListStyle.h" />
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
     <ClInclude Include="file\OutputFile.h" />
@@ -233,7 +233,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="math\CRC.h" />
     <ClInclude Include="net\Address.h" />
-    <ClInclude Include="profiling\SimpleScopedZoneTimer.h" />
+    <ClInclude Include="profiling\ScopedZoneTimer.h" />
     <ClInclude Include="resource\ArchivistInputStream.h" />
     <ClInclude Include="resource\MusicResource.h" />
     <ClInclude Include="resource\ResourceBase.inl">

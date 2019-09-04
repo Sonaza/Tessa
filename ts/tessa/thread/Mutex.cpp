@@ -4,6 +4,8 @@
 #include "ts/tessa/thread/CurrentThread.h"
 #include "ts/tessa/lang/CallStack.h"
 
+#include "ts/tessa/profiling/ScopedZoneTimer.h"
+
 #if TS_MUTEX_PROFILING == TS_TRUE
 #pragma optimize("", off)
 #endif
@@ -22,6 +24,8 @@ Mutex::~Mutex()
 
 void Mutex::lock(const char *debugInfo)
 {
+	TS_ZONE();
+
 #if TS_MUTEX_PROFILING == TS_TRUE
 	SizeType previousOwner = owner;
 	std::string previousOwnerDebugInfo = ownerDebugInfo;
@@ -31,6 +35,8 @@ void Mutex::lock(const char *debugInfo)
 	Time start = Time::now();
 #endif
 
+	TS_ASSERT(owner != CurrentThread::getThreadId() && "Same thread trying to lock again.");
+
 	mutex.lock();
 	owner = CurrentThread::getThreadId();
 
@@ -39,9 +45,9 @@ void Mutex::lock(const char *debugInfo)
 	if (previousOwner != InvalidOwner)
 	{
 		TimeSpan blockedTime = (Time::now() - start);
-		if (blockedTime.getMilliseconds() >= 50)
+		if (blockedTime.getMilliseconds() >= 10)
 		{
-			TS_PRINTF("\n-----------\n  Mutex locking was blocked for %s\n", blockedTime.getAsString());
+			TS_PRINTF("Mutex locking was blocked for %s\n", blockedTime.getAsString());
 		}
 
 // 		if (blockedTime.getMilliseconds() >= 250)

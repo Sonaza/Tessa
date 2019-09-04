@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ts/tessa/time/Time.h"
+
 #if TS_PLATFORM == TS_WINDOWS
 	#define TS_SYSTEM_PATH_DELIMITER '\\'
 #elif TS_PLATFORM == TS_LINUX
@@ -35,8 +37,8 @@ extern String joinPaths(const String &left, const String &right, string::Charact
  */
 extern String normalizePath(const String &path, string::Character delimiter = TS_SYSTEM_PATH_DELIMITER);
 
-/* Returns the directory path without file name.
- * Simply removes everything past the last path delimiter (does not confirm if path was a file or a directory).
+/* Returns the directory path without file name. First checks if the path is a directory,
+ * if it isn't then it simply removes everything past the last path delimiter.
  */
 extern String getDirname(const String &path, const String &delimiters = TS_ALL_PATH_DELIMITERS);
 
@@ -65,6 +67,8 @@ extern bool isDirectory(const String &path);
 /* Attempts to remove the given file and returns true if the operation was successful.
  */
 extern bool removeFile(const String &path);
+
+extern bool getFileModifiedTime(const String &path, int64 &modifiedTime);
 
 /* Returns the base directory path where the current executable is located.
  */

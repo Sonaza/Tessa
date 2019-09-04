@@ -5,6 +5,8 @@
 #include "ts/tessa/file/ArchivistFilesystem.h"
 #include "ts/tessa/resource/ArchivistInputStream.h"
 
+#include "ts/tessa/profiling/ScopedZoneTimer.h"
+
 TS_DEFINE_RESOURCE_TYPE(resource::FontResource);
 
 TS_PACKAGE1(resource)
@@ -62,6 +64,30 @@ bool FontResource::loadResourceImpl()
 
 		return false;
 	})();
+
+	if (success)
+	{
+		TS_ASSERT(resource != nullptr);
+		TS_ZONE_NAMED("Font glyph preload");
+
+		struct Range
+		{
+			uint32 start;
+			uint32 end;
+		};
+		std::vector<Range> preload = 
+		{
+			{ 0x20, 0x7E }, // Ascii 32-126 range
+		};
+
+		for (const Range &range : preload)
+		{
+			for (uint32 codepoint = range.start; codepoint <= range.end; ++codepoint)
+			{
+				resource->getGlyph(codepoint, 30, false, 0.f);
+			}
+		}
+	}
 
 	return success;
 }

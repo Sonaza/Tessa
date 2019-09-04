@@ -69,10 +69,7 @@ bool OutputFile::open(const String &filepath, OutputFileMode modeParam)
 
 	// Not appending so seek back to start
 	if ((modeParam & priv::Out_ModeAppend) == 0)
-	{
-		int asd = fseek(file, 0, SEEK_SET);
-		TS_PRINTF("seek %d\n", asd);
-	}
+		fseek(file, 0, SEEK_SET);
 
 	filePtr = file;
 	return true;
@@ -113,6 +110,16 @@ bool OutputFile::write(const char *inBuffer, BigSizeType size)
 bool OutputFile::write(const unsigned char *inBuffer, BigSizeType size)
 {
 	return write(reinterpret_cast<const char*>(inBuffer), size);
+}
+
+bool OutputFile::writeString(const char *str)
+{
+	return write(str, std::strlen(str));
+}
+
+bool OutputFile::writeString(const std::string &str)
+{
+	return writeVariable(str);
 }
 
 bool OutputFile::writeString(const String &str)

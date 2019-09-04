@@ -10,7 +10,7 @@ class Time
 {
 	friend class TimeSpan;
 public:
-	typedef std::chrono::system_clock system_clock;
+// 	typedef std::chrono::system_clock system_clock;
 	typedef std::chrono::high_resolution_clock highres_clock;
 
 	typedef highres_clock::time_point internal_time_point;

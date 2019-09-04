@@ -53,6 +53,8 @@ public:
 
 	// Vector dot product
 	float dot(const Vec2 &right);
+
+	String toString() const;
 };
 
 template <class T>
@@ -129,5 +131,25 @@ const Vec2<int32> Vec2<int32>::right(1, 0);
 const Vec2<uint32> Vec2<uint32>::zero(0, 0);
 const Vec2<uint32> Vec2<uint32>::up(0, 1);
 const Vec2<uint32> Vec2<uint32>::right(1, 0);
+
+template<class T>
+String Vec2<T>::toString() const
+{
+	return String().format("({}, {})", x, y);
+}
+
+template<class T>
+std::basic_ostream<char> &operator<<(std::basic_ostream<char> &strm, const Vec2<T> &vec)
+{
+	strm << vec.toString();
+	return strm;
+}
+
+template<class T>
+std::basic_ostream<wchar_t> &operator<<(std::basic_ostream<wchar_t> &strm, const Vec2<T> &vec)
+{
+	strm << vec.toString();
+	return strm;
+}
 
 TS_END_PACKAGE1()

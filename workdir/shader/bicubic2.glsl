@@ -71,28 +71,30 @@ void main()
 	// make sure all taps added together is exactly 1.0, otherwise some
 	// (very small) distortion can occur
 	linetaps /= 
-	linetaps.r +
-	linetaps.g +
-	linetaps.b +
-	linetaps.a;
+		linetaps.r +
+		linetaps.g +
+		linetaps.b +
+		linetaps.a;
+	
 	columntaps /=
-	columntaps.r +
-	columntaps.g +
-	columntaps.b +
-	columntaps.a;
+		columntaps.r +
+		columntaps.g +
+		columntaps.b +
+		columntaps.a;
 
 	vec2 xystart = (-1.5 - f) * stepxy + pos;
 	vec4 xpos = vec4(
-	xystart.x,
-	xystart.x + stepxy.x,
-	xystart.x + stepxy.x * 2.0,
-	xystart.x + stepxy.x * 3.0);
+		xystart.x,
+		xystart.x + stepxy.x,
+		xystart.x + stepxy.x * 2.0,
+		xystart.x + stepxy.x * 3.0
+	);
 
 	gl_FragColor.rgb =
-	line(xystart.y                 , xpos, linetaps) * columntaps.r +
-	line(xystart.y + stepxy.y      , xpos, linetaps) * columntaps.g +
-	line(xystart.y + stepxy.y * 2.0, xpos, linetaps) * columntaps.b +
-	line(xystart.y + stepxy.y * 3.0, xpos, linetaps) * columntaps.a;
+		line(xystart.y                 , xpos, linetaps) * columntaps.r +
+		line(xystart.y + stepxy.y      , xpos, linetaps) * columntaps.g +
+		line(xystart.y + stepxy.y * 2.0, xpos, linetaps) * columntaps.b +
+		line(xystart.y + stepxy.y * 3.0, xpos, linetaps) * columntaps.a;
 
 	gl_FragColor.a = 1.0;
 }

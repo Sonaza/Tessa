@@ -6,6 +6,12 @@
 
 TS_PACKAGE1(system)
 
+struct DroppedFile
+{
+	String filepath;
+	math::VC2I point;
+};
+
 struct SystemEventCallbackParams;
 
 class WindowManager : public system::AbstractManagerBase
@@ -42,6 +48,7 @@ public:
 	bool isOpen() const;
 	bool isInFocus() const;
 
+	void setAcceptDropfiles(bool enabled);
 	void setMinMaxSize(const math::VC2U &minSize, const math::VC2U &maxSize = math::VC2U(50000, 50000));
 	math::VC2U getSize() const;
 
@@ -56,8 +63,11 @@ public:
 
 	std::vector<math::VC2U> getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize = math::VC2U::zero);
 
+
 	lang::Signal<const math::VC2U &> screenSizeChangedSignal;
 	lang::Signal<WindowState> windowStateChangedSignal;
+
+	lang::Signal<const std::vector<DroppedFile> &> filesDroppedSignal;
 
 private:
 	class SystemEventCallbackWrapper;

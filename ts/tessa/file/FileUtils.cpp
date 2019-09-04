@@ -147,10 +147,14 @@ extern String normalizePath(const String &path, string::Character delimiter)
 
 extern String getDirname(const String &path, const String &delimiters)
 {
+	if (isDirectory(path))
+		return path;
+
 	BigSizeType pos = path.findLastOf(delimiters, String::InvalidPos);
 	if (pos != String::InvalidPos)
 		return path.substring(0, pos);
-	return String();
+
+	return path;
 }
 
 extern String getBasename(const String &path, bool stripExtension, const String &delimiters)
@@ -215,6 +219,34 @@ extern bool removeFile(const String &path)
 		return true;
 	TS_LOG_ERROR("Unable to remove file or directory. File: %s. Error: %s", path, strerror(errno));
 #endif
+	return false;
+}
+
+extern bool getFileModifiedTime(const String &path, int64 &modifiedTime)
+{
+	const int64 UNIX_TIME_START = 0x019DB1DED53E8000; // January 1, 1970 (start of Unix epoch) in "ticks"
+	const int64 TICKS_PER_SECOND = 10000000;          // a tick is 100ns
+
+	HANDLE hFile = CreateFileW(
+		path.toWideString().c_str(),
+		GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+	if (hFile == nullptr)
+		return false;
+
+// 	SYSTEMTIME stUTC, stLocal;
+	FILETIME writeTime;
+	if (GetFileTime(hFile, nullptr, nullptr, &writeTime))
+	{
+		LARGE_INTEGER li;
+		li.LowPart = writeTime.dwLowDateTime;
+		li.HighPart = writeTime.dwHighDateTime;
+
+		modifiedTime = (li.QuadPart - UNIX_TIME_START) / TICKS_PER_SECOND;
+
+		return true;
+	}
+
 	return false;
 }
 

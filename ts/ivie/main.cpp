@@ -8,23 +8,15 @@
 #include <fmt/printf.h>
 #pragma warning( pop )
 
-#include "ts/tessa/file/InputFile.h"
+#include "ts/tessa/time/Time.h"
+#include "ts/tessa/time/TimeSpan.h"
 
 using namespace ts;
 
 int asdfasd()
 {
-// 	std::locale locale;
-// // 	locale.
-// 
-// 	wchar_t input = L'ä';
-// 
-// 	// Get the facet of the locale which deals with character conversion
-// 	const std::ctype<wchar_t>& facet = std::use_facet< std::ctype<wchar_t> >(locale);
-
-	// Use the facet to convert each character of the input string
-// 	uint32 widened = static_cast<uint32>(facet.widen(input));
-// 	(void)widened;
+	Time t = Time::now();
+	TS_PRINTF("%s", t.fromEpoch().getAsString());
 
 	return 1;
 }

@@ -279,9 +279,8 @@ String &String::format(const std::string &formatStr, const Args&... args)
 	{
 		TS_UNUSED_VARIABLE(e);
 		TS_ASSERTF(false, "String formatting error: %s", e.what());
+		*this = String("<formatting error>");
 	}
-	*this = String("<formatting error>");
-
 	return *this;
 }
 
@@ -296,9 +295,8 @@ String &String::format(const std::wstring &formatStr, const Args&... args)
 	{
 		TS_UNUSED_VARIABLE(e);
 		TS_ASSERTF(false, "String formatting error: %s", e.what());
+		*this = String("<formatting error>");
 	}
-	*this = String("<formatting error>");
-
 	return *this;
 }
 

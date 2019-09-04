@@ -7,6 +7,8 @@
 #include "ts/ivie/viewer/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
+#include "ts/tessa/profiling/ScopedZoneTimer.h"
+
 #define HAVE_STDINT_H 1
 #include "nestegg/nestegg.h"
 #include "vpx/vpx_decoder.h"
@@ -99,7 +101,7 @@ void nestegg_log_callback(nestegg *context, unsigned int severity, char const* f
 ImageBackgroundLoaderWebm::ImageBackgroundLoaderWebm(Image *ownerImage, const String &filepath)
 	: AbstractImageBackgroundLoader(ownerImage, filepath)
 {
-	
+	TS_ZONE();
 }
 
 ImageBackgroundLoaderWebm::~ImageBackgroundLoaderWebm()
@@ -129,6 +131,8 @@ void ImageBackgroundLoaderWebm::onSuspend()
 
 bool ImageBackgroundLoaderWebm::prepareForLoading()
 {
+	TS_ZONE();
+
 	TS_ASSERT(loaderIsPrepared == false && "Loader is already prepared.");
 
 	if (!fileHandle.open(filepath, file::InputFileMode_ReadBinary))

@@ -28,9 +28,6 @@ protected:
 	virtual bool createWindow(system::WindowManager &windowManager);
 	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem);
 
-private:
-	ScopedPointer<viewer::BackgroundFileScanner> BackgroundFileScanner;
-
 };
 
 TS_END_PACKAGE1()

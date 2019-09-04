@@ -82,6 +82,7 @@ private:
 	std::vector<std::type_index> managerInstancingOrder;
 
 	bool applicationRunning = true;
+	bool showFPS = true;
 	
 	system::Gigaton &gigaton;
 

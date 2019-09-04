@@ -24,11 +24,8 @@ public:
 	Image(const String &filepath);
 	~Image();
 
-
 	bool startLoading(bool suspendAfterBufferFull);
 	void unload();
-
-	bool reload();
 
 	void restart(bool suspend);
 	void suspendLoader();
@@ -46,7 +43,7 @@ public:
 
 	const FrameStorage *getCurrentFrameStorage() const;
 
-	SharedPointer<sf::Shader> getDisplayShader(const float apparentScale);
+	SharedPointer<sf::Shader> getDisplayShader(const math::VC2 &apparentSize, bool useAlphaChecker);
 
 	SizeType getCurrentFrameIndex() const;
 	SizeType getNumFramesTotal() const;

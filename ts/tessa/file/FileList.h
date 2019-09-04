@@ -3,7 +3,6 @@
 #include "ts/tessa/thread/Mutex.h"
 #include "ts/tessa/thread/MutexGuard.h"
 #include "ts/tessa/file/FileEntry.h"
-#include "ts/tessa/file/FileListStyle.h"
 
 #include <string>
 #include <vector>
@@ -11,6 +10,31 @@
 #include <regex>
 
 TS_PACKAGE1(file)
+
+namespace priv 
+{
+
+enum FileListStyleBits
+{
+	ListStyleBits_Files       = (1 << 0),
+	ListStyleBits_Directories = (1 << 1),
+	ListStyleBits_Recursive   = (1 << 2),
+};
+
+}
+
+enum FileListStyle : uint8
+{
+	FileListStyle_Directories           = priv::ListStyleBits_Directories,
+	FileListStyle_Directories_Recursive = FileListStyle_Directories | priv::ListStyleBits_Recursive,
+
+	FileListStyle_Files                 = priv::ListStyleBits_Files,
+	FileListStyle_Files_Recursive       = FileListStyle_Files | priv::ListStyleBits_Recursive,
+
+	FileListStyle_All                   = FileListStyle_Files | FileListStyle_Directories,
+	FileListStyle_All_Recursive         = FileListStyle_All | priv::ListStyleBits_Recursive,
+
+};
 
 class FileList : public lang::Noncopyable
 {
@@ -31,16 +55,18 @@ public:
 	std::vector<FileEntry> getFullListing();
 
 private:
-	mutable Mutex mutex;
-
 	// Storing as void pointer to avoid having to include dirent.h in header
 	struct DirectoryFrame
 	{
-		DirectoryFrame(void *ptr, const String &path)
-			: ptr(ptr), rootPath(std::move(path)) {}
+		DirectoryFrame(void *ptr, const String &absolutePath, const String &relativePath)
+			: ptr(ptr)
+			, absolutePath(std::move(absolutePath))
+			, relativePath(std::move(relativePath))
+		{}
 
 		void *ptr = nullptr;
-		String rootPath;
+		String absolutePath;
+		String relativePath;
 	};
 	std::stack<DirectoryFrame> directoryStack;
 	

@@ -24,9 +24,9 @@ TS_PACKAGE1(common)
 class CustomLoggerBuffer : public std::streambuf
 {
 public:
-	CustomLoggerBuffer(const std::string &messageTag, bool assertOnError)
-		: _messageTag(messageTag)
-		, assertOnError(assertOnError)
+	CustomLoggerBuffer(const std::string &messageTag, bool assertOnOutput)
+		: messageTag(messageTag)
+		, assertOnOutput(assertOnOutput)
 	{
 		memset(&_buffer[0], 0, _buffer.size());
 		char *base = &_buffer[0];
@@ -54,25 +54,26 @@ protected:
 
 			string::trimWhitespace(str);
 
-			std::string message = TS_FMT("[%s] %s\n", _messageTag, str);
+			std::string message = TS_FMT("[%s] %s\n", messageTag, str);
 			TS_PRINTF(message);
-			TS_ASSERTF(!assertOnError, message.c_str());
+
+			TS_ASSERTF(!assertOnOutput, message.c_str());
 		}
 		return 0;
 	}
 
 private:
-	enum { BUFFER_MAX_SIZE = 1024, };
+	static const BigSizeType BUFFER_MAX_SIZE = 1024;
 	std::array<char, BUFFER_MAX_SIZE> _buffer;
-	std::string _messageTag;
-	bool assertOnError = false;
+	std::string messageTag;
+	bool assertOnOutput = false;
 };
 
 class CustomLoggerOutputStream : public std::ostream, private virtual CustomLoggerBuffer
 {
 public:
-	CustomLoggerOutputStream(const std::string &messageTag, bool assertOnError)
-		: CustomLoggerBuffer(messageTag, assertOnError)
+	CustomLoggerOutputStream(const std::string &messageTag, bool assertOnOutput)
+		: CustomLoggerBuffer(messageTag, assertOnOutput)
 		, std::ostream(static_cast<std::streambuf*>(this))
 	{
 		flags(std::ios_base::unitbuf);

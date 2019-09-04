@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#define TS_MUTEX_PROFILING TS_FALSE
+#define TS_MUTEX_PROFILING TS_TRUE
 
 #if TS_MUTEX_PROFILING == TS_TRUE
 	#include "ts/tessa/time/Time.h"

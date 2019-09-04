@@ -37,9 +37,6 @@
     <ClCompile Include="viewer\SupportedFormats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="viewer\ViewerStateManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="viewer\image\Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -52,12 +49,6 @@
     <ClCompile Include="viewer\image\ImageBackgroundLoaderFreeImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="viewer\image\ImageManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="viewer\BackgroundFileScanner.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="util\RingBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -65,6 +56,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="viewer\image\ImageBackgroundLoaderWebm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="viewer\ViewerManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -87,9 +81,6 @@
     <ClInclude Include="viewer\SupportedFormats.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="viewer\ViewerStateManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="viewer\image\Image.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -99,13 +90,7 @@
     <ClInclude Include="viewer\image\ImageBackgroundLoaderFreeImage.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="viewer\image\ImageManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="viewer\image\FreeImageStaticInitializer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="viewer\BackgroundFileScanner.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="util\RingBuffer.h">
@@ -118,6 +103,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="viewer\image\ImageBackgroundLoaderWebm.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\ViewerManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
