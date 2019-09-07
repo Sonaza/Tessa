@@ -399,8 +399,6 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool ensureIndex)
 		filelistChangedSignal((SizeType)currentFileList.size());
 	}
 
-	Thread::sleep(5000_ms);
-
 	return true;
 }
 
