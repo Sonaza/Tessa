@@ -321,6 +321,7 @@ bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
 		lock.unlock();
 		taskIt->second->waitForCompletion();
 		lock.lock();
+
 		tryEraseFromQueue();
 	}
 
@@ -344,14 +345,7 @@ void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
 	}
 
 	if (task != nullptr)
-	{
 		task->waitForCompletion();
-// 		TS_PRINTF("Task ID %u complete...\n", taskId);
-	}
-	else
-	{
-// 		TS_PRINTF("Task ID %u was found but is somehow null...\n", taskId);
-	}
 }
 
 SchedulerTaskId ThreadScheduler::scheduleThreadEntry(AbstractThreadEntry *entry, TaskPriority priority, TimeSpan time_from_now)
@@ -360,27 +354,8 @@ SchedulerTaskId ThreadScheduler::scheduleThreadEntry(AbstractThreadEntry *entry,
 
 	ScheduledTaskFuture<void> future = scheduleOnce(priority, time_from_now, [=]()
 	{
-// 		TS_LOG_DEBUG("Entered scheduleThreadEntry task (%s)", entry->getDebugString());
 		entry->entry();
-// 		TS_LOG_DEBUG("Exiting scheduleThreadEntry task (%s)", entry->getDebugString());
 	});
-
-// #if TS_BUILD != TS_FINALRELEASE
-// 	{
-// 		MutexGuard lock(queueMutex);
-// 		Time now = Time::now();
-// 		TS_PRINTF("waitingTaskQueue (%llu tasks):\n", waitingTaskQueue.size());
-// 		for (auto &it : waitingTaskQueue)
-// 		{
-// 			TS_PRINTF("  ID %u : priority %d / time %lld ms\n",
-// 				it->taskId,
-// 				it->priority,
-// 				(it->scheduledTime - now).getMilliseconds()
-// 			);
-// 		}
-// 		TS_PRINTF("\n");
-// 	}
-// #endif
 
 	return future.getTaskId();
 }

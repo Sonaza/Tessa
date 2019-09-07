@@ -3,6 +3,7 @@
 
 #include "ts/tessa/file/OutputFile.h"
 #include "ts/tessa/system/BaseApplication.h"
+#include "ts/tessa/system/WindowManager.h"
 #include "ts/tessa/system/WindowViewManager.h"
 #include "ts/tessa/thread/CurrentThread.h"
 #include "ts/tessa/thread/Thread.h"
@@ -59,6 +60,8 @@ public:
 
 	bool handleEvent(const sf::Event &event)
 	{
+		const system::WindowView &view = windowManager->getInterfaceView();
+
 		switch (event.type)
 		{
 			case sf::Event::MouseMoved:
@@ -70,8 +73,8 @@ public:
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
 					displayOffset += delta;
-					displayOffset.x = math::max(0.f, displayOffset.x);
-					displayOffset.y = math::max(0.f, displayOffset.y);
+					displayOffset.x = math::clamp(displayOffset.x, 0.f, baseStartTime / timescale - view.size.x);
+					displayOffset.y = math::min(0.f, displayOffset.y);
 				}
 			}
 			break;
@@ -79,10 +82,18 @@ public:
 			case sf::Event::MouseWheelScrolled:
 			{
 				float delta = event.mouseWheelScroll.delta;
-				timescale = math::clamp(timescale - delta * math::max(0.05f, (timescale / 30.f)), 0.01f, 500.f);
 
-				displayOffset.x += delta * 50.f;
-				displayOffset.x = math::max(0.f, displayOffset.x);
+				float lastTimeScale = timescale;
+				timescale = math::clamp(timescale - delta * math::max(0.1f, (timescale / 20.f)), 0.01f, 1500.f);
+				
+				float diff = lastTimeScale - timescale;
+
+				TS_PRINTF("Time scale  %0.2f\n", timescale);
+				TS_PRINTF("Scale diff  %0.2f\n", diff);
+
+// 				displayOffset.x += delta * diff * view.size.x * 0.5f;
+// 				displayOffset.x = math::clamp(displayOffset.x, 0.f, baseStartTime / timescale);
+// 				TS_PRINTF("Offset      %0.2f\n", displayOffset.x);
 			}
 			break;
 
@@ -103,8 +114,10 @@ public:
 		return false;
 	}
 
-	float timescale = 35.f;
+	float timescale = 8.0f;
 	math::VC2 displayOffset;
+
+	int64 baseStartTime = 0;
 
 	void render(sf::RenderTarget &renderTarget, const system::WindowView &view)
 	{
@@ -118,13 +131,17 @@ public:
 
 		static ZoneProfiler &profiler = ZoneProfiler::get();
 
-		sf::Text threadText("", *debugFont, 16);
+		// Skedaddle if main thread doesn't have data
+		if (profiler.storage.count(0) == 0)
+			return;
+
+		sf::Text threadText("", *debugFont, 15);
 		threadText.setOutlineThickness(1.f);
 
 		sf::VertexArray bars;
 
 		static const float margin = 3.f;
-		static const float height = 25.f;
+		static const float height = 20.f;
 
 		struct Label
 		{
@@ -134,21 +151,45 @@ public:
 		std::vector<Label> labels;
 
 		float offsetAccumulator = 0;
-		PosType startTimeLimit = 0;
+		int64 startTimeLimit = 0;
+		float timeDisplayOffset = 0.f;
 
-		EventStackCollectionStorage::const_iterator storageIter = profiler.storage.begin();
+		baseStartTime = profiler.storage[0].back().front().start;
+
+		struct HoverInfo
+		{
+			HoverInfo() = default;
+			HoverInfo(SizeType threadId, String threadName, int64 frameIndex, const ZoneFrame *frame, const ZoneEvent *event)
+				: threadId(threadId)
+				, threadName(threadName)
+				, frameIndex(frameIndex)
+				, frame(frame)
+				, event(event)
+			{
+			}
+
+			SizeType threadId = 0;
+			String threadName;
+			int64 frameIndex = 0;
+			const ZoneFrame *frame = nullptr;
+			const ZoneEvent *event = nullptr;
+
+			bool isValid() const { return frame != nullptr && event != nullptr; }
+		};
+		HoverInfo hoverInfo;
+
+		ZoneFrameCollectionStorage::const_iterator storageIter = profiler.storage.begin();
 		for (; storageIter != profiler.storage.end(); ++storageIter)
 		{
 			const SizeType threadId = storageIter->first;
-			if (threadId != 0)
-				continue;
+// 			if (threadId != 0) continue;
 
 			threadText.setString(TS_FMT(
 				"Thread #%u (%s)",
 				threadId, profiler.threadNames[threadId]
 			));
 
-			const math::VC2 basePosition(view.size.x, 50.f + threadId * 220.f + height);
+			const math::VC2 basePosition(view.size.x, 50.f + threadId * 220.f + height + displayOffset.y);
 
 			threadText.setPosition(
 				50.f,
@@ -156,24 +197,21 @@ public:
 
 			renderTarget.draw(threadText);
 
-			math::VC2 positionOffset(0.f, 0.f);
-
-			const EventStackCollection &collection = storageIter->second;
-// 			int64 firstStartTime = collection.back().front().start;
+			const ZoneFrameCollection &collection = storageIter->second;
 
 			if (threadId == 0)
 			{
-				EventStackCollection::const_reverse_iterator frameIter = collection.rbegin();
+				ZoneFrameCollection::const_reverse_iterator frameIter = collection.rbegin();
 				for (; frameIter != collection.rend(); ++frameIter)
 				{
-					const EventList &events = *frameIter;
-					float frameBaseWidth = events.front().elapsed / timescale;
+					const ZoneFrame &frame = *frameIter;
+					float frameBaseWidth = frame.front().elapsed / timescale;
 
 					if (offsetAccumulator + frameBaseWidth >= displayOffset.x)
 					{
-						startTimeLimit = events.front().start;
+						startTimeLimit = frame.front().start;
 
-						positionOffset.x = displayOffset.x - offsetAccumulator;
+						timeDisplayOffset = displayOffset.x - offsetAccumulator;
 
 						break;
 					}
@@ -182,21 +220,29 @@ public:
 				}
 			}
 
-			EventStackCollection::const_reverse_iterator frameIter = collection.rbegin();
+			ZoneFrameCollection::const_reverse_iterator frameIter = collection.rbegin();
 			for (; frameIter != collection.rend(); ++frameIter)
 			{
-				const EventList &events = *frameIter;
+				const ZoneFrame &frame = *frameIter;
+				PosType frameIndex = std::distance(collection.begin(), frameIter.base());
+				PosType frameIndexInverted = std::distance(collection.rbegin(), frameIter);
 
-				int64 startTime = events.front().start;
-				if (startTime > startTimeLimit)
+				int64 startTime = math::max<int64>(0, frame.front().start);
+
+				int64 absoluteTimeDiff = baseStartTime - startTime;
+				float absoluteOffsetX = -(absoluteTimeDiff / timescale) + displayOffset.x;
+
+				if (absoluteOffsetX > 0.f)
 					continue;
 
-				PosType frameIndex = std::distance(collection.begin(), frameIter.base());
+				float frameBaseWidth = frame.front().elapsed / timescale;
+				
+				if (math::abs(absoluteOffsetX) - frameBaseWidth >= view.size.x)
+					break;
 
-				float frameBaseWidth = events.front().elapsed / timescale;
-				positionOffset.x -= frameBaseWidth + margin;
+				math::VC2 positionOffset(absoluteOffsetX, 0.f);
 
-// 				if (frameBaseWidth >= 6.f)
+				if (frameBaseWidth >= 5.f)
 				{
 					labels.push_back({
 						math::FloatRect(basePosition + positionOffset, math::VC2(frameBaseWidth, 20.f), math::Rect_PositionAndSize),
@@ -204,24 +250,25 @@ public:
 					});
 				}
 
-				for (EventList::const_iterator eventsIter = events.begin(); eventsIter != events.end(); ++eventsIter)
+				for (ZoneFrame::const_iterator eventIter = frame.begin(); eventIter != frame.end(); ++eventIter)
 				{
-					const EventFrame &frame = *eventsIter;
+					const ZoneEvent &event = *eventIter;
 
-					float offsetX = (frame.level == 0 ? 0 : frame.start) / timescale;
-					float frameWidth = math::max(1.f, frame.elapsed / timescale - margin);
+					float offsetX = (event.level == 0 ? 0 : event.start) / timescale;
+					float frameWidth = math::max(2.f, event.elapsed / timescale - margin);
 
-					math::VC2 pos = math::VC2(basePosition + positionOffset)
-						+ math::VC2(offsetX, (frame.level + 1.f) * (height + margin));
+					math::VC2 pos = basePosition + positionOffset
+						+ math::VC2(offsetX, (event.level + 1.f) * (height + margin));
 
 					math::VC2 size = math::VC2(frameWidth, height);
 
 					math::FloatRect rect(pos, size, math::Rect_PositionAndSize);
 
-					sf::Color color = frame.level < colors.size() ? colors[frame.level] : sf::Color::Magenta;
+					sf::Color color = event.level < colors.size() ? colors[event.level] : sf::Color::Magenta;
 					if (rect.isPointWithin(mousePosition))
 					{
 						color += sf::Color(30, 30, 30);
+						hoverInfo = { threadId, profiler.threadNames[threadId], frameIndex, &frame, &event };
 					}
 
 					addRectangle(
@@ -234,13 +281,10 @@ public:
 					{
 						labels.push_back({
 							rect,
-							frame.name
+							event.name
 						});
 					}
 				}
-
-				if (math::abs(positionOffset.x) >= view.size.x)
-					break;
 			}
 
 		}
@@ -257,6 +301,41 @@ public:
 			clipShader.setUniform("u_size", lbl.rect.getSize());
 
 			renderTarget.draw(threadText, &clipShader);
+		}
+
+		if (hoverInfo.isValid())
+		{
+			int64 startTime = hoverInfo.event->start + (hoverInfo.event->level > 0 ? hoverInfo.frame->front().start : 0);
+			TimeSpan start = TimeSpan::fromMicroseconds(startTime);
+			TimeSpan elapsed = TimeSpan::fromMicroseconds(hoverInfo.event->elapsed);
+
+			threadText.setString(TS_FMT(
+				"Thread #%u (%s) - Frame %lld\n"
+				"%s\n"
+				"Start     : %s\n"
+				"Elapsed : %s"
+				,
+				hoverInfo.threadId, hoverInfo.threadName, hoverInfo.frameIndex,
+				hoverInfo.event->name,
+				start.getAsString(),
+				elapsed.getAsString()
+			));
+
+			static const math::VC2 offset = math::VC2(15.f, 0.f);
+			static const math::VC2 padding = math::VC2(10.f, 10.f);
+
+			threadText.setPosition(mousePosition + padding / 2.f + offset);
+
+			math::FloatRect bounds = threadText.getLocalBounds();
+			sf::RectangleShape bg(bounds.getSize() + padding);
+			bg.setPosition(mousePosition + offset);
+
+			bg.setFillColor(sf::Color(0, 0, 0, 150));
+			bg.setOutlineThickness(1.f);
+			bg.setOutlineColor(sf::Color(255, 255, 255, 100));
+
+			renderTarget.draw(bg);
+			renderTarget.draw(threadText);
 		}
 	}
 
@@ -293,10 +372,13 @@ private:
 			sf::Color(102, 181, 18),
 			sf::Color(30, 191, 147),
 			sf::Color(53, 156, 243),
+			sf::Color(185, 75, 255),
 		})
 	{
 		system::BaseApplication &app = TS_GET_GIGATON().getGigaton<system::BaseApplication>();
 		debugFont = &app.getDebugFont();
+
+		windowManager = &TS_GET_GIGATON().getGigaton<system::WindowManager>();
 
 		String filepath = resource::ResourceManager::getAbsoluteResourcePath("shader/area_clip.frag");
 		if (!clipShader.loadFromFile(filepath, sf::Shader::Fragment))
@@ -307,13 +389,12 @@ private:
 
 	const std::vector<sf::Color> colors;
 
+	bool visible = true;
 	sf::Font *debugFont = nullptr;
-
 	sf::Shader clipShader;
-
 	math::VC2 mousePosition;
 
-	bool visible = false;
+	system::WindowManager *windowManager = nullptr;
 };
 
 ZoneProfilerRenderer &ZoneProfilerRenderer::get()
@@ -350,10 +431,9 @@ ZoneProfiler &ZoneProfiler::get()
 
 void ZoneProfiler::save(const String &filepath)
 {
-	std::unique_lock<std::recursive_mutex> lock(mutex);
-
 	ZoneProfiler &instance = get();
 
+	std::unique_lock<std::recursive_mutex> lock(mutex);
 	if (instance.storage.empty())
 	{
 		TS_LOG_WARNING("Zone Profiler is has no profiling data to save.\n");
@@ -361,7 +441,7 @@ void ZoneProfiler::save(const String &filepath)
 		return;
 	}
 
-	std::map<SizeType, EventStackCollection> storage = instance.storage;
+	std::map<SizeType, ZoneFrameCollection> storage = instance.storage;
 
 	lock.unlock();
 
@@ -384,57 +464,57 @@ void ZoneProfiler::save(const String &filepath)
 		WRITE("<thread id=\"%u\" name=\"%s\">\n", threadId, threadName);
 		indent++;
 
-		EventStackCollection &collection = storageIter->second;
+		ZoneFrameCollection &collection = storageIter->second;
 		
 		numFrames += collection.size();
 
 		for (SizeType frameIndex = 0; frameIndex < collection.size(); ++frameIndex)
 		{
-			const EventList &events = collection[frameIndex];
+			const ZoneFrame &frame = collection[frameIndex];
 
-			WRITE("<frame start=\"%lld\" elapsed=\"%lld\">\n", events.front().start, events.front().elapsed);
+			WRITE("<frame start=\"%lld\" elapsed=\"%lld\">\n", frame.front().start, frame.front().elapsed);
 			indent++;
 
-			numEvents += events.size();
+			numEvents += frame.size();
 
 			int32 openings = 0;
-			for (auto eventsIter = events.begin(); eventsIter != events.end(); ++eventsIter)
+			for (auto eventsIter = frame.begin(); eventsIter != frame.end(); ++eventsIter)
 			{
-				const EventFrame &frame = *eventsIter;
+				const ZoneEvent &event = *eventsIter;
 
-				int32 level = frame.level;
+				int32 level = event.level;
 
 				auto nextIter = std::next(eventsIter);
-				int32 nextLevel = nextIter == events.end() ? 0 : nextIter->level;
+				int32 nextLevel = nextIter == frame.end() ? 0 : nextIter->level;
 
 				bool closedTag = (nextLevel <= level);
 
-				if (frame.isMutexEvent)
+				if (event.isMutexEvent)
 				{
-					if (frame.wasBlocked)
+					if (event.wasBlocked)
 					{
 						WRITE("<mutex start=\"%lld\" elapsed=\"%lld\" name=\"%s\" blockedBy=\"%u\" />\n",
-							level == 0 ? 0 : frame.start,
-							frame.elapsed,
-							frame.name,
-							frame.mutexOwner
+							level == 0 ? 0 : event.start,
+							event.elapsed,
+							event.name,
+							event.mutexOwner
 						);
 					}
 					else
 					{
 						WRITE("<mutex start=\"%lld\" elapsed=\"%lld\" name=\"%s\" />\n",
-							level == 0 ? 0 : frame.start,
-							frame.elapsed,
-							frame.name
+							level == 0 ? 0 : event.start,
+							event.elapsed,
+							event.name
 						);
 					}
 				}
 				else
 				{
 					WRITE("<event start=\"%lld\" elapsed=\"%lld\" name=\"%s\"%s>\n",
-						level == 0 ? 0 : frame.start,
-						frame.elapsed,
-						frame.name,
+						level == 0 ? 0 : event.start,
+						event.elapsed,
+						event.name,
 						closedTag ? " /" : ""
 					);
 				}
@@ -485,7 +565,7 @@ void ZoneProfiler::save(const String &filepath)
 
 #undef WRITE
 
-void ZoneProfiler::commit(EventList &&events)
+void ZoneProfiler::commit(ZoneFrame &&frame)
 {
 	static thread_local SizeType threadId = thread::CurrentThread::getThreadId();
 	static thread_local std::string threadName = thread::CurrentThread::getThreadName();
@@ -497,8 +577,8 @@ void ZoneProfiler::commit(EventList &&events)
 
 		ZoneProfiler &instance = get();
 
-		TS_ASSERT(!events.empty());
-		instance.storage[threadId].push_back(std::move(events));
+		TS_ASSERT(!frame.empty());
+		instance.storage[threadId].push_back(std::move(frame));
 
 		if (!threadNameSet)
 		{
@@ -506,12 +586,12 @@ void ZoneProfiler::commit(EventList &&events)
 			threadNameSet = true;
 		}
 
-		if (instance.storage[0].size() >= 100)
-			ZoneProfiler::enabled = false;
+// 		if (instance.storage[0].size() >= 100)
+// 			ZoneProfiler::enabled = false;
 	}
 	else
 	{
-		events.clear();
+		frame.clear();
 	}
 }
 
@@ -548,7 +628,7 @@ void ZoneProfiler::render(sf::RenderTarget &renderTarget, const system::WindowVi
 int64 ScopedZoneTimer::absoluteStartTime = -1;
 
 thread_local int64 ScopedZoneTimer::frameStartTime = 0;
-thread_local EventList ScopedZoneTimer::events;
+thread_local ZoneFrame ScopedZoneTimer::currentFrame;
 thread_local SizeType ScopedZoneTimer::eventLevel = 0;
 
 ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
@@ -562,7 +642,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 	if (eventLevel == 0)
 		frameStartTime = startTime;
 
-	EventFrame ef = {
+	ZoneEvent event = {
 		name,
 		eventLevel == 0 ? frameStartTime - absoluteStartTime : startTime - frameStartTime,
 		-1,
@@ -570,12 +650,11 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 		0, false, false
 	};
 
-	if (events.capacity() == 0)
-		events.reserve(16);
+	if (currentFrame.capacity() == 0)
+		currentFrame.reserve(16);
 
-	events.push_back(std::move(ef));
-	frameIndex = events.size() - 1;
-// 	frame = &events.back();
+	currentFrame.push_back(std::move(event));
+	frameIndex = currentFrame.size() - 1;
 
 	eventLevel++;
 }
@@ -591,7 +670,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool b
 	if (eventLevel == 0)
 		frameStartTime = startTime;
 
-	EventFrame ef = {
+	ZoneEvent event = {
 		name,
 		eventLevel == 0 ? frameStartTime - absoluteStartTime : startTime - frameStartTime,
 		-1,
@@ -599,9 +678,8 @@ ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool b
 		mutexOwner, true, blocked
 	};
 
-	events.push_back(std::move(ef));
-	frameIndex = events.size() - 1;
-// 	frame = &events.back();
+	currentFrame.push_back(std::move(event));
+	frameIndex = currentFrame.size() - 1;
 
 	eventLevel++;
 }
@@ -621,24 +699,23 @@ void ScopedZoneTimer::commit() const
 	TS_ASSERT(eventLevel > 0);
 	eventLevel--;
 
-// 	TS_ASSERT(frame != nullptr);
-	EventFrame &frame = events[frameIndex];
+	ZoneEvent &event = currentFrame[frameIndex];
 
-	frame.elapsed = elapsed.getMicroseconds();
-	TS_ASSERT(frame.elapsed >= 0);
+	event.elapsed = elapsed.getMicroseconds();
+	TS_ASSERT(event.elapsed >= 0);
 
 	if (eventLevel == 0)
 	{
-		ZoneProfiler::commit(std::move(events));
-		TS_ASSERT(events.empty());
+		ZoneProfiler::commit(std::move(currentFrame));
+		TS_ASSERT(currentFrame.empty());
 
 	}
 // 	else
 // 	{
-// 		EventList eventsCopy = events;
-// 		ZoneProfiler::commit(std::move(eventsCopy));
+// 		EventList currentFrameCopy = currentFrame;
+// 		ZoneProfiler::commit(std::move(currentFrameCopy));
 // 
-// 		events.erase(std::next(events.begin(), eventLevel), events.end());
+// 		currentFrame.erase(std::next(currentFrame.begin(), eventLevel), currentFrame.end());
 // 	}
 	
 	committed = true;

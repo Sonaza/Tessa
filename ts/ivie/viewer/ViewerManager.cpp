@@ -507,7 +507,7 @@ void ViewerManager::prepareShaders()
 	}
 
 	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert_freeimage.frag"));
-	displayShaderFiles.insert(std::make_pair(DisplayShader_Webm, "shader/convert_webm.frag"));
+	displayShaderFiles.insert(std::make_pair(DisplayShader_Webm,      "shader/convert_webm.frag"));
 }
 
 SharedPointer<sf::Shader> ViewerManager::loadDisplayShader(DisplayShaderTypes type)

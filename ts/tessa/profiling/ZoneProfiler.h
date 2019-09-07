@@ -40,7 +40,7 @@ TS_DECLARE_STRUCT1(system, WindowView);
 
 TS_PACKAGE1(profiling)
 
-struct EventFrame
+struct ZoneEvent
 {
 	const char *name;
 	int64 start;
@@ -51,9 +51,9 @@ struct EventFrame
 	bool wasBlocked;
 };
 
-typedef std::vector<EventFrame> EventList;
-typedef std::vector<EventList> EventStackCollection;
-typedef std::map<SizeType, EventStackCollection> EventStackCollectionStorage;
+typedef std::vector<ZoneEvent> ZoneFrame;
+typedef std::vector<ZoneFrame> ZoneFrameCollection;
+typedef std::map<SizeType, ZoneFrameCollection> ZoneFrameCollectionStorage;
 
 class ZoneProfiler
 {
@@ -64,7 +64,7 @@ public:
 	static ZoneProfiler &get();
 
 	static void save(const String &filepath);
-	static void commit(EventList &&stack);
+	static void commit(ZoneFrame &&stack);
 
 	static void setEnabled(const bool enabled);
 	static bool isEnabled();
@@ -84,7 +84,7 @@ private:
 	static std::atomic_bool enabled;
 
 	std::map<SizeType, std::string> threadNames;
-	EventStackCollectionStorage storage;
+	ZoneFrameCollectionStorage storage;
 };
 
 class ScopedZoneTimer
@@ -110,7 +110,7 @@ private:
 	static int64 absoluteStartTime;
 
 	static thread_local int64 frameStartTime;
-	static thread_local EventList events;
+	static thread_local ZoneFrame currentFrame;
 	static thread_local SizeType eventLevel;
 };
 

@@ -49,7 +49,6 @@ inline Rect<T>::operator sf::Rect<T>() const
 
 #endif
 
-
 template <class T>
 bool Rect<T>::isValid() const
 {
@@ -59,7 +58,7 @@ bool Rect<T>::isValid() const
 template <class T>
 Vec2<T> Rect<T>::getCenter() const
 {
-	return isValid() ? (minbounds + maxbounds) / 2.f : math::Vec2<T>::zero;
+	return isValid() ? (minbounds + maxbounds) / T(2) : math::Vec2<T>::zero;
 }
 
 template <class T>
