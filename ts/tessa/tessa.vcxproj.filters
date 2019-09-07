@@ -182,7 +182,10 @@
     <ClCompile Include="math\Vec2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="profiling\ScopedZoneTimer.cpp">
+    <ClCompile Include="profiling\ZoneProfiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\RecursiveMutex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -430,13 +433,25 @@
     <ClInclude Include="resource\ImageResource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="profiling\ScopedZoneTimer.h">
+    <ClInclude Include="profiling\ZoneProfiler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\RecursiveMutex.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\AbstractMutexBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Rect.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Windows.props" />
     <None Include="string\Utf.inl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="math\Rect.inl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

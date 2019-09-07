@@ -7,7 +7,7 @@
 #include "ts/ivie/viewer/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, viewer)
 

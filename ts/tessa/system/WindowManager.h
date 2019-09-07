@@ -63,7 +63,6 @@ public:
 
 	std::vector<math::VC2U> getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize = math::VC2U::zero);
 
-
 	lang::Signal<const math::VC2U &> screenSizeChangedSignal;
 	lang::Signal<WindowState> windowStateChangedSignal;
 

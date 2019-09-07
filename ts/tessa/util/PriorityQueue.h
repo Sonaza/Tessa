@@ -82,6 +82,11 @@ public:
 		return container.erase(it);
 	}
 
+	const_iterator erase(const_iterator it)
+	{
+		return container.erase(it);
+	}
+
 	bool erase_if(std::function<bool(const Type &)> predicate)
 	{
 		iterator it = find_if(predicate);

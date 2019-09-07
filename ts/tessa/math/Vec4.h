@@ -16,6 +16,7 @@ public:
 	{
 		T v[4];
 		struct { T x, y, z, w; };
+		struct { T r, g, b, a; };
 	};
 
 	Vec4(const Vec4 &vector) = default;

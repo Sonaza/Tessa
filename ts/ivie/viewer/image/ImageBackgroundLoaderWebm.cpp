@@ -7,7 +7,7 @@
 #include "ts/ivie/viewer/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 #define HAVE_STDINT_H 1
 #include "nestegg/nestegg.h"

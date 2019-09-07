@@ -1,0 +1,113 @@
+@import 'external/normalize.css';
+
+*
+{
+	box-sizing: border-box;
+}
+
+html, body
+{
+	background: #333;
+	color: #fff;
+	margin: 0;
+	padding: 0;
+	font-size: 11pt;
+}
+
+div.thread
+{
+	background: #444;
+	border-bottom: 1px solid #ddd;
+	margin: 0 0 1em 0;
+	padding: 1em;
+	min-height: 200px;
+	overflow-x: scroll;
+}
+
+div.thread div.frames
+{
+	display: flex;
+	flex-direction: row;
+	position: relative;
+}
+
+div.frames div.frame
+{
+	/*position: absolute;*/
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	margin: 0 2px 0 0;
+	clear: both;
+}
+
+div.frame div.event-row
+{
+	width: 100%;
+	height: 25px;
+	position: relative;
+	clear: both;
+	margin: 1px 0 2px 0;
+}
+
+div.frame div.event
+{
+	position: absolute;
+	height: 100%;
+	overflow-x: hidden;
+	white-space: nowrap;
+	color: #fff;
+	font-size: 13px;
+	border: 1px solid #000;
+	background-blend-mode: overlay;
+	text-shadow: 0 0 1px rgba(0, 0, 0, 0.9);
+	padding: 2px 2px;
+}
+
+div.event-row.d-0 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#780E0E;
+}
+
+div.event-row.d-1 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#AE1616;
+}
+
+div.event-row.d-2 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#D67A0E;
+}
+
+div.event-row.d-3 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#E8D322;
+}
+
+div.event-row.d-4 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#66B512;
+}
+
+div.event-row.d-5 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#1EBF93;
+}
+
+div.event-row.d-6 .event
+{
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.0) 90%),
+				#359CF3;
+}
+
+h1, h2, h3, h4, h5
+{
+	margin: 0;
+	padding: 0 0 0.5em 0;
+}

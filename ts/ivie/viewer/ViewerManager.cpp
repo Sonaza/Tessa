@@ -8,7 +8,6 @@
 #include "ts/tessa/thread/Thread.h"
 
 #include "ts/tessa/resource/ResourceManager.h"
-#include "ts/tessa/resource/ShaderResource.h"
 
 #include "ts/tessa/file/FileUtils.h"
 
@@ -16,7 +15,7 @@
 #include "ts/ivie/viewer/image/Image.h"
 #include "ts/ivie/util/NaturalSort.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_DEFINE_MANAGER_TYPE(app::viewer::ViewerManager);
 
@@ -56,7 +55,7 @@ public:
 		TS_ASSERT(viewerManager->imageStorage.find(imageHash) != viewerManager->imageStorage.end() &&
 			"Image hash not found in storage, don't try to unload images that aren't even loaded.");
 
-		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(mutex);
 		unloadQueue[imageHash] = Time::now() + delay;
 	}
 
@@ -65,7 +64,7 @@ public:
 // 		TS_ASSERT(unloadQueue.find(imageHash) != unloadQueue.end() &&
 // 			"Image hash not found in unload queue, don't try to cancel unloads.");
 
-		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(mutex);
 		unloadQueue.erase(imageHash);
 	}
 
@@ -73,7 +72,7 @@ public:
 	{
 		while (running)
 		{
-			MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+			MutexGuard lock(mutex);
 			condition.waitFor(lock, 50_ms, [this]()
 			{
 				return !running;// || !unloadQueue.empty();
@@ -114,6 +113,8 @@ public:
 	}
 
 };
+
+std::atomic_bool ViewerManager::quitting = false;
 
 ViewerManager::ViewerManager()
 {
@@ -167,7 +168,7 @@ void ViewerManager::update(const TimeSpan deltaTime)
 	if (pendingImageUpdate)
 	{
 		{
-			MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+			MutexGuard lock(mutex);
 
 			if (pendingImageIndex != -1 && !currentFileList.empty())
 			{
@@ -280,19 +281,19 @@ void ViewerManager::changeImage(int32 amount)
 
 SizeType ViewerManager::getCurrentImageIndex() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return current.imageIndex;
 }
 
 SizeType ViewerManager::getNumImages() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return (SizeType)currentFileList.size();
 }
 
 const String &ViewerManager::getCurrentFilepath() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return current.filepath;
 }
 
@@ -300,7 +301,7 @@ const String &ViewerManager::getCurrentFilepath() const
 
 void ViewerManager::setSorting(SortingStyle sorting)
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	if (currentSorting != sorting)
 	{
 		currentSorting = sorting;
@@ -360,10 +361,10 @@ bool ViewerManager::isExtensionAllowed(const String &filename)
 
 bool ViewerManager::updateFilelist(const String directoryPath, bool ensureIndex)
 {
-	TS_ZONE();
-
 	if (quitting)
 		return false;
+
+	TS_ZONE();
 
 	file::FileList lister(directoryPath, true, scanStyle);
 
@@ -388,7 +389,7 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool ensureIndex)
 	{
 		{
 			TS_ZONE_NAMED("Copying filelist");
-			MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+			MutexGuard lock(mutex);
 			currentFileList = std::move(templist);
 		}
 
@@ -397,6 +398,8 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool ensureIndex)
 
 		filelistChangedSignal((SizeType)currentFileList.size());
 	}
+
+	Thread::sleep(5000_ms);
 
 	return true;
 }
@@ -472,7 +475,7 @@ SharedPointer<Image> ViewerManager::getCurrentImage() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return currentImage;
 }
 
@@ -480,26 +483,29 @@ void ViewerManager::prepareShaders()
 {
 	{
 		const SizeType checkerPatternSize = 8;
+		const SizeType size = checkerPatternSize * 2;
 
-		sf::RenderTexture rt;
-		rt.create(checkerPatternSize * 2, checkerPatternSize * 2);
-		rt.clear(sf::Color::White);
-
-		const math::VC2 size = math::VC2((float)checkerPatternSize, (float)checkerPatternSize);
-		sf::RectangleShape shape(size);
-		shape.setPosition(0.f, 0.f);
-		shape.setFillColor(sf::Color(190, 190, 190));
-		rt.draw(shape);
-		shape.setPosition(size);
-		rt.draw(shape);
-		rt.display();
-
-		alphaCheckerPatternTexture = makeShared<sf::Texture>(rt.getTexture());
-		if (alphaCheckerPatternTexture)
+		// Generate array space for a checker pattern, something like this
+		//   XX..
+		//   ..XX
+		std::vector<uint8> patternTexture(size * size * 4,  255);
+		for (SizeType y = 0; y < size; ++y)
 		{
-			alphaCheckerPatternTexture->setRepeated(true);
-			alphaCheckerPatternTexture->setSmooth(true);
+			for (SizeType x = 0; x < size; ++x)
+			{
+				if ((y < checkerPatternSize && x < checkerPatternSize) ||
+					(y >= checkerPatternSize && x >= checkerPatternSize))
+				{
+					patternTexture[(y * size + x) * 4 + 0] = 190;
+					patternTexture[(y * size + x) * 4 + 1] = 190;
+					patternTexture[(y * size + x) * 4 + 2] = 190;
+				}
+			}
 		}
+
+		alphaCheckerPatternTexture.create(size, size);
+		alphaCheckerPatternTexture.update(&patternTexture[0], size, size, 0, 0);
+		alphaCheckerPatternTexture.setRepeated(true);
 	}
 
 	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert_freeimage.frag"));
@@ -521,8 +527,7 @@ SharedPointer<sf::Shader> ViewerManager::loadDisplayShader(DisplayShaderTypes ty
 
 	if (type == DisplayShader_FreeImage)
 	{
-		TS_ASSERT(alphaCheckerPatternTexture);
-		displayShader->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
+		displayShader->setUniform("u_checkerPatternTexture", alphaCheckerPatternTexture);
 	}
 
 	return displayShader;

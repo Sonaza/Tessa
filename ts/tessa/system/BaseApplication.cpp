@@ -18,7 +18,7 @@
 
 #include "ts/tessa/system/Gigaton.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE1(system)
 
@@ -82,14 +82,13 @@ int32 BaseApplication::launch()
 		return -1;
 	}
 	
-	if (initializeScene())
-	{
-		mainloop();
-	}
-	else
+	if (!initializeScene())
 	{
 		TS_LOG_ERROR("Scene initialize failed!\n");
+		return -1;
 	}
+
+	mainloop();
 
 	stop();
 
@@ -100,6 +99,8 @@ int32 BaseApplication::launch()
 
 bool BaseApplication::initialize()
 {
+	TS_ZONE();
+
 	if (!createSystemManagers())
 		return false;
 
@@ -184,6 +185,8 @@ sf::Font &BaseApplication::getDebugFont()
 
 bool BaseApplication::createSystemManagers()
 {
+	TS_ZONE();
+
 	if (!createManagerInstance<thread::ThreadScheduler>())
 		return false;
 
@@ -322,6 +325,14 @@ void BaseApplication::handleEvents()
 	sf::Event event;
 	while (windowManager.pollEvent(event))
 	{
+#if TS_PROFILER_ENABLED == TS_TRUE
+		if (profiling::ZoneProfiler::isVisible())
+		{
+			if (profiling::ZoneProfiler::handleEvent(event))
+				continue;
+		}
+		else
+#endif
 		if (currentScene != nullptr)
 		{
 			// If event is handled by scene the rest can be skipped
@@ -364,16 +375,17 @@ void BaseApplication::handleEvents()
 
 					case sf::Keyboard::F11:
 					{
-						if (profiling::ZoneProfiler::isEnabled())
-						{
-							profiling::ZoneProfiler::save("profile.xml");
-						}
-						else
-						{
-							TS_PRINTF("Zone Profiler is not enabled.\n");
-						}
+						profiling::ZoneProfiler::save("profile.xml");
 					}
 					break;
+
+					case sf::Keyboard::Multiply:
+					{
+						profiling::ZoneProfiler::toggleVisibility();
+					}
+					break;
+
+
 				}
 			}
 			break;
@@ -393,6 +405,8 @@ void BaseApplication::handleRendering()
 {
 	TS_ZONE();
 
+	TS_ZONE_NAMED_VARIABLE(firstHalfZone, "First Half Zone");
+
 	if (currentScene == nullptr)
 		return;
 	
@@ -401,8 +415,21 @@ void BaseApplication::handleRendering()
 		return;
 
 	sf::RenderWindow &renderWindow = windowManager.getRenderWindow();
-	renderWindow.clear();
+
+// 	{
+// 		TS_ZONE_NAMED("renderWindow.setActive");
+// 		renderWindow.setActive(true);
+// 	}
+
+	{
+		TS_ZONE_NAMED("renderWindow.clear");
+		renderWindow.clear();
+	}
+
+	firstHalfZone.commit();
 	
+	TS_ZONE_NAMED_VARIABLE(secondHalfZone, "Second Half Zone");
+
 	// Application custom view step
 	windowManager.useApplicationView();
 	currentScene->renderApplication(renderWindow, windowManager.getCurrentView());
@@ -411,8 +438,19 @@ void BaseApplication::handleRendering()
 	windowManager.useInterfaceView();
 	currentScene->renderInterface(renderWindow, windowManager.getCurrentView());
 
+	secondHalfZone.commit();
+
+#if TS_PROFILER_ENABLED == TS_TRUE
+	if (profiling::ZoneProfiler::isVisible())
+	{
+		profiling::ZoneProfiler::render(renderWindow, windowManager.getCurrentView());
+	}
+#endif
+
 	if (showFPS && debugFont != nullptr && debugFont->isLoaded())
 	{
+		TS_ZONE_NAMED("FPS Draw");
+
 		sf::Text fps(
 			TS_FMT("FPS %u", getCurrentFramerate()), *debugFont->getResource(), 30
 		);
@@ -422,7 +460,6 @@ void BaseApplication::handleRendering()
 // 		fps.setOutlineColor(sf::Color::Black);
 // 		fps.setOutlineThickness(1.f);
 
-		TS_ZONE_NAMED("FPS Draw");
 		renderWindow.draw(fps);
 	}
 

@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+	<title>Zone Profiler Export</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div id="main">
+		{% for thread_id, thread in data.items() %}
+			<div class="thread">
+				<h2>Thread #{{ thread_id }} <code>{{ thread['name'] }}</code></h2>
+				<div class="frames">
+					{% for frame in thread['frames'] %}
+						{# {% set frame_xpos = to_int(frame['start'] / render_scale) %} #}
+						{% set frame_elapsed = max(2, frame['elapsed']) %}
+						{% set frame_width = to_int(frame_elapsed / render_scale) %}
+						<div class="frame" style="width:{{ frame_width }}px">
+							{% for event_depth, events in frame['events'].items() %}
+								<div class="event-row d-{{ event_depth }}">
+									{% for event in events %}
+										{% set event_xpos = to_int(event['start'] / frame_elapsed * frame_width) %}
+										{% set event_width = to_int(event['elapsed'] / frame_elapsed * frame_width) %}
+										<div class="event" style="left:{{ event_xpos }}px;width:{{ event_width }}px">
+											{{ event['name'] }}
+										</div>
+									{% endfor %}
+								</div>
+							{% endfor %}
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		{% endfor %}
+		
+		<div class="thread" style="display:none">
+			<h2>Thread #0 <code>Main potato</code></h2>
+			<div class="frames">
+				<div class="frame" style="width:200px">
+					<div class="event-row d-0">
+						<div class="event" style="left:0px;width:200px">
+							potato event at root
+						</div>
+					</div>
+					<div class="event-row d-1">
+						<div class="event" style="left:10px;width:40px">
+							short event
+						</div>
+						<div class="event" style="left:70px;width:80px">
+							bit longer
+						</div>
+					</div>
+					<div class="event-row d-2">
+						<div class="event" style="left:12px;width:14px">
+							short sub 1
+						</div>
+						<div class="event" style="left:30px;width:15px">
+							short sub 2
+						</div>
+						<div class="event" style="left:85px;width:60px">
+							sub for longer
+						</div>
+					</div>
+				</div>
+				<div class="frame" style="width:250px">
+					<div class="event-row d-0">
+						<div class="event" style="left:0px;width:250px">
+							potato event at root
+						</div>
+					</div>
+					<div class="event-row d-1">
+						<div class="event" style="left:10px;width:40px">
+							short event
+						</div>
+						<div class="event" style="left:70px;width:80px">
+							bit longer
+						</div>
+					</div>
+					<div class="event-row d-2">
+						<div class="event" style="left:12px;width:11px">
+							short sub 1
+						</div>
+						<div class="event" style="left:26px;width:15px">
+							short sub 2
+						</div>
+						<div class="event" style="left:85px;width:60px">
+							sub for longer
+						</div>
+					</div>
+				</div>
+				<div class="frame" style="width:150px">
+					<div class="event-row d-0">
+						<div class="event" style="left:0px;width:150px">
+							potato event at root
+						</div>
+					</div>
+					<div class="event-row d-1">
+						<div class="event" style="left:10px;width:130px">
+							loooooong
+						</div>
+					</div>
+					<div class="event-row d-2">
+						<div class="event" style="left:30px;width:90px">
+							subsub
+						</div>
+					</div>
+					<div class="event-row d-3">
+						<div class="event" style="left:50px;width:50px">
+							subsubsub
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

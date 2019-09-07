@@ -5,7 +5,7 @@
 #include "ts/tessa/file/ArchivistFilesystem.h"
 #include "ts/tessa/resource/ArchivistInputStream.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_DEFINE_RESOURCE_TYPE(resource::FontResource);
 

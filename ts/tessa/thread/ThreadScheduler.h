@@ -342,17 +342,17 @@ private:
 	bool isTaskQueuedUnsafe(SchedulerTaskId taskId);
 
 	typedef SharedPointer<ScheduledTask> SharedScheduledTask;
-	typedef util::PriorityQueue<SharedScheduledTask, ScheduledTaskSharedPointerSorter> TaskQueueType;
+	typedef util::PriorityQueue<SharedScheduledTask, ScheduledTaskSharedPointerSorter> TaskPriorityQueue;
 
 	// Holder for all incomplete tasks
 	typedef std::map<SchedulerTaskId, SharedScheduledTask> TasksList;
 	TasksList incompleteTasks;
 
 	// Queue for waiting tasks, i.e. ones where scheduled time has not yet passed.
-	TaskQueueType waitingTaskQueue;
+	TaskPriorityQueue waitingTaskQueue;
 	// Queue for pending tasks, i.e. tasks that are ready for execution
 	// and a worker can start processing whenever able.
-	TaskQueueType pendingTaskQueue;
+	TaskPriorityQueue pendingTaskQueue;
 
 	// Matches worker ids to actively worked tasks
 	std::vector<SchedulerTaskId> workerToTaskMap;
@@ -430,7 +430,7 @@ ScheduledTaskFuture<ReturnType> ThreadScheduler::scheduleOnceImpl(
 			}
 		);
 
-		MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(queueMutex);
 		future.taskId = task->taskId;
 		incompleteTasks.insert(std::make_pair(task->taskId, task));
 		waitingTaskQueue.push(task);
@@ -494,7 +494,7 @@ inline SchedulerTaskId ThreadScheduler::scheduleWithIntervalImpl(
 		);
 		createdTaskId = task->taskId;
 
-		MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(queueMutex);
 		incompleteTasks.insert(std::make_pair(task->taskId, task));
 		waitingTaskQueue.push(task);
 	}

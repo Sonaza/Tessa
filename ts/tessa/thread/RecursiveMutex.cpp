@@ -1,36 +1,43 @@
 #include "Precompiled.h"
-#include "Mutex.h"
+#include "RecursiveMutex.h"
 
 #include "ts/tessa/thread/CurrentThread.h"
 #include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE1(thread)
 
-Mutex::Mutex()
+RecursiveMutex::RecursiveMutex()
 {
 
 }
 
-Mutex::~Mutex()
+RecursiveMutex::~RecursiveMutex()
 {
 	TS_ASSERT(owner == InvalidMutexOwner && "Attempting destruction on a locked mutex.");
 }
 
-void Mutex::lock()
+void RecursiveMutex::lock()
 {
-	TS_ZONE_MUTEX(owner, owner != InvalidMutexOwner);
+	if (owner == CurrentThread::getThreadId())
+	{
+		numLocks++;
+		return;
+	}
 
-	TS_ASSERT(owner != CurrentThread::getThreadId() && "Same thread trying to lock again.");
+	TS_ZONE_MUTEX(owner, owner != InvalidMutexOwner);
 
 	mutex.lock();
 	owner = CurrentThread::getThreadId();
 }
 
-bool Mutex::tryLock()
+bool RecursiveMutex::tryLock()
 {
-	TS_ASSERT(owner != CurrentThread::getThreadId() && "Same thread trying to lock again.");
-
-	if (!mutex.try_lock())
+	if (owner == CurrentThread::getThreadId())
+	{
+		numLocks++;
+		return true;
+	}
+	else if (!mutex.try_lock())
 		return false;
 
 	owner = CurrentThread::getThreadId();
@@ -38,15 +45,21 @@ bool Mutex::tryLock()
 	return true;
 }
 
-void Mutex::unlock()
+void RecursiveMutex::unlock()
 {
 	TS_ASSERT(owner == CurrentThread::getThreadId() && "A thread that does not own the mutex is trying to unlock it.");
+
+	if (numLocks > 0)
+	{
+		numLocks--;
+		return;
+	}
 
 	owner = InvalidMutexOwner;
 	mutex.unlock();
 }
 
-std::mutex &Mutex::getInternalMutex()
+std::mutex &RecursiveMutex::getInternalMutex()
 {
 	return mutex;
 }

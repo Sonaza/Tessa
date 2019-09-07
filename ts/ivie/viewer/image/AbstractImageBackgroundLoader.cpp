@@ -3,7 +3,7 @@
 
 #include "ts/tessa/thread/Thread.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, viewer)
 

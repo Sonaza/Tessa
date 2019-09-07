@@ -7,6 +7,8 @@
 #pragma warning( disable : 4201 ) // nonstandard extension used: nameless struct/union
 #pragma warning( disable : 4313 ) // format string conflicts with argument type (seems to be bogus warning or something)
 
+#pragma warning( disable : 4189 ) // local variable is initialized but not referenced
+
 #define TS_VERSION_MAJOR 0
 #define TS_VERSION_MINOR 1
 #define TS_VERSION_PATCH 0
@@ -98,6 +100,9 @@
 #else
 	#define TS_RESTRICT __restrict
 #endif
+
+#define TS_EXPAND_1(x) #x
+#define TS_EXPAND(x)   TS_EXPAND_1(x)
 
 #define TS_UNUSED_VARIABLE(variable) ((void)variable)
 

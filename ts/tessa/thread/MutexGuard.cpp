@@ -3,14 +3,11 @@
 
 TS_PACKAGE1(thread)
 
-MutexGuard::MutexGuard(Mutex &mutexParam, const char *debugInfo)
+MutexGuard::MutexGuard(AbstractMutexBase &mutexParam)
 	: mutex(std::addressof(mutexParam))
 {
-	mutex->lock(debugInfo);
+	mutex->lock();
 	ownsLock = true;
-#if TS_MUTEX_PROFILING == TS_TRUE
-	savedDebugInfo = debugInfo;
-#endif
 }
 
 MutexGuard::MutexGuard(MutexGuard &&other)
@@ -40,11 +37,7 @@ MutexGuard::~MutexGuard()
 
 void MutexGuard::lock()
 {
-#if TS_MUTEX_PROFILING == TS_TRUE
-	mutex->lock(savedDebugInfo);
-#else
 	mutex->lock();
-#endif
 	ownsLock = true;
 }
 

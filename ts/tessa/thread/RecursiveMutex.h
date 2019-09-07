@@ -6,11 +6,11 @@
 
 TS_PACKAGE1(thread)
 
-class Mutex : public thread::AbstractMutexBase
+class RecursiveMutex : public thread::AbstractMutexBase
 {
 public:
-	Mutex();
-	~Mutex();
+	RecursiveMutex();
+	~RecursiveMutex();
 
 	virtual void lock() override;
 	virtual bool tryLock() override;
@@ -20,12 +20,13 @@ public:
 
 private:
 	std::mutex mutex;
+	SizeType numLocks = 0;
 };
 
 TS_END_PACKAGE1()
 
 TS_PACKAGE0()
 
-using thread::Mutex;
+using thread::RecursiveMutex;
 
 TS_END_PACKAGE0()

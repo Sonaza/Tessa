@@ -186,7 +186,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="profiling\ScopedZoneTimer.cpp" />
+    <ClCompile Include="profiling\ZoneProfiler.cpp" />
     <ClCompile Include="renderer\GpuPreference.cpp" />
     <ClCompile Include="resource\AbstractResourceBase.cpp" />
     <ClCompile Include="resource\ArchivistInputStream.cpp" />
@@ -202,6 +202,7 @@
     <ClCompile Include="thread\CurrentThread.cpp" />
     <ClCompile Include="thread\Mutex.cpp" />
     <ClCompile Include="thread\MutexGuard.cpp" />
+    <ClCompile Include="thread\RecursiveMutex.cpp" />
     <ClCompile Include="thread\Thread.cpp" />
     <ClCompile Include="thread\ThreadUtils.cpp" />
     <ClCompile Include="time\Clock.cpp" />
@@ -226,6 +227,7 @@
     <ClInclude Include="lang\ScopedPointer.h" />
     <ClInclude Include="lang\SharedPointer.h" />
     <ClInclude Include="lang\Signal.h" />
+    <ClInclude Include="math\Rect.h" />
     <ClInclude Include="resource\ImageResource.h" />
     <ClInclude Include="string\String.h" />
     <ClInclude Include="string\StringUtils.h" />
@@ -233,7 +235,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="math\CRC.h" />
     <ClInclude Include="net\Address.h" />
-    <ClInclude Include="profiling\ScopedZoneTimer.h" />
+    <ClInclude Include="profiling\ZoneProfiler.h" />
     <ClInclude Include="resource\ArchivistInputStream.h" />
     <ClInclude Include="resource\MusicResource.h" />
     <ClInclude Include="resource\ResourceBase.inl">
@@ -255,11 +257,13 @@
     <ClInclude Include="string\Utf.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="system\WindowViewManager.h" />
+    <ClInclude Include="thread\AbstractMutexBase.h" />
     <ClInclude Include="thread\AbstractThreadEntry.h" />
     <ClInclude Include="thread\ConditionVariable.h" />
     <ClInclude Include="thread\CurrentThread.h" />
     <ClInclude Include="thread\Mutex.h" />
     <ClInclude Include="thread\MutexGuard.h" />
+    <ClInclude Include="thread\RecursiveMutex.h" />
     <ClInclude Include="thread\Thread.h" />
     <ClInclude Include="thread\ThreadUtils.h" />
     <ClInclude Include="time\Clock.h" />
@@ -322,6 +326,7 @@
     <ClInclude Include="math\Vec4.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <None Include="math\Rect.inl" />
     <None Include="string\Utf.inl" />
     <None Include="Windows.props" />
   </ItemGroup>

@@ -36,7 +36,7 @@ public:
 	{
 		while (true)
 		{
-			MutexGuard lock(scheduler->queueMutex, MUTEXGUARD_DEBUGINFO());
+			MutexGuard lock(scheduler->queueMutex);
 			scheduler->schedulerCondition.waitFor(lock, 10_ms,
 			[this]()
 			{
@@ -100,7 +100,7 @@ public:
 			SharedScheduledTask task = nullptr;
 
 			{
-				MutexGuard lock(scheduler->queueMutex, MUTEXGUARD_DEBUGINFO());
+				MutexGuard lock(scheduler->queueMutex);
 				scheduler->workerCondition.wait(lock, [this]()
 				{
 					return !scheduler->running || !scheduler->pendingTaskQueue.empty();
@@ -121,7 +121,7 @@ public:
 			task->workedByWorkerIndex = ScheduledTask::InvalidWorkerIndex;
 
 			{
-				MutexGuard lock(scheduler->queueMutex, MUTEXGUARD_DEBUGINFO());
+				MutexGuard lock(scheduler->queueMutex);
 
 				scheduler->workerToTaskMap[workerIndex] = InvalidTaskId;
 
@@ -129,6 +129,7 @@ public:
 				{
 					task->reschedule();
 					scheduler->waitingTaskQueue.push(task);
+					scheduler->schedulerCondition.notifyAll();
 				}
 				else
 				{
@@ -169,7 +170,7 @@ void ThreadScheduler::deinitialize()
 
 void ThreadScheduler::createBackgroundWorkers(SizeType numWorkers)
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 
 	TS_ASSERT(running == false && "Scheduler background workers have already been created.");
 	running = true;
@@ -189,7 +190,7 @@ void ThreadScheduler::createBackgroundWorkers(SizeType numWorkers)
 void ThreadScheduler::destroyBackgroundWorkers()
 {
 	{
-		MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(queueMutex);
 		running = false;
 	}
 
@@ -206,13 +207,13 @@ void ThreadScheduler::destroyBackgroundWorkers()
 
 SizeType ThreadScheduler::getNumTasks() const
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 	return (SizeType)(waitingTaskQueue.size() + pendingTaskQueue.size());
 }
 
 SizeType ThreadScheduler::getNumTasksInProgress() const
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 	SizeType numTasks = 0;
 	for (SchedulerTaskId id : workerToTaskMap)
 	{
@@ -224,13 +225,13 @@ SizeType ThreadScheduler::getNumTasksInProgress() const
 
 SizeType ThreadScheduler::getNumWorkers() const
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 	return (SizeType)backgroundWorkers.size();
 }
 
 ThreadScheduler::SchedulerStats ThreadScheduler::getStats() const
 {
-// 	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+// 	MutexGuard lock(queueMutex);
 	SchedulerStats stats;
 
 	stats.numBackgroundWorkers = (SizeType)backgroundWorkers.size();
@@ -250,14 +251,14 @@ ThreadScheduler::SchedulerStats ThreadScheduler::getStats() const
 
 bool ThreadScheduler::hasTasks() const
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 	return !waitingTaskQueue.empty() && !pendingTaskQueue.empty();
 }
 
 // void ThreadScheduler::clearTasks()
 // {
 // 	{
-// 		MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+// 		MutexGuard lock(queueMutex);
 // 		waitingTaskQueue.clear();
 // 		pendingTaskQueue.clear();
 // 		incompleteTasks.clear();
@@ -268,7 +269,7 @@ bool ThreadScheduler::hasTasks() const
 
 bool ThreadScheduler::isTaskQueued(SchedulerTaskId taskId)
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 	return isTaskQueuedUnsafe(taskId);
 }
 
@@ -285,22 +286,47 @@ bool ThreadScheduler::isTaskQueuedUnsafe(SchedulerTaskId taskId)
 
 bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
 {
-	MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(queueMutex);
 
 	TasksList::iterator taskIt = incompleteTasks.find(taskId);
 	if (taskIt == incompleteTasks.end())
 		return false;
 
-	auto pred = [taskId](const SharedScheduledTask &t)
+	auto tryEraseFromQueue = [this, taskId]() -> bool
 	{
-		return t->taskId == taskId;
+		const auto pred = [taskId](const SharedScheduledTask &t)
+		{
+			return t->taskId == taskId;
+		};
+
+		TaskPriorityQueue::const_iterator queueIter = waitingTaskQueue.find_if(pred);
+		if (queueIter != waitingTaskQueue.end())
+		{
+			waitingTaskQueue.erase(queueIter);
+			return true;
+		}
+
+		queueIter = pendingTaskQueue.find_if(pred);
+		if (queueIter != pendingTaskQueue.end())
+		{
+			pendingTaskQueue.erase(queueIter);
+			return true;
+		}
+
+		return false;
 	};
 
-	bool erasedFromQueue = waitingTaskQueue.erase_if(pred) || pendingTaskQueue.erase_if(pred);
-	if (erasedFromQueue)
-		incompleteTasks.erase(taskIt);
+	if (!tryEraseFromQueue())
+	{
+		lock.unlock();
+		taskIt->second->waitForCompletion();
+		lock.lock();
+		tryEraseFromQueue();
+	}
 
-	return erasedFromQueue;
+	incompleteTasks.erase(taskIt);
+
+	return true;
 }
 
 void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
@@ -308,14 +334,11 @@ void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
 	SharedScheduledTask task = nullptr;
 
 	{
-		MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(queueMutex);
 
 		TasksList::iterator taskIt = incompleteTasks.find(taskId);
 		if (taskIt == incompleteTasks.end())
-		{
-// 			TS_PRINTF("Task ID %u was not found on incomplete tasks...\n", taskId);
 			return;
-		}
 
 		task = taskIt->second;
 	}
@@ -344,7 +367,7 @@ SchedulerTaskId ThreadScheduler::scheduleThreadEntry(AbstractThreadEntry *entry,
 
 // #if TS_BUILD != TS_FINALRELEASE
 // 	{
-// 		MutexGuard lock(queueMutex, MUTEXGUARD_DEBUGINFO());
+// 		MutexGuard lock(queueMutex);
 // 		Time now = Time::now();
 // 		TS_PRINTF("waitingTaskQueue (%llu tasks):\n", waitingTaskQueue.size());
 // 		for (auto &it : waitingTaskQueue)

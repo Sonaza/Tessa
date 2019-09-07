@@ -4,6 +4,8 @@
 #include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/resource/ImageResource.h"
 
+#include "ts/tessa/profiling/ZoneProfiler.h"
+
 #if TS_PLATFORM == TS_WINDOWS
 
 #include "ts/tessa/common/IncludeWindows.h"
@@ -222,6 +224,8 @@ math::VC2U WindowManager::getSize() const
 
 void WindowManager::useApplicationView()
 {
+	TS_ZONE();
+
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	TS_VERIFY_POINTERS(windowViewManager);
@@ -232,6 +236,8 @@ void WindowManager::useApplicationView()
 
 void WindowManager::useInterfaceView()
 {
+	TS_ZONE();
+
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	TS_VERIFY_POINTERS(windowViewManager);
@@ -242,6 +248,8 @@ void WindowManager::useInterfaceView()
 
 const WindowView &WindowManager::getApplicationView() const
 {
+	TS_ZONE();
+
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	return windowViewManager->getView(WindowViewManager::ViewType_Application);
@@ -249,6 +257,8 @@ const WindowView &WindowManager::getApplicationView() const
 
 const WindowView &WindowManager::getInterfaceView() const
 {
+	TS_ZONE();
+
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	return windowViewManager->getView(WindowViewManager::ViewType_Interface);
@@ -256,6 +266,8 @@ const WindowView &WindowManager::getInterfaceView() const
 
 const WindowView &WindowManager::getCurrentView() const
 {
+	TS_ZONE();
+
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	TS_ASSERT(windowViewManager);
 	if (windowViewManager == nullptr)
@@ -356,6 +368,8 @@ bool WindowManager::setWindowIcon(const String &filepath)
 
 sf::RenderWindow &WindowManager::getRenderWindow()
 {
+	TS_ZONE();
+
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 	return *renderWindow;
 }

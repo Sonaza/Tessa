@@ -15,7 +15,7 @@
 
 #include "ts/tessa/system/WindowViewManager.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, scenes)
 
@@ -216,15 +216,21 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 			{
 				case sf::Mouse::Left:
 				{
-					clickTimer.restart();
-					dragged = 0.f;
+					if (displayMode == Normal)
+					{
+						clickTimer.restart();
+						dragged = 0.f;
+					}
 				}
 				return true;
 
 				case sf::Mouse::Right:
 				{
-					targetImageScale = 1.f;
-					targetPositionOffset = math::VC2::zero;
+					if (displayMode == Normal)
+					{
+						targetImageScale = 1.f;
+						targetPositionOffset = math::VC2::zero;
+					}
 				}
 				return true;
 
@@ -264,19 +270,19 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 		case sf::Event::MouseMoved:
 		{
 			math::VC2I mousePosition(event.mouseMove.x, event.mouseMove.y);
-			math::VC2 mouseDelta = static_cast<math::VC2>(lastMousePosition - mousePosition);
+			math::VC2 mouseDelta = static_cast<math::VC2>(mousePosition - lastMousePosition);
 
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
 				dragged += mouseDelta.length();
-				targetPositionOffset -= mouseDelta;
+				targetPositionOffset += mouseDelta;
 				enforceOversizeLimits(defaultScale * imageScale);
 			}
 			
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 			{
 				// Scales image by holding down middle mouse: moving mouse pointer up or to the right enlarges, and vice versa
-				int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? -math::sign(mouseDelta.x) : math::sign(mouseDelta.y);
+				int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? math::sign(mouseDelta.x) : -math::sign(mouseDelta.y);
 				float delta = mouseDelta.length() * deltaSign;
 				targetImageScale += (delta / 140.f) * targetImageScale;
 				targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);

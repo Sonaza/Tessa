@@ -79,11 +79,11 @@ public:
 	lang::Signal<SharedPointer<Image>> currentImageChangedSignal;
 
 private:
-	std::atomic_bool quitting = false;
+	static std::atomic_bool quitting;
 
 	void prepareShaders();
 	std::map<DisplayShaderTypes, String> displayShaderFiles;
-	SharedPointer<sf::Texture> alphaCheckerPatternTexture;
+	sf::Texture alphaCheckerPatternTexture;
 
 	void applySorting(std::vector<String> &filelist);
 	void ensureImageIndex();

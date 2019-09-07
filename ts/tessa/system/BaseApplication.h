@@ -11,6 +11,8 @@
 
 #include "ts/tessa/time/Clock.h"
 
+#include "ts/tessa/profiling/ZoneProfiler.h"
+
 TS_DECLARE1(system, ThreadPool);
 TS_DECLARE1(system, WindowManager);
 TS_DECLARE1(file, ArchivistFilesystem);
@@ -148,6 +150,8 @@ bool BaseApplication::createManagerInstance(Args&&... args)
 template<class ManagerType>
 ManagerType &BaseApplication::getManager()
 {
+	TS_ZONE();
+
 	const std::type_index typeIndex = typeid(ManagerType);
 	InstancedManagersList::iterator it = managerInstances.find(typeIndex);
 	TS_ASSERT(it != managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
@@ -157,6 +161,8 @@ ManagerType &BaseApplication::getManager()
 template<class ManagerType>
 const ManagerType &BaseApplication::getManager() const
 {
+	TS_ZONE();
+
 	const std::type_index typeIndex = typeid(ManagerType);
 	InstancedManagersList::iterator it = managerInstances.find(typeIndex);
 	TS_ASSERT(it != managerInstances.end() && "Attempting to retrieve a manager that has not been created.");

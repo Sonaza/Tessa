@@ -12,7 +12,7 @@
 #include "ts/tessa/thread/ThreadScheduler.h"
 #include "ts/ivie/viewer/image/ImageBackgroundLoaderWebm.h"
 
-#include "ts/tessa/profiling/ScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, viewer)
 
@@ -45,7 +45,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 	ViewerManager &vm = TS_GET_GIGATON().getGigaton<ViewerManager>();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 	errorText = "Unknown error.";
 
@@ -97,7 +97,7 @@ void Image::unload()
 	if (loaderState == Unloaded)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 // 	TS_ZONE();
 
@@ -122,7 +122,7 @@ void Image::restart(bool suspend)
 	if (loaderState == Error || loaderState == Complete)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 	TS_ASSERT(backgroundLoader);
 
@@ -143,7 +143,7 @@ void Image::restart(bool suspend)
 
 void Image::suspendLoader()
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	if (loaderState == Unloaded || loaderState == Error)
 		return;
 
@@ -153,7 +153,7 @@ void Image::suspendLoader()
 
 void Image::setActive(bool activeParam)
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	active = activeParam;
 	if (active && backgroundLoader)
 	{
@@ -182,7 +182,7 @@ void Image::resumeLoading()
 	if (loaderState != Suspended)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	TS_ASSERT(backgroundLoader);
 	backgroundLoader->resume();
 }
@@ -191,7 +191,7 @@ const math::VC2U Image::getSize() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 // 	TS_ASSERT(data.size.x > 0 && data.size.y > 0 && "Image size is not set.");
 	return data.size;
 }
@@ -200,7 +200,7 @@ const FrameStorage *Image::getCurrentFrameStorage() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	if (!frameBuffer.isEmpty())
 		return &frameBuffer.getReadPtr();
 	return nullptr;
@@ -245,7 +245,7 @@ SizeType Image::getCurrentFrameIndex() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return currentFrameIndex;
 }
 
@@ -253,7 +253,7 @@ SizeType Image::getNumFramesTotal() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return data.numFramesTotal;
 }
 
@@ -261,7 +261,7 @@ SizeType Image::getNumFramesBuffered() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return (SizeType)frameBuffer.getBufferedAmount();
 }
 
@@ -269,7 +269,7 @@ bool Image::getIsAnimated() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return data.numFramesTotal > 1;
 }
 
@@ -277,7 +277,7 @@ bool Image::getHasAlpha() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return data.hasAlpha;
 }
 
@@ -287,7 +287,7 @@ bool Image::advanceToNextFrame()
 
 	static SizeType lastFrameIndex = ~0U;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 	backgroundLoader->requestNextFrame();
 
@@ -307,7 +307,7 @@ bool Image::isDisplayable() const
 	if (loaderState == Unloading)
 		return false;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return loaderState != Error && !frameBuffer.isEmpty() && displayShader != nullptr;
 }
 
@@ -325,7 +325,7 @@ bool Image::hasThumbnail() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return thumbnail != nullptr;
 }
 
@@ -333,7 +333,7 @@ SharedPointer<sf::Texture> Image::getThumbnail() const
 {
 	TS_ZONE();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return thumbnail;
 }
 
@@ -344,7 +344,7 @@ void Image::setImageData(const ImageData &dataParam)
 	if (loaderState == Unloading)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	data = dataParam;
 }
 
@@ -376,7 +376,7 @@ const String &Image::getFilepath() const
 
 String Image::getStats() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	String str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
 		file::getBasename(filepath),
 		currentFrameIndex + 1,
@@ -442,14 +442,14 @@ void Image::finalizeBuffer()
 	if (loaderState == Unloading)
 		return;
 
-// 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+// 	MutexGuard lock(mutex);
 	frameBuffer.removeReadConstraint();
 }
 
 bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxSize)
 {
 	TS_ZONE();
-
+	
 	TS_ASSERT(maxSize > 0);
 	TS_ASSERT(frameTexture != nullptr);
 	if (frameTexture == nullptr)
@@ -477,19 +477,23 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 	}
 
 	sf::RenderTexture rt;
-	if (!rt.create(scaledSize.x, scaledSize.y))
-		return false;
+	{
+		TS_ZONE_NAMED("RenderTexture thumbnail");
 
-	sf::RenderStates states;
-	states.texture = frameTexture.get();
+		if (!rt.create(scaledSize.x, scaledSize.y))
+			return false;
 
-	states.shader = getDisplayShader(scaleFactor).get();
+		sf::RenderStates states;
+		states.texture = frameTexture.get();
 
-	rt.clear(sf::Color::White);
-	rt.draw(
-		util::makeQuadVertexArrayScaled(scaledSize.x, scaledSize.y, textureSize.x, textureSize.y),
-		states);
-	rt.display();
+		states.shader = getDisplayShader(scaleFactor).get();
+
+		rt.clear(sf::Color::White);
+		rt.draw(
+			util::makeQuadVertexArrayScaled(scaledSize.x, scaledSize.y, textureSize.x, textureSize.y),
+			states);
+		rt.display();
+	}
 
 	sf::Texture *thumbnailTexture = new sf::Texture(rt.getTexture());
 	TS_ASSERT(thumbnailTexture != nullptr);
@@ -498,7 +502,7 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 		thumbnailTexture->setSmooth(true);
 		thumbnailTexture->generateMipmap();
 
-		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(mutex);
 		thumbnail.reset(thumbnailTexture);
 	}
 
