@@ -162,6 +162,7 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="common\Debugging.cpp" />
     <ClCompile Include="common\WindowsUtils.cpp" />
     <ClCompile Include="file\ArchivistFilesystem.cpp" />
     <ClCompile Include="file\ArchivistReader.cpp" />

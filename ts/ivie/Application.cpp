@@ -1,5 +1,7 @@
 #include "Precompiled.h"
-#include "ts/ivie/Application.h"
+#include "Application.h"
+
+#include "ts/tessa/common/Debugging.h"
 
 #include "ts/tessa/system/WindowManager.h"
 #include "ts/tessa/file/ArchivistFilesystem.h"
@@ -15,20 +17,21 @@
 #include "ts/ivie/viewer/ViewerManager.h"
 #include "ts/ivie/viewer/image/FreeImageStaticInitializer.h"
 
-#include "ts/tessa/string/String.h"
-
-#if TS_PLATFORM == TS_WINDOWS //&& TS_BUILD != TS_FINALRELEASE
-#include "ts/tessa/common/IncludeWindows.h"
-#else
-bool IsDebuggerPresent() { return false; }
-#endif
-
 TS_PACKAGE1(app)
 
 Application::Application(int32 argc, const wchar_t **argv)
 	: system::BaseApplication(argc, argv)
 {
 	viewer::FreeImageStaticInitializer::staticInitialize();
+
+	if (debugging::isDebuggerPresent())
+	{
+		resource::ResourceManager::setResourceRootDirectory(file::getWorkingDirectory());
+	}
+	else
+	{
+		resource::ResourceManager::setResourceRootDirectory(file::getExecutableDirectory());
+	}
 }
 
 Application::~Application()
@@ -37,15 +40,6 @@ Application::~Application()
 
 bool Application::start()
 {
-	if (IsDebuggerPresent())
-	{
-		resource::ResourceManager::setResourceRootDirectory(file::getWorkingDirectory());
-	}
-	else
-	{
-		resource::ResourceManager::setResourceRootDirectory(file::getExecutableDirectory());
-	}
-
 	viewer::ViewerManager &viewerManager = getManager<viewer::ViewerManager>();
 
 	String pathParameter;
@@ -54,6 +48,9 @@ bool Application::start()
 // 	String workingDirectory = file::isFile(pathParameter) ? file::getDirname(pathParameter) : pathParameter;
 // 	if (workingDirectory.isEmpty())
 // 		workingDirectory = file::joinPaths(file::getWorkingDirectory(), "img");
+
+	bool hasRecursiveFlag = getCommando().hasFlag("r") || getCommando().hasFlag("-recursive");
+	viewerManager.setRecursiveScan(hasRecursiveFlag, false);
 
 	viewerManager.setFilepath(pathParameter);
 

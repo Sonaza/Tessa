@@ -1,6 +1,7 @@
 #include "Precompiled.h"
+#include "BaseApplication.h"
+
 #include "ts/tessa/common/Debugging.h"
-#include "ts/tessa/system/BaseApplication.h"
 
 #include "ts/tessa/file/ArchivistFileSystem.h"
 #include "ts/tessa/file/FileUtils.h"
@@ -47,21 +48,35 @@ int32 BaseApplication::launch()
 {
 	initializeConfigDefaults(_config);
 
-	if (!_config.open(TS_CONFIG_FILE_NAME))
+	String rootPath;
+	if (debugging::isDebuggerPresent())
 	{
-		if (!file::exists(TS_CONFIG_FILE_NAME))
+		rootPath = file::getWorkingDirectory();
+	}
+	else
+	{
+		rootPath = file::getExecutableDirectory();
+	}
+
+	const String configFilepath = file::joinPaths(rootPath, TS_CONFIG_FILE_NAME);
+
+	if (!_config.open(configFilepath))
+	{
+		if (!file::exists(configFilepath))
 		{
 			// Config doesn't exist, create a default.
-			_config.save(TS_CONFIG_FILE_NAME);
-			TS_LOG_WARNING("Unable to open config file. File: %s. Created a new file with application defaults.", TS_CONFIG_FILE_NAME);
+			_config.save(configFilepath);
+			TS_WLOG_WARNING("Unable to open config file. File: %s. Created a new file with application defaults.", configFilepath);
 		}
 		else
 		{
-			TS_LOG_WARNING("Unable to open config file. File: %s. File exists but likely has syntax errors.", TS_CONFIG_FILE_NAME);
+			TS_WLOG_WARNING("Unable to open config file. File: %s. File exists but likely has syntax errors.", configFilepath);
 		}
 	}
 
-	common::Log::setLogFile(_config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
+	const String logFilepath = file::joinPaths(
+		file::getExecutableDirectory(), _config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
+	common::Log::setLogFile(logFilepath);
 
 	if (sf::Shader::isAvailable() == false)
 	{
@@ -271,6 +286,9 @@ void BaseApplication::mainloop()
 
 		handleEvents();
 
+		if (!applicationRunning)
+			break;
+
 		SizeType updates = 0;
 
 		{
@@ -355,6 +373,10 @@ void BaseApplication::handleEvents()
 					case sf::Keyboard::Escape:
 					{
 						applicationRunning = false;
+
+						system::WindowManager &windowManager = getManager<system::WindowManager>();
+						windowManager.close();
+						return;
 					}
 					break;
 

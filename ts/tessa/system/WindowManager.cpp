@@ -112,8 +112,11 @@ void WindowManager::create(const math::VC2U &videomode, const String &windowTitl
 
 void WindowManager::close()
 {
-	renderWindow->close();
-	renderWindow.reset();
+	if (renderWindow != nullptr)
+	{
+		renderWindow->close();
+		renderWindow.reset();
+	}
 }
 
 void WindowManager::setVSyncEnabled(const bool enabled)
@@ -172,6 +175,8 @@ WindowManager::WindowState WindowManager::getWindowState() const
 
 bool WindowManager::pollEvent(sf::Event &eventParam)
 {
+// 	if (renderWindow == nullptr)
+// 		return false;
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
 	bool hasEvent = renderWindow->pollEvent(eventParam);

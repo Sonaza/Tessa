@@ -15,6 +15,7 @@
 #include <functional>
 #include <memory>
 #include <chrono>
+#include <set>
 #include <future>
 
 TS_PACKAGE1(thread)
@@ -131,9 +132,9 @@ struct ScheduledTask
 		future = promise.get_future();
 	}
 
-	ScheduledTask(TaskPriority priority, TimeSpan interval, std::function<bool()> &&task)
+	ScheduledTask(TaskPriority priority, TimeSpan interval, bool startImmediately, std::function<bool()> &&task)
 		: initialized(true)
-		, scheduledTime(Time::now() + interval)
+		, scheduledTime(startImmediately ? Time::now() : Time::now() + interval)
 		, interval(interval)
 		, task(std::move(task))
 		, taskId(ScheduledTask::nextTaskId++)
@@ -274,7 +275,8 @@ public:
 	bool isTaskQueued(SchedulerTaskId taskId);
 
 	// Returns true if task was cancelled succesfully, false if task wasn't found
-	bool cancelTask(SchedulerTaskId taskId);
+	bool cancelTask(SchedulerTaskId taskId, bool waitCompletion);
+	bool isTaskCancelled(SchedulerTaskId taskId) const;
 
 	// Blocks until given task id is complete (returns immediately if task wasn't found)
 	// Can't be used with interval tasks.
@@ -323,19 +325,26 @@ public:
 	template<class Function, class... Args>
 	SchedulerTaskId scheduleWithInterval(
 		TaskPriority priority,
-		TimeSpan interval,
+		TimeSpan interval, bool startImmediately,
 		Function &&f, Args&&... args);
 
 	// For passing in instanced class methods
 	template<class Class, class... Args>
 	SchedulerTaskId scheduleWithInterval(
 		TaskPriority priority,
-		TimeSpan interval,
+		TimeSpan interval, bool startImmediately,
 		bool(Class::*taskFunction)(Args...), Class *instance, Args&&... args);
 	
 	static SizeType numHardwareThreads();
 
+	// Returns current task id being executed in the current thread.
+	// Returns InvalidTaskId if no task is currently being worked on.
+	// Only valid for worker threads.
+	static SchedulerTaskId getCurrentThreadTaskId();
+
 private:
+	static thread_local SchedulerTaskId currentThreadTaskId;
+
 	void createBackgroundWorkers(SizeType numWorkers);
 	void destroyBackgroundWorkers();
 
@@ -354,6 +363,9 @@ private:
 	// and a worker can start processing whenever able.
 	TaskPriorityQueue pendingTaskQueue;
 
+	// Keeps note of any task that was cancelled, important for interval tasks to prevent rescheduling.
+	std::set<SchedulerTaskId> cancelledTasks;
+
 	// Matches worker ids to actively worked tasks
 	std::vector<SchedulerTaskId> workerToTaskMap;
 
@@ -362,7 +374,7 @@ private:
 		TaskPriority priority, TimeSpan time_from_now, std::function<ReturnType()> &&f);
 
 	SchedulerTaskId scheduleWithIntervalImpl(
-		TaskPriority priority, TimeSpan interval, std::function<bool()> &&f);
+		TaskPriority priority, TimeSpan interval, bool startImmediately, std::function<bool()> &&f);
 
 	class BackgroundScheduler;
 	friend class BackgroundScheduler;
@@ -444,7 +456,7 @@ ScheduledTaskFuture<ReturnType> ThreadScheduler::scheduleOnceImpl(
 template<class Function, class... Args>
 SchedulerTaskId ThreadScheduler::scheduleWithInterval(
 	TaskPriority priority,
-	TimeSpan interval,
+	TimeSpan interval, bool startImmediately,
 	Function &&taskFunction, Args&&... args)
 {
 	typedef typename std::result_of<Function(Args...)>::type ReturnType;
@@ -453,6 +465,7 @@ SchedulerTaskId ThreadScheduler::scheduleWithInterval(
 	return scheduleWithIntervalImpl(
 		priority,
 		interval,
+		startImmediately,
 		std::move(std::bind(std::forward<Function>(taskFunction), std::forward<Args>(args)...))
 	);
 }
@@ -460,20 +473,21 @@ SchedulerTaskId ThreadScheduler::scheduleWithInterval(
 template<class Class, class... Args>
 SchedulerTaskId ts::thread::ThreadScheduler::scheduleWithInterval(
 	TaskPriority priority,
-	TimeSpan interval,
+	TimeSpan interval, bool startImmediately,
 	bool(Class::*taskFunction)(Args...), Class *instance, Args&&... args)
 {
 	std::function<bool()> bound = std::bind(taskFunction, instance, std::forward<Args>(args)...);
 	return scheduleWithIntervalImpl(
 		priority,
 		interval,
+		startImmediately,
 		std::move(std::bind(taskFunction, instance, std::forward<Args>(args)...))
 	);
 }
 
 inline SchedulerTaskId ThreadScheduler::scheduleWithIntervalImpl(
 	TaskPriority priority,
-	TimeSpan interval,
+	TimeSpan interval, bool startImmediately,
 	std::function<bool()> &&function)
 {
 	SharedPointer<std::function<bool()>> sharedTask =
@@ -486,6 +500,7 @@ inline SchedulerTaskId ThreadScheduler::scheduleWithIntervalImpl(
 		SharedScheduledTask task = makeShared<ScheduledTask>(
 			priority,
 			interval,
+			startImmediately,
 			[sharedTask]()
 			{
 				// Task return value determines if it will be rescheduled

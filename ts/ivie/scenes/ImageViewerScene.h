@@ -45,6 +45,8 @@ protected:
 
 	float framePadding = 20.f;
 	
+	Clock elapsedTimer;
+
 	Clock clickTimer;
 	Clock frameTimer;
 	Clock changeTimer;

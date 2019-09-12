@@ -623,7 +623,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 	}
 	
 	sf::Text statusText("", *font->getResource());
-// 	statusText.setOutlineThickness(2.f);
+	statusText.setOutlineThickness(2.f);
 
 	if (numImages > 0)
 	{
@@ -644,6 +644,25 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			{
 				TS_ZONE_NAMED("statusText 1 draw");
 				renderTarget.draw(statusText);
+			}
+
+			if (viewerManager->isScanningFiles() && !viewerManager->isFirstScanComplete())
+			{
+				math::FloatRect bounds = statusText.getGlobalBounds();
+
+				sf::CircleShape c(5.f);
+
+				math::VC2 position(bounds.maxbounds.x + 10.f, bounds.getCenter().y);
+
+				float t = elapsedTimer.getElapsedTime().getSecondsAsFloat();
+				position.x += 20.f + std::cos(t * 2.f) * 20.f;
+				position.y += - math::abs(std::cos(t * 10.f) * 10.f) * ((std::cos(t * 5.f) + 1.f) * 0.5f);
+
+				c.setPosition(position);
+				c.setFillColor(sf::Color::White);
+				c.setOutlineColor(sf::Color::Black);
+
+				renderTarget.draw(c);
 			}
 		}
 

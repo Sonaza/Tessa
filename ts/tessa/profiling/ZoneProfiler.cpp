@@ -389,7 +389,7 @@ private:
 
 	const std::vector<sf::Color> colors;
 
-	bool visible = true;
+	bool visible = false;
 	sf::Font *debugFont = nullptr;
 	sf::Shader clipShader;
 	math::VC2 mousePosition;

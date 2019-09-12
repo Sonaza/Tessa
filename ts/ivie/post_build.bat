@@ -21,6 +21,16 @@ echo Running externals build step...
 call "%EXTERNALS_DIRECTORY_PATH%\externals_build_step.bat" %CONFIGURATION% %WORKING_DIRECTORY_PATH%
 if %errorlevel% NEQ 0 goto ERROR
 
+if /I "%CONFIGURATION%" == "release" goto COPY_EXE
+if /I "%CONFIGURATION%" == "finalrelease" goto COPY_EXE
+goto FINISH
+
+:COPY_EXE
+echo Copying %ROOT_DIR%\builds\%CONFIGURATION%\Ivie.exe to %WORKING_DIRECTORY_PATH%\Ivie.exe
+copy %ROOT_DIR%\builds\%CONFIGURATION%\Ivie.exe %WORKING_DIRECTORY_PATH%\Ivie.exe
+
+:FINISH
+
 echo Post Build Script complete!
 
 exit 0

@@ -148,7 +148,7 @@ void ViewerManager::deinitialize()
 	quitting = true;
 
 	if (scannerTaskId != thread::InvalidTaskId)
-		threadScheduler->cancelTask(scannerTaskId);
+		threadScheduler->cancelTask(scannerTaskId, true);
 
 	backgroundUnloader.reset();
 
@@ -189,8 +189,9 @@ void ViewerManager::setFilepath(const String &filepath)
 {
 	TS_ZONE();
 
-	const String directoryPath = file::getDirname(filepath);
-	TS_ASSERT(!directoryPath.isEmpty());
+	String directoryPath = file::getDirname(filepath);
+	if (directoryPath.isEmpty())
+		directoryPath = file::getWorkingDirectory();
 
 	if (currentDirectoryPath == directoryPath)
 	{
@@ -200,23 +201,43 @@ void ViewerManager::setFilepath(const String &filepath)
 	}
 
 	if (scannerTaskId != thread::InvalidTaskId)
-		threadScheduler->cancelTask(scannerTaskId);
+	{
+		threadScheduler->cancelTask(scannerTaskId, true);
+		scannerTaskId = thread::InvalidTaskId;
+	}
 
+	firstScanComplete = false;
 	currentDirectoryPath = directoryPath;
 
-	updateFilelist(currentDirectoryPath, false);
+	IndexingAction action = IndexingAction_KeepCurrentFile;
 
-	if (file::isFile(filepath))
-		jumpToImageByFilename(filepath);
+	if (file::isFile(filepath) && isExtensionAllowed(filepath))
+	{
+		currentFileList.clear();
+		currentFileList.push_back(filepath);
+		pendingImageIndex = -1;
+		current.imageIndex = 0;
+		current.filepath = filepath;
+		pendingImageUpdate = true;
+	}
 	else
-		jumpToImage(0);
+	{
+		action = IndexingAction_Reset;
+	}
 
-	pendingImageUpdate = true;
+	oneTimeScannerTaskId = threadScheduler->scheduleOnce(
+		thread::Priority_Critical,
+		TimeSpan::zero,
+		&ThisClass::updateFilelist, this, directoryPath, false, action
+	).getTaskId();
 
-	scannerTaskId = threadScheduler->scheduleWithInterval(
-		thread::Priority_Normal,
-		TimeSpan::fromMilliseconds(2000),
-		&ViewerManager::updateFilelist, this, directoryPath, true);
+
+// 	updateFilelist(currentDirectoryPath, false, false);
+// 
+// 	if (file::isFile(filepath))
+// 		jumpToImageByFilename(filepath);
+// 	else
+// 		jumpToImage(0);
 }
 
 const String &ViewerManager::getFilepath() const
@@ -224,10 +245,18 @@ const String &ViewerManager::getFilepath() const
 	return currentDirectoryPath;
 }
 
-void ViewerManager::setRecursiveScan(bool recursiveEnabled)
+void ViewerManager::setRecursiveScan(bool recursiveEnabled, bool immediateRescan)
 {
 	scanStyle = !recursiveEnabled ? file::FileListStyle_Files : file::FileListStyle_Files_Recursive;
-	updateFilelist(currentDirectoryPath, true);
+
+	if (!currentDirectoryPath.isEmpty() && immediateRescan)
+	{
+		oneTimeScannerTaskId = threadScheduler->scheduleOnce(
+			thread::Priority_Critical,
+			TimeSpan::zero,
+			&ThisClass::updateFilelist, this, currentDirectoryPath, true, IndexingAction_KeepCurrentFile
+		).getTaskId();
+	}
 }
 
 //////////////////////////////////////////////////////
@@ -289,6 +318,16 @@ SizeType ViewerManager::getNumImages() const
 {
 	MutexGuard lock(mutex);
 	return (SizeType)currentFileList.size();
+}
+
+bool ViewerManager::isScanningFiles() const
+{
+	return scanningFiles.load();
+}
+
+bool ViewerManager::isFirstScanComplete() const
+{
+	return firstScanComplete;
 }
 
 const String &ViewerManager::getCurrentFilepath() const
@@ -359,31 +398,65 @@ bool ViewerManager::isExtensionAllowed(const String &filename)
 	return std::find(allowedExtensions.begin(), allowedExtensions.end(), ext) != allowedExtensions.end();
 }
 
-bool ViewerManager::updateFilelist(const String directoryPath, bool ensureIndex)
+bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRecursive, IndexingAction indexingAction)
 {
+	const thread::SchedulerTaskId taskId = thread::ThreadScheduler::getCurrentThreadTaskId();
+	TS_PRINTF("ViewerManager::updateFilelist task id %u\n", thread::ThreadScheduler::getCurrentThreadTaskId());
+
 	if (quitting)
 		return false;
 
 	TS_ZONE();
-
-	file::FileList lister(directoryPath, true, scanStyle);
-
-	std::vector<file::FileEntry> files = lister.getFullListing();
+	scanningFiles = true;
 
 	std::vector<String> templist;
-	templist.reserve(files.size());
+	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
 
-	for (file::FileEntry &file : files)
+	while (!quitting)
 	{
-		if (isExtensionAllowed(file.getFilepath()))
+		file::FileList lister(directoryPath, true, listScanStyle);
+
+		file::FileEntry entry;
+		while (lister.next(entry))
 		{
-			templist.push_back({
-				file.getFullFilepath()
-			});
+			if (quitting)
+				return false;
+
+			if (threadScheduler->isTaskCancelled(taskId))
+			{
+				TS_PRINTF("Task cancelled, skedaddlar!\n");
+				return false;
+			}
+
+			if (isExtensionAllowed(entry.getFilepath()))
+			{
+				templist.push_back({
+					entry.getFullFilepath()
+				});
+			}
 		}
+
+		if (templist.empty() && scanStyle == file::FileListStyle_Files_Recursive && listScanStyle != scanStyle)
+		{
+			listScanStyle = scanStyle;
+			continue;
+		}
+		break;
+	}
+
+	if (quitting)
+		return false;
+
+	if (threadScheduler->isTaskCancelled(taskId))
+	{
+		TS_PRINTF("Task cancelled, skedaddlar 2!\n");
+		return false;
 	}
 
 	applySorting(templist);
+
+	if (quitting)
+		return false;
 
 	if ((templist.size() != currentFileList.size()) || (templist != currentFileList))
 	{
@@ -393,13 +466,38 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool ensureIndex)
 			currentFileList = std::move(templist);
 		}
 
-		if (ensureIndex)
-			ensureImageIndex();
+		switch (indexingAction)
+		{
+			case IndexingAction_DoNothing:
+				// See me doing nothing here
+			break;
+
+			case IndexingAction_KeepCurrentFile:
+				ensureImageIndex();
+			break;
+
+			case IndexingAction_Reset:
+				pendingImageIndex = 0;
+				pendingImageUpdate = true;
+			break;
+		}
 
 		filelistChangedSignal((SizeType)currentFileList.size());
 	}
 
-	return true;
+	scanningFiles = false;
+	firstScanComplete = true;
+
+	if (!quitting && scannerTaskId == thread::InvalidTaskId)
+	{
+		scannerTaskId = threadScheduler->scheduleWithInterval(
+			thread::Priority_Normal,
+			TimeSpan::fromMilliseconds(2000), true,
+			&ViewerManager::updateFilelist, this, directoryPath, true, IndexingAction_KeepCurrentFile
+		);
+	}
+
+	return !quitting;
 }
 
 void ViewerManager::applySorting(std::vector<String> &filelist)
@@ -429,6 +527,7 @@ void ViewerManager::ensureImageIndex()
 	}
 
 	PosType updatedIndex = findFileIndexByName(current.filepath, currentFileList);
+	TS_WPRINTF("File: %s   Updated index: %lld\n", current.filepath, updatedIndex);
 	if (updatedIndex != current.imageIndex)
 	{
 		if (updatedIndex >= 0)

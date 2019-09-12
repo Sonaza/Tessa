@@ -11,6 +11,7 @@
 #include "ts/tessa/common/Assert.h"
 #include "ts/tessa/string/StringUtils.h"
 #include "ts/tessa/Config.h"
+#include "ts/tessa/file/FileUtils.h"
 
 #include <array>
 
@@ -80,7 +81,7 @@ public:
 	}
 };
 
-String Log::filepathToBeOpened = TS_DEFAULT_LOG_FILE_NAME;
+String Log::filepathToBeOpened = file::joinPaths(file::getExecutableDirectory(), TS_DEFAULT_LOG_FILE_NAME);
 
 Log &Log::getSingleton()
 {
@@ -90,7 +91,7 @@ Log &Log::getSingleton()
 
 bool Log::setLogFile(const String &filepathParam)
 {
-	if (filepathToBeOpened.isEmpty())
+	if (filepathParam.isEmpty())
 		return false;
 
 	Log::filepathToBeOpened = filepathParam;

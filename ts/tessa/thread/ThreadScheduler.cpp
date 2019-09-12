@@ -13,6 +13,8 @@ TS_DEFINE_MANAGER_TYPE(thread::ThreadScheduler);
 
 TS_PACKAGE1(thread)
 
+thread_local SchedulerTaskId ThreadScheduler::currentThreadTaskId = InvalidTaskId;
+
 class ThreadScheduler::BackgroundScheduler : public AbstractThreadEntry
 {
 	ThreadScheduler *scheduler = nullptr;
@@ -116,16 +118,20 @@ public:
 			}
 			TS_ASSERT(task != nullptr);
 
+			ThreadScheduler::currentThreadTaskId = task->taskId;
+
 			task->workedByWorkerIndex = workerIndex;
 			bool canReschedule = task->run();
 			task->workedByWorkerIndex = ScheduledTask::InvalidWorkerIndex;
+
+			ThreadScheduler::currentThreadTaskId = InvalidTaskId;
 
 			{
 				MutexGuard lock(scheduler->queueMutex);
 
 				scheduler->workerToTaskMap[workerIndex] = InvalidTaskId;
 
-				if (canReschedule)
+				if (canReschedule && scheduler->cancelledTasks.count(task->taskId) == 0)
 				{
 					task->reschedule();
 					scheduler->waitingTaskQueue.push(task);
@@ -133,6 +139,7 @@ public:
 				}
 				else
 				{
+					TS_PRINTF("Task %u was not rescheduled.\n", task->taskId);
 					scheduler->incompleteTasks.erase(task->taskId);
 				}
 			}
@@ -284,13 +291,15 @@ bool ThreadScheduler::isTaskQueuedUnsafe(SchedulerTaskId taskId)
 		   (pendingTaskQueue.find_if(pred) != pendingTaskQueue.end());
 }
 
-bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
+bool ThreadScheduler::cancelTask(SchedulerTaskId taskId, bool waitCompletion)
 {
 	MutexGuard lock(queueMutex);
 
 	TasksList::iterator taskIt = incompleteTasks.find(taskId);
 	if (taskIt == incompleteTasks.end())
 		return false;
+
+	cancelledTasks.insert(taskId);
 
 	auto tryEraseFromQueue = [this, taskId]() -> bool
 	{
@@ -316,18 +325,24 @@ bool ThreadScheduler::cancelTask(SchedulerTaskId taskId)
 		return false;
 	};
 
-	if (!tryEraseFromQueue())
+	bool wasErased = tryEraseFromQueue();
+	if (wasErased)
+	{
+		incompleteTasks.erase(taskIt);
+	}
+	else if (waitCompletion)
 	{
 		lock.unlock();
 		taskIt->second->waitForCompletion();
 		lock.lock();
-
-		tryEraseFromQueue();
 	}
 
-	incompleteTasks.erase(taskIt);
-
 	return true;
+}
+
+bool ThreadScheduler::isTaskCancelled(SchedulerTaskId taskId) const
+{
+	return cancelledTasks.count(taskId) > 0;
 }
 
 void ThreadScheduler::waitUntilTaskComplete(SchedulerTaskId taskId)
@@ -365,5 +380,11 @@ SizeType ThreadScheduler::numHardwareThreads()
 	return (SizeType)std::thread::hardware_concurrency();
 }
 
+SchedulerTaskId ThreadScheduler::getCurrentThreadTaskId()
+{
+	return currentThreadTaskId;
+}
+
 
 TS_END_PACKAGE1()
+
