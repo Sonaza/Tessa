@@ -72,7 +72,7 @@ public:
 		DisplayShader_FreeImage,
 		DisplayShader_Webm,
 	};
-	SharedPointer<sf::Shader> loadDisplayShader(DisplayShaderTypes type);
+	SharedPointer<resource::ShaderResource> loadDisplayShader(DisplayShaderTypes type);
 
 	String getStats();
 

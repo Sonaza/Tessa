@@ -96,16 +96,16 @@ bool ArchivistWriter::saveToFile(const String &archiveFilename, bool overwriteEx
 		ArchivistFileHeader header;
 		memset(&header, 0, sizeof(ArchivistFileHeader));
 		
-		std::string ansiFilename = file.archiveFilepath.toAnsiString();
-		memcpy(header.filename, (void*)ansiFilename.c_str(), ansiFilename.size());
+		auto utf8Filename = file.archiveFilepath.toUtf8();
+		memcpy(header.filename, (void*)utf8Filename.c_str(), utf8Filename.size());
 		header.filesize = (SizeType)file.filesize;
 		header.compression = file.compression;
 
 		headers.push_back(header);
 	}
 
-	OutputFile archive(archiveFilename, OutputFileMode_WriteBinaryTruncate);
-	if (!archive)
+	OutputFile archive;
+	if (!archive.open(archiveFilename, OutputFileMode_WriteBinaryTruncate))
 		return false;
 
 	ArchivistFileFormat archiveFormat;

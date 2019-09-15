@@ -208,13 +208,17 @@ FrameStorage *Image::getCurrentFrameStorage()
 	return nullptr;
 }
 
-SharedPointer<sf::Shader> Image::getDisplayShader(const float apparentScale)
+sf::Shader *Image::getDisplayShader(const float apparentScale)
 {
 	TS_ZONE();
+
+	sf::Shader *shader = nullptr;
 
 	if (displayShader)
 	{
 		TS_ZONE_NAMED("Set Uniforms");
+
+		shader = displayShader->getResource().get();
 
 		switch (currentLoaderType)
 		{
@@ -223,10 +227,10 @@ SharedPointer<sf::Shader> Image::getDisplayShader(const float apparentScale)
 				sf::Glsl::Vec2 arr[2];
 				arr[0] = (math::VC2)data.size * apparentScale;
 				arr[1] = math::VC2(apparentScale, apparentScale);
-				displayShader->setUniformArray("u_params", arr, 2);
+				shader->setUniformArray("u_params", arr, 2);
 
-// 				displayShader->setUniform("u_textureApparentSize", apparentSize);
-// 				displayShader->setUniform("u_apparentScale", apparentScale);
+// 				shader->setUniform("u_textureApparentSize", apparentSize);
+// 				shader->setUniform("u_apparentScale", apparentScale);
 			}
 			break;
 
@@ -240,7 +244,7 @@ SharedPointer<sf::Shader> Image::getDisplayShader(const float apparentScale)
 		}
 	}
 
-	return displayShader;
+	return shader;
 }
 
 SizeType Image::getCurrentFrameIndex() const
@@ -500,7 +504,7 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 		sf::RenderStates states;
 		states.texture = frameTexture.get();
 
-		states.shader = getDisplayShader(scaleFactor).get();
+		states.shader = getDisplayShader(scaleFactor);
 
 		rt.clear(sf::Color::White);
 		rt.draw(

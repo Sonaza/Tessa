@@ -182,7 +182,7 @@ bool OutputFile::flush()
 
 bool OutputFile::isOpen() const
 {
-	return filePtr != nullptr && bad != false;
+	return filePtr != nullptr && bad == false;
 }
 
 bool OutputFile::isBad() const

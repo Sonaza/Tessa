@@ -5,13 +5,9 @@
 TS_PACKAGE1(math)
 
 extern uint32 simpleHash32(const char *str, BigSizeType length);
-extern uint32 simpleHash32(const std::string &str);
-extern uint32 simpleHash32(const std::wstring &str);
 extern uint32 simpleHash32(const String &str);
 
 extern uint64 simpleHash64(const char *str, BigSizeType length);
-extern uint64 simpleHash64(const std::string &str);
-extern uint64 simpleHash64(const std::wstring &str);
 extern uint64 simpleHash64(const String &str);
 
 template<class T>
@@ -22,10 +18,22 @@ uint32 simpleHash32(const T &val)
 }
 
 template<class T>
+uint32 simpleHash32(const std::basic_string<T> &val)
+{
+	return simpleHash32(reinterpret_cast<const char *>(&val[0]), sizeof(T) * val.size());
+}
+
+template<class T>
 uint64 simpleHash64(const T &val)
 {
 	static_assert(std::is_trivially_copyable<T>::value, "Type must be trivially copyable. Specialization is required for complex types.");
 	return simpleHash64(reinterpret_cast<const char *>(&val), sizeof(T));
+}
+
+template<class T>
+uint64 simpleHash64(const std::basic_string<T> &val)
+{
+	return simpleHash64(reinterpret_cast<const char *>(&val[0]), sizeof(T) * val.size());
 }
 
 // template<class T>

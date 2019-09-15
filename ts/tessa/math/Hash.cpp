@@ -17,16 +17,6 @@ extern uint32 simpleHash32(const char *str, BigSizeType length)
 	return out;
 }
 
-extern uint32 simpleHash32(const std::string &str)
-{
-	return simpleHash32(str.c_str(), str.size());
-}
-
-extern uint32 simpleHash32(const std::wstring &str)
-{
-	return simpleHash32(reinterpret_cast<const char *>(&str[0]), sizeof(wchar_t) * str.size());
-}
-
 extern uint32 simpleHash32(const String &str)
 {
 	return simpleHash32(reinterpret_cast<const char *>(&str[0]), sizeof(char32_t) * str.getSize());
@@ -37,16 +27,6 @@ extern uint64 simpleHash64(const char *str, BigSizeType length)
 	uint64 out;
 	siphash(reinterpret_cast<const uint8*>(str), length, key, reinterpret_cast<uint8*>(&out), sizeof(out));
 	return out;
-}
-
-extern uint64 simpleHash64(const std::string &str)
-{
-	return simpleHash64(str.c_str(), str.size());
-}
-
-extern uint64 simpleHash64(const std::wstring &str)
-{
-	return simpleHash64(reinterpret_cast<const char *>(&str[0]), sizeof(wchar_t) * str.size());
 }
 
 extern uint64 simpleHash64(const String &str)

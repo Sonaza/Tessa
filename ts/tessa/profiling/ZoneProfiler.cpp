@@ -9,6 +9,7 @@
 #include "ts/tessa/thread/Thread.h"
 #include "ts/tessa/time/TimeSpan.h"
 #include "ts/tessa/resource/ResourceManager.h"
+#include "ts/tessa/resource/ShaderResource.h"
 
 #include <cinttypes>
 #include <cmath>
@@ -296,11 +297,12 @@ public:
 			threadText.setString(lbl.text);
 			threadText.setPosition(lbl.rect.minbounds);
 
-			clipShader.setUniform("u_resolution", view.size);
-			clipShader.setUniform("u_position", lbl.rect.minbounds);
-			clipShader.setUniform("u_size", lbl.rect.getSize());
+			sf::Shader &shader = *clipShader->getResource();
+			shader.setUniform("u_resolution", view.size);
+			shader.setUniform("u_position", lbl.rect.minbounds);
+			shader.setUniform("u_size", lbl.rect.getSize());
 
-			renderTarget.draw(threadText, &clipShader);
+			renderTarget.draw(threadText, &shader);
 		}
 
 		if (hoverInfo.isValid())
@@ -380,8 +382,8 @@ private:
 
 		windowManager = &TS_GET_GIGATON().getGigaton<system::WindowManager>();
 
-		String filepath = resource::ResourceManager::getAbsoluteResourcePath("shader/area_clip.frag");
-		if (!clipShader.loadFromFile(filepath, sf::Shader::Fragment))
+		clipShader = makeShared<resource::ShaderResource>("shader/area_clip.frag");
+		if (clipShader == nullptr || !clipShader->loadResource())
 		{
 			TS_ASSERT(!"Failed to load text clip shader.");
 		}
@@ -391,7 +393,7 @@ private:
 
 	bool visible = false;
 	sf::Font *debugFont = nullptr;
-	sf::Shader clipShader;
+	SharedPointer<resource::ShaderResource> clipShader;
 	math::VC2 mousePosition;
 
 	system::WindowManager *windowManager = nullptr;

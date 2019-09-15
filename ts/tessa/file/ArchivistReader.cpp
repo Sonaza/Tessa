@@ -66,7 +66,7 @@ bool ArchivistReader::openArchive(const String &filepath)
 			return false;
 		}
 
-		const SizeType hash = math::simpleHash32(String(header.filename));
+		const SizeType hash = math::simpleHash32(header.filename, strlen(header.filename));
 		headers.emplace(hash, header);
 	}
 
@@ -75,13 +75,13 @@ bool ArchivistReader::openArchive(const String &filepath)
 
 bool ArchivistReader::fileExists(const String &filename) const
 {
-	const SizeType hash = math::simpleHash32(filename);
+	const SizeType hash = math::simpleHash32(filename.toUtf8());
 	return headers.count(hash) > 0;
 }
 
 PosType ArchivistReader::getFileSize(const String &filename)
 {
-	SizeType hash = math::simpleHash32(filename);
+	SizeType hash = math::simpleHash32(filename.toUtf8());
 	return headers.count(hash) > 0 ? headers[hash].filesize : -1;
 }
 
@@ -103,7 +103,7 @@ SizeType ArchivistReader::getNumFiles() const
 
 bool ArchivistReader::getFileExtractor(const String &filename, ArchivistReaderExtractor &extractor)
 {
-	const SizeType hash = math::simpleHash32(filename);
+	const SizeType hash = math::simpleHash32(filename.toUtf8());
 	if (headers.count(hash) == 0)
 	{
 		TS_LOG_ERROR("Archive does not contain the request file. File: %s\n", filename);

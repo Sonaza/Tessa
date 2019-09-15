@@ -13,18 +13,11 @@
 
 using namespace ts;
 
-int asdfasd()
-{
-	Time t = Time::now();
-	TS_PRINTF("%s", t.fromEpoch().getAsString());
-
-	return 1;
-}
+extern void makepack();
 
 int wmain(int argc, const wchar_t **argv)
 {
-// 	if (asdfasd())
-// 		return 0;
+// 	makepack();
 
 	app::Application app(argc, argv);
 	int returnCode = app.launch();

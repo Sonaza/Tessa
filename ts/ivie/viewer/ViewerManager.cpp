@@ -651,22 +651,25 @@ void ViewerManager::prepareShaders()
 	displayShaderFiles.insert(std::make_pair(DisplayShader_Webm,      "shader/convert_webm.frag"));
 }
 
-SharedPointer<sf::Shader> ViewerManager::loadDisplayShader(DisplayShaderTypes type)
+SharedPointer<resource::ShaderResource> ViewerManager::loadDisplayShader(DisplayShaderTypes type)
 {
-	SharedPointer<sf::Shader> displayShader = makeShared<sf::Shader>();
+	TS_ASSERT(displayShaderFiles.find(type) != displayShaderFiles.end() && "Attempting to load an undefined display shader.");
+
+// 	String filepath = resource::ResourceManager::getAbsoluteResourcePath(displayShaderFiles[type]);
+
+	SharedPointer<resource::ShaderResource> displayShader = makeShared<resource::ShaderResource>(displayShaderFiles[type]);
 	TS_ASSERT(displayShader);
 	if (displayShader == nullptr)
 		return nullptr;
 
-	TS_ASSERT(displayShaderFiles.find(type) != displayShaderFiles.end() && "Attempting to load an undefined display shader.");
-
-	String filepath = resource::ResourceManager::getAbsoluteResourcePath(displayShaderFiles[type]);
-	if (!displayShader->loadFromFile(filepath, sf::Shader::Fragment))
+	if (!displayShader->loadResource())
 		return nullptr;
+
+	sf::Shader *shader = displayShader->getResource().get();
 
 	if (type == DisplayShader_FreeImage)
 	{
-		displayShader->setUniform("u_checkerPatternTexture", alphaCheckerPatternTexture);
+		shader->setUniform("u_checkerPatternTexture", alphaCheckerPatternTexture);
 	}
 
 	return displayShader;

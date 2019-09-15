@@ -24,7 +24,6 @@ public:
 	Image(const String &filepath);
 	~Image();
 
-
 	bool startLoading(bool suspendAfterBufferFull);
 	void unload();
 
@@ -48,7 +47,7 @@ public:
 
 	FrameStorage *getCurrentFrameStorage();
 
-	SharedPointer<sf::Shader> getDisplayShader(const float apparentScale);
+	sf::Shader *getDisplayShader(const float apparentScale);
 
 	SizeType getCurrentFrameIndex() const;
 	SizeType getNumFramesTotal() const;
@@ -137,7 +136,7 @@ private:
 
 	bool makingThumbnail = false;
 	SharedPointer<sf::Texture> thumbnail;
-	SharedPointer<sf::Shader> displayShader;
+	SharedPointer<resource::ShaderResource> displayShader;
 
 	ScopedPointer<AbstractImageBackgroundLoader> backgroundLoader;
 	

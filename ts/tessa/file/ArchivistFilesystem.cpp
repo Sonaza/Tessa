@@ -61,7 +61,7 @@ bool ArchivistFilesystem::addArchive(const String &archivePath)
 	std::vector<String> list = reader->getFileList();
 	for (String &filepath : list)
 	{
-		const SizeType fileHash = math::simpleHash32(filepath);
+		const SizeType fileHash = math::simpleHash32(filepath.toUtf8());
 
 		if (fileToArchiveMapping.count(fileHash) > 0)
 			TS_PRINTF("%s is being overridden by another file from %s\n", filepath, archivePath);
@@ -82,7 +82,7 @@ bool ArchivistFilesystem::fileExists(const String &filepath)
 // 	if (!overridePath.empty() && exists(joinPaths(overridePath, filepath)))
 // 		return true;
 
-	const SizeType fileHash = math::simpleHash32(filepath);
+	const SizeType fileHash = math::simpleHash32(filepath.toUtf8());
 	if (fileToArchiveMapping.count(fileHash) > 0)
 		return true;
 
@@ -94,7 +94,7 @@ bool ArchivistFilesystem::fileExists(const String &filepath)
 
 PosType ArchivistFilesystem::getFileSize(const String &filepath)
 {
-	const SizeType fileHash = math::simpleHash32(filepath);
+	const SizeType fileHash = math::simpleHash32(filepath.toUtf8());
 	if (fileToArchiveMapping.count(fileHash) > 0)
 	{
 		const SizeType archiveHash = fileToArchiveMapping[fileHash];
@@ -110,7 +110,7 @@ const std::vector<String> &ArchivistFilesystem::getFileList() const
 
 bool ArchivistFilesystem::getFileExtractor(const String &filepath, ArchivistReaderExtractor &extractor)
 {
-	const SizeType fileHash = math::simpleHash32(filepath);
+	const SizeType fileHash = math::simpleHash32(filepath.toUtf8());
 	if (fileToArchiveMapping.count(fileHash) > 0)
 	{
 		const SizeType archiveHash = fileToArchiveMapping[fileHash];

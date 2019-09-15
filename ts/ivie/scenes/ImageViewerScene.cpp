@@ -484,7 +484,6 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 {
 	const system::WindowView &view = windowManager->getApplicationView();
 
-// 	float scale = defaultScale * imageScale;
 	math::VC2 scaledSize = static_cast<math::VC2>(imageSize) * scale;
 
 	math::VC2 oversize = (scaledSize - view.size) / 2.f;
@@ -613,7 +612,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 				transform.scale(scale, scale);
 				states.transform = transform;
 
-				states.shader = currentImage->getDisplayShader(scale).get();
+				states.shader = currentImage->getDisplayShader(scale);
 
 				renderTarget.draw(va, states);
 			}
@@ -786,7 +785,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 				renderTarget.draw(statusText);
 			}
 
-			if (currentImage->getIsAnimated())
+			if (currentImage != nullptr && currentImage->getIsAnimated())
 			{
 				float progress = currentImage->getAnimationProgress(frameTimer.getElapsedTime());
 
@@ -865,6 +864,21 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		errorText.setPosition(view.size / 2.f);
 
 		renderTarget.draw(errorText);
+
+		if (numImages == 0)
+		{
+			errorText.setString(TS_WFMT(
+				"Path: %s",
+				viewerManager->getFilepath()
+			));
+
+			bounds = errorText.getLocalBounds();
+			errorText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+			errorText.setPosition(view.size.x / 2.f, view.size.y / 2.f + 30.f);
+			errorText.setScale(0.55f, 0.55f);
+
+			renderTarget.draw(errorText);
+		}
 	}
 
 	if (showManagerStatus || showSchedulerStatus)

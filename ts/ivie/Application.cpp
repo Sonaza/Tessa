@@ -45,23 +45,13 @@ bool Application::start()
 	String pathParameter;
 	getCommando().getNthParameter(0, pathParameter);
 
-// 	String workingDirectory = file::isFile(pathParameter) ? file::getDirname(pathParameter) : pathParameter;
-// 	if (workingDirectory.isEmpty())
-// 		workingDirectory = file::joinPaths(file::getWorkingDirectory(), "img");
+	if (pathParameter.isEmpty())
+		pathParameter = file::joinPaths(file::getWorkingDirectory(), "img");
 
 	bool hasRecursiveFlag = getCommando().hasFlag("r") || getCommando().hasFlag("-recursive");
 	viewerManager.setRecursiveScan(hasRecursiveFlag, false);
 
 	viewerManager.setFilepath(pathParameter);
-
-// 	if (!pathParameter.isEmpty() && file::exists(pathParameter) && file::isFile(pathParameter))
-// 	{
-// 		viewerManager.jumpToImageByFilename(pathParameter);
-// 	}
-// 	else
-// 	{
-// 		viewerManager.jumpToImage(0);
-// 	}
 
 	return true;
 }
@@ -141,7 +131,7 @@ bool Application::createWindow(system::WindowManager &windowManager)
 
 bool Application::loadArchives(file::ArchivistFilesystem &fileSystem)
 {
-
+	fileSystem.addArchive(resource::ResourceManager::getAbsoluteResourcePath("resources.tsp"));
 	return true;
 }
 
