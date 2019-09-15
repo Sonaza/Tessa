@@ -12,7 +12,7 @@
 #include "ts/tessa/file/FileUtils.h"
 
 #include "ts/ivie/viewer/SupportedFormats.h"
-#include "ts/ivie/viewer/image/Image.h"
+#include "ts/ivie/image/Image.h"
 #include "ts/ivie/util/NaturalSort.h"
 
 #include "ts/tessa/profiling/ZoneProfiler.h"
@@ -28,12 +28,13 @@ class ViewerManager::BackgroundImageUnloader : public thread::AbstractThreadEntr
 	std::atomic_bool running = true;
 	Thread *thread = nullptr;
 
-	Mutex mutex;
 	ConditionVariable condition;
 
 	std::map<uint32, Time> unloadQueue;
 
 public:
+	Mutex mutex;
+
 	BackgroundImageUnloader(ViewerManager *viewerManager)
 		: viewerManager(viewerManager)
 	{
@@ -55,7 +56,6 @@ public:
 		TS_ASSERT(viewerManager->imageStorage.find(imageHash) != viewerManager->imageStorage.end() &&
 			"Image hash not found in storage, don't try to unload images that aren't even loaded.");
 
-		MutexGuard lock(mutex);
 		unloadQueue[imageHash] = Time::now() + delay;
 	}
 
@@ -64,7 +64,6 @@ public:
 // 		TS_ASSERT(unloadQueue.find(imageHash) != unloadQueue.end() &&
 // 			"Image hash not found in unload queue, don't try to cancel unloads.");
 
-		MutexGuard lock(mutex);
 		unloadQueue.erase(imageHash);
 	}
 
@@ -82,7 +81,7 @@ public:
 
 // 			TS_ZONE();
 
-			std::vector<SharedPointer<Image>> unloadables;
+			std::vector<SharedPointer<image::Image>> unloadables;
 
 			for (auto it = unloadQueue.begin(); it != unloadQueue.end();)
 			{
@@ -99,7 +98,7 @@ public:
 
 			lock.unlock();
 
-			for (SharedPointer<Image> &image : unloadables)
+			for (SharedPointer<image::Image> &image : unloadables)
 			{
 				if (image != nullptr && !image->isUnloaded())
 				{
@@ -154,7 +153,7 @@ void ViewerManager::deinitialize()
 
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
-		SharedPointer<Image> &image = it->second;
+		SharedPointer<image::Image> &image = it->second;
 		if (image && !image->isUnloaded())
 			image->unload();
 	}
@@ -170,13 +169,15 @@ void ViewerManager::update(const TimeSpan deltaTime)
 		{
 			MutexGuard lock(mutex);
 
+			SizeType previousImageIndex = current.imageIndex;
+
 			if (pendingImageIndex != -1 && !currentFileList.empty())
 			{
 				current.imageIndex = (SizeType)pendingImageIndex;
 				current.filepath = currentFileList[current.imageIndex];
 			}
 
-			updateCurrentImage();
+			updateCurrentImage(previousImageIndex);
 
 			pendingImageUpdate = false;
 		}
@@ -193,7 +194,7 @@ void ViewerManager::setFilepath(const String &filepath)
 	if (directoryPath.isEmpty())
 		directoryPath = file::getWorkingDirectory();
 
-	if (currentDirectoryPath == directoryPath)
+	if (file::pathIsSubpath(currentDirectoryPath, directoryPath))
 	{
 		if (file::isFile(filepath))
 			jumpToImageByFilename(filepath);
@@ -245,12 +246,25 @@ const String &ViewerManager::getFilepath() const
 	return currentDirectoryPath;
 }
 
+bool ViewerManager::isRecursiveScan() const
+{
+	return scanStyle == file::FileListStyle_Files_Recursive;
+}
+
 void ViewerManager::setRecursiveScan(bool recursiveEnabled, bool immediateRescan)
 {
 	scanStyle = !recursiveEnabled ? file::FileListStyle_Files : file::FileListStyle_Files_Recursive;
 
 	if (!currentDirectoryPath.isEmpty() && immediateRescan)
 	{
+		if (scannerTaskId != thread::InvalidTaskId)
+		{
+			threadScheduler->cancelTask(scannerTaskId, true);
+			scannerTaskId = thread::InvalidTaskId;
+		}
+
+		firstScanComplete = false;
+
 		oneTimeScannerTaskId = threadScheduler->scheduleOnce(
 			thread::Priority_Critical,
 			TimeSpan::zero,
@@ -270,6 +284,9 @@ void ViewerManager::jumpToImage(SizeType index)
 
 	const SizeType numImagesTotal = (SizeType)currentFileList.size();
 	if (index >= numImagesTotal)
+		index = numImagesTotal - 1;
+
+	if (index == current.imageIndex)
 		return;
 
 	pendingImageIndex = index;
@@ -400,13 +417,34 @@ bool ViewerManager::isExtensionAllowed(const String &filename)
 
 bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRecursive, IndexingAction indexingAction)
 {
+	TS_ZONE();
+
 	const thread::SchedulerTaskId taskId = thread::ThreadScheduler::getCurrentThreadTaskId();
-	TS_PRINTF("ViewerManager::updateFilelist task id %u\n", thread::ThreadScheduler::getCurrentThreadTaskId());
 
 	if (quitting)
 		return false;
 
-	TS_ZONE();
+	if (!file::exists(directoryPath) || !file::isDirectory(directoryPath))
+	{
+		TS_WLOG_ERROR("Directory path does not exist. Path: %s", directoryPath);
+
+		{
+			TS_ZONE_NAMED("Copying filelist");
+			MutexGuard lock(mutex);
+			currentFileList.clear();
+
+			currentDirectoryPath.clear();
+			scannerTaskId = thread::InvalidTaskId;
+		}
+
+		pendingImageIndex = 0;
+		pendingImageUpdate = true;
+
+		filelistChangedSignal(0U);
+		
+		return false;
+	}
+
 	scanningFiles = true;
 
 	std::vector<String> templist;
@@ -486,7 +524,9 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRec
 	}
 
 	scanningFiles = false;
-	firstScanComplete = true;
+
+	if (scanStyle != file::FileListStyle_Files_Recursive || scannerTaskId != thread::InvalidTaskId)
+		firstScanComplete = true;
 
 	if (!quitting && scannerTaskId == thread::InvalidTaskId)
 	{
@@ -536,7 +576,9 @@ void ViewerManager::ensureImageIndex()
 		}
 		else
 		{
-			jumpToImage((SizeType)(current.imageIndex > 0 ? current.imageIndex - 1 : 0));
+			SizeType index = (SizeType)(current.imageIndex > 0 ? current.imageIndex - 1 : 0);
+			index = math::min(index, (SizeType)currentFileList.size() - 1);
+			jumpToImage(index);
 		}
 	}
 }
@@ -559,7 +601,7 @@ String ViewerManager::getStats()
 
 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
 	{
-		SharedPointer<Image> &image = it->second;
+		SharedPointer<image::Image> &image = it->second;
 		stats.push_back(image->getStats());
 	}
 
@@ -568,7 +610,7 @@ String ViewerManager::getStats()
 	return string::joinString(stats, "\n");
 }
 
-SharedPointer<Image> ViewerManager::getCurrentImage() const
+SharedPointer<image::Image> ViewerManager::getCurrentImage() const
 {
 	TS_ZONE();
 
@@ -630,7 +672,7 @@ SharedPointer<sf::Shader> ViewerManager::loadDisplayShader(DisplayShaderTypes ty
 	return displayShader;
 }
 
-void ViewerManager::updateCurrentImage()
+void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 {
 	TS_ZONE();
 
@@ -650,9 +692,9 @@ void ViewerManager::updateCurrentImage()
 		uint32 imageHash = math::simpleHash32(entry.filepath);
 		activeImages.push_back(imageHash);
 
-		SharedPointer<Image> &image = imageStorage[imageHash];
+		SharedPointer<image::Image> &image = imageStorage[imageHash];
 		if (image == nullptr)
-			image = makeShared<Image>(entry.filepath);
+			image = makeShared<image::Image>(entry.filepath);
 
 		bool isCurrentImage = (entry.index == current.imageIndex);
 		if (isCurrentImage)
@@ -666,15 +708,17 @@ void ViewerManager::updateCurrentImage()
 
 		if (image->isUnloaded())
 		{
-// 			TS_WPRINTF("--- Starting loading %s\n", entry.filepath);
 			image->startLoading(!isCurrentImage);
 		}
-		else if (image->isSuspended() && isCurrentImage)
+		else if (isCurrentImage && image->isSuspended())
 		{
-// 			TS_WPRINTF("--- Resuming loading %s\n", entry.filepath);
 			image->resumeLoading();
 		}
-
+		else if (entry.index == previousImageIndex)
+		{
+			image->restart(true);
+		}
+		
 		if (image->hasError())
 		{
 			TS_WPRINTF("Couldn't load image: %s\n", image->getErrorText());
@@ -684,28 +728,65 @@ void ViewerManager::updateCurrentImage()
 		image->setActive(isCurrentImage);
 	}
 
-	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
+	std::vector<uint32> newlyActiveImages;
+	for (uint32 imageHash : activeImages)
 	{
-		uint32 imageHash = it->first;
-		SharedPointer<Image> &image = it->second;
+		if (!ts::util::findIfContains(lastActiveImages, imageHash))
+			newlyActiveImages.push_back(imageHash);
+	}
 
-		if (image->getState() == Image::Unloaded)
-			continue;
-
+	std::vector<uint32> newlyInactiveImages;
+	for (uint32 imageHash : lastActiveImages)
+	{
 		if (!ts::util::findIfContains(activeImages, imageHash))
+			newlyInactiveImages.push_back(imageHash);
+	}
+
+	lastActiveImages = activeImages;
+
+	{
+		MutexGuard lock(backgroundUnloader->mutex);
+
+		for (const uint32 imageHash : newlyActiveImages)
 		{
-// 			TS_WPRINTF("--- Adding to unload queue %s\n", image->getFilepath());
-// 			image->unload();
-			image->suspendLoader();
-			backgroundUnloader->addToQueue(imageHash, TimeSpan::fromMilliseconds(2000));
-		}
-		else if (imageHash != currentImageHash)
-		{
-// 			TS_WPRINTF("--- Restarting playback %s\n", image->getFilepath());
+	 		SharedPointer<image::Image> &image = imageStorage[imageHash];
+			
+			if (image->getState() == image::Image::Unloaded)
+				continue;
+
 			image->restart(true);
 			backgroundUnloader->removeFromQueue(imageHash);
 		}
+
+		for (const uint32 imageHash : newlyInactiveImages)
+		{
+			SharedPointer<image::Image> &image = imageStorage[imageHash];
+
+			if (image->getState() == image::Image::Unloaded)
+				continue;
+
+			image->suspendLoader();
+			backgroundUnloader->addToQueue(imageHash, TimeSpan::fromMilliseconds(2000));
+		}
 	}
+
+// 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
+// 	{
+// 		uint32 imageHash = it->first;
+// 		SharedPointer<image::Image> &image = it->second;
+// 
+// 		if (ts::util::findIfContains(newlyInactiveImages, imageHash))
+// 			continue;
+// 
+// 		if (image->getState() == image::Image::Unloaded)
+// 			continue;
+// 		
+// 		if (imageHash != currentImageHash)
+// 		{
+// // 			TS_WPRINTF("--- Restarting playback %s\n", image->getFilepath());
+// 			image->restart(true);
+// 		}
+// 	}
 }
 
 TS_END_PACKAGE2()

@@ -37,28 +37,28 @@
     <ClCompile Include="viewer\SupportedFormats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="viewer\image\Image.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="viewer\image\AbstractImageBackgroundLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="viewer\image\FreeImageStaticInitializer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="viewer\image\ImageBackgroundLoaderFreeImage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="util\RingBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util\RenderUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="viewer\image\ImageBackgroundLoaderWebm.cpp">
+    <ClCompile Include="viewer\ViewerManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="viewer\ViewerManager.cpp">
+    <ClCompile Include="image\AbstractImageBackgroundLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image\FreeImageStaticInitializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image\Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image\ImageBackgroundLoaderFreeImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image\ImageBackgroundLoaderWebm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -81,18 +81,6 @@
     <ClInclude Include="viewer\SupportedFormats.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="viewer\image\Image.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="viewer\image\AbstractImageBackgroundLoader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="viewer\image\ImageBackgroundLoaderFreeImage.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="viewer\image\FreeImageStaticInitializer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="util\RingBuffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -102,10 +90,22 @@
     <ClInclude Include="resource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="viewer\image\ImageBackgroundLoaderWebm.h">
+    <ClInclude Include="viewer\ViewerManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="viewer\ViewerManager.h">
+    <ClInclude Include="image\AbstractImageBackgroundLoader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="image\FreeImageStaticInitializer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="image\Image.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="image\ImageBackgroundLoaderFreeImage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="image\ImageBackgroundLoaderWebm.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

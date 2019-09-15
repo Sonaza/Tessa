@@ -13,14 +13,12 @@ struct WindowView
 	float rotation = 0.f;  // The rotation in degrees
 	float scale = 1.f;     // Scales the view size in a way where >1.0 results in thigs looking smaller 
 
-	explicit operator sf::View() const
-	{
-		sf::View view;
-		view.setSize(size * scale);
-		view.setCenter(position.x, position.y);
-		view.setRotation(rotation);
-		return view;
-	}
+	explicit operator sf::View() const;
+
+	sf::Transform getTransform() const;
+
+	math::VC2 convertToViewCoordinate(const math::VC2 &coordinate) const;
+	math::VC2 convertFromViewCoordinate(const math::VC2 &coordinate) const;
 };
 
 class WindowViewManager : public system::AbstractManagerBase

@@ -40,19 +40,21 @@ extern bool isAbsolutePath(const String &path)
 {
 
 #if TS_PLATFORM == TS_WINDOWS
-	if (path.getSize() >= 2)
-	{
-		// Match drive letter and colon pattern (e.g. C:)
-		// Network drive paths start with two backslashes and are considered absolute as well.
-		static std::wregex pathRegex(L"^([A-Za-z]:|\\\\)", std::regex_constants::ECMAScript);
-		if (std::regex_search(path.toWideString(), pathRegex))
-			return true;
-	}
+	return PathIsRelativeW(path.toWideString().c_str()) == FALSE;
+
+// 	if (path.getSize() >= 2)
+// 	{
+// 		// Match drive letter and colon pattern (e.g. C:)
+// 		// Network drive paths start with two backslashes and are considered absolute as well.
+// 		static std::wregex pathRegex(L"^([A-Za-z]:|\\\\)", std::regex_constants::ECMAScript);
+// 		if (std::regex_search(path.toWideString(), pathRegex))
+// 			return true;
+// 	}
 #else
 	if (path.getSize() >= 1)
 		return path[0] == '/';
-#endif
 	return false;
+#endif
 }
 
 extern bool hasTrailingSlash(const String &path)
@@ -145,6 +147,16 @@ extern String normalizePath(const String &path, string::Character delimiter)
 	return normalized;
 }
 
+extern bool pathIsSubpath(const String &rootPath, const String &otherPath)
+{
+	if (!isAbsolutePath(rootPath) || !isAbsolutePath(otherPath))
+		return false;
+
+	const String normalizedRoot = normalizePath(rootPath);
+	const String normalizedOther = normalizePath(otherPath);
+	return normalizedOther.find(normalizedRoot) == 0;
+}
+
 extern String getDirname(const String &path, const String &delimiters)
 {
 	if (isDirectory(path))
@@ -210,7 +222,7 @@ extern bool isDirectory(const String &path)
 extern bool removeFile(const String &path)
 {
 #if TS_PLATFORM == TS_WINDOWS
-	if (DeleteFileW(path.toWideString().c_str()) != 0) // Non-zero marks success
+	if (DeleteFileW(path.toWideString().c_str()) == TRUE)
 		return true;
 
 	TS_LOG_ERROR("Unable to remove file or directory. File: %s. Error: %s", path, windows::getLastErrorAsString());

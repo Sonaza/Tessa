@@ -13,6 +13,36 @@ TS_DEFINE_MANAGER_TYPE(system::WindowViewManager);
 
 TS_PACKAGE1(system)
 
+WindowView::operator sf::View() const
+{
+	sf::View view;
+	view.setSize(size * scale);
+	view.setCenter(position.x, position.y);
+	view.setRotation(rotation);
+	return view;
+}
+
+sf::Transform WindowView::getTransform() const
+{
+	sf::Transform t;
+
+	t.translate(-size / 2.f + position / 2.f);
+	t.scale(scale, scale);
+	t.rotate(rotation);
+
+	return t;
+}
+
+math::VC2 WindowView::convertToViewCoordinate(const math::VC2 &coordinate) const
+{
+	return getTransform().transformPoint(coordinate);
+}
+
+math::VC2 WindowView::convertFromViewCoordinate(const math::VC2 &coordinate) const
+{
+	return getTransform().getInverse().transformPoint(coordinate);
+}
+
 WindowViewManager::WindowViewManager()
 {
 	gigaton.registerClass(this);

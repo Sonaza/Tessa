@@ -5,7 +5,7 @@
 
 #include "ts/tessa/file/FileList.h"
 
-TS_DECLARE2(app, viewer, Image);
+TS_DECLARE2(app, image, Image);
 
 TS_PACKAGE2(app, viewer)
 
@@ -38,6 +38,7 @@ public:
 	void setFilepath(const String &filepath);
 	const String &getFilepath() const;
 
+	bool isRecursiveScan() const;
 	void setRecursiveScan(bool recursiveEnabled, bool immediateRescan = true);
 
 	enum SortingStyle
@@ -64,7 +65,7 @@ public:
 
 	const String &getCurrentFilepath() const;
 
-	SharedPointer<Image> getCurrentImage() const;
+	SharedPointer<image::Image> getCurrentImage() const;
 
 	enum DisplayShaderTypes
 	{
@@ -79,7 +80,7 @@ public:
 	lang::Signal<SizeType> filelistChangedSignal;
 
 	// When current image changes, parameter is SharedPointer of the image (nullptr of none)
-	lang::Signal<SharedPointer<Image>> currentImageChangedSignal;
+	lang::Signal<SharedPointer<image::Image>> currentImageChangedSignal;
 
 private:
 	static std::atomic_bool quitting;
@@ -121,7 +122,7 @@ private:
 		String filepath;
 	};
 	DisplayState current;
-	SharedPointer<Image> currentImage;
+	SharedPointer<image::Image> currentImage;
 
 	bool pendingImageUpdate = true;
 	PosType pendingImageIndex = 0;
@@ -133,10 +134,11 @@ private:
 // 	};
 	std::vector<String> currentFileList;
 
-	void updateCurrentImage();
+	void updateCurrentImage(SizeType previousImageIndex);
 
-	typedef std::map<uint32, SharedPointer<Image>> ImageStorageList;
+	typedef std::map<uint32, SharedPointer<image::Image>> ImageStorageList;
 	ImageStorageList imageStorage;
+	std::vector<uint32> lastActiveImages;
 
 	class BackgroundImageUnloader;
 	ScopedPointer<BackgroundImageUnloader> backgroundUnloader;

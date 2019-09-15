@@ -2,9 +2,9 @@
 
 #include "ts/ivie/util/RingBuffer.h"
 
-TS_DECLARE2(app, viewer, AbstractImageBackgroundLoader);
+TS_DECLARE2(app, image, AbstractImageBackgroundLoader);
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 struct FrameStorage
 {
@@ -24,8 +24,11 @@ public:
 	Image(const String &filepath);
 	~Image();
 
+
 	bool startLoading(bool suspendAfterBufferFull);
 	void unload();
+
+	bool reload();
 
 	void restart(bool suspend);
 	void suspendLoader();
@@ -38,12 +41,14 @@ public:
 	void resumeLoading();
 
 	bool getIsAnimated() const;
+	float getAnimationProgress(TimeSpan frametime = TimeSpan::zero) const;
+
 	bool getHasAlpha() const;
 	const math::VC2U getSize() const;
 
-	const FrameStorage *getCurrentFrameStorage() const;
+	FrameStorage *getCurrentFrameStorage();
 
-	SharedPointer<sf::Shader> getDisplayShader(const math::VC2 &apparentSize, bool useAlphaChecker);
+	SharedPointer<sf::Shader> getDisplayShader(const float apparentScale);
 
 	SizeType getCurrentFrameIndex() const;
 	SizeType getNumFramesTotal() const;
@@ -124,6 +129,7 @@ private:
 	String errorText;
 
 	SizeType currentFrameIndex = 0;
+	TimeSpan currentFrameTime;
 
 	static const BigSizeType MaxFrameBufferCapacity = 20;
 	typedef util::RingBuffer<FrameStorage, MaxFrameBufferCapacity> FrameRingBuffer;

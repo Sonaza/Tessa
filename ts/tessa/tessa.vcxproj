@@ -173,6 +173,7 @@
     <ClCompile Include="file\FileUtils.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
+    <ClCompile Include="input\InputManager.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
     <ClCompile Include="math\Vec2.cpp" />
     <ClCompile Include="resource\ImageResource.cpp" />
@@ -224,6 +225,7 @@
     <ClInclude Include="file\FileUtils.h" />
     <ClInclude Include="file\InputFile.h" />
     <ClInclude Include="file\OutputFile.h" />
+    <ClInclude Include="input\InputManager.h" />
     <ClInclude Include="lang\Noncopyable.h" />
     <ClInclude Include="lang\ScopedPointer.h" />
     <ClInclude Include="lang\SharedPointer.h" />

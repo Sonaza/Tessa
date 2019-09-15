@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ts/ivie/viewer/image/AbstractImageBackgroundLoader.h"
+#include "ts/ivie/image/AbstractImageBackgroundLoader.h"
 
 #include "ts/tessa/file/InputFile.h"
 
@@ -14,9 +14,9 @@ typedef const struct vpx_codec_iface vpx_codec_iface_t;
 struct vpx_codec_ctx;
 typedef vpx_codec_ctx vpx_codec_ctx_t;
 
-TS_DECLARE2(app, viewer, Image);
+TS_DECLARE2(app, image, Image);
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 class ImageBackgroundLoaderWebm : public AbstractImageBackgroundLoader
 {

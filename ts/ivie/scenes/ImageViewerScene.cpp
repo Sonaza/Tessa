@@ -8,7 +8,7 @@
 #include "ts/ivie/util/NaturalSort.h"
 #include "ts/ivie/viewer/ViewerManager.h"
 
-#include "ts/ivie/viewer/image/Image.h"
+#include "ts/ivie/image/Image.h"
 
 #include "ts/ivie/util/RenderUtil.h"
 #include "ts/tessa/thread/ThreadScheduler.h"
@@ -16,6 +16,10 @@
 #include "ts/tessa/system/WindowViewManager.h"
 
 #include "ts/tessa/profiling/ZoneProfiler.h"
+
+#if TS_PLATFORM == TS_WINDOWS
+#include "ts/tessa/common/WindowsUtils.h"
+#endif
 
 TS_PACKAGE2(app, scenes)
 
@@ -58,9 +62,8 @@ void ImageViewerScene::stop()
 
 void ImageViewerScene::loadResources(resource::ResourceManager &rm)
 {
-	font = rm.loadResource<resource::FontResource>("viewer_font", "SourceHanSans-Medium.ttc", true);
-
-// 	shader.loadFromFile("convert.frag", sf::Shader::Fragment);
+	font = rm.loadFont("viewer_font", "SourceHanSans-Medium.ttc", true);
+	backgroundShader = rm.loadShader("background_shader", "shader/background_gradient.frag", true);
 }
 
 bool ImageViewerScene::handleEvent(const sf::Event event)
@@ -175,6 +178,30 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 					return true;
 				}
 
+				case sf::Keyboard::F6:
+				{
+					backgroundShader->reloadResource();
+					return true;
+				}
+
+				case sf::Keyboard::G:
+				{
+#if TS_PLATFORM == TS_WINDOWS
+					windows::openExplorerToFile(viewerManager->getCurrentFilepath());
+					return true;
+#endif
+				}
+				break;
+
+				case sf::Keyboard::D:
+				{
+#if TS_PLATFORM == TS_WINDOWS
+					windows::openFileWithDialog(viewerManager->getCurrentFilepath());
+					return true;
+#endif
+				}
+				break;
+
 				case sf::Keyboard::M:
 				{
 					displayMode = displayMode == Normal ? Manga : Normal;
@@ -200,8 +227,20 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 				case sf::Keyboard::R:
 				{
-					recursiveFileSearch = !recursiveFileSearch;
-					viewerManager->setRecursiveScan(recursiveFileSearch);
+					viewerManager->setRecursiveScan(!viewerManager->isRecursiveScan());
+					return true;
+				}
+
+				case sf::Keyboard::H:
+				{
+					if (!sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+					{
+						viewerInfoMode = viewerInfoMode == ViewerInfo_DisplayAll ? ViewerInfo_HideAll : ViewerInfo_DisplayAll; 
+					}
+					else
+					{
+						viewerInfoMode = viewerInfoMode != ViewerInfo_IndexOnly ? ViewerInfo_IndexOnly : ViewerInfo_DisplayAll;
+					}
 					return true;
 				}
 
@@ -253,7 +292,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 			{
 				case sf::Mouse::Left:
 				{
-					if (clickTimer.getElapsedTime() < 150_ms && dragged <= 10.f)
+					if (clickTimer.getElapsedTime() < 250_ms && dragged <= 10.f)
 					{
 						targetImageScale = 1.f / defaultScale;
 					}
@@ -286,7 +325,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				float delta = mouseDelta.length() * deltaSign;
 				targetImageScale += (delta / 140.f) * targetImageScale;
 				targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
-				enforceOversizeLimits(defaultScale * targetImageScale);
+				enforceOversizeLimits(defaultScale * imageScale);
 			}
 
 			lastMousePosition = mousePosition;
@@ -302,9 +341,9 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				case Normal:
 				{
 					targetImageScale += delta * 0.15f * targetImageScale;
-					targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
+					targetImageScale = math::clamp(targetImageScale, 1.f, 10.f);
 
-					if (delta > 0.f)
+// 					if (delta > 0.f)
 					{
 						const system::WindowView &view = windowManager->getApplicationView();
 
@@ -313,21 +352,32 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 							(float)event.mouseWheelScroll.y
 						);
 
-// 						sf::Transform tf;
-// 						tf.translate(positionOffset).scale(targetImageScale, targetImageScale);
-// 						math::VC2 mousetf = tf.getInverse().transformPoint(mouse);
-// 						TS_PRINTF("mouse %s\n", mousetf.toString());
+						math::VC2 converted = view.convertToViewCoordinate(mouse);
 
-						math::VC2 center = view.size / 2.f;
-						math::VC2 diff = mouse - center;
+						float currentScale = defaultScale * imageScale;
+						float targetScale = defaultScale * targetImageScale;
 
-						math::VC2 offset = diff;
+						math::VC2 imageCenter = static_cast<math::VC2>(imageSize) / 2.f;
 
-						targetPositionOffset -= offset;
-						enforceOversizeLimits(defaultScale * targetImageScale);
+						sf::Transform currentTransform;
+						currentTransform
+							.translate(positionOffset)
+							.scale(currentScale, currentScale)
+							.translate(-imageCenter);
 
-//		 				TS_PRINTF("mouse %s, center %s, diff %s\n", mouse.toString(), center.toString(), diff.toString());
-// 						TS_PRINTF("diff %s\n", offset.toString());
+						sf::Transform targetTransform;
+						targetTransform
+							.translate(positionOffset)
+							.scale(targetScale, targetScale)
+							.translate(-imageCenter);
+
+						math::VC2 currentMouseImagePos = currentTransform.getInverse().transformPoint(converted);
+						math::VC2 targetMouseImagePos = targetTransform.getInverse().transformPoint(converted);
+						
+						math::VC2 diff = targetMouseImagePos - currentMouseImagePos;
+						targetPositionOffset = positionOffset + diff * 1.03f * targetScale;
+						
+						enforceOversizeLimits(defaultScale * math::max(targetImageScale, imageScale));
 					}
 				}
 				break;
@@ -402,26 +452,35 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 	{
 		targetImageScale = math::max(1.f, targetImageScale);
 	}
-
-	defaultScale += (targetDefaultScale - defaultScale) * deltaTime.getSecondsAsFloat() * 8.f;
-	imageScale += (targetImageScale - imageScale) * deltaTime.getSecondsAsFloat() * 25.f;
-
-	positionOffset += (targetPositionOffset - positionOffset) * deltaTime.getSecondsAsFloat() * 32.f;
-
-	{
-		float scale = defaultScale * imageScale;
-		math::VC2 scaledSize = static_cast<math::VC2>(imageSize) * scale;
-
-		math::VC2 oversize = (scaledSize - view.size) / 2.f;
-		oversize.x = math::max(0.f, oversize.x);
-		oversize.y = math::max(0.f, oversize.y);
-
-		positionOffset.x = math::clamp(positionOffset.x, -oversize.x, oversize.x);
-		positionOffset.y = math::clamp(positionOffset.y, -oversize.y, oversize.y);
-	}
 }
 
-void ImageViewerScene::enforceOversizeLimits(float scale)
+void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
+{
+	TS_ZONE();
+
+	const system::WindowView &view = windowManager->getApplicationView();
+
+	float delta = deltaTime.getSecondsAsFloat();
+
+	defaultScale += (targetDefaultScale - defaultScale) * delta * 8.f;
+
+	imageScale += (targetImageScale - imageScale) * delta * 24.f;
+
+	float positionTweenSpeed = math::abs(targetImageScale - imageScale) < 0.01f ? 35.f : 24.f;
+	positionOffset += (targetPositionOffset - positionOffset) * delta * positionTweenSpeed;
+
+	{
+		float targetIndexAlpha = viewerInfoMode != ViewerInfo_HideAll ? 1.f : 0.f;
+		viewerInfoAlpha.index += (targetIndexAlpha - viewerInfoAlpha.index) * delta * 16.f;
+
+		float targetOtherAlpha = viewerInfoMode == ViewerInfo_DisplayAll ? 1.f : 0.f;
+		viewerInfoAlpha.other += (targetOtherAlpha - viewerInfoAlpha.other) * delta * 16.f;
+	}
+
+	enforceOversizeLimits(defaultScale * imageScale, false);
+}
+
+void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 {
 	const system::WindowView &view = windowManager->getApplicationView();
 
@@ -434,20 +493,22 @@ void ImageViewerScene::enforceOversizeLimits(float scale)
 
 	positionOversizeLimit = oversize;
 
-	targetPositionOffset.x = math::clamp(targetPositionOffset.x, -oversize.x, oversize.x);
-	targetPositionOffset.y = math::clamp(targetPositionOffset.y, -oversize.y, oversize.y);
+	if (enforceTarget)
+	{
+		targetPositionOffset.x = math::clamp(targetPositionOffset.x, -oversize.x, oversize.x);
+		targetPositionOffset.y = math::clamp(targetPositionOffset.y, -oversize.y, oversize.y);
+	}
 
 	positionOffset.x = math::clamp(positionOffset.x, -oversize.x, oversize.x);
 	positionOffset.y = math::clamp(positionOffset.y, -oversize.y, oversize.y);
 }
 
-void ImageViewerScene::imageChanged(SharedPointer<viewer::Image> image)
+void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 {
 	TS_ZONE();
 
 	currentImage = image;
-	if (updateImageInfo() == false)
-		pendingImageInfo = true;
+	pendingImageInfo = !updateImageInfo();
 
 	switch (displayMode)
 	{
@@ -460,7 +521,6 @@ void ImageViewerScene::imageChanged(SharedPointer<viewer::Image> image)
 
 		case Manga:
 		{
-// 			targetImageScale = 1.f;
 			targetPositionOffset.x = 0.f;
 			targetPositionOffset.y = 10000.f;
 			enforceOversizeLimits(defaultScale * targetImageScale);
@@ -501,6 +561,18 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 	renderTarget.clear(sf::Color(30, 30, 30));
 
+	if (backgroundShader && backgroundShader->isLoaded())
+	{
+		sf::RectangleShape bg(view.size);
+		bg.setFillColor(sf::Color(30, 30, 30));
+		bg.setOrigin(view.size / 2.f);
+
+		sf::Shader &bgShader = *backgroundShader->getResource();
+		bgShader.setUniform("u_resolution", view.size);
+
+		renderTarget.draw(bg, &bgShader);
+	}
+
 	if (currentImage != nullptr)
 	{
 		math::VC2U size = currentImage->getSize();
@@ -511,25 +583,30 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 		bool displayable = currentImage->isDisplayable() && !pendingImageInfo;
 		if (displayable)
 		{
-			viewer::FrameStorage frame = *currentImage->getCurrentFrameStorage();
-			if (frame.texture != nullptr)
+			image::FrameStorage currentFrame = *currentImage->getCurrentFrameStorage();
+			currentFrameTime = currentFrame.frameTime;
+
+			if (currentFrame.texture != nullptr)
 			{
 				if (currentImage->getIsAnimated())
 				{
-					if (frameTimer.getElapsedTime() > frame.frameTime)
+					if (frameTimer.getElapsedTime() > currentFrame.frameTime)
 					{
 						currentImage->advanceToNextFrame();
 						frameTimer.restart();
+
+						currentFrame = *currentImage->getCurrentFrameStorage();
+						currentFrameTime = currentFrame.frameTime;
 					}
 				}
 
-				sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
-					size.x, size.y, size.x, size.y, 3, sf::Color(0, 0, 0, 170));
+				sf::VertexArray va = util::makeQuadVertexArrayScaled(
+					size.x, size.y, size.x, size.y);
 
-				frame.texture->setSmooth(displaySmooth);
+				currentFrame.texture->setSmooth(displaySmooth);
 
 				sf::RenderStates states;
-				states.texture = frame.texture.get();
+				states.texture = currentFrame.texture.get();
 
 				sf::Transform transform;
 				transform.translate(scaledSize / -2.f + positionOffset);
@@ -538,10 +615,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 				states.shader = currentImage->getDisplayShader(scale).get();
 
-				{
-					TS_ZONE_NAMED("renderTarget.draw image");
-					renderTarget.draw(va, states);
-				}
+				renderTarget.draw(va, states);
 			}
 			else
 			{
@@ -569,10 +643,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 				transform.scale(scale, scale);
 				states.transform = transform;
 
-				{
-					TS_ZONE_NAMED("renderTarget.draw thumbnail");
-					renderTarget.draw(va, states);
-				}
+				renderTarget.draw(va, states);
 			}
 		}
 	}
@@ -602,94 +673,176 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		if (!hasError && !currentImage->isDisplayable())
 		{
 			sf::Text loadingText;
-// 			loadingText.setOutlineThickness(2.f);
+			loadingText.setOutlineThickness(2.f);
 			loadingText.setFont(*font->getResource());
 
-			loadingText.setString("Loading...");
+			SizeType numDots = 1 + ((elapsedTimer.getElapsedTime().getMilliseconds() / 900) % 3);
+			loadingText.setString(TS_FMT("Loading%s", std::string(numDots, '.')));
 
 			sf::FloatRect bounds = loadingText.getLocalBounds();
 			loadingText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-			loadingText.setPosition(view.size / 2.f);
+			loadingText.setPosition(view.size / 2.f + math::VC2(0.f, 25.f));
 
-			{
-				TS_ZONE_NAMED("renderTarget.draw loadingText");
-				renderTarget.draw(loadingText);
-			}
+			renderTarget.draw(loadingText);
+
+			drawLoaderGadget(renderTarget, view.size / 2.f + math::VC2(0.f, -25.f), 30.f);
 		}
 	}
 	else
 	{
 		hasError = true;
 	}
-	
-	sf::Text statusText("", *font->getResource());
-	statusText.setOutlineThickness(2.f);
 
-	if (numImages > 0)
+	if (viewerInfoAlpha.index >= 0.003f && numImages > 0)
 	{
+		sf::Text statusText("", *font->getResource());
+		statusText.setOutlineThickness(2.f);
+
+		float bottomOffset = (1.f - viewerInfoAlpha.other) * 60.f;
+		float textBottomOffset = 27.f - bottomOffset;
+
+		statusText.setFillColor(sf::Color(255, 255, 255, (uint8)(viewerInfoAlpha.index * 255)));
+		statusText.setOutlineColor(sf::Color(0, 0, 0, (uint8)(viewerInfoAlpha.index * 255)));
+
 		{
-			TS_ZONE_NAMED("statusText 1");
+			statusText.setString(TS_WFMT("%u / %u",
+				viewerManager->getCurrentImageIndex() + 1,
+				viewerManager->getNumImages()
+			));
 
-			{
-				TS_ZONE_NAMED("statusText 1 sprintf");
-				statusText.setString(TS_WFMT("%u / %u",
-					viewerManager->getCurrentImageIndex() + 1,
-					viewerManager->getNumImages()
-				));
-			}
+			statusText.setOrigin(0.f, statusText.getLocalBounds().height);
 
-			statusText.setPosition(10.f, 35.f);
+			statusText.setPosition(
+				16.f,
+				view.size.y - (!hasError ? 60.f : 0.f) - textBottomOffset
+			);
 			statusText.setScale(0.9f, 0.9f);
 
-			{
-				TS_ZONE_NAMED("statusText 1 draw");
-				renderTarget.draw(statusText);
-			}
+			renderTarget.draw(statusText);
 
 			if (viewerManager->isScanningFiles() && !viewerManager->isFirstScanComplete())
 			{
 				math::FloatRect bounds = statusText.getGlobalBounds();
 
-				sf::CircleShape c(5.f);
-
-				math::VC2 position(bounds.maxbounds.x + 10.f, bounds.getCenter().y);
-
-				float t = elapsedTimer.getElapsedTime().getSecondsAsFloat();
-				position.x += 20.f + std::cos(t * 2.f) * 20.f;
-				position.y += - math::abs(std::cos(t * 10.f) * 10.f) * ((std::cos(t * 5.f) + 1.f) * 0.5f);
-
-				c.setPosition(position);
-				c.setFillColor(sf::Color::White);
-				c.setOutlineColor(sf::Color::Black);
-
-				renderTarget.draw(c);
+				math::VC2 position(bounds.maxbounds.x + 30.f, bounds.getCenter().y - 5.f);
+				drawLoaderGadget(renderTarget, position);
 			}
 		}
 
+		if (viewerInfoAlpha.other >= 0.03f)
 		{
-			TS_ZONE_NAMED("statusText 2");
+			statusText.setFillColor(sf::Color(255, 255, 255, (uint8)(viewerInfoAlpha.other * 255)));
+			statusText.setOutlineColor(sf::Color(0, 0, 0, (uint8)(viewerInfoAlpha.other * 255)));
 
-			String filename = file::getBasename(viewerManager->getCurrentFilepath());
+			{
+				String filename = file::getBasename(viewerManager->getCurrentFilepath());
+				TS_ASSERT(!filename.isEmpty());
 
-			statusText.setString(
-				filename
-			);
+				statusText.setString(filename);
 
-			statusText.setPosition(10.f, 75.f);
+				statusText.setOrigin(statusText.getLocalBounds().width, 0.f);
 
-			float filenameScale = math::clamp(60.f / (float)filename.getSize(), 0.5f, 1.f);
-			statusText.setScale(0.9f * filenameScale, 0.9f * filenameScale);
+				float filenameScale = math::clamp(60.f / (float)filename.getSize(), 0.5f, 1.f) * 0.9f;
+				statusText.setScale(filenameScale, filenameScale);
 
-			renderTarget.draw(statusText);
+				statusText.setPosition(
+					view.size.x - 16.f,
+					view.size.y - 30.f * filenameScale - textBottomOffset
+				);
+
+				renderTarget.draw(statusText);
+			}
+
+			if (!hasError)
+			{
+				statusText.setOrigin(0.f, 0.f);
+
+				float scale = defaultScale * imageScale;
+
+				if (math::abs(scale - 1.f) < 0.001f)
+				{
+					statusText.setString(TS_FMT("%.1f%%\n%u x %u",
+						scale * 100.f,
+						imageSize.x, imageSize.y
+					));
+				}
+				else
+				{
+					math::VC2U scaledSize = static_cast<math::VC2U>(
+						static_cast<math::VC2>(imageSize) * scale + math::VC2(0.5f, 0.5f));
+
+					statusText.setString(TS_FMT("%.1f%%\n%u x %u (%u x %u)",
+						scale * 100.f,
+						imageSize.x, imageSize.y,
+						scaledSize.x, scaledSize.y
+					));
+				}
+
+				statusText.setPosition(
+					16.f,
+					view.size.y - 50.f - textBottomOffset);
+				statusText.setScale(0.7f, 0.7f);
+
+				renderTarget.draw(statusText);
+			}
+
+			if (currentImage->getIsAnimated())
+			{
+				float progress = currentImage->getAnimationProgress(frameTimer.getElapsedTime());
+
+				math::VC2 fullsize(view.size.x + 2.f, 4.f);
+				float offset = 1.f;
+
+				{
+					sf::RectangleShape bar(fullsize);
+					bar.setFillColor(sf::Color(0, 0, 0, (uint8)(viewerInfoAlpha.other * 160)));
+					bar.setOutlineColor(sf::Color(80, 80, 80, (uint8)(viewerInfoAlpha.other * 200)));
+					bar.setOutlineThickness(1.f);
+
+					bar.setOrigin(fullsize.x * 0.5f, fullsize.y);
+					bar.setPosition(
+						view.size.x / 2.f,
+						view.size.y - offset + bottomOffset
+					);
+
+					renderTarget.draw(bar);
+				}
+
+				{
+					sf::RectangleShape bar(math::VC2(fullsize.x * progress, fullsize.y));
+					bar.setFillColor(sf::Color(255, 255, 255, (uint8)(viewerInfoAlpha.other * 230)));
+
+					bar.setOrigin(0.f, fullsize.y);
+					bar.setPosition(
+						view.size.x / 2.f - fullsize.x / 2.f,
+						view.size.y - offset + bottomOffset
+					);
+
+					renderTarget.draw(bar, sf::BlendAdd);
+				}
+
+				{
+					sf::CircleShape dot(5.f);
+					dot.setFillColor(sf::Color(255, 220, 40, (uint8)(viewerInfoAlpha.other * 255)));
+					dot.setOutlineColor(sf::Color(127, 110, 20, (uint8)(viewerInfoAlpha.other * 120)));
+					dot.setOutlineThickness(2.f);
+
+					dot.setOrigin(5.f, 5.f);
+					dot.setPosition(
+						view.size.x / 2.f - fullsize.x / 2.f + fullsize.x * progress,
+						view.size.y - fullsize.y * 0.5f - offset + bottomOffset
+					);
+
+					renderTarget.draw(dot);
+				}
+			}
 		}
 	}
 
 	if (hasError)
 	{
-		TS_ZONE_NAMED("errortext 1");
-
 		sf::Text errorText("", *font->getResource());
-// 		errorText.setOutlineThickness(2.f);
+		errorText.setOutlineThickness(2.f);
 
 		if (currentImage != nullptr)
 		{
@@ -713,43 +866,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 
 		renderTarget.draw(errorText);
 	}
-	else
-	{
-		{
-			TS_ZONE_NAMED("statusText 3");
-
-			float scale = defaultScale * imageScale;
-
-			if (math::abs(scale - 1.f) < 0.001f)
-			{
-				statusText.setString(TS_FMT("%.1f%%\n%u x %u",
-					scale * 100.f,
-					imageSize.x, imageSize.y
-				));
-			}
-			else
-			{
-				math::VC2U scaledSize = static_cast<math::VC2U>(
-					static_cast<math::VC2>(imageSize) * scale + math::VC2(0.5f, 0.5f));
-
-				statusText.setString(TS_FMT("%.1f%%\n%u x %u (%u x %u)",
-					scale * 100.f,
-					imageSize.x, imageSize.y,
-					scaledSize.x, scaledSize.y
-				));
-			}
-
-			statusText.setPosition(10.f, 115.f);
-			statusText.setScale(0.7f, 0.7f);
-
-			renderTarget.draw(statusText);
-		}
-	}
 
 	if (showManagerStatus || showSchedulerStatus)
 	{
-		TS_ZONE_NAMED("debugText 2");
-
 		sf::Text debugText;
 // 		debugText.setOutlineThickness(2.f);
 		debugText.setFont(*font->getResource());
@@ -783,6 +902,23 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			renderTarget.draw(debugText);
 		}
 	}
+}
+
+void ImageViewerScene::drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width)
+{
+	sf::CircleShape c(5.f);
+
+	float t = elapsedTimer.getElapsedTime().getSecondsAsFloat();
+
+	math::VC2 position = centerPosition;
+	position.x += std::cos(t * 2.f) * width;
+	position.y += -math::abs(std::cos(t * 10.f) * 10.f) * ((std::cos(t * 4.f - math::PI) + 1.f) * 0.5f);
+
+	c.setPosition(position);
+	c.setFillColor(sf::Color::White);
+	c.setOutlineColor(sf::Color::Black);
+
+	renderTarget.draw(c);
 }
 
 TS_END_PACKAGE2()

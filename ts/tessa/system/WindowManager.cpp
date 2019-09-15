@@ -1,6 +1,7 @@
 #include "Precompiled.h"
-#include "ts/tessa/system/WindowManager.h"
+#include "WindowManager.h"
 
+#include "ts/tessa/input/InputManager.h"
 #include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/resource/ImageResource.h"
 
@@ -60,6 +61,9 @@ bool WindowManager::initialize()
 {
 	windowViewManager = gigaton.getGigatonOptional<system::WindowViewManager>();
 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, windowViewManager);
+
+	inputManager = gigaton.getGigatonOptional<input::InputManager>();
+	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, inputManager);
 
 	return true;
 }
@@ -179,9 +183,16 @@ bool WindowManager::pollEvent(sf::Event &eventParam)
 // 		return false;
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
-	bool hasEvent = renderWindow->pollEvent(eventParam);
-	if (hasEvent)
+	bool hasEvent = false;
+	while ((hasEvent = renderWindow->pollEvent(eventParam)) == true)
 	{
+		if (inputManager != nullptr)
+		{
+			// Inputmanager may override event in some cases
+			if (inputManager->handleEvent(eventParam))
+				continue;
+		}
+
 		switch (eventParam.type)
 		{
 			case sf::Event::Resized:
@@ -191,6 +202,8 @@ bool WindowManager::pollEvent(sf::Event &eventParam)
 			}
 			break;
 		}
+
+		break;
 	}
 	return hasEvent;
 }

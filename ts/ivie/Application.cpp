@@ -15,14 +15,14 @@
 #include "ts/ivie/viewer/SupportedFormats.h"
 
 #include "ts/ivie/viewer/ViewerManager.h"
-#include "ts/ivie/viewer/image/FreeImageStaticInitializer.h"
+#include "ts/ivie/image/FreeImageStaticInitializer.h"
 
 TS_PACKAGE1(app)
 
 Application::Application(int32 argc, const wchar_t **argv)
 	: system::BaseApplication(argc, argv)
 {
-	viewer::FreeImageStaticInitializer::staticInitialize();
+	image::FreeImageStaticInitializer::staticInitialize();
 
 	if (debugging::isDebuggerPresent())
 	{

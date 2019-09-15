@@ -37,6 +37,10 @@ extern String joinPaths(const String &left, const String &right, string::Charact
  */
 extern String normalizePath(const String &path, string::Character delimiter = TS_SYSTEM_PATH_DELIMITER);
 
+/* Returns if given absolute path is subpath of another absolute path.
+ */
+extern bool pathIsSubpath(const String &rootPath, const String &otherPath);
+
 /* Returns the directory path without file name. First checks if the path is a directory,
  * if it isn't then it simply removes everything past the last path delimiter.
  */

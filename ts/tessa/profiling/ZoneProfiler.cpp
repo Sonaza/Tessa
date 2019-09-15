@@ -406,7 +406,7 @@ ZoneProfilerRenderer &ZoneProfilerRenderer::get()
 std::recursive_mutex ZoneProfiler::mutex;
 std::atomic_bool ZoneProfiler::saving = false;
 
-std::atomic_bool ZoneProfiler::enabled = true;
+std::atomic_bool ZoneProfiler::enabled = false;
 
 ZoneProfiler::ZoneProfiler()
 {

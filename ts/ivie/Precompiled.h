@@ -8,6 +8,8 @@
 
 #include "ts/tessa/system/BaseApplication.h"
 
+#include "ts/tessa/input/InputManager.h"
+
 #include "ts/tessa/system/WindowManager.h"
 #include "ts/tessa/resource/ResourceManager.h"
 

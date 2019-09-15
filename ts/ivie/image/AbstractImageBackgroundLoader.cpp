@@ -5,7 +5,7 @@
 
 #include "ts/tessa/profiling/ZoneProfiler.h"
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 AbstractImageBackgroundLoader::AbstractImageBackgroundLoader(Image *ownerImage, const String &filepath)
 	: ownerImage(ownerImage)

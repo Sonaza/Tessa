@@ -73,7 +73,6 @@ private:
 	void mainloop();
 
 	void handleEvents();
-	void handleUpdate(const TimeSpan deltaTime);
 	void handleRendering();
 
 	bool createSystemManagers();

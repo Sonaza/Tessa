@@ -2,24 +2,19 @@
 #include "BaseApplication.h"
 
 #include "ts/tessa/common/Debugging.h"
-
+#include "ts/tessa/Config.h"
 #include "ts/tessa/file/ArchivistFileSystem.h"
 #include "ts/tessa/file/FileUtils.h"
+#include "ts/tessa/input/InputManager.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
+#include "ts/tessa/resource/FontResource.h"
+#include "ts/tessa/resource/ResourceManager.h"
+#include "ts/tessa/system/Gigaton.h"
 #include "ts/tessa/system/WindowManager.h"
 #include "ts/tessa/system/WindowViewManager.h"
-#include "ts/tessa/resource/ResourceManager.h"
-
 #include "ts/tessa/thread/Thread.h"
 #include "ts/tessa/thread/ThreadScheduler.h"
 #include "ts/tessa/thread/ThreadUtils.h"
-
-#include "ts/tessa/resource/FontResource.h"
-
-#include "ts/tessa/Config.h"
-
-#include "ts/tessa/system/Gigaton.h"
-
-#include "ts/tessa/profiling/ZoneProfiler.h"
 
 TS_PACKAGE1(system)
 
@@ -217,6 +212,9 @@ bool BaseApplication::createSystemManagers()
 	if (!createManagerInstance<system::WindowViewManager>())
 		return false;
 
+	if (!createManagerInstance<input::InputManager>())
+		return false;
+
 	return true;
 }
 
@@ -289,19 +287,18 @@ void BaseApplication::mainloop()
 		if (!applicationRunning)
 			break;
 
-		SizeType updates = 0;
-
+		if (currentScene != nullptr)
 		{
 			TS_ZONE_NAMED("Main Loop Updates");
+
 			deltaAccumulator += deltaTime;
 			while (deltaAccumulator >= fixedDeltaTime)
 			{
-				handleUpdate(fixedDeltaTime);
+				currentScene->update(fixedDeltaTime);
 				deltaAccumulator -= fixedDeltaTime;
-				updates++;
 			}
-// 			if (updates > 1)
-// 				TS_PRINTF("Update lagged, catched up by updating %u times\n", updates);
+
+			currentScene->updateFrequent(deltaTime);
 		}
 
 		handleRendering();
@@ -363,6 +360,7 @@ void BaseApplication::handleEvents()
 			case sf::Event::Closed:
 			{
 				applicationRunning = false;
+				return;
 			}
 			break;
 
@@ -413,14 +411,6 @@ void BaseApplication::handleEvents()
 			break;
 		}
 	}
-}
-
-void BaseApplication::handleUpdate(const TimeSpan deltaTime)
-{
-	if (currentScene == nullptr)
-		return;
-
-	currentScene->update(deltaTime);
 }
 
 void BaseApplication::handleRendering()

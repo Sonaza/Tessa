@@ -3,9 +3,9 @@
 #include "ts/tessa/thread/AbstractThreadEntry.h"
 
 #include "ts/tessa/thread/ThreadScheduler.h"
-#include "ts/ivie/viewer/image/Image.h"
+#include "ts/ivie/image/Image.h"
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 class AbstractImageBackgroundLoader : public thread::AbstractThreadEntry
 {

@@ -1,15 +1,15 @@
 #pragma once
 
-#include "ts/ivie/viewer/image/AbstractImageBackgroundLoader.h"
+#include "ts/ivie/image/AbstractImageBackgroundLoader.h"
 
 #include "ts/tessa/file/InputFile.h"
 
 #include "SFML/Graphics.hpp"
 #include "FreeImage.h"
 
-TS_DECLARE2(app, viewer, Image);
+TS_DECLARE2(app, image, Image);
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 class ImageBackgroundLoaderFreeImage : public AbstractImageBackgroundLoader
 {

@@ -25,7 +25,9 @@ public:
 	virtual void loadResources(resource::ResourceManager &rm) = 0;
 
 	virtual bool handleEvent(const sf::Event event) = 0;
+
 	virtual void update(const TimeSpan deltaTime) = 0;
+	virtual void updateFrequent(const TimeSpan deltaTime) = 0;
 
 	virtual void renderApplication(sf::RenderTarget &renderTarget, const WindowView &view) = 0;
 	virtual void renderInterface(sf::RenderTarget &renderTarget, const WindowView &view) = 0;

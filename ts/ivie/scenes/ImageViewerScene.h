@@ -3,7 +3,8 @@
 #include "ts/tessa/system/AbstractSceneBase.h"
 
 TS_DECLARE2(app, viewer, ViewerManager);
-TS_DECLARE2(app, viewer, Image);
+TS_DECLARE2(app, image, Image);
+TS_DECLARE_STRUCT2(app, image, FrameStorage);
 
 TS_DECLARE_STRUCT1(system, WindowView);
 
@@ -23,13 +24,15 @@ public:
 	virtual void loadResources(resource::ResourceManager &rm) override;
 
 	virtual bool handleEvent(const sf::Event event) override;
+
 	virtual void update(const TimeSpan deltaTime) override;
+	virtual void updateFrequent(const TimeSpan deltaTime) override;
 
 	virtual void renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view) override;
 	virtual void renderInterface(sf::RenderTarget &renderTarget, const system::WindowView &view) override;
 
 protected:
-	void imageChanged(SharedPointer<viewer::Image> image);
+	void imageChanged(SharedPointer<image::Image> image);
 	lang::SignalBind imageChangedBind;
 
 	void filelistChanged(SizeType numFiles);
@@ -48,12 +51,15 @@ protected:
 	Clock elapsedTimer;
 
 	Clock clickTimer;
-	Clock frameTimer;
 	Clock changeTimer;
 
 	bool updateImageInfo();
 
-	SharedPointer<viewer::Image> currentImage;
+	void drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width = 12.f);
+
+	resource::ShaderResource *backgroundShader = nullptr;
+
+	SharedPointer<image::Image> currentImage;
 	bool pendingImageInfo = true;
 	math::VC2U imageSize;
 
@@ -66,10 +72,8 @@ protected:
 	math::VC2 positionOffset;
 	math::VC2 targetPositionOffset;
 	
-	void enforceOversizeLimits(float scale);
+	void enforceOversizeLimits(float scale, bool enforceTarget = true);
 	math::VC2 positionOversizeLimit;
-
-	bool recursiveFileSearch = true;
 
 	enum DisplayMode
 	{
@@ -80,7 +84,24 @@ protected:
 
 	float dragged = 0.f;
 
+	Clock frameTimer;
+	TimeSpan currentFrameTime;
+
 	//////////////////////
+
+	enum ViewerInfoMode
+	{
+		ViewerInfo_DisplayAll,
+		ViewerInfo_IndexOnly,
+		ViewerInfo_HideAll,
+	};
+	ViewerInfoMode viewerInfoMode = ViewerInfo_DisplayAll;
+	struct ViewerInfoAlpha
+	{
+		float index = 1.f;
+		float other = 1.f;
+	};
+	ViewerInfoAlpha viewerInfoAlpha;
 
 	bool displaySmooth = true;
 
@@ -91,8 +112,6 @@ protected:
 
 	system::WindowManager *windowManager = nullptr;
 	viewer::ViewerManager *viewerManager = nullptr;
-
-	sf::Sprite sprite;
 };
 
 TS_END_PACKAGE2()

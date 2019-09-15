@@ -139,7 +139,6 @@ public:
 				}
 				else
 				{
-					TS_PRINTF("Task %u was not rescheduled.\n", task->taskId);
 					scheduler->incompleteTasks.erase(task->taskId);
 				}
 			}

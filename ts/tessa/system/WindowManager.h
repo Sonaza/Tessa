@@ -4,6 +4,8 @@
 
 #include "ts/tessa/system/WindowViewManager.h"
 
+TS_DECLARE1(input, InputManager);
+
 TS_PACKAGE1(system)
 
 struct DroppedFile
@@ -81,7 +83,9 @@ private:
 	ScopedPointer<sf::RenderWindow> renderWindow;
 	WindowViewManager::ViewType currentViewType;
 
+	input::InputManager *inputManager = nullptr;
 	system::WindowViewManager *windowViewManager = nullptr;
+
 };
 
 TS_END_PACKAGE1()

@@ -191,6 +191,9 @@
     <ClCompile Include="common\Debugging.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="input\InputManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -446,6 +449,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="math\Rect.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="input\InputManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

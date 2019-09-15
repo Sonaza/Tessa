@@ -6,15 +6,17 @@
 
 #include "ts/ivie/util/RenderUtil.h"
 
-#include "ts/ivie/viewer/image/ImageManager.h"
-#include "ts/ivie/viewer/image/ImageBackgroundLoaderFreeImage.h"
+#include "ts/ivie/viewer/ViewerManager.h"
+#include "ts/ivie/image/ImageBackgroundLoaderFreeImage.h"
 
 #include "ts/tessa/thread/ThreadScheduler.h"
-#include "ts/ivie/viewer/image/ImageBackgroundLoaderWebm.h"
+#include "ts/ivie/image/ImageBackgroundLoaderWebm.h"
 
-#include "ts/tessa/profiling/SimpleScopedZoneTimer.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
+
+using viewer::ViewerManager;
 
 Image::Image(const String &filepath)
 	: filepath(filepath)
@@ -27,17 +29,25 @@ Image::~Image()
 	backgroundLoader.reset();
 }
 
+bool Image::reload()
+{
+	unload();
+	return startLoading(false);
+}
+
 bool Image::startLoading(bool suspendAfterBufferFull)
 {
+	TS_ZONE();
+
 	TS_ASSERT(loaderState == Unloaded);
 	if (loaderState != Unloaded)
 		return false;
 
-// 	TS_SIMPLE_ZONE();
+// 	TS_ZONE();
 
-	ImageManager &im = TS_GET_GIGATON().getGigaton<ImageManager>();
+	ViewerManager &vm = TS_GET_GIGATON().getGigaton<ViewerManager>();
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 	errorText = "Unknown error.";
 
@@ -46,7 +56,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 	{
 		case LoaderFreeImage:
 		{
-			displayShader = im.loadDisplayShader(ImageManager::DisplayShader_FreeImage);
+			displayShader = vm.loadDisplayShader(ViewerManager::DisplayShader_FreeImage);
 
 			loaderState = Loading;
 			backgroundLoader.reset(new ImageBackgroundLoaderFreeImage(this, filepath));
@@ -55,7 +65,7 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 		case LoaderWebm:
 		{
-			displayShader = im.loadDisplayShader(ImageManager::DisplayShader_Webm);
+			displayShader = vm.loadDisplayShader(ViewerManager::DisplayShader_Webm);
 
 			loaderState = Loading;
 			backgroundLoader.reset(new ImageBackgroundLoaderWebm(this, filepath));
@@ -84,12 +94,14 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 
 void Image::unload()
 {
+	TS_ZONE();
+
 	if (loaderState == Unloaded)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
-// 	TS_SIMPLE_ZONE();
+// 	TS_ZONE();
 
 	loaderState = Unloading;
 
@@ -112,7 +124,7 @@ void Image::restart(bool suspend)
 	if (loaderState == Error || loaderState == Complete)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 	TS_ASSERT(backgroundLoader);
 
@@ -133,7 +145,7 @@ void Image::restart(bool suspend)
 
 void Image::suspendLoader()
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	if (loaderState == Unloaded || loaderState == Error)
 		return;
 
@@ -143,7 +155,7 @@ void Image::suspendLoader()
 
 void Image::setActive(bool activeParam)
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	active = activeParam;
 	if (active && backgroundLoader)
 	{
@@ -172,44 +184,58 @@ void Image::resumeLoading()
 	if (loaderState != Suspended)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	TS_ASSERT(backgroundLoader);
 	backgroundLoader->resume();
 }
 
 const math::VC2U Image::getSize() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 // 	TS_ASSERT(data.size.x > 0 && data.size.y > 0 && "Image size is not set.");
 	return data.size;
 }
 
-const FrameStorage *Image::getCurrentFrameStorage() const
+FrameStorage *Image::getCurrentFrameStorage()
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	if (!frameBuffer.isEmpty())
 		return &frameBuffer.getReadPtr();
 	return nullptr;
 }
 
-SharedPointer<sf::Shader> Image::getDisplayShader(const math::VC2 &apparentSize, bool useAlphaChecker)
+SharedPointer<sf::Shader> Image::getDisplayShader(const float apparentScale)
 {
+	TS_ZONE();
+
 	if (displayShader)
 	{
+		TS_ZONE_NAMED("Set Uniforms");
+
 		switch (currentLoaderType)
 		{
 			case LoaderFreeImage:
 			{
-				displayShader->setUniform("u_textureApparentSize", apparentSize);
-				displayShader->setUniform("u_useAlphaChecker", true);
+				sf::Glsl::Vec2 arr[2];
+				arr[0] = (math::VC2)data.size * apparentScale;
+				arr[1] = math::VC2(apparentScale, apparentScale);
+				displayShader->setUniformArray("u_params", arr, 2);
+
+// 				displayShader->setUniform("u_textureApparentSize", apparentSize);
+// 				displayShader->setUniform("u_apparentScale", apparentScale);
 			}
 			break;
+
 			case LoaderWebm:
 			{
-// 				displayShader->setUniform("u_textureApparentSize", apparentSize);
-// 				displayShader->setUniform("u_useAlphaChecker", true);
+
 			}
 			break;
+
 			default: TS_ASSERT(!"Unknown type"); break;
 		}
 	}
@@ -219,39 +245,62 @@ SharedPointer<sf::Shader> Image::getDisplayShader(const math::VC2 &apparentSize,
 
 SizeType Image::getCurrentFrameIndex() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return currentFrameIndex;
 }
 
 SizeType Image::getNumFramesTotal() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return data.numFramesTotal;
 }
 
 SizeType Image::getNumFramesBuffered() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return (SizeType)frameBuffer.getBufferedAmount();
 }
 
 bool Image::getIsAnimated() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return data.numFramesTotal > 1;
+}
+
+float Image::getAnimationProgress(TimeSpan elapsedFrameTime) const
+{
+	if (data.numFramesTotal == 0)
+		return 0.f;
+
+	float progress = (currentFrameIndex / (float)data.numFramesTotal) +
+		(elapsedFrameTime.getMilliseconds() / (float)currentFrameTime.getMilliseconds()) * (1.f / (float)data.numFramesTotal);
+
+	return progress;
 }
 
 bool Image::getHasAlpha() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return data.hasAlpha;
 }
 
 bool Image::advanceToNextFrame()
 {
+	TS_ZONE();
+
 	static SizeType lastFrameIndex = ~0U;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 
 	backgroundLoader->requestNextFrame();
 
@@ -259,6 +308,7 @@ bool Image::advanceToNextFrame()
 	{
 		frameBuffer.incrementRead();
 		currentFrameIndex = (currentFrameIndex + 1) % data.numFramesTotal;
+		currentFrameTime = frameBuffer.getReadPtr().frameTime;
 		return true;
 	}
 	return false;
@@ -266,10 +316,12 @@ bool Image::advanceToNextFrame()
 
 bool Image::isDisplayable() const
 {
+	TS_ZONE();
+
 	if (loaderState == Unloading)
 		return false;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	return loaderState != Error && !frameBuffer.isEmpty() && displayShader != nullptr;
 }
 
@@ -285,22 +337,28 @@ const String &Image::getErrorText() const
 
 bool Image::hasThumbnail() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return thumbnail != nullptr;
 }
 
 SharedPointer<sf::Texture> Image::getThumbnail() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
 	return thumbnail;
 }
 
 void Image::setImageData(const ImageData &dataParam)
 {
+	TS_ZONE();
+
 	if (loaderState == Unloading)
 		return;
 
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	data = dataParam;
 }
 
@@ -324,13 +382,15 @@ Image::ImageLoaderState Image::getState() const
 
 const String &Image::getFilepath() const
 {
+	TS_ZONE();
+
 	// No mutexing because value doesn't ever change after creation, reads should always be ok
 	return filepath;
 }
 
 String Image::getStats() const
 {
-	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+	MutexGuard lock(mutex);
 	String str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
 		file::getBasename(filepath),
 		currentFrameIndex + 1,
@@ -349,6 +409,8 @@ void Image::setState(ImageLoaderState state)
 
 bool Image::getIsBufferFull() const
 {
+	TS_ZONE();
+
 	if (loaderState == Unloading)
 		return true;
 
@@ -357,6 +419,8 @@ bool Image::getIsBufferFull() const
 
 FrameStorage *Image::getNextBuffer()
 {
+	TS_ZONE();
+
 	if (loaderState == Unloading)
 		return nullptr;
 
@@ -365,6 +429,8 @@ FrameStorage *Image::getNextBuffer()
 
 void Image::swapBuffer()
 {
+	TS_ZONE();
+
 	if (loaderState == Unloading)
 		return;
 
@@ -390,12 +456,14 @@ void Image::finalizeBuffer()
 	if (loaderState == Unloading)
 		return;
 
-// 	MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+// 	MutexGuard lock(mutex);
 	frameBuffer.removeReadConstraint();
 }
 
 bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxSize)
 {
+	TS_ZONE();
+	
 	TS_ASSERT(maxSize > 0);
 	TS_ASSERT(frameTexture != nullptr);
 	if (frameTexture == nullptr)
@@ -406,34 +474,40 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 	if (textureSize.x == 0 || textureSize.y == 0)
 		return false;
 
+	float scaleFactor;
+
 	math::VC2U scaledSize;
 	if (textureSize.x >= textureSize.y)
 	{
-		float factor = maxSize / (float)textureSize.x;
+		scaleFactor = maxSize / (float)textureSize.x;
 		scaledSize.x = maxSize;
-		scaledSize.y = (uint32)(textureSize.y * factor);
+		scaledSize.y = (uint32)(textureSize.y * scaleFactor);
 	}
 	else
 	{
-		float factor = maxSize / (float)textureSize.y;
+		scaleFactor = maxSize / (float)textureSize.y;
 		scaledSize.y = maxSize;
-		scaledSize.x = (uint32)(textureSize.x * factor);
+		scaledSize.x = (uint32)(textureSize.x * scaleFactor);
 	}
 
 	sf::RenderTexture rt;
-	if (!rt.create(scaledSize.x, scaledSize.y))
-		return false;
+	{
+		TS_ZONE_NAMED("RenderTexture thumbnail");
 
-	sf::RenderStates states;
-	states.texture = frameTexture.get();
+		if (!rt.create(scaledSize.x, scaledSize.y))
+			return false;
 
-	states.shader = getDisplayShader(static_cast<math::VC2>(scaledSize), true).get();
+		sf::RenderStates states;
+		states.texture = frameTexture.get();
 
-	rt.clear(sf::Color::White);
-	rt.draw(
-		util::makeQuadVertexArrayScaled(scaledSize.x, scaledSize.y, textureSize.x, textureSize.y),
-		states);
-	rt.display();
+		states.shader = getDisplayShader(scaleFactor).get();
+
+		rt.clear(sf::Color::White);
+		rt.draw(
+			util::makeQuadVertexArrayScaled(scaledSize.x, scaledSize.y, textureSize.x, textureSize.y),
+			states);
+		rt.display();
+	}
 
 	sf::Texture *thumbnailTexture = new sf::Texture(rt.getTexture());
 	TS_ASSERT(thumbnailTexture != nullptr);
@@ -442,7 +516,7 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 		thumbnailTexture->setSmooth(true);
 		thumbnailTexture->generateMipmap();
 
-		MutexGuard lock(mutex, MUTEXGUARD_DEBUGINFO());
+		MutexGuard lock(mutex);
 		thumbnail.reset(thumbnailTexture);
 	}
 

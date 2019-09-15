@@ -4,7 +4,7 @@
 #include "ts/tessa/thread/Thread.h"
 #include "ts/tessa/file/FileUtils.h"
 
-#include "ts/ivie/viewer/image/Image.h"
+#include "ts/ivie/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
 #include "ts/tessa/profiling/ZoneProfiler.h"
@@ -16,7 +16,7 @@
 
 #pragma warning( disable: 4505 ) // Unreferenced local function has been removed
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 namespace
 {

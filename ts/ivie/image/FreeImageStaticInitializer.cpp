@@ -3,7 +3,7 @@
 
 #include "FreeImage.h"
 
-TS_PACKAGE2(app, viewer)
+TS_PACKAGE2(app, image)
 
 namespace
 {

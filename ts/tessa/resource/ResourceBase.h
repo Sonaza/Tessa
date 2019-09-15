@@ -34,6 +34,12 @@ public:
 	virtual bool loadResource();
 	virtual void unloadResource();
 
+	bool reloadResource()
+	{
+		unloadResource();
+		return loadResource();
+	}
+
 	SharedPointer<ResourceType> getResource() const;
 
 protected:
