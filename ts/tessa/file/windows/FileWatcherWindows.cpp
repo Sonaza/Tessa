@@ -89,8 +89,9 @@ void CALLBACK completionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfer
 			break;
 
 			default:
-				TS_ASSERT(!"Unsupported file action");
-			break;
+				return;
+// 				TS_ASSERT(!"Unsupported file action");
+// 			break;
 		}
 
 	} while (record->NextEntryOffset != 0);
