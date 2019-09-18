@@ -154,6 +154,14 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 				case sf::Keyboard::S:
 				{
+					SizeType option = (SizeType)viewerManager->getSorting();
+					option = (option + 1) % viewer::SortingStyle_NumOptions;
+					viewerManager->setSorting((viewer::SortingStyle)option);
+					return true;
+				}
+
+				case sf::Keyboard::P:
+				{
 					displaySmooth = !displaySmooth;
 					return true;
 				}
@@ -227,7 +235,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 				case sf::Keyboard::R:
 				{
-					viewerManager->setRecursiveScan(!viewerManager->isRecursiveScan());
+					viewerManager->setRecursiveScan(!viewerManager->getIsRecursiveScan());
 					return true;
 				}
 
@@ -294,15 +302,35 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				{
 					if (clickTimer.getElapsedTime() < 250_ms && dragged <= 10.f)
 					{
+						TS_ASSERT(defaultScale > 0.f);
 						targetImageScale = 1.f / defaultScale;
+
+						{
+							math::VC2 mouse(
+								(float)event.mouseButton.x,
+								(float)event.mouseButton.y
+							);
+
+							const system::WindowView &view = windowManager->getApplicationView();
+
+							float currentScale = defaultScale * imageScale;
+							math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, 1.f);
+
+							float distanceFromEdgeX = math::abs(mouse.x - (view.size.x / 2.f)) / (view.size.x / 2.f);
+							float distanceFromEdgeY = math::abs(mouse.y - (view.size.y / 2.f)) / (view.size.y / 2.f);
+							float distanceFromEdge = math::max(distanceFromEdgeX, distanceFromEdgeY);
+							float multiplier = (float)std::pow((distanceFromEdge - 0.5f) * 2.f, 6) * 0.4f + 1.f;
+
+							targetPositionOffset = positionOffset + diff * multiplier;
+
+							enforceOversizeLimits(defaultScale * math::max(targetImageScale, imageScale));
+						}
 					}
 				}
 				return true;
 
 				default: break;
 			}
-
-			
 		}
 		break;
 
@@ -343,38 +371,18 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 					targetImageScale += delta * 0.15f * targetImageScale;
 					targetImageScale = math::clamp(targetImageScale, 1.f, 10.f);
 
-// 					if (delta > 0.f)
 					{
-						const system::WindowView &view = windowManager->getApplicationView();
-
 						math::VC2 mouse(
 							(float)event.mouseWheelScroll.x,
 							(float)event.mouseWheelScroll.y
 						);
 
-						math::VC2 converted = view.convertToViewCoordinate(mouse);
-
 						float currentScale = defaultScale * imageScale;
 						float targetScale = defaultScale * targetImageScale;
 
-						math::VC2 imageCenter = static_cast<math::VC2>(imageSize) / 2.f;
+						const system::WindowView &view = windowManager->getApplicationView();
+						math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, targetScale);
 
-						sf::Transform currentTransform;
-						currentTransform
-							.translate(positionOffset)
-							.scale(currentScale, currentScale)
-							.translate(-imageCenter);
-
-						sf::Transform targetTransform;
-						targetTransform
-							.translate(positionOffset)
-							.scale(targetScale, targetScale)
-							.translate(-imageCenter);
-
-						math::VC2 currentMouseImagePos = currentTransform.getInverse().transformPoint(converted);
-						math::VC2 targetMouseImagePos = targetTransform.getInverse().transformPoint(converted);
-						
-						math::VC2 diff = targetMouseImagePos - currentMouseImagePos;
 						targetPositionOffset = positionOffset + diff * 1.03f * targetScale;
 						
 						enforceOversizeLimits(defaultScale * math::max(targetImageScale, imageScale));
@@ -502,6 +510,33 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 	positionOffset.y = math::clamp(positionOffset.y, -oversize.y, oversize.y);
 }
 
+math::VC2 ImageViewerScene::calculateMouseDiff(const system::WindowView &view,
+	const math::VC2 &mousePos, float currentScale, float targetScale)
+{
+	if (pendingImageInfo)
+		return math::VC2::zero;
+
+	math::VC2 converted = view.convertToViewCoordinate(mousePos);
+	math::VC2 imageCenter = static_cast<math::VC2>(imageSize) / 2.f;
+
+	sf::Transform currentTransform;
+	currentTransform
+		.translate(positionOffset)
+		.scale(currentScale, currentScale)
+		.translate(-imageCenter);
+
+	sf::Transform targetTransform;
+	targetTransform
+		.translate(positionOffset)
+		.scale(targetScale, targetScale)
+		.translate(-imageCenter);
+
+	math::VC2 currentMouseImagePos = currentTransform.getInverse().transformPoint(converted);
+	math::VC2 targetMouseImagePos = targetTransform.getInverse().transformPoint(converted);
+
+	return targetMouseImagePos - currentMouseImagePos;
+}
+
 void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 {
 	TS_ZONE();
@@ -594,8 +629,8 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 						currentImage->advanceToNextFrame();
 						frameTimer.restart();
 
-						currentFrame = *currentImage->getCurrentFrameStorage();
-						currentFrameTime = currentFrame.frameTime;
+// 						currentFrame = *currentImage->getCurrentFrameStorage();
+// 						currentFrameTime = currentFrame.frameTime;
 					}
 				}
 
@@ -734,14 +769,17 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			statusText.setOutlineColor(sf::Color(0, 0, 0, (uint8)(viewerInfoAlpha.other * 255)));
 
 			{
-				String filename = file::getBasename(viewerManager->getCurrentFilepath());
+				const String filename = viewerManager->getCurrentFilepath(false);
 				TS_ASSERT(!filename.isEmpty());
 
-				statusText.setString(filename);
+// 				String dirname = file::getDirname(filename);
+				String basename = file::getBasename(filename);
+
+				statusText.setString(basename);
 
 				statusText.setOrigin(statusText.getLocalBounds().width, 0.f);
 
-				float filenameScale = math::clamp(60.f / (float)filename.getSize(), 0.5f, 1.f) * 0.9f;
+				float filenameScale = math::clamp(60.f / (float)basename.getSize(), 0.5f, 1.f) * 0.9f;
 				statusText.setScale(filenameScale, filenameScale);
 
 				statusText.setPosition(

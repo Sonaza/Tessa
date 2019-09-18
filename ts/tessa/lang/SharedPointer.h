@@ -53,7 +53,7 @@ public:
 	const T *operator->() const;
 
 	explicit operator bool() const;
-// 	explicit operator void *() const;
+	explicit operator void *() const;
 
 	bool operator!() const;
 	bool operator==(nullptr_t) const;

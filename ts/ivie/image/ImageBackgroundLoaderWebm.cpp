@@ -167,7 +167,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 
 	totalDuration = TimeSpan::fromNanoseconds(streamTotalDuration);
 
-	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration.getMilliseconds());
+// 	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration.getMilliseconds());
 
 	SizeType numTracks = 0;
 	if (nestegg_track_count(state.context, &numTracks) == -1)
@@ -519,7 +519,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 	if (!bufferedFrames.empty())
 	{
 		BufferedFrame &top = bufferedFrames.front();
-		bufferStorage.texture = top.texture;
+		bufferStorage.texture = std::move(top.texture);
 		bufferStorage.frameTime = top.frameTime;
 		bufferedFrames.pop_front();
 		return true;

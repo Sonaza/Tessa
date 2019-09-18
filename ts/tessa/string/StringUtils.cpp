@@ -79,6 +79,11 @@ extern String replaceCharacterCopy(const String &str, Character search, Characte
 	return out;
 }
 
+std::vector<String> splitString(const String &str, Character delimiter)
+{
+	return splitString(str, String(delimiter));
+}
+
 std::vector<String> splitString(const String &str, const String &delimiters)
 {
 	std::vector<String> tokens;

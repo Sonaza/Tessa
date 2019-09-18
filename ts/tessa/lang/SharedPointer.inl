@@ -59,7 +59,10 @@ SharedPointer<T> &SharedPointer<T>::operator=(const SharedPointer<T> &other)
 	// Prevent self assignment
 	if (this != &other)
 	{
+		// Decrease references for existing pointer
 		decreaseReferenceCounter();
+
+		// Replace existing pointer with the copy and increment references
 		pointer = other.pointer;
 		impl = other.impl;
 		increaseReferenceCounter();
@@ -79,12 +82,12 @@ SharedPointer<T> &SharedPointer<T>::operator=(SharedPointer<T> &&other) noexcept
 	// Prevent self assignment
 	if (this != &other)
 	{
+		// Decrease references for existing pointer
 		decreaseReferenceCounter();
-		pointer = other.pointer;
-		impl = other.impl;
 
-		other.pointer = nullptr;
-		other.impl = nullptr;
+		// Move the other pointer over without incrementing references
+		pointer = std::exchange(other.pointer, nullptr);
+		impl = std::exchange(other.impl, nullptr);
 	}
 	return *this;
 }
@@ -152,11 +155,11 @@ SharedPointer<T>::operator bool() const
 	return pointer != nullptr;
 }
 
-// template <class T>
-// SharedPointer<T>::operator void *() const
-// {
-// 	return static_cast<void*>(pointer);
-// }
+template <class T>
+SharedPointer<T>::operator void *() const
+{
+	return static_cast<void*>(pointer);
+}
 
 template <class T>
 bool SharedPointer<T>::operator!() const

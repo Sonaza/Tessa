@@ -22,7 +22,9 @@ extern String trimWhitespaceCopy(const String &str);
 extern void replaceCharacter(String &str, Character search, Character replacement);
 extern String replaceCharacterCopy(const String &str, Character search, Character replacement);
 
+extern std::vector<String> splitString(const String &str, Character delimiter);
 extern std::vector<String> splitString(const String &str, const String &delimiters);
+
 extern String joinString(const std::vector<String> &arr, const String &glue);
 
 TS_END_PACKAGE1()

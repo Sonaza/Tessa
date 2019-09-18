@@ -147,14 +147,39 @@ extern String normalizePath(const String &path, string::Character delimiter)
 	return normalized;
 }
 
-extern bool pathIsSubpath(const String &rootPath, const String &otherPath)
+extern bool pathIsSubpath(const String &rootPath, const String &comparedPath)
 {
-	if (!isAbsolutePath(rootPath) || !isAbsolutePath(otherPath))
+	if (!isAbsolutePath(rootPath) || !isAbsolutePath(comparedPath))
 		return false;
 
-	const String normalizedRoot = normalizePath(rootPath);
-	const String normalizedOther = normalizePath(otherPath);
-	return normalizedOther.find(normalizedRoot) == 0;
+	const String rootNormalized = normalizePath(rootPath);
+	const String comparedNormalized = normalizePath(comparedPath);
+
+	if (rootNormalized == comparedNormalized)
+		return true;
+
+	std::vector<String> rootSegments = string::splitString(rootNormalized, TS_SYSTEM_PATH_DELIMITER);
+	std::vector<String> comparedSegments = string::splitString(comparedNormalized, TS_SYSTEM_PATH_DELIMITER);
+
+	// Not subpath if root has more segments than the other
+	if (rootSegments.size() > comparedSegments.size())
+		return false;
+
+	for (BigSizeType i = 0; i < rootSegments.size(); ++i)
+	{
+		if (rootSegments[i] != comparedSegments[i])
+			return false;
+	}
+
+	return true;
+}
+
+extern String stripRootPath(const String &path, const String &rootPath)
+{
+	BigSizeType rootPathSize = rootPath.getSize() + (hasTrailingSlash(rootPath) ? 0 : 1);
+	if (path.getSize() < rootPathSize)
+		return path;
+	return path.substring(rootPathSize);
 }
 
 extern String getDirname(const String &path, const String &delimiters)

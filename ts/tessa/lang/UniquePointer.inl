@@ -97,11 +97,11 @@ UniquePointer<T, Deleter>::operator bool() const
 	return pointer != nullptr;
 }
 
-// template <class T, class Deleter>
-// UniquePointer<T, Deleter>::operator void *() const
-// {
-// 	return static_cast<void*>(pointer);
-// }
+template <class T, class Deleter>
+UniquePointer<T, Deleter>::operator void *() const
+{
+	return static_cast<void*>(pointer);
+}
 
 template <class T, class Deleter>
 bool UniquePointer<T, Deleter>::operator!() const

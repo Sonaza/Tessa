@@ -55,7 +55,8 @@ protected:
 
 	bool updateImageInfo();
 
-	void drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width = 12.f);
+	void drawLoaderGadget(sf::RenderTarget &renderTarget,
+		const math::VC2 &centerPosition, float width = 12.f);
 
 	resource::ShaderResource *backgroundShader = nullptr;
 
@@ -74,6 +75,9 @@ protected:
 	
 	void enforceOversizeLimits(float scale, bool enforceTarget = true);
 	math::VC2 positionOversizeLimit;
+
+	math::VC2 calculateMouseDiff(const system::WindowView &view, 
+		const math::VC2 &mousePos, float currentScale, float targetScale);
 
 	enum DisplayMode
 	{

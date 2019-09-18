@@ -39,7 +39,6 @@ bool FontResource::loadResourceImpl()
 				strm.reset(new ArchivistInputStream(extractor));
 				if (resource->loadFromStream(*strm))
 				{
-					TS_WPRINTF("Loaded from archivist filesystem: %s\n", filepath);
 					return true;
 				}
 				else
@@ -56,7 +55,6 @@ bool FontResource::loadResourceImpl()
 		// Fallback from normal file system
 		if (resource->loadFromFile(getAbsolutePath()))
 		{
-			TS_WPRINTF("Loaded from normal filesystem: %s\n", filepath);
 			return true;
 		}
 		else

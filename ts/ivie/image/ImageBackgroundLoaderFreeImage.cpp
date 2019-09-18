@@ -131,6 +131,21 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 		{
 			loaderFormat = StillImageFormat;
 
+			switch (state.format)
+			{
+				case FIF_ICO:
+				{
+					flags |= ICO_MAKEALPHA;
+				}
+				break;
+
+				case FIF_JPEG:
+				{
+					flags |= JPEG_EXIFROTATE | JPEG_ACCURATE;
+				}
+				break;
+			}
+
 			state.bitmap = FreeImage_LoadFromMemory(state.format, state.memory, flags);
 			if (state.bitmap == nullptr)
 			{
@@ -212,6 +227,16 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 	imageSize.x = FreeImage_GetWidth(state.bitmap);
 	imageSize.y = FreeImage_GetHeight(state.bitmap);
 
+// 	FIICCPROFILE *icc = FreeImage_GetICCProfile(state.bitmap);
+// 	if (icc->size > 0)
+// 	{
+// 		TS_WPRINTF("%s as some profile? %u bytes\n", filepath, icc->size);
+// 	}
+// 	else
+// 	{
+// 		TS_WPRINTF("%s does not have profile?\n", filepath);
+// 	}
+
 	SizeType maxSize = sf::Texture::getMaximumSize();
 	if (imageSize.x > maxSize || imageSize.y > maxSize)
 	{
@@ -239,6 +264,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 	imageData.size = imageSize;
 	imageData.hasAlpha = true;
+	imageData.numFramesTotal = 1;
 
 	bool success = false;
 
@@ -246,6 +272,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 	if (bufferStorage.texture != nullptr && bufferStorage.texture->create(imageSize.x, imageSize.y))
 	{
+// 		bufferStorage.texture->setSrgb(true);
 		bufferStorage.texture->update(bits, imageSize.x, imageSize.y, 0, 0, sf::Texture::BGRA);
 
 		if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))

@@ -164,6 +164,8 @@ void ViewerManager::update(const TimeSpan deltaTime)
 {
 	TS_ZONE();
 
+	fileWatcher.update();
+
 	if (pendingImageUpdate)
 	{
 		{
@@ -186,18 +188,107 @@ void ViewerManager::update(const TimeSpan deltaTime)
 	}
 }
 
+void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notifyEvents)
+{
+	MutexGuard lock(mutex, thread::DeferLock);
+	
+	bool sortNeeded = false;
+	bool ensureImageIndexNeeded = false;
+
+	for (const file::FileNotifyEvent &notifyEvent : notifyEvents)
+	{
+		if (!isExtensionAllowed(notifyEvent.name))
+			continue;
+
+		if (!lock.isLocked())
+			lock.lock();
+
+		switch (notifyEvent.flag)
+		{
+			case file::FileNotify_FileAdded:
+			{
+				currentFileList.push_back(notifyEvent.name);
+			}
+			break;
+
+			case file::FileNotify_FileRemoved:
+			{
+				if (current.filepath == notifyEvent.name)
+					previousImage();
+
+				auto it = std::find(currentFileList.begin(), currentFileList.end(), notifyEvent.name);
+				if (it != currentFileList.end())
+					currentFileList.erase(it);
+			}
+			break;
+
+			case file::FileNotify_FileRenamed:
+			{
+				TS_WPRINTF("File renamed! %s -> %s\n", notifyEvent.name, notifyEvent.lastName);
+
+				auto it = std::find(currentFileList.begin(), currentFileList.end(), notifyEvent.lastName);
+				if (it != currentFileList.end())
+				{
+					*it = notifyEvent.name;
+					sortNeeded = true;
+				}
+
+				if (current.filepath == notifyEvent.lastName)
+				{
+					current.filepath = notifyEvent.name;
+					ensureImageIndexNeeded = true;
+				}
+			}
+			break;
+
+			default: /* boop */ break;
+		}
+	}
+
+	if (sortNeeded)
+		applySorting(currentFileList);
+
+	if (ensureImageIndexNeeded)
+		ensureImageIndex();
+}
+
+void ViewerManager::resetFileWatcher(bool recursive)
+{
+	if (fileWatcher.isWatching())
+	{
+		watchNotifyBind.disconnect();
+		fileWatcher.reset();
+	}
+
+	fileWatcher.watch(currentDirectoryPath, recursive, file::FileWatch_FileChanges | file::FileWatch_DirectoryChanges);
+	watchNotifyBind.connect(fileWatcher.notifySignal, &ThisClass::watchNotify, this);
+}
+
 void ViewerManager::setFilepath(const String &filepath)
 {
 	TS_ZONE();
+
+	if (!file::exists(filepath))
+	{
+		TS_WLOG_ERROR("Given filepath does not exist. Path: %s.", filepath);
+		return;
+	}
 
 	String directoryPath = file::getDirname(filepath);
 	if (directoryPath.isEmpty())
 		directoryPath = file::getWorkingDirectory();
 
-	if (file::pathIsSubpath(currentDirectoryPath, directoryPath))
+	if (getIsRecursiveScan() && file::pathIsSubpath(currentDirectoryPath, directoryPath))
 	{
 		if (file::isFile(filepath))
+		{
 			jumpToImageByFilename(filepath);
+		}
+		else if (file::isDirectory(filepath))
+		{
+			jumpToImageByDirectory(filepath);
+		}
+		
 		return;
 	}
 
@@ -210,15 +301,19 @@ void ViewerManager::setFilepath(const String &filepath)
 	firstScanComplete = false;
 	currentDirectoryPath = directoryPath;
 
+	resetFileWatcher(getIsRecursiveScan());
+
 	IndexingAction action = IndexingAction_KeepCurrentFile;
 
 	if (file::isFile(filepath) && isExtensionAllowed(filepath))
 	{
+		const String relativePath = file::stripRootPath(filepath, currentDirectoryPath);
+
 		currentFileList.clear();
-		currentFileList.push_back(filepath);
+		currentFileList.push_back(relativePath);
 		pendingImageIndex = -1;
 		current.imageIndex = 0;
-		current.filepath = filepath;
+		current.filepath = relativePath;
 		pendingImageUpdate = true;
 	}
 	else
@@ -226,19 +321,11 @@ void ViewerManager::setFilepath(const String &filepath)
 		action = IndexingAction_Reset;
 	}
 
-	oneTimeScannerTaskId = threadScheduler->scheduleOnce(
+	scannerTaskId = threadScheduler->scheduleOnce(
 		thread::Priority_Critical,
 		TimeSpan::zero,
-		&ThisClass::updateFilelist, this, directoryPath, false, action
+		&ThisClass::updateFilelist, this, directoryPath, true, false, action
 	).getTaskId();
-
-
-// 	updateFilelist(currentDirectoryPath, false, false);
-// 
-// 	if (file::isFile(filepath))
-// 		jumpToImageByFilename(filepath);
-// 	else
-// 		jumpToImage(0);
 }
 
 const String &ViewerManager::getFilepath() const
@@ -246,7 +333,7 @@ const String &ViewerManager::getFilepath() const
 	return currentDirectoryPath;
 }
 
-bool ViewerManager::isRecursiveScan() const
+bool ViewerManager::getIsRecursiveScan() const
 {
 	return scanStyle == file::FileListStyle_Files_Recursive;
 }
@@ -263,12 +350,14 @@ void ViewerManager::setRecursiveScan(bool recursiveEnabled, bool immediateRescan
 			scannerTaskId = thread::InvalidTaskId;
 		}
 
+		resetFileWatcher(getIsRecursiveScan());
+
 		firstScanComplete = false;
 
-		oneTimeScannerTaskId = threadScheduler->scheduleOnce(
+		scannerTaskId = threadScheduler->scheduleOnce(
 			thread::Priority_Critical,
 			TimeSpan::zero,
-			&ThisClass::updateFilelist, this, currentDirectoryPath, true, IndexingAction_KeepCurrentFile
+			&ThisClass::updateFilelist, this, currentDirectoryPath, false, true, IndexingAction_KeepCurrentFile
 		).getTaskId();
 	}
 }
@@ -295,7 +384,32 @@ void ViewerManager::jumpToImage(SizeType index)
 
 void ViewerManager::jumpToImageByFilename(const String &filename)
 {
-	PosType index = findFileIndexByName(filename, currentFileList);
+	const String relativePath = file::stripRootPath(filename, currentDirectoryPath);
+
+	PosType index = findFileIndexByName(relativePath, currentFileList);
+	if (index >= 0)
+		jumpToImage((SizeType)index);
+	else
+		jumpToImage(0);
+}
+
+void ViewerManager::jumpToImageByDirectory(const String &filename)
+{
+	const String relativePath = file::stripRootPath(filename, currentDirectoryPath);
+
+	auto pred = [&](const String &path)
+	{
+		return path.find(relativePath) == 0;
+	};
+
+	PosType index = -1;
+
+	auto it = std::find_if(currentFileList.begin(), currentFileList.end(), pred);
+	if (it != currentFileList.end())
+	{
+		index = std::distance(currentFileList.begin(), it);
+	}
+
 	if (index >= 0)
 		jumpToImage((SizeType)index);
 	else
@@ -347,10 +461,10 @@ bool ViewerManager::isFirstScanComplete() const
 	return firstScanComplete;
 }
 
-const String &ViewerManager::getCurrentFilepath() const
+const String ViewerManager::getCurrentFilepath(bool absolute) const
 {
 	MutexGuard lock(mutex);
-	return current.filepath;
+	return absolute ? file::joinPaths(currentDirectoryPath, current.filepath) : current.filepath;
 }
 
 //////////////////////////////////////////////////////
@@ -358,13 +472,25 @@ const String &ViewerManager::getCurrentFilepath() const
 void ViewerManager::setSorting(SortingStyle sorting)
 {
 	MutexGuard lock(mutex);
-	if (currentSorting != sorting)
+	if (currentSortingStyle != sorting)
 	{
-		currentSorting = sorting;
+		currentSortingStyle = sorting;
 
-		applySorting(currentFileList);
-		ensureImageIndex();
+		if (!currentFileList.empty())
+		{
+			applySorting(currentFileList);
+			ensureImageIndex();
+
+			updateCurrentImage(current.imageIndex);
+
+			filelistChangedSignal((SizeType)currentFileList.size());
+		}
 	}
+}
+
+SortingStyle ViewerManager::getSorting() const
+{
+	return currentSortingStyle;
 }
 
 //////////////////////////////////////////////////////
@@ -415,9 +541,17 @@ bool ViewerManager::isExtensionAllowed(const String &filename)
 	return std::find(allowedExtensions.begin(), allowedExtensions.end(), ext) != allowedExtensions.end();
 }
 
-bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRecursive, IndexingAction indexingAction)
+bool ViewerManager::updateFilelist(const String directoryPath,
+	bool directoryChanged, bool allowFullRecursive, IndexingAction indexingAction)
 {
 	TS_ZONE();
+
+	TS_WPRINTF("updateFilelist\n");
+	TS_WPRINTF("  directoryPath      : %s\n", directoryPath);
+	TS_WPRINTF("  directoryChanged   : %d\n", (int)directoryChanged);
+	TS_WPRINTF("  allowFullRecursive : %d\n", (int)allowFullRecursive);
+	TS_WPRINTF("  indexingAction     : %d\n", (int)indexingAction);
+	TS_WPRINTF("\n");
 
 	const thread::SchedulerTaskId taskId = thread::ThreadScheduler::getCurrentThreadTaskId();
 
@@ -434,7 +568,6 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRec
 			currentFileList.clear();
 
 			currentDirectoryPath.clear();
-			scannerTaskId = thread::InvalidTaskId;
 		}
 
 		pendingImageIndex = 0;
@@ -469,7 +602,7 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRec
 			if (isExtensionAllowed(entry.getFilepath()))
 			{
 				templist.push_back({
-					entry.getFullFilepath()
+					entry.getFilepath()
 				});
 			}
 		}
@@ -482,21 +615,15 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRec
 		break;
 	}
 
-	if (quitting)
+	if (quitting || threadScheduler->isTaskCancelled(taskId))
 		return false;
-
-	if (threadScheduler->isTaskCancelled(taskId))
-	{
-		TS_PRINTF("Task cancelled, skedaddlar 2!\n");
-		return false;
-	}
 
 	applySorting(templist);
 
 	if (quitting)
 		return false;
 
-	if ((templist.size() != currentFileList.size()) || (templist != currentFileList))
+	if (directoryChanged || (templist.size() != currentFileList.size()) || (templist != currentFileList))
 	{
 		{
 			TS_ZONE_NAMED("Copying filelist");
@@ -515,9 +642,17 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRec
 			break;
 
 			case IndexingAction_Reset:
+				TS_PRINTF("ASDASDASD\n");
 				pendingImageIndex = 0;
 				pendingImageUpdate = true;
 			break;
+		}
+
+		if (directoryChanged)
+		{
+			TS_PRINTF("DSGXCVXCV\n");
+			pendingImageIndex = 0;
+			pendingImageUpdate = true;
 		}
 
 		filelistChangedSignal((SizeType)currentFileList.size());
@@ -525,32 +660,37 @@ bool ViewerManager::updateFilelist(const String directoryPath, bool allowFullRec
 
 	scanningFiles = false;
 
-	if (scanStyle != file::FileListStyle_Files_Recursive || scannerTaskId != thread::InvalidTaskId)
-		firstScanComplete = true;
+	if (quitting)
+		return false;
 
-	if (!quitting && scannerTaskId == thread::InvalidTaskId)
+	if (allowFullRecursive == false && scanStyle == file::FileListStyle_Files_Recursive)
 	{
-		scannerTaskId = threadScheduler->scheduleWithInterval(
+		scannerTaskId = threadScheduler->scheduleOnce(
 			thread::Priority_Normal,
-			TimeSpan::fromMilliseconds(2000), true,
-			&ViewerManager::updateFilelist, this, directoryPath, true, IndexingAction_KeepCurrentFile
-		);
+			TimeSpan::zero,
+			&ViewerManager::updateFilelist, this, directoryPath, false, true, IndexingAction_KeepCurrentFile
+		).getTaskId();
+	}
+	else if (allowFullRecursive == true || scanStyle != file::FileListStyle_Files_Recursive)
+	{
+		scannerTaskId = thread::InvalidTaskId;
+		firstScanComplete = true;
 	}
 
-	return !quitting;
+	return true;
 }
 
 void ViewerManager::applySorting(std::vector<String> &filelist)
 {
 	TS_ZONE();
 
-	switch (currentSorting)
+	switch (currentSortingStyle)
 	{
-		case SortByName:
+		case SortingStyle_ByName:
 			std::sort(filelist.begin(), filelist.end(), util::naturalSort);
 		break;
 
-		case SortByExtension:
+		case SortingStyle_ByExtension:
 			std::sort(filelist.begin(), filelist.end(), util::naturalSortByExtension);
 		break;
 	}
@@ -655,8 +795,6 @@ SharedPointer<resource::ShaderResource> ViewerManager::loadDisplayShader(Display
 {
 	TS_ASSERT(displayShaderFiles.find(type) != displayShaderFiles.end() && "Attempting to load an undefined display shader.");
 
-// 	String filepath = resource::ResourceManager::getAbsoluteResourcePath(displayShaderFiles[type]);
-
 	SharedPointer<resource::ShaderResource> displayShader = makeShared<resource::ShaderResource>(displayShaderFiles[type]);
 	TS_ASSERT(displayShader);
 	if (displayShader == nullptr)
@@ -690,14 +828,20 @@ void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 
 	uint32 currentImageHash = 0;
 
+	const uint32 currentPathHash = math::simpleHash32(currentDirectoryPath);
+
 	for (const ImageEntry &entry : imagesToLoad)
 	{
-		uint32 imageHash = math::simpleHash32(entry.filepath);
+		uint32 imageHash = math::hashCombine(currentPathHash, entry.filepath);
+
 		activeImages.push_back(imageHash);
 
 		SharedPointer<image::Image> &image = imageStorage[imageHash];
 		if (image == nullptr)
-			image = makeShared<image::Image>(entry.filepath);
+		{
+			String absolutePath = file::joinPaths(currentDirectoryPath, entry.filepath);
+			image = makeShared<image::Image>(absolutePath);
+		}
 
 		bool isCurrentImage = (entry.index == current.imageIndex);
 		if (isCurrentImage)
@@ -717,7 +861,7 @@ void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 		{
 			image->resumeLoading();
 		}
-		else if (entry.index == previousImageIndex)
+		else if (entry.index == previousImageIndex && !isCurrentImage)
 		{
 			image->restart(true);
 		}
@@ -769,27 +913,9 @@ void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 				continue;
 
 			image->suspendLoader();
-			backgroundUnloader->addToQueue(imageHash, TimeSpan::fromMilliseconds(2000));
+			backgroundUnloader->addToQueue(imageHash, 2000_ms);
 		}
 	}
-
-// 	for (ImageStorageList::iterator it = imageStorage.begin(); it != imageStorage.end(); ++it)
-// 	{
-// 		uint32 imageHash = it->first;
-// 		SharedPointer<image::Image> &image = it->second;
-// 
-// 		if (ts::util::findIfContains(newlyInactiveImages, imageHash))
-// 			continue;
-// 
-// 		if (image->getState() == image::Image::Unloaded)
-// 			continue;
-// 		
-// 		if (imageHash != currentImageHash)
-// 		{
-// // 			TS_WPRINTF("--- Restarting playback %s\n", image->getFilepath());
-// 			image->restart(true);
-// 		}
-// 	}
 }
 
 TS_END_PACKAGE2()

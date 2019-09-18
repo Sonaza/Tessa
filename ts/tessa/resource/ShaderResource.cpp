@@ -33,7 +33,6 @@ bool ShaderResource::loadResourceImpl()
 				ArchivistInputStream strm(extractor);
 				if (resource->loadFromStream(strm, sf::Shader::Fragment))
 				{
-					TS_WPRINTF("Loaded from archivist filesystem: %s\n", filepath);
 					return true;
 				}
 				else
@@ -50,7 +49,6 @@ bool ShaderResource::loadResourceImpl()
 		// Fallback from normal file system
 		if (resource->loadFromFile(getAbsolutePath(), sf::Shader::Fragment))
 		{
-			TS_WPRINTF("Loaded from normal filesystem: %s\n", filepath);
 			return true;
 		}
 		else

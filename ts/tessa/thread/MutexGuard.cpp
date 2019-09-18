@@ -10,6 +10,26 @@ MutexGuard::MutexGuard(AbstractMutexBase &mutexParam)
 	ownsLock = true;
 }
 
+MutexGuard::MutexGuard(AbstractMutexBase &mutexParam, DeferLockType t)
+	: mutex(std::addressof(mutexParam))
+{
+	// No locking here.
+}
+
+MutexGuard::MutexGuard(AbstractMutexBase &mutexParam, TryToLockType t)
+	: mutex(std::addressof(mutexParam))
+{
+	if (mutex->tryLock())
+		ownsLock = true;
+}
+
+MutexGuard::MutexGuard(AbstractMutexBase &mutexParam, AdoptLockType t)
+	: mutex(std::addressof(mutexParam))
+{
+	TS_ASSERTF(mutexParam.ownerIsCurrentThread(), "Current thread is not the owner of the lock.");
+	ownsLock = true;
+}
+
 MutexGuard::MutexGuard(MutexGuard &&other)
 {
 	*this = std::move(other);

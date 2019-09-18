@@ -4,6 +4,7 @@
 #include "ts/tessa/thread/ThreadScheduler.h"
 
 #include "ts/tessa/file/FileList.h"
+#include "ts/tessa/file/FileWatcher.h"
 
 TS_DECLARE2(app, image, Image);
 
@@ -22,6 +23,15 @@ struct ImageEntry
 	Buffering buffering;
 };
 
+enum SortingStyle
+{
+	SortingStyle_ByName,
+	SortingStyle_ByExtension,
+// 	SortingStyle_ByLastModified,
+
+	SortingStyle_NumOptions,
+};
+
 class ViewerManager : public system::AbstractManagerBase
 {
 	TS_DECLARE_MANAGER_TYPE(app::viewer::ViewerManager);
@@ -38,21 +48,18 @@ public:
 	void setFilepath(const String &filepath);
 	const String &getFilepath() const;
 
-	bool isRecursiveScan() const;
+	bool getIsRecursiveScan() const;
 	void setRecursiveScan(bool recursiveEnabled, bool immediateRescan = true);
 
-	enum SortingStyle
-	{
-		SortByName,
-		SortByExtension,
-	};
 	void setSorting(SortingStyle sorting);
+	SortingStyle getSorting() const;
 
 	//////////////////////////////////////////////////////
 	// Image state
 	
 	void jumpToImage(SizeType index);
 	void jumpToImageByFilename(const String &filename);
+	void jumpToImageByDirectory(const String &directory);
 	void nextImage();
 	void previousImage();
 	void changeImage(int32 direction);
@@ -63,7 +70,7 @@ public:
 	bool isScanningFiles() const;
 	bool isFirstScanComplete() const;
 
-	const String &getCurrentFilepath() const;
+	const String getCurrentFilepath(bool absolute = true) const;
 
 	SharedPointer<image::Image> getCurrentImage() const;
 
@@ -100,7 +107,8 @@ private:
 	};
 
 	bool isExtensionAllowed(const String &filename);
-	bool updateFilelist(const String directoryPath, bool allowFullRecursive, IndexingAction indexingAction);
+	bool updateFilelist(const String directoryPath,
+		bool directoryChanged, bool allowFullRecursive, IndexingAction indexingAction);
 
 	bool firstScanComplete = false;
 	std::atomic_bool scanningFiles;
@@ -109,12 +117,14 @@ private:
 
 	PosType findFileIndexByName(const String &filepath, const std::vector<String> &filelist);
 
-	std::vector<String> allowedExtensions;
-	SortingStyle currentSorting = SortByName;
-
 	file::FileListStyle scanStyle = file::FileListStyle_Files_Recursive;
 
 	String currentDirectoryPath;
+
+	void resetFileWatcher(bool recursive);
+	void watchNotify(const std::vector<file::FileNotifyEvent> &notifyEvent);
+	file::FileWatcher fileWatcher;
+	lang::SignalBind watchNotifyBind;
 
 	struct DisplayState
 	{
@@ -127,12 +137,13 @@ private:
 	bool pendingImageUpdate = true;
 	PosType pendingImageIndex = 0;
 
-// 	struct ImageFile
-// 	{
-// 		String filepath;
-// 		int64 lastModifiedTime;
-// 	};
+	struct ImageFile
+	{
+		String filepath;
+		int64 lastModifiedTime;
+	};
 	std::vector<String> currentFileList;
+	SortingStyle currentSortingStyle = SortingStyle_ByName;
 
 	void updateCurrentImage(SizeType previousImageIndex);
 
@@ -143,8 +154,9 @@ private:
 	class BackgroundImageUnloader;
 	ScopedPointer<BackgroundImageUnloader> backgroundUnloader;
 
+	std::vector<String> allowedExtensions;
+
 	thread::SchedulerTaskId scannerTaskId = thread::InvalidTaskId;
-	thread::SchedulerTaskId oneTimeScannerTaskId = thread::InvalidTaskId;
 
 	thread::ThreadScheduler *threadScheduler = nullptr;
 	mutable Mutex mutex;

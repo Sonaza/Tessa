@@ -171,8 +171,10 @@
     <ClCompile Include="file\FileEntry.cpp" />
     <ClCompile Include="file\FileList.cpp" />
     <ClCompile Include="file\FileUtils.cpp" />
+    <ClCompile Include="file\FileWatcher.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />
+    <ClCompile Include="file\windows\FileWatcherWindows.cpp" />
     <ClCompile Include="input\InputManager.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
     <ClCompile Include="math\Vec2.cpp" />
@@ -199,6 +201,7 @@
     <ClCompile Include="resource\SoundResource.cpp" />
     <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="system\WindowViewManager.cpp" />
+    <ClCompile Include="thread\AbstractMutexBase.cpp" />
     <ClCompile Include="thread\AbstractThreadEntry.cpp" />
     <ClCompile Include="thread\ConditionVariable.cpp" />
     <ClCompile Include="thread\CurrentThread.cpp" />
@@ -223,8 +226,10 @@
     <ClInclude Include="file\FileEntry.h" />
     <ClInclude Include="file\FileList.h" />
     <ClInclude Include="file\FileUtils.h" />
+    <ClInclude Include="file\FileWatcher.h" />
     <ClInclude Include="file\InputFile.h" />
     <ClInclude Include="file\OutputFile.h" />
+    <ClInclude Include="file\windows\FileWatcherWindows.h" />
     <ClInclude Include="input\InputManager.h" />
     <ClInclude Include="lang\Noncopyable.h" />
     <ClInclude Include="lang\ScopedPointer.h" />

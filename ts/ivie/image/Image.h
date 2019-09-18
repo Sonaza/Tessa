@@ -130,6 +130,9 @@ private:
 	SizeType currentFrameIndex = 0;
 	TimeSpan currentFrameTime;
 
+	SizeType displayableBufferThreshold = 1;
+	bool displayableThresholdReached = false;
+
 	static const BigSizeType MaxFrameBufferCapacity = 20;
 	typedef util::RingBuffer<FrameStorage, MaxFrameBufferCapacity> FrameRingBuffer;
 	FrameRingBuffer frameBuffer;

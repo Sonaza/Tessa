@@ -146,7 +146,7 @@ void main()
 		texColor = mix(direct, sharpened, smoothstep(0.0, 1.0, scale));
 	}
 	
-	// texColor = contrast(texColor, 1.2, 0.0);
+	// texColor = contrast(texColor, 1.7, 0.0);
 	// texColor = contrast(texColor, 0.75, 0.1);
 	
 	vec4 checker = checkerboard(uv, apparentSize);

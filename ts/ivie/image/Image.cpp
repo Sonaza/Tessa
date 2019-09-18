@@ -322,11 +322,12 @@ bool Image::isDisplayable() const
 {
 	TS_ZONE();
 
-	if (loaderState == Unloading)
+	// Only displayable in loading/complete state
+	if (loaderState != Loading && loaderState != Complete)
 		return false;
 
 	MutexGuard lock(mutex);
-	return loaderState != Error && !frameBuffer.isEmpty() && displayShader != nullptr;
+	return displayableThresholdReached && !frameBuffer.isEmpty() && displayShader != nullptr;
 }
 
 bool Image::hasError() const
@@ -364,6 +365,8 @@ void Image::setImageData(const ImageData &dataParam)
 
 	MutexGuard lock(mutex);
 	data = dataParam;
+
+	displayableBufferThreshold = math::clamp(data.numFramesTotal, 1U, 5U);
 }
 
 Image::LoaderType Image::sniffLoaderType()
@@ -439,6 +442,12 @@ void Image::swapBuffer()
 		return;
 
 	frameBuffer.incrementWrite();
+
+	if (!displayableThresholdReached)
+	{
+		if (frameBuffer.getBufferedAmount() >= displayableBufferThreshold)
+			displayableThresholdReached = true;
+	}
 
 	if (makingThumbnail == false)
 	{

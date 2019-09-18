@@ -39,7 +39,11 @@ extern String normalizePath(const String &path, string::Character delimiter = TS
 
 /* Returns if given absolute path is subpath of another absolute path.
  */
-extern bool pathIsSubpath(const String &rootPath, const String &otherPath);
+extern bool pathIsSubpath(const String &rootPath, const String &comparedPath);
+
+/* Returns a given path with the root path removed. Does not check if the path is a valid subpath.
+*/
+extern String stripRootPath(const String &path, const String &rootPath);
 
 /* Returns the directory path without file name. First checks if the path is a directory,
  * if it isn't then it simply removes everything past the last path delimiter.

@@ -194,6 +194,15 @@
     <ClCompile Include="input\InputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file\FileWatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\windows\FileWatcherWindows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\AbstractMutexBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
@@ -452,6 +461,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="input\InputManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileWatcher.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\windows\FileWatcherWindows.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

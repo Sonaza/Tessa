@@ -95,6 +95,8 @@ void WindowManager::create(const math::VC2U &videomode, const String &windowTitl
 	settings.majorVersion = 3;
 	settings.minorVersion = 0;
 
+// 	settings.sRgbCapable = true;
+
 	renderWindow.reset(new sf::RenderWindow(
 		sf::VideoMode(videomode.x, videomode.y),
 		windowTitle, style, settings
