@@ -75,7 +75,7 @@ private:
 	SizeType numPagesTotal = 0;
 
 	bool imageDataUpdated = false;
-	Image::ImageData imageData;
+	ImageData imageData;
 
 	bool multibitmapInitialized = false;
 

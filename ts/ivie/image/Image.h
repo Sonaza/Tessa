@@ -12,6 +12,13 @@ struct FrameStorage
 	TimeSpan frameTime;
 };
 
+struct ImageData
+{
+	math::VC2U size;
+	bool hasAlpha = false;
+	SizeType numFramesTotal = 0;
+};
+
 class Image
 {
 	typedef Image ThisClass;
@@ -42,7 +49,7 @@ public:
 	bool getIsAnimated() const;
 	float getAnimationProgress(TimeSpan frametime = TimeSpan::zero) const;
 
-	bool getHasAlpha() const;
+	bool getImageData(ImageData &outData) const;
 	const math::VC2U getSize() const;
 
 	FrameStorage *getCurrentFrameStorage();
@@ -104,14 +111,9 @@ private:
 	String filepath;
 	bool active = false;
 
-	struct ImageData
-	{
-		math::VC2U size;
-		bool hasAlpha = false;
-		SizeType numFramesTotal = 0;
-	};
 	void setImageData(const ImageData &imageData);
-	ImageData data;
+	ImageData imageData;
+	bool imageDataIsSet = false;
 
 	enum LoaderType
 	{

@@ -1,11 +1,9 @@
 #pragma once
 
 #include "ts/tessa/system/AbstractSceneBase.h"
+#include "ts/ivie/image/Image.h"
 
 TS_DECLARE2(app, viewer, ViewerManager);
-TS_DECLARE2(app, image, Image);
-TS_DECLARE_STRUCT2(app, image, FrameStorage);
-
 TS_DECLARE_STRUCT1(system, WindowView);
 
 TS_PACKAGE2(app, scenes)
@@ -60,9 +58,16 @@ protected:
 
 	resource::ShaderResource *backgroundShader = nullptr;
 
-	SharedPointer<image::Image> currentImage;
-	bool pendingImageInfo = true;
-	math::VC2U imageSize;
+	struct CurrentState
+	{
+		SharedPointer<image::Image> image;
+
+		bool hasData = false;
+		image::ImageData data;
+
+		TimeSpan frameTime;
+	};
+	CurrentState current;
 
 	float defaultScale = 1.f;
 	float targetDefaultScale = 1.f;
@@ -72,7 +77,9 @@ protected:
 
 	math::VC2 positionOffset;
 	math::VC2 targetPositionOffset;
-	
+
+	Clock frameTimer;
+
 	void enforceOversizeLimits(float scale, bool enforceTarget = true);
 	math::VC2 positionOversizeLimit;
 
@@ -88,8 +95,6 @@ protected:
 
 	float dragged = 0.f;
 
-	Clock frameTimer;
-	TimeSpan currentFrameTime;
 
 	//////////////////////
 

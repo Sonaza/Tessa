@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef TS_INCLUDE_FILEWATCH_IMPL
-#error "The special impl headers are only supposed to be included in FileWatcher.cpp"
-#endif
-
 #include "ts/tessa/file/FileWatcher.h"
 #include "ts/tessa/common/IncludeWindows.h"
 
@@ -23,6 +19,7 @@ public:
 	virtual void update();
 
 	virtual bool isWatching() const;
+	virtual bool hasError() const;
 
 	void addEvent(FileNotifyEvent &&notifyEvent);
 

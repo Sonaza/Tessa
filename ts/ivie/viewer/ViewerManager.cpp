@@ -184,7 +184,7 @@ void ViewerManager::update(const TimeSpan deltaTime)
 			pendingImageUpdate = false;
 		}
 
-		currentImageChangedSignal(currentImage);
+		imageChangedSignal(currentImage);
 	}
 }
 
@@ -300,6 +300,8 @@ void ViewerManager::setFilepath(const String &filepath)
 
 	firstScanComplete = false;
 	currentDirectoryPath = directoryPath;
+	TS_ASSERT(!currentDirectoryPath.isEmpty());
+	currentDirectoryPathHash = math::simpleHash32(currentDirectoryPath);
 
 	resetFileWatcher(getIsRecursiveScan());
 
@@ -324,7 +326,7 @@ void ViewerManager::setFilepath(const String &filepath)
 	scannerTaskId = threadScheduler->scheduleOnce(
 		thread::Priority_Critical,
 		TimeSpan::zero,
-		&ThisClass::updateFilelist, this, directoryPath, true, false, action
+		&ThisClass::updateFilelist, this, directoryPath, false, action
 	).getTaskId();
 }
 
@@ -357,7 +359,7 @@ void ViewerManager::setRecursiveScan(bool recursiveEnabled, bool immediateRescan
 		scannerTaskId = threadScheduler->scheduleOnce(
 			thread::Priority_Critical,
 			TimeSpan::zero,
-			&ThisClass::updateFilelist, this, currentDirectoryPath, false, true, IndexingAction_KeepCurrentFile
+			&ThisClass::updateFilelist, this, currentDirectoryPath, true, IndexingAction_KeepCurrentFile
 		).getTaskId();
 	}
 }
@@ -542,16 +544,9 @@ bool ViewerManager::isExtensionAllowed(const String &filename)
 }
 
 bool ViewerManager::updateFilelist(const String directoryPath,
-	bool directoryChanged, bool allowFullRecursive, IndexingAction indexingAction)
+	bool allowFullRecursive, IndexingAction indexingAction)
 {
 	TS_ZONE();
-
-	TS_WPRINTF("updateFilelist\n");
-	TS_WPRINTF("  directoryPath      : %s\n", directoryPath);
-	TS_WPRINTF("  directoryChanged   : %d\n", (int)directoryChanged);
-	TS_WPRINTF("  allowFullRecursive : %d\n", (int)allowFullRecursive);
-	TS_WPRINTF("  indexingAction     : %d\n", (int)indexingAction);
-	TS_WPRINTF("\n");
 
 	const thread::SchedulerTaskId taskId = thread::ThreadScheduler::getCurrentThreadTaskId();
 
@@ -568,6 +563,7 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 			currentFileList.clear();
 
 			currentDirectoryPath.clear();
+			currentDirectoryPathHash = 0;
 		}
 
 		pendingImageIndex = 0;
@@ -623,40 +619,30 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 	if (quitting)
 		return false;
 
-	if (directoryChanged || (templist.size() != currentFileList.size()) || (templist != currentFileList))
 	{
-		{
-			TS_ZONE_NAMED("Copying filelist");
-			MutexGuard lock(mutex);
-			currentFileList = std::move(templist);
-		}
+		TS_ZONE_NAMED("Copying filelist");
+		MutexGuard lock(mutex);
+		currentFileList = std::move(templist);
+	}
 
-		switch (indexingAction)
-		{
-			case IndexingAction_DoNothing:
-				// See me doing nothing here
-			break;
+	switch (indexingAction)
+	{
+		case IndexingAction_DoNothing:
+			// See me doing nothing here
+		break;
 
-			case IndexingAction_KeepCurrentFile:
-				ensureImageIndex();
-			break;
+		case IndexingAction_KeepCurrentFile:
+			ensureImageIndex();
+		break;
 
-			case IndexingAction_Reset:
-				TS_PRINTF("ASDASDASD\n");
-				pendingImageIndex = 0;
-				pendingImageUpdate = true;
-			break;
-		}
-
-		if (directoryChanged)
-		{
-			TS_PRINTF("DSGXCVXCV\n");
+		case IndexingAction_Reset:
+			TS_PRINTF("ASDASDASD\n");
 			pendingImageIndex = 0;
 			pendingImageUpdate = true;
-		}
-
-		filelistChangedSignal((SizeType)currentFileList.size());
+		break;
 	}
+
+	filelistChangedSignal((SizeType)currentFileList.size());
 
 	scanningFiles = false;
 
@@ -668,7 +654,7 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 		scannerTaskId = threadScheduler->scheduleOnce(
 			thread::Priority_Normal,
 			TimeSpan::zero,
-			&ViewerManager::updateFilelist, this, directoryPath, false, true, IndexingAction_KeepCurrentFile
+			&ThisClass::updateFilelist, this, directoryPath, true, IndexingAction_KeepCurrentFile
 		).getTaskId();
 	}
 	else if (allowFullRecursive == true || scanStyle != file::FileListStyle_Files_Recursive)
@@ -828,11 +814,9 @@ void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 
 	uint32 currentImageHash = 0;
 
-	const uint32 currentPathHash = !currentDirectoryPath.isEmpty() ? math::simpleHash32(currentDirectoryPath) : 0;
-
 	for (const ImageEntry &entry : imagesToLoad)
 	{
-		uint32 imageHash = math::hashCombine(currentPathHash, entry.filepath);
+		uint32 imageHash = math::hashCombine(currentDirectoryPathHash, entry.filepath);
 
 		activeImages.push_back(imageHash);
 

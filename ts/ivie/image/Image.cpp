@@ -114,7 +114,7 @@ void Image::unload()
 
 	errorText.clear();
 
-	data = ImageData();
+// 	imageData = ImageData();
 	currentFrameIndex = 0;
 	loaderState = Unloaded;
 }
@@ -189,13 +189,27 @@ void Image::resumeLoading()
 	backgroundLoader->resume();
 }
 
+bool Image::getImageData(ImageData &outData) const
+{
+	TS_ZONE();
+
+	MutexGuard lock(mutex);
+	if (imageDataIsSet == true)
+	{
+		outData = imageData;
+		TS_WPRINTF("Image::getImageData %s\n", filepath);
+		TS_ASSERT(outData.size.x > 0 && outData.size.y > 0);
+		return true;
+	}
+	return false;
+}
+
 const math::VC2U Image::getSize() const
 {
 	TS_ZONE();
 
 	MutexGuard lock(mutex);
-// 	TS_ASSERT(data.size.x > 0 && data.size.y > 0 && "Image size is not set.");
-	return data.size;
+	return imageData.size;
 }
 
 FrameStorage *Image::getCurrentFrameStorage()
@@ -225,7 +239,7 @@ sf::Shader *Image::getDisplayShader(const float apparentScale)
 			case LoaderFreeImage:
 			{
 				sf::Glsl::Vec2 arr[2];
-				arr[0] = (math::VC2)data.size * apparentScale;
+				arr[0] = (math::VC2)imageData.size * apparentScale;
 				arr[1] = math::VC2(apparentScale, apparentScale);
 				shader->setUniformArray("u_params", arr, 2);
 
@@ -260,7 +274,7 @@ SizeType Image::getNumFramesTotal() const
 	TS_ZONE();
 
 	MutexGuard lock(mutex);
-	return data.numFramesTotal;
+	return imageData.numFramesTotal;
 }
 
 SizeType Image::getNumFramesBuffered() const
@@ -276,26 +290,18 @@ bool Image::getIsAnimated() const
 	TS_ZONE();
 
 	MutexGuard lock(mutex);
-	return data.numFramesTotal > 1;
+	return imageData.numFramesTotal > 1;
 }
 
 float Image::getAnimationProgress(TimeSpan elapsedFrameTime) const
 {
-	if (data.numFramesTotal == 0)
+	if (imageData.numFramesTotal == 0)
 		return 0.f;
 
-	float progress = (currentFrameIndex / (float)data.numFramesTotal) +
-		(elapsedFrameTime.getMilliseconds() / (float)currentFrameTime.getMilliseconds()) * (1.f / (float)data.numFramesTotal);
+	float progress = (currentFrameIndex / (float)imageData.numFramesTotal) +
+		(elapsedFrameTime.getMilliseconds() / (float)currentFrameTime.getMilliseconds()) * (1.f / (float)imageData.numFramesTotal);
 
 	return progress;
-}
-
-bool Image::getHasAlpha() const
-{
-	TS_ZONE();
-
-	MutexGuard lock(mutex);
-	return data.hasAlpha;
 }
 
 bool Image::advanceToNextFrame()
@@ -311,7 +317,7 @@ bool Image::advanceToNextFrame()
 	if (loaderState == Complete || frameBuffer.canIncrementRead())
 	{
 		frameBuffer.incrementRead();
-		currentFrameIndex = (currentFrameIndex + 1) % data.numFramesTotal;
+		currentFrameIndex = (currentFrameIndex + 1) % imageData.numFramesTotal;
 		currentFrameTime = frameBuffer.getReadPtr().frameTime;
 		return true;
 	}
@@ -364,9 +370,13 @@ void Image::setImageData(const ImageData &dataParam)
 		return;
 
 	MutexGuard lock(mutex);
-	data = dataParam;
+	TS_WPRINTF("Image::setImageData %s\n", filepath);
 
-	displayableBufferThreshold = math::clamp(data.numFramesTotal, 1U, 5U);
+	TS_ASSERT(dataParam.size.x > 0 && dataParam.size.y > 0);
+	imageData = dataParam;
+	imageDataIsSet = true;
+
+	displayableBufferThreshold = math::clamp(imageData.numFramesTotal, 1U, 5U);
 }
 
 Image::LoaderType Image::sniffLoaderType()
@@ -401,7 +411,7 @@ String Image::getStats() const
 	String str = TS_WFMT("%s (%u / %u [%u buffered]) Image: %s Loader: %s",
 		file::getBasename(filepath),
 		currentFrameIndex + 1,
-		math::max(1U, data.numFramesTotal),
+		math::max(1U, imageData.numFramesTotal),
 		frameBuffer.getBufferedAmount(),
 		getStateString(loaderState),
 		backgroundLoader ? backgroundLoader->getStateString(backgroundLoader->getState()) : L"null"

@@ -1,13 +1,9 @@
 #include "Precompiled.h"
 #include "FileWatcher.h"
 
-#define TS_INCLUDE_FILEWATCH_IMPL
-
 #if TS_PLATFORM == TS_WINDOWS
 #include "ts/tessa/file/windows/FileWatcherWindows.h"
 #endif
-
-#undef TS_INCLUDE_FILEWATCH_IMPL
 
 TS_PACKAGE1(file)
 
@@ -43,6 +39,11 @@ void FileWatcher::update()
 bool FileWatcher::isWatching() const
 {
 	return impl != nullptr && impl->isWatching();
+}
+
+bool FileWatcher::hasError() const
+{
+	return impl != nullptr && impl->hasError();
 }
 
 TS_END_PACKAGE1()

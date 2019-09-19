@@ -43,6 +43,7 @@ public:
 	virtual void update() = 0;
 
 	virtual bool isWatching() const = 0;
+	virtual bool hasError() const = 0;
 
 protected:
 	FileWatcher *parent = nullptr;
@@ -60,6 +61,7 @@ public:
 	void update();
 
 	bool isWatching() const;
+	bool hasError() const;
 
 	lang::Signal<const std::vector<FileNotifyEvent>&> notifySignal;
 

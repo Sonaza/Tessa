@@ -125,9 +125,6 @@ void main()
 	vec2 uv = gl_TexCoord[0].xy;
 	uv = vec2(uv.x, 1.0 - uv.y);
 	
-	vec2 pixelCoordinate = uv * apparentSize;
-	if (uv.x * apparentSize.x >= apparentSize.x - 1.5)
-		discard;
 	
 	vec4 direct = texture2D(u_texture, uv);
 	vec4 sharpened = sharpen(u_texture, uv, apparentSize, apparentScale);
@@ -150,5 +147,10 @@ void main()
 	// texColor = contrast(texColor, 0.75, 0.1);
 	
 	vec4 checker = checkerboard(uv, apparentSize);
+	
+	vec2 pixelCoordinate = uv * apparentSize;
+	if (uv.x * apparentSize.x >= apparentSize.x - 1.5)
+		checker.a = 0.0;
+	
 	gl_FragColor = mix(checker, vec4(texColor.rgb, 1.0), texColor.a) * gl_Color;
 }

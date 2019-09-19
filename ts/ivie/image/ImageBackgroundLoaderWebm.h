@@ -80,7 +80,7 @@ private:
 	math::VC2U imageSize;
 
 	bool imageDataUpdated = false;
-	Image::ImageData imageData;
+	ImageData imageData;
 
 };
 

@@ -2,7 +2,6 @@
 
 #if TS_PLATFORM == TS_WINDOWS
 
-#define TS_INCLUDE_FILEWATCH_IMPL
 #include "FileWatcherWindows.h"
 
 #include "ts/tessa/file/FileWatcher.h"
@@ -27,6 +26,7 @@ struct WatchData
 	bool recursive = false;
 	SizeType flags = 0;
 
+	bool hasError = false;
 	bool stopped = false;
 };
 
@@ -42,6 +42,7 @@ void CALLBACK completionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfer
 	if (dwErrorCode != ERROR_SUCCESS)
 	{
 		TS_ASSERTF(false, "error! %u", dwErrorCode);
+		watchData->hasError = true;
 		return;
 	}
 
@@ -88,10 +89,7 @@ void CALLBACK completionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfer
 				notifyEvent.name = std::move(filename);
 			break;
 
-			default:
-				return;
-// 				TS_ASSERT(!"Unsupported file action");
-// 			break;
+			default: return;
 		}
 
 	} while (record->NextEntryOffset != 0);
@@ -223,6 +221,11 @@ void FileWatcherWindows::update()
 bool FileWatcherWindows::isWatching() const
 {
 	return watchData != nullptr;
+}
+
+bool FileWatcherWindows::hasError() const
+{
+	return watchData != nullptr && watchData->hasError;
 }
 
 void FileWatcherWindows::addEvent(FileNotifyEvent &&notifyEvent)

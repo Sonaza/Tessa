@@ -131,7 +131,8 @@ void AbstractImageBackgroundLoader::entry()
 		}
 		else
 		{
-			TS_ASSERT(!"This shouldn't ever happen.");
+// 			TS_ASSERT(!"This shouldn't ever happen.");
+			TS_WLOG_ERROR("Invalid state: loader started with %s state. Aborting...", getStateString(loaderState));
 			return;
 		}
 	}

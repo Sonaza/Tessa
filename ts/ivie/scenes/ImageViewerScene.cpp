@@ -8,8 +8,6 @@
 #include "ts/ivie/util/NaturalSort.h"
 #include "ts/ivie/viewer/ViewerManager.h"
 
-#include "ts/ivie/image/Image.h"
-
 #include "ts/ivie/util/RenderUtil.h"
 #include "ts/tessa/thread/ThreadScheduler.h"
 
@@ -49,7 +47,7 @@ bool ImageViewerScene::start()
 		&ThisClass::filelistChanged, this);
 
 	imageChangedBind.connect(
-		viewerManager->currentImageChangedSignal,
+		viewerManager->imageChangedSignal,
 		lang::SignalPriority_Normal,
 		&ThisClass::imageChanged, this);
 
@@ -180,8 +178,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 				case sf::Keyboard::F5:
 				{
-					if (currentImage != nullptr)
-						currentImage->reload();
+					if (current.image != nullptr)
+						current.image->reload();
 
 					return true;
 				}
@@ -416,31 +414,27 @@ bool ImageViewerScene::updateImageInfo()
 {
 	TS_ZONE();
 
-	if (currentImage == nullptr)
-		return true;
-	
-	const system::WindowView &view = windowManager->getApplicationView();
+	TS_ASSERT(current.image != nullptr);
 
-	if (currentImage->isDisplayable())
+	image::ImageData imageData;
+	if (current.image->getImageData(imageData))
 	{
-		imageSize = currentImage->getSize();
-		if (imageSize.x > 0 && imageSize.y > 0)
-		{
-			targetDefaultScale = math::min(
-				math::min(1.f, (view.size.x - framePadding) / (float)imageSize.x),
-				math::min(1.f, (view.size.y - framePadding) / (float)imageSize.y)
-			);
-		}
-		else
-		{
-			targetDefaultScale = 1.f;
-		}
+		current.data = std::move(imageData);
+		current.hasData = true;
 
+		const system::WindowView &view = windowManager->getApplicationView();
+
+		TS_ASSERT(current.data.size.x > 0 && current.data.size.y > 0);
+
+		targetDefaultScale = math::min(
+			math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
+			math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
+		);
 		defaultScale = targetDefaultScale;
 
 		return true;
 	}
-	else if (currentImage->hasError())
+	else if (current.image->hasError())
 	{
 		defaultScale = 1.f;
 		targetDefaultScale = 1.f;
@@ -458,8 +452,8 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 
 	framePadding = math::max(20.f, view.size.x * 0.02f);
 
-	if (pendingImageInfo && updateImageInfo())
-		pendingImageInfo = false;
+	if (current.image != nullptr && !current.hasData)
+		updateImageInfo();
 
 	if (!sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 	{
@@ -495,9 +489,12 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 
 void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 {
+	if (!current.hasData)
+		return;
+
 	const system::WindowView &view = windowManager->getApplicationView();
 
-	math::VC2 scaledSize = static_cast<math::VC2>(imageSize) * scale;
+	math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
 
 	math::VC2 oversize = (scaledSize - view.size) / 2.f;
 	oversize.x = math::max(0.f, oversize.x);
@@ -518,11 +515,11 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 math::VC2 ImageViewerScene::calculateMouseDiff(const system::WindowView &view,
 	const math::VC2 &mousePos, float currentScale, float targetScale)
 {
-	if (pendingImageInfo)
+	if (!current.hasData)
 		return math::VC2::zero;
 
 	math::VC2 converted = view.convertToViewCoordinate(mousePos);
-	math::VC2 imageCenter = static_cast<math::VC2>(imageSize) / 2.f;
+	math::VC2 imageCenter = static_cast<math::VC2>(current.data.size) / 2.f;
 
 	math::Transform currentTransform;
 	currentTransform
@@ -546,8 +543,11 @@ void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 {
 	TS_ZONE();
 
-	currentImage = image;
-	pendingImageInfo = !updateImageInfo();
+	current = CurrentState();
+	current.image = image;
+
+	if (current.image != nullptr)
+		updateImageInfo();
 
 	switch (displayMode)
 	{
@@ -573,7 +573,7 @@ void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 void ImageViewerScene::filelistChanged(SizeType numFiles)
 {
 	if (numFiles == 0)
-		currentImage = nullptr;
+		current.image = nullptr;
 }
 
 void ImageViewerScene::screenResized(const math::VC2U &size)
@@ -581,8 +581,8 @@ void ImageViewerScene::screenResized(const math::VC2U &size)
 	const system::WindowView &view = windowManager->getApplicationView();
 
 	targetDefaultScale = math::min(
-		math::min(1.f, (view.size.x - framePadding) / (float)imageSize.x),
-		math::min(1.f, (view.size.y - framePadding) / (float)imageSize.y)
+		math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
+		math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
 	);
 }
 
@@ -612,35 +612,36 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 		renderTarget.draw(bg, &bgShader);
 	}
 
-	if (currentImage != nullptr)
+	if (current.image != nullptr)
 	{
-		math::VC2U size = currentImage->getSize();
 		float scale = defaultScale * imageScale;
 
-		math::VC2 scaledSize = static_cast<math::VC2>(size) * scale;
+		math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
 
-		bool displayable = currentImage->isDisplayable() && !pendingImageInfo;
+		bool displayable = current.image->isDisplayable() && current.hasData;
 		if (displayable)
 		{
-			image::FrameStorage currentFrame = *currentImage->getCurrentFrameStorage();
-			currentFrameTime = currentFrame.frameTime;
+			image::FrameStorage currentFrame = *current.image->getCurrentFrameStorage();
+			current.frameTime = currentFrame.frameTime;
 
 			if (currentFrame.texture != nullptr)
 			{
-				if (currentImage->getIsAnimated())
+				if (current.image->getIsAnimated())
 				{
 					if (frameTimer.getElapsedTime() > currentFrame.frameTime)
 					{
-						currentImage->advanceToNextFrame();
+						current.image->advanceToNextFrame();
 						frameTimer.restart();
 
-// 						currentFrame = *currentImage->getCurrentFrameStorage();
-// 						currentFrameTime = currentFrame.frameTime;
+// 						currentFrame = *current.image->getCurrentFrameStorage();
+// 						current.frameTime = currentFrame.frameTime;
 					}
 				}
 
 				sf::VertexArray va = util::makeQuadVertexArrayScaled(
-					size.x, size.y, size.x, size.y);
+					current.data.size.x, current.data.size.y,
+					current.data.size.x, current.data.size.y
+				);
 
 				currentFrame.texture->setSmooth(displaySmooth);
 
@@ -653,7 +654,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 					.scale(scale, scale);
 				states.transform = (sf::Transform)transform;
 
-				states.shader = currentImage->getDisplayShader(scale);
+				states.shader = current.image->getDisplayShader(scale);
 
 				renderTarget.draw(va, states);
 			}
@@ -663,15 +664,15 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 			}
 		}
 		
-		if (!displayable)
+		if (!displayable && current.hasData)
 		{
-			SharedPointer<sf::Texture> thumbnail = currentImage->getThumbnail();
+			SharedPointer<sf::Texture> thumbnail = current.image->getThumbnail();
 			if (thumbnail != nullptr)
 			{
 				math::VC2U thumbnailSize = thumbnail->getSize();
 
 				sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
-					size.x, size.y,
+					current.data.size.x, current.data.size.y,
 					thumbnailSize.x, thumbnailSize.y,
 					3, sf::Color(0, 0, 0, 170));
 
@@ -697,9 +698,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 	const SizeType numImages = viewerManager->getNumImages();
 	bool hasError = false;
 
-	if (currentImage != nullptr)
+	if (current.image != nullptr)
 	{
-// 		SharedPointer<sf::Texture> thumbnail = currentImage->getThumbnail();
+// 		SharedPointer<sf::Texture> thumbnail = current.image->getThumbnail();
 // 		if (thumbnail != nullptr)
 // 		{
 // 			sf::Sprite asd;
@@ -709,9 +710,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 // 			renderTarget.draw(asd);
 // 		}
 
-		hasError = currentImage->hasError();
+		hasError = current.image->hasError();
 
-		if (!hasError && !currentImage->isDisplayable())
+		if (!hasError && !current.image->isDisplayable())
 		{
 			sf::Text loadingText;
 			loadingText.setOutlineThickness(2.f);
@@ -807,17 +808,17 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 				{
 					statusText.setString(TS_FMT("%.1f%%\n%u x %u",
 						scale * 100.f,
-						imageSize.x, imageSize.y
+						current.data.size.x, current.data.size.y
 					));
 				}
 				else
 				{
 					math::VC2U scaledSize = static_cast<math::VC2U>(
-						static_cast<math::VC2>(imageSize) * scale + math::VC2(0.5f, 0.5f));
+						static_cast<math::VC2>(current.data.size) * scale + math::VC2(0.5f, 0.5f));
 
 					statusText.setString(TS_FMT("%.1f%%\n%u x %u (%u x %u)",
 						scale * 100.f,
-						imageSize.x, imageSize.y,
+						current.data.size.x, current.data.size.y,
 						scaledSize.x, scaledSize.y
 					));
 				}
@@ -830,9 +831,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 				renderTarget.draw(statusText);
 			}
 
-			if (currentImage != nullptr && currentImage->getIsAnimated())
+			if (current.image != nullptr && current.image->getIsAnimated())
 			{
-				float progress = currentImage->getAnimationProgress(frameTimer.getElapsedTime());
+				float progress = current.image->getAnimationProgress(frameTimer.getElapsedTime());
 
 				math::VC2 fullsize(view.size.x + 2.f, 4.f);
 				float offset = 1.f;
@@ -888,9 +889,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 		sf::Text errorText("", *font->getResource());
 		errorText.setOutlineThickness(2.f);
 
-		if (currentImage != nullptr)
+		if (current.image != nullptr)
 		{
-			const String &errorStr = currentImage->getErrorText();
+			const String &errorStr = current.image->getErrorText();
 			errorText.setString(TS_WFMT(
 				"Error: %s", (!errorStr.isEmpty() ? errorStr : "error has error.")
 			));

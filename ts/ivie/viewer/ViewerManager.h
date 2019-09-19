@@ -87,7 +87,7 @@ public:
 	lang::Signal<SizeType> filelistChangedSignal;
 
 	// When current image changes, parameter is SharedPointer of the image (nullptr of none)
-	lang::Signal<SharedPointer<image::Image>> currentImageChangedSignal;
+	lang::Signal<SharedPointer<image::Image>> imageChangedSignal;
 
 private:
 	static std::atomic_bool quitting;
@@ -108,7 +108,7 @@ private:
 
 	bool isExtensionAllowed(const String &filename);
 	bool updateFilelist(const String directoryPath,
-		bool directoryChanged, bool allowFullRecursive, IndexingAction indexingAction);
+		bool allowFullRecursive, IndexingAction indexingAction);
 
 	bool firstScanComplete = false;
 	std::atomic_bool scanningFiles;
@@ -120,6 +120,7 @@ private:
 	file::FileListStyle scanStyle = file::FileListStyle_Files_Recursive;
 
 	String currentDirectoryPath;
+	uint32 currentDirectoryPathHash = 0;
 
 	void resetFileWatcher(bool recursive);
 	void watchNotify(const std::vector<file::FileNotifyEvent> &notifyEvent);
