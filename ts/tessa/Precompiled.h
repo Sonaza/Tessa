@@ -14,12 +14,13 @@
 #include "ts/tessa/lang/Pointers.h"
 #include "ts/tessa/lang/Noncopyable.h"
 
+#include "ts/tessa/math/Constants.h"
+#include "ts/tessa/math/CommonMath.h"
 #include "ts/tessa/math/Vec2.h"
 #include "ts/tessa/math/Vec3.h"
 #include "ts/tessa/math/Vec4.h"
 #include "ts/tessa/math/Rect.h"
-#include "ts/tessa/math/Constants.h"
-#include "ts/tessa/math/CommonMath.h"
+#include "ts/tessa/math/Mat4.h"
 
 #include "ts/tessa/system/Gigaton.h"
 

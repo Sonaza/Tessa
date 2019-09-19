@@ -519,13 +519,13 @@ math::VC2 ImageViewerScene::calculateMouseDiff(const system::WindowView &view,
 	math::VC2 converted = view.convertToViewCoordinate(mousePos);
 	math::VC2 imageCenter = static_cast<math::VC2>(imageSize) / 2.f;
 
-	sf::Transform currentTransform;
+	math::Transform currentTransform;
 	currentTransform
 		.translate(positionOffset)
 		.scale(currentScale, currentScale)
 		.translate(-imageCenter);
 
-	sf::Transform targetTransform;
+	math::Transform targetTransform;
 	targetTransform
 		.translate(positionOffset)
 		.scale(targetScale, targetScale)
@@ -642,10 +642,11 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 				sf::RenderStates states;
 				states.texture = currentFrame.texture.get();
 
-				sf::Transform transform;
-				transform.translate(scaledSize / -2.f + positionOffset);
-				transform.scale(scale, scale);
-				states.transform = transform;
+				math::Transform transform;
+				transform
+					.translate(scaledSize / -2.f + positionOffset)
+					.scale(scale, scale);
+				states.transform = (sf::Transform)transform;
 
 				states.shader = currentImage->getDisplayShader(scale);
 
@@ -672,10 +673,11 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 				sf::RenderStates states;
 				states.texture = thumbnail.get();
 
-				sf::Transform transform;
-				transform.translate(scaledSize / -2.f + positionOffset);
-				transform.scale(scale, scale);
-				states.transform = transform;
+				math::Transform transform;
+				transform
+					.translate(scaledSize / -2.f + positionOffset)
+					.scale(scale, scale);
+				states.transform = (sf::Transform)transform;
 
 				renderTarget.draw(va, states);
 			}

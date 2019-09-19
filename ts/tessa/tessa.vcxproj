@@ -322,9 +322,9 @@
     <ClInclude Include="lang\UniquePointer.inl">
       <FileType>Document</FileType>
     </ClInclude>
-    <ClInclude Include="math\Mat4.inl">
+    <ClCompile Include="math\Mat4.cpp">
       <FileType>Document</FileType>
-    </ClInclude>
+    </ClCompile>
     <ClInclude Include="math\Vec2.inl">
       <FileType>Document</FileType>
     </ClInclude>

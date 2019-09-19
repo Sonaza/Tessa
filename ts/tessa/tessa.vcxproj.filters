@@ -319,9 +319,6 @@
     <ClInclude Include="math\Vec2.inl">
       <Filter>Source Files\math</Filter>
     </ClInclude>
-    <ClInclude Include="math\Mat4.inl">
-      <Filter>Source Files\math</Filter>
-    </ClInclude>
     <ClInclude Include="file\FileList.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -468,6 +465,9 @@
     </ClInclude>
     <ClInclude Include="file\windows\FileWatcherWindows.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Mat4.cpp">
+      <Filter>Source Files\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
