@@ -383,7 +383,12 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 						const system::WindowView &view = windowManager->getApplicationView();
 						math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, targetScale);
 
-						targetPositionOffset = positionOffset + diff * 1.03f * targetScale;
+						float distanceFromEdgeX = math::abs(mouse.x - (view.size.x / 2.f)) / (view.size.x / 2.f);
+						float distanceFromEdgeY = math::abs(mouse.y - (view.size.y / 2.f)) / (view.size.y / 2.f);
+						float distanceFromEdge = math::max(distanceFromEdgeX, distanceFromEdgeY);
+						float multiplier = (float)std::pow((distanceFromEdge - 0.5f) * 2.f, 6) * 0.3f + 1.f;
+
+						targetPositionOffset = positionOffset + diff * multiplier * targetScale;
 						
 						enforceOversizeLimits(defaultScale * math::max(targetImageScale, imageScale));
 					}

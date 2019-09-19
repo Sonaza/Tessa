@@ -48,47 +48,51 @@ const float *Mat4::getMatrix() const
 
 Mat4 Mat4::getInverse() const
 {
-	// Precalculate some 2x2 determinants
-	float s0 = m_matrix[0] * m_matrix[5] - m_matrix[4] * m_matrix[1];
-	float s1 = m_matrix[0] * m_matrix[6] - m_matrix[4] * m_matrix[2];
-	float s2 = m_matrix[0] * m_matrix[7] - m_matrix[4] * m_matrix[3];
-	float s3 = m_matrix[1] * m_matrix[6] - m_matrix[5] * m_matrix[2];
-	float s4 = m_matrix[1] * m_matrix[7] - m_matrix[5] * m_matrix[3];
-	float s5 = m_matrix[2] * m_matrix[7] - m_matrix[6] * m_matrix[3];
+	float A2323 = m_matrix[10] * m_matrix[15] - m_matrix[14] * m_matrix[11];
+	float A1223 = m_matrix[6]  * m_matrix[11] - m_matrix[10] * m_matrix[7];
+	float A1323 = m_matrix[6]  * m_matrix[15] - m_matrix[14] * m_matrix[7];
+	float A0323 = m_matrix[2]  * m_matrix[15] - m_matrix[14] * m_matrix[3];
+	float A0223 = m_matrix[2]  * m_matrix[11] - m_matrix[10] * m_matrix[3];
+	float A0123 = m_matrix[2]  * m_matrix[7]  - m_matrix[6]  * m_matrix[3];
+	float A2313 = m_matrix[9]  * m_matrix[15] - m_matrix[13] * m_matrix[11];
+	float A1313 = m_matrix[5]  * m_matrix[15] - m_matrix[13] * m_matrix[7];
+	float A1213 = m_matrix[5]  * m_matrix[11] - m_matrix[9]  * m_matrix[7];
+	float A2312 = m_matrix[9]  * m_matrix[14] - m_matrix[13] * m_matrix[10];
+	float A1312 = m_matrix[5]  * m_matrix[14] - m_matrix[13] * m_matrix[6];
+	float A1212 = m_matrix[5]  * m_matrix[10] - m_matrix[9]  * m_matrix[6];
+	float A0313 = m_matrix[1]  * m_matrix[15] - m_matrix[13] * m_matrix[3];
+	float A0213 = m_matrix[1]  * m_matrix[11] - m_matrix[9]  * m_matrix[3];
+	float A0312 = m_matrix[1]  * m_matrix[14] - m_matrix[13] * m_matrix[2];
+	float A0212 = m_matrix[1]  * m_matrix[10] - m_matrix[9]  * m_matrix[2];
+	float A0113 = m_matrix[1]  * m_matrix[7]  - m_matrix[5]  * m_matrix[3];
+	float A0112 = m_matrix[1]  * m_matrix[6]  - m_matrix[5]  * m_matrix[2];
 
-	float c5 = m_matrix[10] * m_matrix[15] - m_matrix[14] * m_matrix[11];
-	float c4 = m_matrix[9]  * m_matrix[15] - m_matrix[13] * m_matrix[11];
-	float c3 = m_matrix[9]  * m_matrix[14] - m_matrix[13] * m_matrix[10];
-	float c2 = m_matrix[8]  * m_matrix[15] - m_matrix[12] * m_matrix[11];
-	float c1 = m_matrix[8]  * m_matrix[14] - m_matrix[12] * m_matrix[10];
-	float c0 = m_matrix[8]  * m_matrix[13] - m_matrix[12] * m_matrix[9];
-
-	// Calculate determinant for the whole 4x4
-	float det = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+	float det = m_matrix[0]  * (m_matrix[5] * A2323 - m_matrix[9] * A1323 + m_matrix[13] * A1223)
+	          - m_matrix[4]  * (m_matrix[1] * A2323 - m_matrix[9] * A0323 + m_matrix[13] * A0223)
+	          + m_matrix[8]  * (m_matrix[1] * A1323 - m_matrix[5] * A0323 + m_matrix[13] * A0123)
+	          - m_matrix[12] * (m_matrix[1] * A1223 - m_matrix[5] * A0223 + m_matrix[9]  * A0123);
 
 	// Check determinant to avoid division by zero
 	if (det != 0.f)
 	{
 		float invdet = 1.f / det;
-
-		// Calculate the inverse
 		return Mat4(
-			( m_matrix[5]  * c5 - m_matrix[6]  * c4 + m_matrix[7]  * c3) * invdet,
-			(-m_matrix[1]  * c5 + m_matrix[2]  * c4 - m_matrix[3]  * c3) * invdet,
-			( m_matrix[13] * s5 - m_matrix[14] * s4 + m_matrix[15] * s3) * invdet,
-			(-m_matrix[9]  * s5 + m_matrix[10] * s4 - m_matrix[11] * s3) * invdet,
-			(-m_matrix[4]  * c5 + m_matrix[6]  * c2 - m_matrix[7]  * c1) * invdet,
-			( m_matrix[0]  * c5 - m_matrix[2]  * c2 + m_matrix[3]  * c1) * invdet,
-			(-m_matrix[12] * s5 + m_matrix[14] * s2 - m_matrix[15] * s1) * invdet,
-			( m_matrix[8]  * s5 - m_matrix[10] * s2 + m_matrix[11] * s1) * invdet,
-			( m_matrix[4]  * c4 - m_matrix[5]  * c2 + m_matrix[7]  * c0) * invdet,
-			(-m_matrix[0]  * c4 + m_matrix[1]  * c2 - m_matrix[3]  * c0) * invdet,
-			( m_matrix[12] * s4 - m_matrix[13] * s2 + m_matrix[15] * s0) * invdet,
-			(-m_matrix[8]  * s4 + m_matrix[9]  * s2 - m_matrix[11] * s0) * invdet,
-			(-m_matrix[4]  * c3 + m_matrix[5]  * c1 - m_matrix[6]  * c0) * invdet,
-			( m_matrix[0]  * c3 - m_matrix[1]  * c1 + m_matrix[2]  * c0) * invdet,
-			(-m_matrix[12] * s3 + m_matrix[13] * s1 - m_matrix[14] * s0) * invdet,
-			( m_matrix[8]  * s3 - m_matrix[9]  * s1 + m_matrix[10] * s0) * invdet
+			 (m_matrix[5] * A2323 - m_matrix[9] * A1323 + m_matrix[13] * A1223) * invdet,
+			-(m_matrix[4] * A2323 - m_matrix[8] * A1323 + m_matrix[12] * A1223) * invdet,
+			 (m_matrix[4] * A2313 - m_matrix[8] * A1313 + m_matrix[12] * A1213) * invdet,
+			-(m_matrix[4] * A2312 - m_matrix[8] * A1312 + m_matrix[12] * A1212) * invdet,
+			-(m_matrix[1] * A2323 - m_matrix[9] * A0323 + m_matrix[13] * A0223) * invdet,
+			 (m_matrix[0] * A2323 - m_matrix[8] * A0323 + m_matrix[12] * A0223) * invdet,
+			-(m_matrix[0] * A2313 - m_matrix[8] * A0313 + m_matrix[12] * A0213) * invdet,
+			 (m_matrix[0] * A2312 - m_matrix[8] * A0312 + m_matrix[12] * A0212) * invdet,
+			 (m_matrix[1] * A1323 - m_matrix[5] * A0323 + m_matrix[13] * A0123) * invdet,
+			-(m_matrix[0] * A1323 - m_matrix[4] * A0323 + m_matrix[12] * A0123) * invdet,
+			 (m_matrix[0] * A1313 - m_matrix[4] * A0313 + m_matrix[12] * A0113) * invdet,
+			-(m_matrix[0] * A1312 - m_matrix[4] * A0312 + m_matrix[12] * A0112) * invdet,
+			-(m_matrix[1] * A1223 - m_matrix[5] * A0223 + m_matrix[9]  * A0123) * invdet,
+			 (m_matrix[0] * A1223 - m_matrix[4] * A0223 + m_matrix[8]  * A0123) * invdet,
+			-(m_matrix[0] * A1213 - m_matrix[4] * A0213 + m_matrix[8]  * A0113) * invdet,
+			 (m_matrix[0] * A1212 - m_matrix[4] * A0212 + m_matrix[8]  * A0112) * invdet
 		);
 	}
 	else
@@ -321,6 +325,23 @@ Mat4::operator sf::Transform() const
 }
 
 #endif
+
+bool operator==(const Mat4 &lhs, const Mat4 &rhs)
+{
+	const float *lm = lhs.getMatrix();
+	const float *rm = rhs.getMatrix();
+	for (int32_t i = 0; i < 16; ++i)
+	{
+		if (lm[i] != rm[i])
+			return false;
+	}
+	return true;
+}
+
+bool operator!=(const Mat4 &lhs, const Mat4 &rhs)
+{
+	return !(lhs == rhs);
+}
 
 Mat4 operator*(const Mat4 &lhs, const Mat4 &rhs)
 {

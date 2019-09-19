@@ -15,7 +15,7 @@ struct WindowView
 
 	explicit operator sf::View() const;
 
-	sf::Transform getTransform() const;
+	math::Transform getTransform() const;
 
 	math::VC2 convertToViewCoordinate(const math::VC2 &coordinate) const;
 	math::VC2 convertFromViewCoordinate(const math::VC2 &coordinate) const;

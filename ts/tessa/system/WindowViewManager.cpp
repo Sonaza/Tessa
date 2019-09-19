@@ -22,14 +22,12 @@ WindowView::operator sf::View() const
 	return view;
 }
 
-sf::Transform WindowView::getTransform() const
+math::Transform WindowView::getTransform() const
 {
-	sf::Transform t;
-
-	t.translate(-size / 2.f + position / 2.f);
-	t.scale(scale, scale);
-	t.rotate(rotation);
-
+	math::Transform t;
+	t.translate(-size / 2.f + position / 2.f)
+	 .scale(scale, scale)
+	 .rotate(rotation);
 	return t;
 }
 

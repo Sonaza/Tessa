@@ -125,6 +125,9 @@ private:
 	float m_matrix[16];
 };
 
+bool operator==(const Mat4 &lhs, const Mat4 &rhs);
+bool operator!=(const Mat4 &lhs, const Mat4 &rhs);
+
 Mat4 operator*(const Mat4 &lhs, const Mat4 &rhs);
 
 // Transform Vector by matrix
