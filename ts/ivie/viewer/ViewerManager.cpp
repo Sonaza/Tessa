@@ -828,7 +828,7 @@ void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 
 	uint32 currentImageHash = 0;
 
-	const uint32 currentPathHash = math::simpleHash32(currentDirectoryPath);
+	const uint32 currentPathHash = !currentDirectoryPath.isEmpty() ? math::simpleHash32(currentDirectoryPath) : 0;
 
 	for (const ImageEntry &entry : imagesToLoad)
 	{
