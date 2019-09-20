@@ -13,12 +13,9 @@ goto exe_not_found
 
 :extract
 echo Extracting with %ZIPEXE%
-
 for /R %%I in (*.7z) do (
 	call %ZIPEXE% x "%%I" -o"%%~dpI" -aoa
 )
-rem echo %%~dpI %%I
-
 echo.
 goto end
 
