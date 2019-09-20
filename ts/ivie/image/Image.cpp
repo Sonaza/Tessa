@@ -222,7 +222,7 @@ FrameStorage *Image::getCurrentFrameStorage()
 	return nullptr;
 }
 
-sf::Shader *Image::getDisplayShader(const float apparentScale)
+sf::Shader *Image::getDisplayShader(const DisplayShaderParams *params)
 {
 	TS_ZONE();
 
@@ -233,24 +233,24 @@ sf::Shader *Image::getDisplayShader(const float apparentScale)
 		TS_ZONE_NAMED("Set Uniforms");
 
 		shader = displayShader->getResource().get();
+		if (params == nullptr)
+			return shader;
 
 		switch (currentLoaderType)
 		{
 			case LoaderFreeImage:
 			{
-				sf::Glsl::Vec2 arr[2];
-				arr[0] = (math::VC2)imageData.size * apparentScale;
-				arr[1] = math::VC2(apparentScale, apparentScale);
-				shader->setUniformArray("u_params", arr, 2);
+// 				shader->setUniform("u_viewSize", params->viewSize);
 
-// 				shader->setUniform("u_textureApparentSize", apparentSize);
-// 				shader->setUniform("u_apparentScale", apparentScale);
+				shader->setUniform("u_apparentSize", static_cast<math::VC2>(imageData.size) * params->scale);
+				shader->setUniform("u_apparentScale", params->scale);
+// 				shader->setUniform("u_positionOffset", params->offset);
 			}
 			break;
 
 			case LoaderWebm:
 			{
-
+				// Set something?
 			}
 			break;
 
@@ -376,7 +376,7 @@ void Image::setImageData(const ImageData &dataParam)
 	imageData = dataParam;
 	imageDataIsSet = true;
 
-	displayableBufferThreshold = math::clamp(imageData.numFramesTotal, 1U, 5U);
+	displayableBufferThreshold = math::clamp(imageData.numFramesTotal, 1U, 2U);
 }
 
 Image::LoaderType Image::sniffLoaderType()
@@ -523,7 +523,9 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 		sf::RenderStates states;
 		states.texture = frameTexture.get();
 
-		states.shader = getDisplayShader(scaleFactor);
+		DisplayShaderParams params = {};
+		params.scale = scaleFactor;
+		states.shader = getDisplayShader(&params);
 
 		rt.clear(sf::Color::White);
 		rt.draw(

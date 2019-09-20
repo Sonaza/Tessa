@@ -63,6 +63,7 @@ protected:
 		SharedPointer<image::Image> image;
 
 		bool hasData = false;
+		bool hasError = false;
 		image::ImageData data;
 
 		TimeSpan frameTime;

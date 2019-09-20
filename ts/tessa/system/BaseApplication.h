@@ -62,11 +62,17 @@ protected:
 	virtual bool createWindow(system::WindowManager &windowManager) = 0;
 	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem) = 0;
 
+	virtual bool customQuitHandler() = 0;
+
 	// For System and Application manager instantiation
 	template<class ManagerType, class... Args>
 	bool createManagerInstance(Args&&... args);
 
+
 private:
+	bool quit();
+	void fastExit();
+
 	bool initialize();
 	void deinitialize();
 

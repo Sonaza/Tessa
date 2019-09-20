@@ -107,6 +107,26 @@ int32 BaseApplication::launch()
 	return 0;
 }
 
+bool BaseApplication::quit()
+{
+	if (customQuitHandler())
+		return false;
+
+#if TS_BUILD != TS_DEBUG
+	fastExit();
+#else
+	applicationRunning = false;
+	system::WindowManager &windowManager = getManager<system::WindowManager>();
+	windowManager.close();
+	return true;
+#endif
+}
+
+void BaseApplication::fastExit()
+{
+	std::quick_exit(0);
+}
+
 bool BaseApplication::initialize()
 {
 	TS_ZONE();
@@ -359,8 +379,8 @@ void BaseApplication::handleEvents()
 		{
 			case sf::Event::Closed:
 			{
-				applicationRunning = false;
-				return;
+				if (quit())
+					return;
 			}
 			break;
 
@@ -370,11 +390,8 @@ void BaseApplication::handleEvents()
 				{
 					case sf::Keyboard::Escape:
 					{
-						applicationRunning = false;
-
-						system::WindowManager &windowManager = getManager<system::WindowManager>();
-						windowManager.close();
-						return;
+						if (quit())
+							return;
 					}
 					break;
 

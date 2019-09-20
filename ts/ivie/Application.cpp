@@ -135,5 +135,10 @@ bool Application::loadArchives(file::ArchivistFilesystem &fileSystem)
 	return true;
 }
 
+bool Application::customQuitHandler()
+{
+	return false;
+}
+
 TS_END_PACKAGE1()
 

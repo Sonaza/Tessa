@@ -19,6 +19,13 @@ struct ImageData
 	SizeType numFramesTotal = 0;
 };
 
+struct DisplayShaderParams
+{
+	math::VC2 viewSize;
+	float scale;
+	math::VC2 offset;
+};
+
 class Image
 {
 	typedef Image ThisClass;
@@ -54,7 +61,7 @@ public:
 
 	FrameStorage *getCurrentFrameStorage();
 
-	sf::Shader *getDisplayShader(const float apparentScale);
+	sf::Shader *getDisplayShader(const DisplayShaderParams *params);
 
 	SizeType getCurrentFrameIndex() const;
 	SizeType getNumFramesTotal() const;

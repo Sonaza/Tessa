@@ -1,9 +1,13 @@
 #version 130
 
+// uniform vec2 u_viewSize;
+
 uniform sampler2D u_texture;
 uniform sampler2D u_checkerPatternTexture;
 
-uniform vec2 u_params[2];
+uniform vec2 u_apparentSize;
+uniform float u_apparentScale;
+// uniform vec2 u_positionOffset;
 
 #define M_PI 3.1415926535897932384626433832795
 
@@ -11,6 +15,9 @@ vec4 checkerboard(vec2 uv, vec2 texturePixelSize)
 {
 	vec2 checkerSize = textureSize(u_checkerPatternTexture, 0);
 	return texture2D(u_checkerPatternTexture, (texturePixelSize / checkerSize) * (uv - vec2(0.5)));
+
+	// vec2 auv = (gl_FragCoord.xy / u_viewSize) - vec2(0.5);
+	// return texture2D(u_checkerPatternTexture, (u_viewSize / checkerSize) * (auv));
 }
 
 vec4 downsample(sampler2D texture, vec2 uv, vec2 apparentSize, float distance)
@@ -40,9 +47,6 @@ vec4 downsample(sampler2D texture, vec2 uv, vec2 apparentSize, float distance)
     
     return vec4(sum.rgb, texture2D(texture, uv).a);
 }
-
-
-
 
 vec4 sharpen(sampler2D texture, vec2 uv, vec2 size, float apparentScale)
 {
@@ -119,26 +123,22 @@ vec4 contrast(vec4 color, float contrast, float brightness)
 
 void main()
 {
-	vec2 apparentSize = u_params[0].xy;
-	float apparentScale = u_params[1].x;
-	
 	vec2 uv = gl_TexCoord[0].xy;
 	uv = vec2(uv.x, 1.0 - uv.y);
 	
-	
 	vec4 direct = texture2D(u_texture, uv);
-	vec4 sharpened = sharpen(u_texture, uv, apparentSize, apparentScale);
+	vec4 sharpened = sharpen(u_texture, uv, u_apparentSize, u_apparentScale);
 	
 	vec4 texColor = vec4(0.0, 0.0, 0.0, 1.0);
-	if (apparentScale < 1.0)
+	if (u_apparentScale < 1.0)
 	{
-		float scale = (apparentScale - 0.5) / 0.5;
+		float scale = (u_apparentScale - 0.5) / 0.5;
 		scale = clamp(scale, 0.0, 1.0);
 		texColor = mix(sharpened, direct, smoothstep(0.0, 1.0, scale));
 	}
 	else
 	{
-		float scale = (apparentScale - 1.0) / 0.3;
+		float scale = (u_apparentScale - 1.0) / 0.3;
 		scale = clamp(scale, 0.0, 1.0);
 		texColor = mix(direct, sharpened, smoothstep(0.0, 1.0, scale));
 	}
@@ -146,10 +146,10 @@ void main()
 	// texColor = contrast(texColor, 1.7, 0.0);
 	// texColor = contrast(texColor, 0.75, 0.1);
 	
-	vec4 checker = checkerboard(uv, apparentSize);
+	vec4 checker = checkerboard(uv, u_apparentSize);
 	
-	vec2 pixelCoordinate = uv * apparentSize;
-	if (uv.x * apparentSize.x >= apparentSize.x - 1.5)
+	vec2 pixelCoordinate = uv * u_apparentSize;
+	if (uv.x * u_apparentSize.x >= u_apparentSize.x - 1.5)
 		checker.a = 0.0;
 	
 	gl_FragColor = mix(checker, vec4(texColor.rgb, 1.0), texColor.a) * gl_Color;

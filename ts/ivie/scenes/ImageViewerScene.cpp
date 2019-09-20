@@ -381,10 +381,14 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 						const system::WindowView &view = windowManager->getApplicationView();
 						math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, targetScale);
 
-						float distanceFromEdgeX = math::abs(mouse.x - (view.size.x / 2.f)) / (view.size.x / 2.f);
-						float distanceFromEdgeY = math::abs(mouse.y - (view.size.y / 2.f)) / (view.size.y / 2.f);
-						float distanceFromEdge = math::max(distanceFromEdgeX, distanceFromEdgeY);
-						float multiplier = (float)std::pow((distanceFromEdge - 0.5f) * 2.f, 6) * 0.3f + 1.f;
+						float multiplier = 1.f;
+						if (delta > 0.f)
+						{
+							float distanceFromEdgeX = math::abs(mouse.x - (view.size.x / 2.f)) / (view.size.x / 2.f);
+							float distanceFromEdgeY = math::abs(mouse.y - (view.size.y / 2.f)) / (view.size.y / 2.f);
+							float distanceFromEdge = math::max(distanceFromEdgeX, distanceFromEdgeY);
+							multiplier = (float)std::pow((distanceFromEdge - 0.5f) * 2.f, 4) * 0.13f + 1.f;
+						}
 
 						targetPositionOffset = positionOffset + diff * multiplier * targetScale;
 						
@@ -426,21 +430,48 @@ bool ImageViewerScene::updateImageInfo()
 
 		TS_ASSERT(current.data.size.x > 0 && current.data.size.y > 0);
 
+		float previousDefaultScale = defaultScale;
+
 		targetDefaultScale = math::min(
 			math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
 			math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
 		);
 		defaultScale = targetDefaultScale;
 
+		switch (displayMode)
+		{
+		case Normal:
+		{
+			targetImageScale = 1.f;
+			if (defaultScale == 1.f)
+				imageScale = targetImageScale;
+
+			targetPositionOffset = math::VC2::zero;
+		}
+		break;
+
+		case Manga:
+		{
+			targetPositionOffset.x = 0.f;
+			targetPositionOffset.y = 10000.f;
+			enforceOversizeLimits(defaultScale * targetImageScale);
+		}
+		break;
+		}
+
+		frameTimer.restart();
+
 		return true;
 	}
 	else if (current.image->hasError())
 	{
-		defaultScale = 1.f;
-		targetDefaultScale = 1.f;
+		current.hasError = true;
+
+		defaultScale = targetDefaultScale = 1.f;
+		imageScale = targetImageScale = 1.f;
+		positionOffset = targetPositionOffset = math::VC2::zero;
 		return true;
 	}
-
 	return false;
 }
 
@@ -452,7 +483,7 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 
 	framePadding = math::max(20.f, view.size.x * 0.02f);
 
-	if (current.image != nullptr && !current.hasData)
+	if (current.image != nullptr && !current.hasError && !current.hasData)
 		updateImageInfo();
 
 	if (!sf::Mouse::isButtonPressed(sf::Mouse::Middle))
@@ -548,26 +579,6 @@ void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 
 	if (current.image != nullptr)
 		updateImageInfo();
-
-	switch (displayMode)
-	{
-		case Normal:
-		{
-			targetImageScale = 1.f;
-			targetPositionOffset = math::VC2::zero;
-		}
-		break;
-
-		case Manga:
-		{
-			targetPositionOffset.x = 0.f;
-			targetPositionOffset.y = 10000.f;
-			enforceOversizeLimits(defaultScale * targetImageScale);
-		}
-		break;
-	}
-
-	frameTimer.restart();
 }
 
 void ImageViewerScene::filelistChanged(SizeType numFiles)
@@ -654,7 +665,11 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 					.scale(scale, scale);
 				states.transform = (sf::Transform)transform;
 
-				states.shader = current.image->getDisplayShader(scale);
+				image::DisplayShaderParams params;
+				params.viewSize = view.size;
+				params.scale = scale;
+				params.offset = positionOffset;
+				states.shader = current.image->getDisplayShader(&params);
 
 				renderTarget.draw(va, states);
 			}

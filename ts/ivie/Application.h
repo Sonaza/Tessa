@@ -28,6 +28,7 @@ protected:
 	virtual bool createWindow(system::WindowManager &windowManager);
 	virtual bool loadArchives(file::ArchivistFilesystem &fileSystem);
 
+	virtual bool customQuitHandler();
 };
 
 TS_END_PACKAGE1()
