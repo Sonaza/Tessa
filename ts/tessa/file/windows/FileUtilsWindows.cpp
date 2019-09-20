@@ -4,19 +4,11 @@
 
 #include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/string/StringUtils.h"
-
-#include <stack>
-#include <cstdio>
-#include <regex>
-
 #include "ts/tessa/common/IncludeWindows.h"
 #include "ts/tessa/common/WindowsUtils.h"
 
 #include <shlwapi.h>
-#include <io.h> 
-
-#define access  _access_s
-#define waccess _waccess_s
+#include <stack>
 
 #define MAX_PATH_LENGTH MAX_PATH
 

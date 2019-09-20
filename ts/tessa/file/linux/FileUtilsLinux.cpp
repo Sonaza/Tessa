@@ -9,7 +9,6 @@
 #include <cstdio>
 
 #include <unistd.h>
-#define waccess access
 
 #define MAX_PATH_LENGTH PATH_MAX
 
