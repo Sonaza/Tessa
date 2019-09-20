@@ -234,10 +234,10 @@ std::wstring String::toWideString() const
 	return output;
 }
 
-std::basic_string<uint8> String::toUtf8() const
+std::basic_string<char> String::toUtf8() const
 {
 	// Prepare the output string
-	std::basic_string<uint8> output;
+	std::basic_string<char> output;
 	output.reserve(buffer.length());
 	
 	// Convert
@@ -246,10 +246,10 @@ std::basic_string<uint8> String::toUtf8() const
 	return output;
 }
 
-std::basic_string<uint16> String::toUtf16() const
+std::basic_string<char16_t> String::toUtf16() const
 {
 	// Prepare the output string
-	std::basic_string<uint16> output;
+	std::basic_string<char16_t> output;
 	output.reserve(buffer.length());
 	
 	// Convert

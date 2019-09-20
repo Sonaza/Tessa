@@ -171,6 +171,8 @@
     <ClCompile Include="file\FileEntry.cpp" />
     <ClCompile Include="file\FileList.cpp" />
     <ClCompile Include="file\FileUtils.cpp" />
+    <ClCompile Include="file\linux\FileUtilsLinux.cpp" />
+    <ClCompile Include="file\windows\FileUtilsWindows.cpp" />
     <ClCompile Include="file\FileWatcher.cpp" />
     <ClCompile Include="file\InputFile.cpp" />
     <ClCompile Include="file\OutputFile.cpp" />

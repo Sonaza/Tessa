@@ -55,7 +55,7 @@ void setThreadName(DWORD nativeThreadID, const std::string &threadName)
 	info.dwFlags = 0;
 
 #pragma warning( push )
-#pragma warning( disable : 6320 6322 )
+#pragma warning( disable : 6320 6322 ) // Mute warnings about catch-all exception handling and empty block
 	__try
 	{
 		const DWORD MS_VC_THREAD_NAMING_EXCEPTION = 0x406D1388;
@@ -69,6 +69,7 @@ void setThreadName(DWORD nativeThreadID, const std::string &threadName)
 }
 
 #endif
+
 
 }
 

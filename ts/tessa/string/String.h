@@ -130,8 +130,8 @@ public:
 	template<class... Args>
 	String &format(const std::wstring &formatStr, const Args&... args);
 
-	std::basic_string<uint8> toUtf8() const;
-	std::basic_string<uint16> toUtf16() const;
+	std::basic_string<char> toUtf8() const;
+	std::basic_string<char16_t> toUtf16() const;
 	std::basic_string<char32_t> toUtf32() const;
 
 	String &operator+=(const String &right);

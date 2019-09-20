@@ -74,9 +74,6 @@
     <ClCompile Include="file\FileList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="file\FileUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="net\Address.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -201,6 +198,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="thread\AbstractMutexBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math\Mat4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\windows\FileUtilsWindows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\linux\FileUtilsLinux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\FileUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -465,9 +474,6 @@
     </ClInclude>
     <ClInclude Include="file\windows\FileWatcherWindows.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="math\Mat4.cpp">
-      <Filter>Source Files\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

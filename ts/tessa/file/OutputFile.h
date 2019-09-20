@@ -131,7 +131,7 @@ TS_FORCEINLINE bool OutputFile::writeVariable<std::string>(const std::string &va
 template <>
 TS_FORCEINLINE bool OutputFile::writeVariable<String>(const String &value)
 {
-	const std::basic_string<uint8> utf8str = value.toUtf8();
+	const std::basic_string<char> utf8str = value.toUtf8();
 	return write(utf8str.c_str(), utf8str.size());
 }
 
