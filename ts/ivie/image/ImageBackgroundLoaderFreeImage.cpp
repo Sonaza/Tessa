@@ -272,7 +272,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 	if (bufferStorage.texture != nullptr && bufferStorage.texture->create(imageSize.x, imageSize.y))
 	{
-// 		bufferStorage.texture->setSrgb(true);
+		bufferStorage.texture->setSrgb(true);
 		bufferStorage.texture->update(bits, imageSize.x, imageSize.y, 0, 0, sf::Texture::BGRA);
 
 		if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))

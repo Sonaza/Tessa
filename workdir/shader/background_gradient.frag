@@ -43,4 +43,7 @@ void main()
 	// outColor.rgb = vec3(noise);
 	
 	gl_FragColor = outColor;
+	gl_FragColor.r = pow(gl_FragColor.r, 2.4);
+	gl_FragColor.g = pow(gl_FragColor.g, 2.4);
+	gl_FragColor.b = pow(gl_FragColor.b, 2.4);
 }

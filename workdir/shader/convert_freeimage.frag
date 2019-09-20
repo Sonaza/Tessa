@@ -153,4 +153,7 @@ void main()
 		checker.a = 0.0;
 	
 	gl_FragColor = mix(checker, vec4(texColor.rgb, 1.0), texColor.a) * gl_Color;
+	gl_FragColor.r = pow(gl_FragColor.r, 2.4);
+	gl_FragColor.g = pow(gl_FragColor.g, 2.4);
+	gl_FragColor.b = pow(gl_FragColor.b, 2.4);
 }
