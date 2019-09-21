@@ -2,6 +2,7 @@ builds/*
 obj/*
 package/*
 ext_build/*
+ext_unused/*
 misc/*
 resource/*
 
