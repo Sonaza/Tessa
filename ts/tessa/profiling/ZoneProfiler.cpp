@@ -433,6 +433,7 @@ ZoneProfiler &ZoneProfiler::get()
 
 void ZoneProfiler::save(const String &filepath)
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	ZoneProfiler &instance = get();
 
 	std::unique_lock<std::recursive_mutex> lock(mutex);
@@ -563,6 +564,7 @@ void ZoneProfiler::save(const String &filepath)
 	TS_PRINTF("  Number of Collected Frames : %lld\n", numFrames);
 	TS_PRINTF("  Number of Collected Events : %lld\n", numEvents);
 	TS_PRINTF("\n");
+#endif
 }
 
 #undef WRITE
@@ -599,32 +601,50 @@ void ZoneProfiler::commit(ZoneFrame &&frame)
 
 void ZoneProfiler::setEnabled(const bool enabledParam)
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	enabled = enabledParam;
+#endif
 }
 
 bool ZoneProfiler::isEnabled()
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	return enabled.load();
+#else
+	return false;
+#endif
 }
 
 void ZoneProfiler::toggleVisibility()
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	ZoneProfilerRenderer::get().toggleVisibility();
+#endif
 }
 
 bool ZoneProfiler::isVisible()
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	return ZoneProfilerRenderer::get().isVisible();
+#else
+	return false;
+#endif
 }
 
 bool ZoneProfiler::handleEvent(const sf::Event &event)
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	return ZoneProfilerRenderer::get().handleEvent(event);
+#else
+	return false;
+#endif
 }
 
 void ZoneProfiler::render(sf::RenderTarget &renderTarget, const system::WindowView &view)
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	ZoneProfilerRenderer::get().render(renderTarget, view);
+#endif
 }
 
 int64 ScopedZoneTimer::absoluteStartTime = -1;
@@ -653,7 +673,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 	};
 
 	if (currentFrame.capacity() == 0)
-		currentFrame.reserve(16);
+		currentFrame.reserve(8);
 
 	currentFrame.push_back(std::move(event));
 	frameIndex = currentFrame.size() - 1;

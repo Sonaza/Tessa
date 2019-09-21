@@ -172,20 +172,43 @@ void ViewerManager::update(const TimeSpan deltaTime)
 			MutexGuard lock(mutex);
 
 			SizeType previousImageIndex = current.imageIndex;
+			uint32 previousDirectoryHash = current.directoryHash;
 
-			if (pendingImageIndex != -1 && !currentFileList.empty())
+			if (pending.imageIndex != INVALID_IMAGE_INDEX)
 			{
-				current.imageIndex = (SizeType)pendingImageIndex;
-				current.filepath = currentFileList[current.imageIndex];
+				current = std::move(pending);
 			}
-
-			updateCurrentImage(previousImageIndex);
+			
+			updateCurrentImage(previousDirectoryHash, previousImageIndex);
 
 			pendingImageUpdate = false;
 		}
 
 		imageChangedSignal(currentImage);
 	}
+}
+
+void ViewerManager::setPendingImage(SizeType imageIndex)
+{
+	if (imageIndex == INVALID_IMAGE_INDEX)
+	{
+		pending = DisplayState();
+		return;
+	}
+
+	if (imageIndex < currentFileList.size())
+	{
+		pending.imageIndex = imageIndex;
+		pending.directoryHash = currentDirectoryPathHash;
+		pending.filepath = currentFileList[imageIndex];
+	}
+	else
+	{
+		pending = DisplayState();
+		current = pending;
+	}
+
+	pendingImageUpdate = true;
 }
 
 void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notifyEvents)
@@ -268,6 +291,8 @@ void ViewerManager::setFilepath(const String &filepath)
 {
 	TS_ZONE();
 
+	MutexGuard lock(mutex);
+
 	if (!file::exists(filepath))
 	{
 		TS_WLOG_ERROR("Given filepath does not exist. Path: %s.", filepath);
@@ -313,10 +338,8 @@ void ViewerManager::setFilepath(const String &filepath)
 
 		currentFileList.clear();
 		currentFileList.push_back(relativePath);
-		pendingImageIndex = -1;
-		current.imageIndex = 0;
-		current.filepath = relativePath;
-		pendingImageUpdate = true;
+
+		setPendingImage(0);
 	}
 	else
 	{
@@ -380,8 +403,7 @@ void ViewerManager::jumpToImage(SizeType index)
 	if (index == current.imageIndex)
 		return;
 
-	pendingImageIndex = index;
-	pendingImageUpdate = true;
+	setPendingImage(index);
 }
 
 void ViewerManager::jumpToImageByFilename(const String &filename)
@@ -483,7 +505,7 @@ void ViewerManager::setSorting(SortingStyle sorting)
 			applySorting(currentFileList);
 			ensureImageIndex();
 
-			updateCurrentImage(current.imageIndex);
+			updateCurrentImage(current.directoryHash, current.imageIndex);
 
 			filelistChangedSignal((SizeType)currentFileList.size());
 		}
@@ -564,10 +586,9 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 
 			currentDirectoryPath.clear();
 			currentDirectoryPathHash = 0;
+		
+			setPendingImage(INVALID_IMAGE_INDEX);
 		}
-
-		pendingImageIndex = 0;
-		pendingImageUpdate = true;
 
 		filelistChangedSignal(0U);
 		
@@ -577,11 +598,13 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 	scanningFiles = true;
 
 	std::vector<String> templist;
+
 	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
+	SizeType flags = file::FileListFlags_SkipDotEntries | file::FileListFlags_LargeFetch;
 
 	while (!quitting)
 	{
-		file::FileList lister(directoryPath, true, listScanStyle);
+		file::FileList lister(directoryPath, listScanStyle, flags);
 
 		file::FileEntry entry;
 		while (lister.next(entry))
@@ -595,10 +618,10 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 				return false;
 			}
 
-			if (isExtensionAllowed(entry.getFilepath()))
+			if (isExtensionAllowed(entry.getBasename()))
 			{
 				templist.push_back({
-					entry.getFilepath()
+					entry.getBasename()
 				});
 			}
 		}
@@ -623,25 +646,24 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 		TS_ZONE_NAMED("Copying filelist");
 		MutexGuard lock(mutex);
 		currentFileList = std::move(templist);
+
+		switch (indexingAction)
+		{
+			case IndexingAction_DoNothing:
+				// See me doing nothing here
+			break;
+
+			case IndexingAction_KeepCurrentFile:
+				ensureImageIndex();
+			break;
+
+			case IndexingAction_Reset:
+				TS_PRINTF("ASDASDASD\n");
+				setPendingImage(0);
+			break;
+		}
 	}
-
-	switch (indexingAction)
-	{
-		case IndexingAction_DoNothing:
-			// See me doing nothing here
-		break;
-
-		case IndexingAction_KeepCurrentFile:
-			ensureImageIndex();
-		break;
-
-		case IndexingAction_Reset:
-			TS_PRINTF("ASDASDASD\n");
-			pendingImageIndex = 0;
-			pendingImageUpdate = true;
-		break;
-	}
-
+	
 	filelistChangedSignal((SizeType)currentFileList.size());
 
 	scanningFiles = false;
@@ -686,23 +708,26 @@ void ViewerManager::ensureImageIndex()
 {
 	if (currentFileList.empty())
 	{
+		setPendingImage(INVALID_IMAGE_INDEX);
 		current = DisplayState();
-		pendingImageUpdate = true;
-		pendingImageIndex = -1;
 		return;
 	}
 
-	PosType updatedIndex = findFileIndexByName(current.filepath, currentFileList);
-	TS_WPRINTF("File: %s   Updated index: %lld\n", current.filepath, updatedIndex);
-	if (updatedIndex != current.imageIndex)
+	DisplayState *state = &current;
+	if (pendingImageUpdate && pending.imageIndex != INVALID_IMAGE_INDEX)
+		state = &pending;
+
+	PosType updatedIndex = findFileIndexByName(state->filepath, currentFileList);
+	TS_WPRINTF("File: %s   Updated index: %lld\n", state->filepath, updatedIndex);
+	if (updatedIndex != state->imageIndex)
 	{
 		if (updatedIndex >= 0)
 		{
-			current.imageIndex = (SizeType)updatedIndex;
+			state->imageIndex = (SizeType)updatedIndex;
 		}
 		else
 		{
-			SizeType index = (SizeType)(current.imageIndex > 0 ? current.imageIndex - 1 : 0);
+			SizeType index = (SizeType)(state->imageIndex > 0 ? state->imageIndex - 1 : 0);
 			index = math::min(index, (SizeType)currentFileList.size() - 1);
 			jumpToImage(index);
 		}
@@ -799,7 +824,7 @@ SharedPointer<resource::ShaderResource> ViewerManager::loadDisplayShader(Display
 	return displayShader;
 }
 
-void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
+void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType previousImageIndex)
 {
 	TS_ZONE();
 
@@ -845,7 +870,7 @@ void ViewerManager::updateCurrentImage(SizeType previousImageIndex)
 		{
 			image->resumeLoading();
 		}
-		else if (entry.index == previousImageIndex && !isCurrentImage)
+		else if (entry.index == (SizeType)previousImageIndex && !isCurrentImage)
 		{
 			image->restart(true);
 		}

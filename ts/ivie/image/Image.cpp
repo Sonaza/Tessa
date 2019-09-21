@@ -197,7 +197,6 @@ bool Image::getImageData(ImageData &outData) const
 	if (imageDataIsSet == true)
 	{
 		outData = imageData;
-		TS_WPRINTF("Image::getImageData %s\n", filepath);
 		TS_ASSERT(outData.size.x > 0 && outData.size.y > 0);
 		return true;
 	}
@@ -370,8 +369,6 @@ void Image::setImageData(const ImageData &dataParam)
 		return;
 
 	MutexGuard lock(mutex);
-	TS_WPRINTF("Image::setImageData %s\n", filepath);
-
 	TS_ASSERT(dataParam.size.x > 0 && dataParam.size.y > 0);
 	imageData = dataParam;
 	imageDataIsSet = true;
@@ -534,12 +531,17 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 		rt.display();
 	}
 
-	sf::Texture *thumbnailTexture = new sf::Texture(rt.getTexture());
+	sf::Texture *thumbnailTexture = new sf::Texture;
 	TS_ASSERT(thumbnailTexture != nullptr);
 	if (thumbnailTexture != nullptr)
 	{
+		thumbnailTexture->create(scaledSize.x, scaledSize.y);
+
+// 		thumbnailTexture->setSrgb(true);
+		thumbnailTexture->update(rt.getTexture());
+
 		thumbnailTexture->setSmooth(true);
-		thumbnailTexture->generateMipmap();
+// 		thumbnailTexture->generateMipmap();
 
 		MutexGuard lock(mutex);
 		thumbnail.reset(thumbnailTexture);

@@ -1,21 +1,23 @@
 #include "Precompiled.h"
-#include "OutputFile.h"
 
+#if TS_PLATFORM == TS_LINUX
+
+#include "ts/tessa/file/OutputFile.h"
 #include "ts/tessa/file/FileUtils.h"
 
 #include <cstdio>
 
 TS_PACKAGE1(file)
 
-typedef FILE FileHandle;
+typedef FILE* FileHandle;
 
 OutputFile::OutputFile()
 {
 }
 
-OutputFile::OutputFile(const String &filepath, OutputFileMode mode)
+OutputFile::OutputFile(const String &filepath, OutputFileMode mode, OutputFileCreation creation)
 {
-	open(filepath, mode);
+	open(filepath, mode, creation);
 }
 
 OutputFile::~OutputFile()
@@ -32,35 +34,34 @@ OutputFile &OutputFile::operator=(OutputFile &&other)
 {
 	if (this != &other)
 	{
-		std::swap(filePtr, other.filePtr);
-		std::swap(bad, other.bad);
+		handle = std::exchange(other.handle, nullptr);
+		bad = std::exchange(other.bad, nullptr);
 	}
 	return *this;
 }
 
-bool OutputFile::open(const String &filepath, OutputFileMode modeParam)
+bool OutputFile::open(const String &filepath, OutputFileMode modeParam, OutputFileCreation creation)
 {
-	TS_ASSERT(filePtr == nullptr && "OutputFile is already opened.");
-	if (filePtr != nullptr)
+	TS_ASSERT(handle == nullptr && "OutputFile is already opened.");
+	if (handle != nullptr)
 		return false;
 
-	String mode;
+	if (creation == OutputFileCreation_OpenExisting && !exists(filepath))
+	{
+		TS_LOG_ERROR("Open failed. File does not exist and creation flag prevents creation.\n", filepath);
+		return false;
+	}
+
+	const char *mode;
 	switch (modeParam)
 	{
-		case OutputFileMode_Write:               mode = exists(filepath) ? "r+" : "w"; break;
-		case OutputFileMode_WriteTruncate:       mode = "w"; break;
-		case OutputFileMode_WriteAppend:         mode = "a"; break;
 		case OutputFileMode_WriteBinary:         mode = exists(filepath) ? "r+b" : "wb"; break;
 		case OutputFileMode_WriteBinaryTruncate: mode = "wb"; break;
 		case OutputFileMode_WriteBinaryAppend:   mode = "ab"; break;
 		default: TS_ASSERT(!"Unhandled mode"); return false;
 	}
 
-#if TS_PLATFORM == TS_WINDOWS
-	FileHandle *file = _wfopen(filepath.toWideString().c_str(), mode.toWideString().c_str());
-#else
-	FileHandle *file = fopen(filepath.toUtf8().c_str(), mode.toUtf8().c_str());
-#endif
+	FileHandle file = fopen(filepath.toUtf8().c_str(), mode);
 	if (file == nullptr)
 	{
 		TS_LOG_ERROR("Open failed. File: %s - Error: %s\n", filepath, strerror(errno));
@@ -71,30 +72,30 @@ bool OutputFile::open(const String &filepath, OutputFileMode modeParam)
 	if ((modeParam & priv::Out_ModeAppend) == 0)
 		fseek(file, 0, SEEK_SET);
 
-	filePtr = file;
+	handle = file;
 	return true;
 }
 
 void OutputFile::close()
 {
-	if (filePtr != nullptr)
+	if (handle != nullptr)
 	{
-		FileHandle *file = static_cast<FileHandle*>(filePtr);
+		FileHandle file = static_cast<FileHandle>(handle);
 		fclose(file);
 	}
-	filePtr = nullptr;
+	handle = nullptr;
 	bad = false;
 }
 
-bool OutputFile::write(const char *inBuffer, BigSizeType size)
+bool OutputFile::write(const char *inBuffer, SizeType size)
 {
 	TS_ASSERT(inBuffer != nullptr);
 
-	TS_ASSERT(filePtr != nullptr && "OutputFile is not opened.");
-	if (filePtr == nullptr || bad == true)
+	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
+	if (handle == nullptr || bad == true)
 		return false;
 
-	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	FileHandle file = static_cast<FileHandle>(handle);
 	BigSizeType bytesWritten = fwrite(inBuffer, sizeof(inBuffer[0]), size, file);
 	TS_ASSERT(bytesWritten == size);
 	
@@ -107,7 +108,7 @@ bool OutputFile::write(const char *inBuffer, BigSizeType size)
 	return true;
 }
 
-bool OutputFile::write(const unsigned char *inBuffer, BigSizeType size)
+bool OutputFile::write(const unsigned char *inBuffer, SizeType size)
 {
 	return write(reinterpret_cast<const char*>(inBuffer), size);
 }
@@ -134,8 +135,8 @@ PosType OutputFile::seek(PosType pos)
 
 PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 {
-	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
-	if (filePtr == nullptr || bad == true)
+	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	if (handle == nullptr || bad == true)
 		return -1;
 
 	int32 origin;
@@ -147,7 +148,7 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 		case SeekFromEnd:       origin = SEEK_END; break;
 	}
 
-	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	FileHandle file = static_cast<FileHandle>(handle);
 	if (fseek(file, (long)pos, origin) == 0)
 	{
 // 		eof = (feof(file) != 0);
@@ -158,21 +159,21 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 
 PosType OutputFile::tell() const
 {
-	TS_ASSERT(filePtr != nullptr && "OutputFile is not opened.");
-	if (filePtr == nullptr || bad == true)
+	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
+	if (handle == nullptr || bad == true)
 		return -1;
 
-	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	FileHandle file = static_cast<FileHandle>(handle);
 	return ftell(file);
 }
 
 bool OutputFile::flush()
 {
-	TS_ASSERT(filePtr != nullptr && "OutputFile is not opened.");
-	if (filePtr == nullptr || bad == true)
+	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
+	if (handle == nullptr || bad == true)
 		return false;
 	
-	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	FileHandle file = static_cast<FileHandle>(handle);
 	
 	if (fflush(file) == 0)
 		return true;
@@ -182,26 +183,26 @@ bool OutputFile::flush()
 
 bool OutputFile::isOpen() const
 {
-	return filePtr != nullptr && bad == false;
+	return handle != nullptr && bad == false;
 }
 
 bool OutputFile::isBad() const
 {
-	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
-	if (filePtr == nullptr || bad == true)
+	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	if (handle == nullptr || bad == true)
 		return true;
 
-	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	FileHandle file = static_cast<FileHandle>(handle);
 	return ferror(file) != 0;
 }
 
 void OutputFile::clearFlags()
 {
-	TS_ASSERT(filePtr != nullptr && "InputFile is not opened.");
-	if (filePtr == nullptr)
+	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	if (handle == nullptr)
 		return;
 
-	FileHandle *file = static_cast<FileHandle*>(filePtr);
+	FileHandle file = static_cast<FileHandle>(handle);
 	clearerr(file);
 // 	eof = false;
 	bad = false;
@@ -218,3 +219,5 @@ bool OutputFile::operator!() const
 }
 
 TS_END_PACKAGE1()
+
+#endif

@@ -71,19 +71,10 @@
     <ClCompile Include="system\AbstractSceneBase.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="file\FileList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="net\Address.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="math\CRC.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="file\InputFile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="file\OutputFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file\FileEntry.cpp">
@@ -210,6 +201,33 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file\FileUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\windows\InputFileWindows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\linux\InputFileLinux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\linux\OutputFileLinux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\windows\OutputFileWindows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\linux\FileListLinux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\windows\FileListWindows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\FileTime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\linux\FileTimeLinux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\windows\FileTimeWindows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -473,6 +491,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="file\windows\FileWatcherWindows.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileTime.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,14 +8,9 @@
 
 TS_PACKAGE1(file)
 
-namespace
-{
-
-bool isSlash(int32 c)
+static bool isSlash(int32 c)
 {
 	return c == '/' || c == '\\';
-}
-
 }
 
 extern bool hasTrailingSlash(const String &path)
@@ -122,23 +117,6 @@ extern String getExtension(const String &path)
 	if (pos != String::InvalidPos && path[pos] == '.')
 		return path.substring(pos + 1);
 	return String();
-}
-
-namespace
-{
-// Offset from Jan 1, 1601 to January 1, 1970 (start of Unix epoch) (converting from 100ns ticks to milliseconds)
-const int64 UNIX_TIME_OFFSET_MILLISECONDS = 11644473600000ULL;
-const int64 TICKS_PER_1KMILLISECONDS = 10000; // a tick is 100ns
-}
-
-extern TimeStamp getTimestampFromFileTime(const FileTime filetime)
-{
-	return (TimeStamp)filetime / TICKS_PER_1KMILLISECONDS - UNIX_TIME_OFFSET_MILLISECONDS;
-}
-
-extern FileTime getFileTimeFromTimestamp(const TimeStamp timestamp)
-{
-	return ((FileTime)timestamp + UNIX_TIME_OFFSET_MILLISECONDS) * TICKS_PER_1KMILLISECONDS;
 }
 
 TS_END_PACKAGE1()

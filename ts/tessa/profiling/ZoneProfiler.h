@@ -12,7 +12,7 @@
 #include <unordered_map>
 
 #if TS_BUILD != TS_FINALRELEASE
-	#define TS_PROFILER_ENABLED TS_TRUE
+	#define TS_PROFILER_ENABLED TS_FALSE
 #else
 	#define TS_PROFILER_ENABLED TS_FALSE
 #endif
@@ -27,12 +27,16 @@
 #define TS_ZONE_NAMED_VARIABLE(variable, name) const ts::profiling::ScopedZoneTimer variable(TS_FUNCTION_LOG_SIMPLE ":" TS_EXPAND(__LINE__), name)
 #define TS_ZONE_MUTEX(owner, blocked)          const ts::profiling::ScopedZoneTimer __mutexZoneTimer(TS_FUNCTION_LOG_SIMPLE ":" TS_EXPAND(__LINE__), owner, blocked)
 
+#define TS_ZONE_VARIABLE_FINISH(variable) (variable).commit()
+
 #else
 
 #define TS_ZONE()                              ((void)0)
 #define TS_ZONE_NAMED(name)                    ((void)0)
 #define TS_ZONE_NAMED_VARIABLE(variable, name) ((void)0)
 #define TS_ZONE_MUTEX(owner, blocked)          ((void)0)
+
+#define TS_ZONE_VARIABLE_FINISH(variable)      ((void)0)
 
 #endif
 

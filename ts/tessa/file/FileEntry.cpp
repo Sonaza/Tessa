@@ -14,31 +14,44 @@ FileEntry &FileEntry::operator=(FileEntry &&other)
 {
 	if (this != &other)
 	{
-		filepath = std::move(other.filepath);
-		rootDirectory = std::move(other.rootDirectory);
-		std::swap(isDir, other.isDir);
+		m_basename = std::move(other.m_basename);
+		m_rootpath = std::move(other.m_rootpath);
+
+		m_lastModified = std::exchange(other.m_lastModified, 0);
+		m_filesize = std::exchange(other.m_filesize, 0);
+		m_directory = std::exchange(other.m_directory, false);
 	}
 	return *this;
 }
 
-const String &FileEntry::getFilepath() const
+const String &FileEntry::getBasename() const
 {
-	return filepath;
+	return m_basename;
 }
 
-const String FileEntry::getFullFilepath() const
+const String FileEntry::getFullPath() const
 {
-	return joinPaths(rootDirectory, filepath);
+	return joinPaths(m_rootpath, m_basename);
+}
+
+FileTime FileEntry::getLastModified() const
+{
+	return m_lastModified;
+}
+
+BigSizeType FileEntry::getSize() const
+{
+	return m_filesize;
 }
 
 bool FileEntry::isDirectory() const
 {
-	return isDir;
+	return m_directory;
 }
 
 bool FileEntry::isFile() const
 {
-	return !isDir;
+	return !m_directory;
 }
 
 TS_END_PACKAGE1()

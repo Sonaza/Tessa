@@ -27,7 +27,7 @@ ArchivistWriter::ArchivistWriter()
 bool ArchivistWriter::stageFile(const String &filepath, const String &archiveFilepath, ArchivistCompressionMode compression)
 {
 	const SizeType hash = math::simpleHash32(filepath);
-	if (_stagefiles.count(hash) > 0)
+	if (stagefiles.count(hash) > 0)
 	{
 		TS_LOG_WARNING("File is already staged. File: %s\n", filepath);
 		return false;
@@ -63,19 +63,19 @@ bool ArchivistWriter::stageFile(const String &filepath, const String &archiveFil
 	}
 
 	// Archive size would exceed the limit
-	if (_stagedTotalFilesize + filesize > ArchiveMaxSize)
+	if (totalStagedFilesize + filesize > ArchiveMaxSize)
 	{
 		TS_LOG_ERROR("All staged files together exceed the maximum size of %u MB. File: %s\n", (ArchiveMaxSize / 1024 / 1024), filepath);
 		return false;
 	}
 
-	Stagefile &file = _stagefiles[hash];
+	Stagefile &file = stagefiles[hash];
 	file.filepath = std::move(filepath);
 	file.archiveFilepath = normalizePath(archiveFilepath, '/');
 	file.filesize = (SizeType)filesize; // Casting is fine, file size is less than the limits
 	file.compression = compression;
 
-	_stagedTotalFilesize += filesize;
+	totalStagedFilesize += filesize;
 
 	return true;
 }
@@ -88,8 +88,15 @@ bool ArchivistWriter::saveToFile(const String &archiveFilename, bool overwriteEx
 		return false;
 	}
 
+	if (stagefiles.empty())
+	{
+		TS_ASSERT(!"There are no files staged for writing.");
+		TS_LOG_ERROR("There are no files staged for writing.");
+		return false;
+	}
+
 	std::vector<ArchivistFileHeader> headers;
-	for (StagefileList::const_iterator it = _stagefiles.begin(); it != _stagefiles.end(); ++it)
+	for (StagefileList::const_iterator it = stagefiles.begin(); it != stagefiles.end(); ++it)
 	{
 		const Stagefile &file = it->second;
 
@@ -126,7 +133,7 @@ bool ArchivistWriter::saveToFile(const String &archiveFilename, bool overwriteEx
 	ByteBuffer buffer;
 
 	SizeType index = 0;
-	for (StagefileList::const_iterator it = _stagefiles.begin(); it != _stagefiles.end(); ++it, ++index)
+	for (StagefileList::const_iterator it = stagefiles.begin(); it != stagefiles.end(); ++it, ++index)
 	{
 		const Stagefile &file = it->second;
 
@@ -152,7 +159,7 @@ bool ArchivistWriter::saveToFile(const String &archiveFilename, bool overwriteEx
 
 		headers[index].offset = (SizeType)currentOffset;
 
-		archive.write(&buffer[0], bufferBytesWritten);
+		archive.write(&buffer[0], (SizeType)bufferBytesWritten);
 		currentOffset += bufferBytesWritten;
 	}
 
@@ -162,7 +169,7 @@ bool ArchivistWriter::saveToFile(const String &archiveFilename, bool overwriteEx
 
 	archive.close();
 
-	return false;
+	return true;
 }
 
 PosType ArchivistWriter::copyFileToBuffer(const String &filepath, ByteBuffer &dstBuffer)
@@ -172,9 +179,10 @@ PosType ArchivistWriter::copyFileToBuffer(const String &filepath, ByteBuffer &ds
 		return false;
 
 	PosType filesize = input.getSize();
+	TS_ASSERT(filesize > 0);
 	dstBuffer.resize(filesize);
 
-	PosType bytesRead = input.read(&dstBuffer[0], filesize);
+	PosType bytesRead = input.read(&dstBuffer[0], (SizeType)filesize);
 	if (bytesRead < filesize)
 	{
 		dstBuffer.clear();
@@ -190,12 +198,13 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const String &filepat
 		return false;
 
 	PosType filesize = input.getSize();
+	TS_ASSERT(filesize > 0);
 	ByteBuffer srcBuffer(filesize);
 
 	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((int32)filesize);
 	dstBuffer.resize(blockSizeMax);
 
-	PosType bytesRead = input.read(&srcBuffer[0], filesize);
+	PosType bytesRead = input.read(&srcBuffer[0], (SizeType)filesize);
 	if (bytesRead < filesize)
 	{
 		TS_LOG_ERROR("File read error. File: %s\n", filepath);

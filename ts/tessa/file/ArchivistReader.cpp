@@ -132,7 +132,7 @@ bool ArchivistReader::extractToFile(const String &filename, const String &target
 		if (bytesRead <= 0)
 			break;
 
-		output.write(buffer, bytesRead);
+		output.write(buffer, (SizeType)bytesRead);
 	}
 	output.close();
 

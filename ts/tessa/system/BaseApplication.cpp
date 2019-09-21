@@ -124,7 +124,8 @@ bool BaseApplication::quit()
 
 void BaseApplication::fastExit()
 {
-	std::quick_exit(0);
+// 	std::quick_exit(123);
+	_Exit(123);
 }
 
 bool BaseApplication::initialize()
@@ -455,7 +456,7 @@ void BaseApplication::handleRendering()
 		renderWindow.clear();
 	}
 
-	firstHalfZone.commit();
+	TS_ZONE_VARIABLE_FINISH(firstHalfZone);
 	
 	TS_ZONE_NAMED_VARIABLE(secondHalfZone, "Second Half Zone");
 
@@ -467,7 +468,7 @@ void BaseApplication::handleRendering()
 	windowManager.useInterfaceView();
 	currentScene->renderInterface(renderWindow, windowManager.getCurrentView());
 
-	secondHalfZone.commit();
+	TS_ZONE_VARIABLE_FINISH(secondHalfZone);
 
 #if TS_PROFILER_ENABLED == TS_TRUE
 	if (profiling::ZoneProfiler::isVisible())

@@ -9,4 +9,6 @@ extern bool openExplorerToFile(const String &filepath);
 
 extern bool openFileWithDialog(const String &filepath);
 
+extern BigSizeType convertLargeIntegerTo64bit(SizeType lowPart, SizeType highPart);
+
 TS_END_PACKAGE1()

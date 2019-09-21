@@ -81,8 +81,10 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 	}
 
 	PosType filesize = fileHandle.getSize();
+	TS_ASSERT(filesize > 0);
+
 	state.memoryBuffer.resize(filesize);
-	fileHandle.read(&state.memoryBuffer[0], filesize);
+	fileHandle.read(&state.memoryBuffer[0], (SizeType)filesize);
 	fileHandle.close();
 
 	state.memory = FreeImage_OpenMemory(&state.memoryBuffer[0], (DWORD)filesize);
@@ -272,7 +274,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 	if (bufferStorage.texture != nullptr && bufferStorage.texture->create(imageSize.x, imageSize.y))
 	{
-		bufferStorage.texture->setSrgb(true);
+// 		bufferStorage.texture->setSrgb(true);
 		bufferStorage.texture->update(bits, imageSize.x, imageSize.y, 0, 0, sf::Texture::BGRA);
 
 		if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))

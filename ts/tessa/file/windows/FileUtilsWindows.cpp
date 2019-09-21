@@ -4,8 +4,8 @@
 
 #include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/string/StringUtils.h"
+
 #include "ts/tessa/common/IncludeWindows.h"
-#include "ts/tessa/common/WindowsUtils.h"
 
 #include <shlwapi.h>
 #include <stack>
@@ -93,23 +93,6 @@ extern bool removeFile(const String &path)
 		return false;
 	}
 	return true;
-}
-
-extern FileTime getFileModifiedTime(const String &path)
-{
-	WIN32_FILE_ATTRIBUTE_DATA data;
-	if (GetFileAttributesExW(path.toWideString().c_str(), GetFileExInfoStandard, &data))
-	{
-		if (data.nFileSizeLow == 0 && data.nFileSizeHigh == 0)
-			return -1;
-
-		FILETIME ft = data.ftLastWriteTime;
-		LARGE_INTEGER li;
-		li.LowPart = ft.dwLowDateTime;
-		li.HighPart = ft.dwHighDateTime;
-		return li.QuadPart;
-	}
-	return -1;
 }
 
 extern String getExecutableDirectory()

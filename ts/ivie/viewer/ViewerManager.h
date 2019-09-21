@@ -127,16 +127,23 @@ private:
 	file::FileWatcher fileWatcher;
 	lang::SignalBind watchNotifyBind;
 
+	static const SizeType INVALID_IMAGE_INDEX = ~0U;
 	struct DisplayState
 	{
-		SizeType imageIndex = 0;
+		SizeType imageIndex = INVALID_IMAGE_INDEX;
+		uint32 directoryHash = 0;
 		String filepath;
 	};
 	DisplayState current;
+
 	SharedPointer<image::Image> currentImage;
 
+	// Sets pending image to given index on the currentFileList.
+	// If index is INVALID_INDEX the pending image will be cleared instead.
+	void setPendingImage(SizeType imageIndex);
+	DisplayState pending;
+
 	bool pendingImageUpdate = true;
-	PosType pendingImageIndex = 0;
 
 	struct ImageFile
 	{
@@ -146,7 +153,7 @@ private:
 	std::vector<String> currentFileList;
 	SortingStyle currentSortingStyle = SortingStyle_ByName;
 
-	void updateCurrentImage(SizeType previousImageIndex);
+	void updateCurrentImage(SizeType previousDirectoryHash, SizeType previousImageIndex);
 
 	typedef std::map<uint32, SharedPointer<image::Image>> ImageStorageList;
 	ImageStorageList imageStorage;

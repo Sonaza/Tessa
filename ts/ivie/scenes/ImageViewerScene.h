@@ -57,6 +57,7 @@ protected:
 		const math::VC2 &centerPosition, float width = 12.f);
 
 	resource::ShaderResource *backgroundShader = nullptr;
+	resource::ShaderResource *gaussianShader = nullptr;
 
 	struct CurrentState
 	{

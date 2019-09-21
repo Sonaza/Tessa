@@ -133,14 +133,6 @@ extern void setWorkingDirectory(const String &path)
 	chdir(path.toUtf8().c_str());
 }
 
-extern FileTime getFileModifiedTime(const String &path)
-{
-	struct stat st;
-	stat(path.toUtf8().c_str(), &st);
-	// Converts from unix epoch time to 100-nanosecond units as in windows
-	return getFileTimeFromTimestamp((uint64_t)st.st_mtim.tv_sec * 1000 + (uint64_t)st.st_mtim.tv_nsec / 1000000);
-}
-
 TS_END_PACKAGE1()
 
 #endif

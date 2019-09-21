@@ -102,6 +102,15 @@ extern bool openFileWithDialog(const String &filepath)
 	return true;
 }
 
+extern BigSizeType convertLargeIntegerTo64bit(SizeType lowPart, SizeType highPart)
+{
+	LARGE_INTEGER li;
+	li.LowPart = lowPart;
+	li.HighPart = highPart;
+	return li.QuadPart;
+}
+
+
 TS_END_PACKAGE1()
 
 #endif

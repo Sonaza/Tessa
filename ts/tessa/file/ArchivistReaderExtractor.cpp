@@ -231,7 +231,7 @@ PosType ArchivistReaderExtractor::readNoCompressed(char *outBuffer, BigSizeType 
 	PosType bytesRemaining = header.filesize - currentPosition;
 	TS_ASSERT(bytesRemaining >= 0 && "read overflow");
 
-	BigSizeType numBytesToRead = math::min((BigSizeType)bytesRemaining, size);
+	SizeType numBytesToRead = math::min((SizeType)bytesRemaining, (SizeType)size);
 
 	archiveFile.seek(position);
 	PosType bytesRead = archiveFile.read(outBuffer, numBytesToRead);

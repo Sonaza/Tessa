@@ -17,10 +17,8 @@ enum InputFileModeBits
 
 enum InputFileMode
 {
-	// Read file in text mode
-	InputFileMode_Read       = priv::In_ModeRead,
 	// Read file in binary mode
-	InputFileMode_ReadBinary = InputFileMode_Read | priv::In_ModeBinary,
+	InputFileMode_ReadBinary = priv::In_ModeRead | priv::In_ModeBinary,
 };
 
 class InputFile : public lang::Noncopyable
@@ -46,15 +44,15 @@ public:
 	/* Reads size bytes to the outBuffer.
 	 * Buffer must already be allocated and have at least size bytes of space.
 	 * Returns one of these:
-	 *    number of bytes read (may be less than bytes requested),
-	 *    0 if already eof,
+	 *    number of bytes read (may be less than bytes requested when reaching end of file),
+	 *    0 if already end of file,
      *    or -1 on failure or bad.
 	 */
-	PosType read(char *outBuffer, BigSizeType size);
-	PosType read(unsigned char *outBuffer, BigSizeType size);
+	PosType read(char *outBuffer, SizeType numBytesToRead);
+	PosType read(unsigned char *outBuffer, SizeType numBytesToRead);
 
-	PosType readLine(char *outBuffer, BigSizeType size, const char linebreak = '\n');
-	PosType readLine(unsigned char *outBuffer, BigSizeType size, const char linebreak = '\n');
+	PosType readLine(char *outBuffer, SizeType numBytesToRead, const char linebreak = '\n');
+	PosType readLine(unsigned char *outBuffer, SizeType numBytesToRead, const char linebreak = '\n');
 
 	/* Reads variable directly.
 	 */
@@ -110,7 +108,7 @@ public:
 	bool operator!() const;
 
 private:
-	void *filePtr = nullptr;
+	void *handle = nullptr;
 	bool eof = false;
 	mutable bool bad = false;
 	PosType filesize = -1;

@@ -18,20 +18,17 @@
 
 TS_PACKAGE2(app, image)
 
-namespace
-{
-
-int io_read(void *buffer, size_t size, void *userdata)
+static int io_read(void *buffer, size_t size, void *userdata)
 {
 	file::InputFile &handle = *(file::InputFile*)userdata;
 	if (handle.isEOF())
 		return 0;
 
-	PosType bytesRead = (int)handle.read(reinterpret_cast<char*>(buffer), size);
+	PosType bytesRead = (int)handle.read(reinterpret_cast<char*>(buffer), (SizeType)size);
 	return bytesRead > 0 ? 1 : (handle.isEOF() ? 0 : -1); // 1 on success, 0 on eof, -1 on failure
 }
 
-int io_seek(int64_t position, int whence, void *userdata)
+static int io_seek(int64_t position, int whence, void *userdata)
 {
 	file::InputFile &handle = *(file::InputFile*)userdata;
 
@@ -53,13 +50,13 @@ int io_seek(int64_t position, int whence, void *userdata)
 	return 0;
 }
 
-int64_t io_tell(void* userdata)
+static int64_t io_tell(void* userdata)
 {
 	file::InputFile &handle = *(file::InputFile*)userdata;
 	return handle.tell();
 }
 
-void nestegg_log_callback(nestegg *context, unsigned int severity, char const* format, ...)
+static void nestegg_log_callback(nestegg *context, unsigned int severity, char const* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -94,8 +91,6 @@ void nestegg_log_callback(nestegg *context, unsigned int severity, char const* f
 
 		default: /* bop */ break;
 	}
-}
-
 }
 
 ImageBackgroundLoaderWebm::ImageBackgroundLoaderWebm(Image *ownerImage, const String &filepath)

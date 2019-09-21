@@ -62,6 +62,7 @@ void ImageViewerScene::loadResources(resource::ResourceManager &rm)
 {
 	font = rm.loadFont("viewer_font", "SourceHanSans-Medium.ttc", true);
 	backgroundShader = rm.loadShader("background_shader", "shader/background_gradient.frag", true);
+	gaussianShader = rm.loadShader("gaussian_shader", "shader/gaussian.frag", true);
 }
 
 bool ImageViewerScene::handleEvent(const sf::Event event)
@@ -629,7 +630,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 		math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
 
-		bool displayable = current.image->isDisplayable() && current.hasData;
+		bool displayable = current.image->isDisplayable() && current.hasData && !sf::Keyboard::isKeyPressed(sf::Keyboard::Tab);
 		if (displayable)
 		{
 			image::FrameStorage currentFrame = *current.image->getCurrentFrameStorage();
@@ -686,10 +687,10 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 			{
 				math::VC2U thumbnailSize = thumbnail->getSize();
 
-				sf::VertexArray va = util::makeQuadVertexArrayScaledShadow(
+				sf::VertexArray va = util::makeQuadVertexArrayScaled(
 					current.data.size.x, current.data.size.y,
-					thumbnailSize.x, thumbnailSize.y,
-					3, sf::Color(0, 0, 0, 170));
+					thumbnailSize.x, thumbnailSize.y
+				);
 
 				sf::RenderStates states;
 				states.texture = thumbnail.get();
@@ -699,6 +700,12 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 					.translate(scaledSize / -2.f + positionOffset)
 					.scale(scale, scale);
 				states.transform = (sf::Transform)transform;
+
+				sf::Shader &gaussian = *gaussianShader->getResource();
+// 				gaussian.setUniform("u_textureSize", static_cast<math::VC2>(thumbnailSize));
+				gaussian.setUniform("u_textureSize", static_cast<math::VC2>(current.data.size));
+				gaussian.setUniform("u_direction", math::VC2(0.5f, 0.f));
+				states.shader = &gaussian;
 
 				renderTarget.draw(va, states);
 			}
@@ -791,10 +798,9 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			statusText.setFillColor(sf::Color(255, 255, 255, (uint8)(viewerInfoAlpha.other * 255)));
 			statusText.setOutlineColor(sf::Color(0, 0, 0, (uint8)(viewerInfoAlpha.other * 255)));
 
+			const String filename = viewerManager->getCurrentFilepath(false);
+			if (!filename.isEmpty())
 			{
-				const String filename = viewerManager->getCurrentFilepath(false);
-				TS_ASSERT(!filename.isEmpty());
-
 // 				String dirname = file::getDirname(filename);
 				String basename = file::getBasename(filename);
 

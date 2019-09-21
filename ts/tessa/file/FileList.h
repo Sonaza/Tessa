@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ts/tessa/thread/Mutex.h"
-#include "ts/tessa/thread/MutexGuard.h"
 #include "ts/tessa/file/FileEntry.h"
 
 #include <string>
@@ -33,17 +31,24 @@ enum FileListStyle : uint8
 
 	FileListStyle_All                   = FileListStyle_Files | FileListStyle_Directories,
 	FileListStyle_All_Recursive         = FileListStyle_All | priv::ListStyleBits_Recursive,
+};
 
+enum FileListFlags
+{
+	// Skips . and .. in directories
+	FileListFlags_SkipDotEntries = (1 << 0),
+	// Windows only: Uses large fetch (can more optimal when scanning whole directory contents)
+	FileListFlags_LargeFetch     = (1 << 1),
 };
 
 class FileList : public lang::Noncopyable
 {
 public:
 	FileList();
-	FileList(const String &directoryPath, bool skipDotEntries = true, FileListStyle style = FileListStyle_All);
+	FileList(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, SizeType listFlags = 0);
 	~FileList();
 
-	bool open(const String &directoryPath, bool skipDotEntries = true, FileListStyle style = FileListStyle_All);
+	bool open(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, SizeType listFlags = 0);
 	void close();
 
 	bool next(FileEntry &entry);
@@ -58,24 +63,25 @@ private:
 	// Storing as void pointer to avoid having to include dirent.h in header
 	struct DirectoryFrame
 	{
-		DirectoryFrame(void *ptr, const String &absolutePath, const String &relativePath)
-			: ptr(ptr)
-			, absolutePath(std::move(absolutePath))
-			, relativePath(std::move(relativePath))
+		DirectoryFrame(void *handle, const String &absolutePath, const String &relativePath)
+			: handle(handle)
+			, absolutePath(absolutePath)
+			, relativePath(relativePath)
 		{}
 
-		void *ptr = nullptr;
+		void *handle = nullptr;
 		String absolutePath;
 		String relativePath;
 	};
-	std::stack<DirectoryFrame> directoryStack;
-	
-	String directoryPath;
-	FileListStyle style = FileListStyle_All;
-	bool skipDotEntries = true;
-	bool done = false;
+	std::stack<DirectoryFrame> m_directoryStack;
 
-	void *globRegex = nullptr;
+	bool m_done = false;
+
+	String m_directoryPath;
+	FileListStyle m_listStyle = FileListStyle_All;
+	SizeType m_listFlags = 0;
+
+	void *m_globRegex = nullptr;
 };
 
 TS_END_PACKAGE1()

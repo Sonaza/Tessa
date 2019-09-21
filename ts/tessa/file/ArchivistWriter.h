@@ -32,11 +32,11 @@ private:
 		ArchivistCompressionMode compression;
 	};
 	typedef std::map<SizeType, Stagefile> StagefileList;
-	StagefileList _stagefiles;
+	StagefileList stagefiles;
 
-	BigSizeType _stagedTotalFilesize = 0;
+	BigSizeType totalStagedFilesize = 0;
 
-	const BigSizeType FileMaxSize = std::numeric_limits<int32_t>::max();
+	const BigSizeType FileMaxSize = std::numeric_limits<int32_t>::max() - 1024;
 	const BigSizeType ArchiveMaxSize = std::numeric_limits<int32_t>::max();
 };
 
