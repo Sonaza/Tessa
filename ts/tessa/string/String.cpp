@@ -487,14 +487,14 @@ bool operator>=(const String &left, const String &right)
 String operator+(const String &left, const String &right)
 {
 	String string = left;
-	string += right;
+	string.append(right);
 	return string;
 }
 
 String operator+(const Character &left, const String &right)
 {
 	String string(left);
-	string += right;
+	string.append(right);
 	return string;
 }
 
