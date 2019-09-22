@@ -7,11 +7,8 @@
 
 TS_PACKAGE1(string)
 
-namespace
-{
-
 // Removes whitespace on the left in place
-void leftTrim(String &str)
+static void leftTrim(String &str)
 {
 	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](uint32 c)
 	{
@@ -20,14 +17,12 @@ void leftTrim(String &str)
 }
 
 // Removes whitespace on the right in place
-void rightTrim(String &str)
+static void rightTrim(String &str)
 {
 	str.erase(std::find_if(str.rbegin(), str.rend(), [](int32 c)
 	{
 		return !std::isspace(c);
 	}).base(), str.end());
-}
-
 }
 
 extern void toUppercase(String &str)
