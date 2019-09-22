@@ -27,7 +27,7 @@ Vec3<T>::Vec3(const Vec3<U> &vector)
 }
 
 // SFML conversions if using the library
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 
 template <class T>
 Vec3<T>::Vec3(const sf::Vector3<T> &vector)

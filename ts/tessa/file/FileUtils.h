@@ -18,17 +18,25 @@ TS_PACKAGE1(file)
  */
 extern bool isAbsolutePath(const String &path);
 
+/* Returns true if the given path has leading slashes (checks for both forward and backslashes)
+ */
+extern bool hasLeadingSlash(const String &path);
+
 /* Returns true if the given path has trailing slashes (checks for both forward and backslashes)
  */
 extern bool hasTrailingSlash(const String &path);
 
 /* Removes all trailing slashes, modifying the given path in place.
  */
-extern void removeTrailingSlashes(String &path);
+extern void removeTrailingSlash(String &path);
 
-/* Returns the the two sections joined together, while making sure there aren't duplicate path delimiters.
+/* Returns the two sections joined together, while making sure there aren't duplicate path delimiters.
  */
 extern String joinPaths(const String &left, const String &right, string::Character delimiter = TS_SYSTEM_PATH_DELIMITER);
+
+/* Appends the other section to the path in place, while making sure there aren't duplicate path delimiters.
+*/
+extern void appendPath(String &path, const String &sectionToAppend, string::Character delimiter = TS_SYSTEM_PATH_DELIMITER);
 
 /* Returns a normalized path by collapsing all relational segments to their simplest form.
  * Additionally all path delimiters are replaced with the one given.

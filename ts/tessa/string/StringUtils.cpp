@@ -102,16 +102,16 @@ std::vector<String> splitString(const String &str, const String &delimiters)
 
 extern String joinString(const std::vector<String> &arr, const String &glue)
 {
-// 	BigSizeType totalSize = 0;
-// 	for (const String &str : arr)
-// 		totalSize += str.getSize() + glue.getSize();
+	BigSizeType totalSize = 0;
+	for (const String &str : arr)
+		totalSize += str.getSize() + glue.getSize();
 
 	String result;
-// 	result.reserve(totalSize);
+	result.reserve(totalSize);
 
 	for (auto it = arr.begin(); it != arr.end(); ++it)
 	{
-		result += (it != arr.begin() ? glue : "") + *it;
+		result.append((it != arr.begin() ? glue : "") + *it);
 	}
 	return result;
 }

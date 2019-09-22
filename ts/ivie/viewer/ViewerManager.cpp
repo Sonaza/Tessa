@@ -1,21 +1,18 @@
 #include "Precompiled.h"
 #include "ViewerManager.h"
 
-#include "ts/tessa/util/ContainerUtil.h"
+#include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/math/Hash.h"
+#include "ts/tessa/profiling/ZoneProfiler.h"
+#include "ts/tessa/resource/ResourceManager.h"
 #include "ts/tessa/string/StringUtils.h"
 #include "ts/tessa/thread/AbstractThreadEntry.h"
 #include "ts/tessa/thread/Thread.h"
+#include "ts/tessa/util/ContainerUtil.h"
 
-#include "ts/tessa/resource/ResourceManager.h"
-
-#include "ts/tessa/file/FileUtils.h"
-
-#include "ts/ivie/viewer/SupportedFormats.h"
 #include "ts/ivie/image/Image.h"
 #include "ts/ivie/util/NaturalSort.h"
-
-#include "ts/tessa/profiling/ZoneProfiler.h"
+#include "ts/ivie/viewer/SupportedFormats.h"
 
 TS_DEFINE_MANAGER_TYPE(app::viewer::ViewerManager);
 
@@ -565,6 +562,23 @@ bool ViewerManager::isExtensionAllowed(const String &filename)
 	return std::find(allowedExtensions.begin(), allowedExtensions.end(), ext) != allowedExtensions.end();
 }
 
+template<class T, class V>
+struct ScopedStateSetter
+{
+	T *ptr;
+	V exitvalue;
+	ScopedStateSetter(T *ptr, V entryvalue, V exitvalue)
+		: ptr(ptr)
+		, exitvalue(exitvalue)
+	{
+		*ptr = entryvalue;
+	}
+	~ScopedStateSetter()
+	{
+		*ptr = exitvalue;
+	}
+};
+
 bool ViewerManager::updateFilelist(const String directoryPath,
 	bool allowFullRecursive, IndexingAction indexingAction)
 {
@@ -595,18 +609,20 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 		return false;
 	}
 
-	scanningFiles = true;
+	ScopedStateSetter<decltype(scanningFiles), bool> scanningFilesSetter(&scanningFiles, true, false);
 
 	std::vector<String> templist;
 
 	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
-	SizeType flags = file::FileListFlags_SkipDotEntries | file::FileListFlags_LargeFetch;
+	SizeType flags = file::FileListFlags_SkipDotEntries
+		           | file::FileListFlags_LargeFetch
+		           | file::FileListFlags_ExcludeRootPath;
 
 	while (!quitting)
 	{
 		file::FileList lister(directoryPath, listScanStyle, flags);
 
-		file::FileEntry entry;
+		file::FileListEntry entry;
 		while (lister.next(entry))
 		{
 			if (quitting)
@@ -618,10 +634,10 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 				return false;
 			}
 
-			if (isExtensionAllowed(entry.getBasename()))
+			if (isExtensionAllowed(entry.getFilename()))
 			{
 				templist.push_back({
-					entry.getBasename()
+					entry.getFilename()
 				});
 			}
 		}

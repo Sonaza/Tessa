@@ -39,7 +39,7 @@ bool FileList::open(const String &path, FileListStyle listStyle, SizeType listFl
 	m_listStyle = listStyle;
 	m_listFlags = listFlags;
 
-	m_directoryStack.push(DirectoryFrame(dir, m_directoryPath, ""));
+	m_directoryStack.push(DirectoryFrame{ dir, m_directoryPath });
 
 	return true;
 }
@@ -60,7 +60,7 @@ void FileList::close()
 	}
 }
 
-bool FileList::next(FileEntry &entry)
+bool FileList::next(FileListEntry &entry)
 {
 	TS_ASSERT(!m_directoryStack.empty() && "FileList is not opened.");
 	if (m_directoryStack.empty() || m_done == true)
@@ -89,12 +89,14 @@ bool FileList::next(FileEntry &entry)
 				}
 				else if ((m_listStyle & priv::ListStyleBits_Recursive) > 0)
 				{
-					String absolutePath = joinPaths(frame.absolutePath, relativePath);
+					String absolutePath = joinPaths(frame.absolutePath, filename);
 
 					DIR *dirPtr = opendir(absolutePath.toUtf8().c_str());
 					TS_ASSERT(dirPtr != nullptr);
 					if (dirPtr != nullptr)
-						m_directoryStack.push(DirectoryFrame(dirPtr, frame.absolutePath, relativePath));
+						m_directoryStack.push(
+							DirectoryFrame{ dirPtr, absolutePath, }
+						);
 				}
 
 				if ((m_listStyle & priv::ListStyleBits_Directories) == 0)
@@ -116,8 +118,18 @@ bool FileList::next(FileEntry &entry)
 				}
 			}
 
-			entry.m_basename = std::move(relativePath);
-			entry.m_rootpath = frame.absolutePath;
+			if ((m_listFlags & FileListFlags_FileNameOnly) != 0 || depth == 1)
+			{
+				entry.m_filename = std::move(filename);
+			}
+			else
+			{
+				String relativePath = stripRootPath(frame.absolutePath, m_directoryPath);
+				entry.m_filename = joinPaths(relativePath, filename);
+			}
+
+			if ((m_listFlags & FileListFlags_ExcludeRootPath) == 0)
+				entry.m_rootpath = frame.absolutePath;
 			
 			struct stat st;
 			if (stat(entry.getFullPath().toUtf8().c_str(), &st) == 0)
@@ -177,12 +189,12 @@ void FileList::setGlobRegex(const String &pattern)
 	m_globRegex = regex;
 }
 
-std::vector<FileEntry> FileList::getFullListing()
+std::vector<FileListEntry> FileList::getFullListing()
 {
 	rewind();
 
-	std::vector<FileEntry> list;
-	FileEntry entry;
+	std::vector<FileListEntry> list;
+	FileListEntry entry;
 	while (next(entry))
 		list.push_back(std::move(entry));
 

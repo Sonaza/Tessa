@@ -141,6 +141,8 @@ void main()
 		float scale = (u_apparentScale - 1.0) / 0.3;
 		scale = clamp(scale, 0.0, 1.0);
 		texColor = mix(direct, sharpened, smoothstep(0.0, 1.0, scale));
+		texColor = mix(direct, sharpened, smoothstep(0.0, 1.0, scale));
+		texColor = mix(direct, sharpened, smoothstep(0.0, 1.0, scale));
 	}
 	
 	// texColor = contrast(texColor, 1.7, 0.0);

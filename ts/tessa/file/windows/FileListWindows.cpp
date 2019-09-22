@@ -43,7 +43,7 @@ bool FileList::open(const String &path, FileListStyle listStyle, SizeType listFl
 
 	// Entries are pushed with null handles since "opening"
 	// the handle already also queries for the first file.
-	m_directoryStack.push(DirectoryFrame(nullptr, m_directoryPath, ""));
+	m_directoryStack.push(DirectoryFrame{ nullptr, m_directoryPath });
 
 	return true;
 }
@@ -64,7 +64,7 @@ void FileList::close()
 	}
 }
 
-bool FileList::next(FileEntry &entry)
+bool FileList::next(FileListEntry &entry)
 {
 	TS_ASSERT(!m_directoryStack.empty() && "FileList is not opened.");
 	if (m_directoryStack.empty() || m_done == true)
@@ -90,7 +90,7 @@ bool FileList::next(FileEntry &entry)
 
 			HANDLE handle = FindFirstFileExW(
 				searchPath.toWideString().c_str(),
-				FindExInfoStandard,
+				FindExInfoBasic, // cAlternateFileName is always null with this flag
 				&findData,
 				FindExSearchNameMatch,
 				nullptr,
@@ -102,12 +102,12 @@ bool FileList::next(FileEntry &entry)
 					frame.absolutePath,
 					windows::getLastErrorAsString()
 				);
-				m_done = true;
-				return false;
 			}
-
-			frame.handle = handle;
-			entryFound = true;
+			else
+			{
+				frame.handle = handle;
+				entryFound = true;
+			}
 		}
 		else
 		{
@@ -120,15 +120,12 @@ bool FileList::next(FileEntry &entry)
 				TS_WLOG_ERROR("FindNextFileW failed. Error: %s",
 					windows::getLastErrorAsString()
 				);
-				return false;
 			}
 		}
 
 		if (entryFound)
 		{
 			String filename(findData.cFileName);
-
-			String relativePath = joinPaths(frame.relativePath, filename);
 
 			const bool isDir = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 			if (isDir == true)
@@ -144,7 +141,9 @@ bool FileList::next(FileEntry &entry)
 
 					// Sanity check assert
 					TS_ASSERT(exists(absolutePath) && isDirectory(absolutePath));
-					m_directoryStack.push(DirectoryFrame(nullptr, absolutePath, relativePath));
+					m_directoryStack.push(
+						DirectoryFrame{ nullptr, absolutePath }
+					);
 				}
 
 				if ((m_listStyle & priv::ListStyleBits_Directories) == 0)
@@ -165,9 +164,20 @@ bool FileList::next(FileEntry &entry)
 					}
 				}
 			}
+			
+			if ((m_listFlags & FileListFlags_FileNameOnly) != 0 || depth == 1)
+			{
+				entry.m_filename = std::move(filename);
+			}
+			else
+			{
+				String path = stripRootPath(frame.absolutePath, m_directoryPath);
+				appendPath(path, filename);
+				entry.m_filename = std::move(path);
+			}
 
-			entry.m_basename = std::move(relativePath);
-			entry.m_rootpath = frame.absolutePath;
+			if ((m_listFlags & FileListFlags_ExcludeRootPath) == 0)
+				entry.m_rootpath = frame.absolutePath;
 
 			entry.m_lastModified = windows::convertLargeIntegerTo64bit(
 				findData.ftLastWriteTime.dwLowDateTime,
@@ -236,12 +246,12 @@ void FileList::setGlobRegex(const String &pattern)
 	m_globRegex = regex;
 }
 
-std::vector<FileEntry> FileList::getFullListing()
+std::vector<FileListEntry> FileList::getFullListing()
 {
 	rewind();
 
-	std::vector<FileEntry> list;
-	FileEntry entry;
+	std::vector<FileListEntry> list;
+	FileListEntry entry;
 	while (next(entry))
 		list.push_back(std::move(entry));
 

@@ -4,11 +4,9 @@
 
 #include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/string/StringUtils.h"
-
 #include "ts/tessa/common/IncludeWindows.h"
 
 #include <shlwapi.h>
-#include <stack>
 
 #define MAX_PATH_LENGTH MAX_PATH
 
@@ -21,53 +19,17 @@ extern bool isAbsolutePath(const String &path)
 
 extern String normalizePath(const String &path, string::Character delimiter)
 {
-	String workpath = path;
-	string::trimWhitespace(workpath);
+	TS_ASSERT(path.getSize() <= MAX_PATH_LENGTH);
+	if (path.getSize() > MAX_PATH_LENGTH)
+		return "";
 
-	const bool isUncPath = PathIsUNCW(path.toWideString().c_str()) == TRUE;
+	// PathCchCanonicalize would be a better alternative
+	// but it is only supported from Windows 8 onwards.
+	wchar_t buffer[MAX_PATH_LENGTH] = {};
+	if (PathCanonicalizeW(buffer, path.toWideString().c_str()))
+		return String(buffer);
 
-	std::vector<String> splitPath = string::splitString(workpath, TS_ALL_PATH_DELIMITERS);
-
-	int32 ignore = 0;
-	std::stack<String *> pathTokens;
-	for (auto it = splitPath.rbegin(); it != splitPath.rend(); ++it)
-	{
-		String &p = *it;
-
-		if (p.isEmpty() || p == ".")
-			continue;
-
-		if (p == "..")
-		{
-			ignore++;
-			continue;
-		}
-
-		if (ignore > 0)
-		{
-			ignore--;
-			continue;
-		}
-
-		pathTokens.push(&p);
-	}
-
-	String normalized;
-	normalized.reserve(path.getSize() / 2);
-
-	if (isUncPath)
-		normalized.append("\\\\");
-
-	while (!pathTokens.empty())
-	{
-		normalized.append(*pathTokens.top());
-
-		if (pathTokens.size() > 1)
-			normalized.append(delimiter);
-
-		pathTokens.pop();
-	}
-	return normalized;
+	return "";
 }
 
 extern bool exists(const String &path)
@@ -77,19 +39,20 @@ extern bool exists(const String &path)
 
 extern bool isFile(const String &path)
 {
-	return PathIsDirectoryW(path.toWideString().c_str()) == FALSE;
+	return !isDirectory(path);
 }
 
 extern bool isDirectory(const String &path)
 {
-	return !isFile(path);
+	return PathIsDirectoryW(path.toWideString().c_str()) == TRUE;
 }
 
 extern bool removeFile(const String &path)
 {
 	if (DeleteFileW(path.toWideString().c_str()) == FALSE)
 	{
-		TS_LOG_ERROR("Unable to remove file or directory. File: %s. Error: %s", path, windows::getLastErrorAsString());
+		TS_LOG_ERROR("Unable to remove file or directory. File: %s. Error: %s",
+			path, windows::getLastErrorAsString());
 		return false;
 	}
 	return true;
@@ -102,7 +65,7 @@ extern String getExecutableDirectory()
 	if (!executablePath.isEmpty())
 		return executablePath;
 
-	wchar_t buffer[MAX_PATH_LENGTH] = { 0 };
+	wchar_t buffer[MAX_PATH_LENGTH] = {};
 	GetModuleFileNameW(nullptr, buffer, MAX_PATH_LENGTH);
 	executablePath = getDirname(String(buffer));
 	return executablePath;
@@ -110,14 +73,14 @@ extern String getExecutableDirectory()
 
 extern String getWorkingDirectory()
 {
-	wchar_t buffer[MAX_PATH_LENGTH] = { 0 };
+	wchar_t buffer[MAX_PATH_LENGTH] = {};
 	GetCurrentDirectoryW(MAX_PATH_LENGTH, buffer);
 	return String(buffer);
 }
 
 extern void setWorkingDirectory(const String &path)
 {
-	TS_ASSERT(path.getSize() < MAX_PATH_LENGTH);
+	TS_ASSERT(path.getSize() <= MAX_PATH_LENGTH);
 	SetCurrentDirectoryW(path.toWideString().c_str());
 }
 

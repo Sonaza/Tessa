@@ -77,9 +77,6 @@
     <ClCompile Include="math\CRC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="file\FileEntry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file\ArchivistWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -230,12 +227,15 @@
     <ClCompile Include="file\windows\FileTimeWindows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file\FileListEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string\StringView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math\Constants.h">
-      <Filter>Source Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Common.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="common\Assert.h">
@@ -373,9 +373,6 @@
     <ClInclude Include="file\OutputFile.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="file\FileEntry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="file\ArchivistCommon.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -495,6 +492,18 @@
     </ClInclude>
     <ClInclude Include="file\FileTime.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file\FileListEntry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string\StringView.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalConfig.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\Common.h">
+      <Filter>Source Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

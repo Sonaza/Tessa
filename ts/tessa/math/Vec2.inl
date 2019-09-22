@@ -26,7 +26,7 @@ Vec2<T>::Vec2(const Vec2<U> &vector)
 }
 
 // SFML conversions if using the library
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 
 template <class T>
 Vec2<T>::Vec2(const sf::Vector2<T> &vector)

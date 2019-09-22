@@ -201,11 +201,11 @@ String::operator std::wstring() const
 	return toWideString();
 }
 
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 
 String::operator sf::String() const
 {
-	return sf::String(reinterpret_cast<const uint32 *>(getData()));
+	return sf::String(reinterpret_cast<const uint32 *>(getPointer()));
 }
 
 #endif
@@ -263,12 +263,6 @@ std::basic_string<char32_t> String::toUtf32() const
 	return buffer;
 }
 
-String &String::operator+=(const String &right)
-{
-	buffer += right.buffer;
-	return *this;
-}
-
 char32_t &String::operator[](BigSizeType index)
 {
 	TS_ASSERT(index < buffer.size());
@@ -301,14 +295,14 @@ void String::clear()
 	buffer.clear();
 }
 
-BigSizeType String::getSize() const
-{
-	return buffer.size();
-}
-
 bool String::isEmpty() const
 {
 	return buffer.empty();
+}
+
+BigSizeType String::getSize() const
+{
+	return buffer.size();
 }
 
 void String::erase(BigSizeType position, BigSizeType count)
@@ -415,7 +409,7 @@ String String::substring(BigSizeType position, BigSizeType length) const
 	return buffer.substr(position, length);
 }
 
-const char32_t *String::getData() const
+const char32_t *String::getPointer() const
 {
 	return buffer.c_str();
 }

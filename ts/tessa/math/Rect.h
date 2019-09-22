@@ -34,7 +34,7 @@ public:
 	explicit Rect(const Rect<U> &other);
 
 	// SFML conversions if using the library
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 
 	Rect(const sf::Rect<T> &rect);
 	operator sf::Rect<T>() const;

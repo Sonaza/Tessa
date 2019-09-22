@@ -4,7 +4,7 @@
 #include "ts/tessa/math/Vec3.h"
 #include "ts/tessa/math/Vec4.h"
 
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 #include "SFML/Graphics/Transform.hpp"
 #endif
 
@@ -82,7 +82,7 @@ public:
 	static Mat4 makeOrtho(float left, float right,
 		float bottom, float top, float znear = -1.f, float zfar = 1.f);
 
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 	Mat4(const sf::Transform &transform);
 	explicit operator sf::Transform() const;
 #endif

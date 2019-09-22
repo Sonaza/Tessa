@@ -4,8 +4,13 @@
 
 #pragma once
 
-#include "ts/tessa/common/IncludeSFML.h"
 #include "ts/tessa/common/Common.h"
+
+#include "ts/tessa/GlobalConfig.h"
+
+#if TS_GLOBAL_USING_SFML == TS_TRUE
+#include "ts/tessa/common/IncludeSFML.h"
+#endif
 
 #include "ts/tessa/common/Log.h"
 #include "ts/tessa/common/FourCC.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ts/tessa/file/FileEntry.h"
+#include "ts/tessa/file/FileListEntry.h"
 
 #include <string>
 #include <vector>
@@ -35,10 +35,19 @@ enum FileListStyle : uint8
 
 enum FileListFlags
 {
-	// Skips . and .. in directories
-	FileListFlags_SkipDotEntries = (1 << 0),
-	// Windows only: Uses large fetch (can more optimal when scanning whole directory contents)
-	FileListFlags_LargeFetch     = (1 << 1),
+	// Skips . and .. in directories.
+	FileListFlags_SkipDotEntries     = (1 << 0),
+	// Windows only: Uses large fetch. Can more optimal when scanning whole directory contents.
+	FileListFlags_LargeFetch         = (1 << 1),
+
+	// File list omits setting the root path in FileListEntry.
+	// Can be more optimal when root path is not required.
+	FileListFlags_ExcludeRootPath    = (1 << 2),
+
+	// File list sets FileListEntry's file name to be the file name only,
+	// excluding the relative path section to scan root path.
+	// Only applies when using recursive scans.
+	FileListFlags_FileNameOnly       = (1 << 3),
 };
 
 class FileList : public lang::Noncopyable
@@ -51,27 +60,20 @@ public:
 	bool open(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, SizeType listFlags = 0);
 	void close();
 
-	bool next(FileEntry &entry);
+	bool next(FileListEntry &entry);
 	void rewind();
 
 	bool isDone() const;
 	void setGlobRegex(const String &pattern);
 
-	std::vector<FileEntry> getFullListing();
+	std::vector<FileListEntry> getFullListing();
 
 private:
 	// Storing as void pointer to avoid having to include dirent.h in header
 	struct DirectoryFrame
 	{
-		DirectoryFrame(void *handle, const String &absolutePath, const String &relativePath)
-			: handle(handle)
-			, absolutePath(absolutePath)
-			, relativePath(relativePath)
-		{}
-
-		void *handle = nullptr;
+		void *handle;
 		String absolutePath;
-		String relativePath;
 	};
 	std::stack<DirectoryFrame> m_directoryStack;
 

@@ -13,43 +13,54 @@ static bool isSlash(int32 c)
 	return c == '/' || c == '\\';
 }
 
+extern bool hasLeadingSlash(const String &path)
+{
+	return !path.isEmpty() && isSlash(path.front());
+}
+
 extern bool hasTrailingSlash(const String &path)
 {
-	return isSlash(path.back());
+	return !path.isEmpty() && isSlash(path.back());
 }
 
-extern void removeTrailingSlashes(String &path)
+extern void removeTrailingSlash(String &path)
 {
-	path.erase(std::find_if(path.rbegin(), path.rend(), [](int32 c)
-	{
-		return !isSlash(c);
-	}).base(), path.end());
-}
+	if (hasTrailingSlash(path))
+		path.erase(path.end() - 1);
 
-extern String removeTrailingSlashesCopy(const String &path)
-{
-	String out = path;
-	removeTrailingSlashes(out);
-	return out;
+// 	path.erase(std::find_if(path.rbegin(), path.rbegin() + 1, [](int32 c)
+// 	{
+// 		return !isSlash(c);
+// 	}).base(), path.end());
 }
 
 extern String joinPaths(const String &left, const String &right, string::Character delimiter)
 {
-	if (left.isEmpty() && right.isEmpty())
-		return left;
-
-	else if (left.isEmpty())
+	if (left.isEmpty()) 
+	{
 		return right;
-
+	}
 	else if (right.isEmpty())
+	{
 		return left;
+	}
 
-	String result;
-	result.reserve(left.getSize() + right.getSize() + 1);
-	result.append(left);
-	removeTrailingSlashes(result);
-	result.append(delimiter + right);
+	String result(left);
+	appendPath(result, right, delimiter);
 	return result;
+}
+
+extern void appendPath(String &path, const String &sectionToAppend, string::Character delimiter)
+{
+	if (sectionToAppend.isEmpty())
+		return;
+
+	path.reserve(path.getSize() + sectionToAppend.getSize() + 1);
+	if (!hasTrailingSlash(path))
+		path.append(delimiter);
+	path.append(sectionToAppend);
+
+	path = normalizePath(path, delimiter);
 }
 
 extern bool pathIsSubpath(const String &rootPath, const String &comparedPath)
@@ -81,9 +92,15 @@ extern bool pathIsSubpath(const String &rootPath, const String &comparedPath)
 
 extern String stripRootPath(const String &path, const String &rootPath)
 {
-	BigSizeType rootPathSize = rootPath.getSize() + (hasTrailingSlash(rootPath) ? 0 : 1);
-	if (path.getSize() < rootPathSize)
-		return path;
+	BigSizeType rootPathSize = rootPath.getSize();
+	TS_ASSERT(path.getSize() >= rootPathSize);
+
+	if (path.getSize() == rootPathSize)
+		return "";
+
+	if (path.getSize() > rootPathSize && isSlash(path[rootPathSize]))
+		rootPathSize++;
+
 	return path.substring(rootPathSize);
 }
 

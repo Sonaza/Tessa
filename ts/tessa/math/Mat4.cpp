@@ -301,7 +301,7 @@ Mat4 Mat4::makeOrtho(float left, float right, float bottom, float top, float zne
 	);
 }
 
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 
 Mat4::Mat4(const sf::Transform &transform)
 {

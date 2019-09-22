@@ -4,15 +4,16 @@
 
 TS_PACKAGE1(file)
 
-class FileEntry
+class FileListEntry
 {
 public:
-	FileEntry() = default;
+	FileListEntry() = default;
 
-	FileEntry(FileEntry &&other);
-	FileEntry &operator=(FileEntry &&other);
+	FileListEntry(FileListEntry &&other);
+	FileListEntry &operator=(FileListEntry &&other);
 
-	const String &getBasename() const;
+	// Returns the filename (including relative path if 
+	const String &getFilename() const;
 	const String getFullPath() const;
 
 	FileTime getLastModified() const;
@@ -24,7 +25,7 @@ public:
 private:
 	friend class FileList;
 
-	String m_basename;
+	String m_filename;
 	String m_rootpath;
 	
 	FileTime m_lastModified = 0;

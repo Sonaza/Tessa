@@ -107,12 +107,9 @@ public:
 	operator std::string() const;
 	operator std::wstring() const;
 
-#if defined(SFML_VERSION_MAJOR)
+#if TS_GLOBAL_USING_SFML == TS_TRUE
 	operator sf::String() const;
 #endif
-
-	std::string toAnsiString(const std::locale &locale = std::locale()) const;
-	std::wstring toWideString() const;
 
 	/* String formatting as provided by fmt-library.
 	 * sprintf is the old school POSIX style formatting.
@@ -130,11 +127,12 @@ public:
 	template<class... Args>
 	String &format(const std::wstring &formatStr, const Args&... args);
 
+	std::string toAnsiString(const std::locale &locale = std::locale()) const;
+	std::wstring toWideString() const;
+
 	std::basic_string<char> toUtf8() const;
 	std::basic_string<char16_t> toUtf16() const;
 	std::basic_string<char32_t> toUtf32() const;
-
-	String &operator+=(const String &right);
 
 	char32_t &operator[](BigSizeType index);
 	const char32_t &operator[](BigSizeType index) const;
@@ -145,9 +143,8 @@ public:
 	void reserve(BigSizeType size);
 	void clear();
 
-	BigSizeType getSize() const;
-
 	bool isEmpty() const;
+	BigSizeType getSize() const;
 
 	void erase(BigSizeType position, BigSizeType count = 1);
 	void erase(const_iterator pos);
@@ -179,7 +176,7 @@ public:
 
 	String substring(BigSizeType position, BigSizeType length = InvalidPos) const;
 
-	const char32_t *getData() const;
+	const char32_t *getPointer() const;
 
 	iterator begin();
 	iterator end();

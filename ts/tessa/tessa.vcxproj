@@ -168,7 +168,7 @@
     <ClCompile Include="file\ArchivistReader.cpp" />
     <ClCompile Include="file\ArchivistReaderExtractor.cpp" />
     <ClCompile Include="file\ArchivistWriter.cpp" />
-    <ClCompile Include="file\FileEntry.cpp" />
+    <ClCompile Include="file\FileListEntry.cpp" />
     <ClCompile Include="file\FileTime.cpp" />
     <ClCompile Include="file\linux\FileTimeLinux.cpp" />
     <ClCompile Include="file\windows\FileListWindows.cpp" />
@@ -207,6 +207,7 @@
     <ClCompile Include="resource\MusicResource.cpp" />
     <ClCompile Include="resource\ShaderResource.cpp" />
     <ClCompile Include="resource\SoundResource.cpp" />
+    <ClCompile Include="string\StringView.cpp" />
     <ClCompile Include="system\AbstractManagerBase.cpp" />
     <ClCompile Include="system\WindowViewManager.cpp" />
     <ClCompile Include="thread\AbstractMutexBase.cpp" />
@@ -231,7 +232,7 @@
     <ClInclude Include="file\ArchivistReaderExtractor.h" />
     <ClInclude Include="file\ArchivistWriter.h" />
     <ClInclude Include="file\ArchivistCommon.h" />
-    <ClInclude Include="file\FileEntry.h" />
+    <ClInclude Include="file\FileListEntry.h" />
     <ClInclude Include="file\FileList.h" />
     <ClInclude Include="file\FileTime.h" />
     <ClInclude Include="file\FileUtils.h" />
@@ -239,6 +240,7 @@
     <ClInclude Include="file\InputFile.h" />
     <ClInclude Include="file\OutputFile.h" />
     <ClInclude Include="file\windows\FileWatcherWindows.h" />
+    <ClInclude Include="GlobalConfig.h" />
     <ClInclude Include="input\InputManager.h" />
     <ClInclude Include="lang\Noncopyable.h" />
     <ClInclude Include="lang\ScopedPointer.h" />
@@ -271,6 +273,7 @@
     <ClCompile Include="system\WindowManager.cpp" />
     <ClInclude Include="resource\ShaderResource.h" />
     <ClInclude Include="resource\SoundResource.h" />
+    <ClInclude Include="string\StringView.h" />
     <ClInclude Include="string\Utf.h" />
     <ClInclude Include="system\AbstractManagerBase.h" />
     <ClInclude Include="system\WindowViewManager.h" />
