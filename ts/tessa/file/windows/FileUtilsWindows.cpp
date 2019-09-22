@@ -44,7 +44,7 @@ extern bool isFile(const String &path)
 
 extern bool isDirectory(const String &path)
 {
-	return PathIsDirectoryW(path.toWideString().c_str()) == TRUE;
+	return PathIsDirectoryW(path.toWideString().c_str()) != FALSE;
 }
 
 extern bool removeFile(const String &path)
