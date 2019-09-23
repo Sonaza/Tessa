@@ -82,10 +82,10 @@ std::vector<String> splitString(const String &str, Character delimiter)
 std::vector<String> splitString(const String &str, const String &delimiters)
 {
 	std::vector<String> tokens;
-	PosType index = 0;
+	BigSizeType index = 0;
 	while (index < str.getSize())
 	{
-		PosType pos = str.findFirstOf(delimiters, index);
+		BigSizeType pos = str.findFirstOf(delimiters, index);
 		tokens.push_back(str.substring(index, pos - index));
 		if (pos == String::InvalidPos)
 			break;
