@@ -110,6 +110,25 @@ extern BigSizeType convertLargeIntegerTo64bit(SizeType lowPart, SizeType highPar
 	return li.QuadPart;
 }
 
+extern int32 getWindowsVersion()
+{
+	typedef LONG NTSTATUS;
+
+	int32 ret = 0;
+	
+	NTSTATUS(WINAPI *RtlGetVersion)(OSVERSIONINFOEXW*);
+
+	*(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+
+	if (RtlGetVersion != nullptr)
+	{
+		OSVERSIONINFOEXW osInfo;
+		osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+		RtlGetVersion(&osInfo);
+		ret = osInfo.dwMajorVersion;
+	}
+	return ret;
+}
 
 TS_END_PACKAGE1()
 
