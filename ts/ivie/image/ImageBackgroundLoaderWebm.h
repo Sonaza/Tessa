@@ -59,8 +59,7 @@ private:
 		nestegg *context = nullptr;
 		vpx_codec_iface_t *interface = nullptr;
 		vpx_codec_ctx_t *codec = nullptr;
-
-		SizeType trackIndex = 0;
+		uint32 trackIndex = 0;
 	};
 	DecoderState state;
 

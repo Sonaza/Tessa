@@ -164,7 +164,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 
 // 	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration.getMilliseconds());
 
-	SizeType numTracks = 0;
+	uint32 numTracks = 0;
 	if (nestegg_track_count(state.context, &numTracks) == -1)
 	{
 		errorText = "Failed to retrieve track count.";
@@ -176,8 +176,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 
 	bool hasVideoTrack = false;
 
-// 	vpx_codec_iface_t *interface = nullptr;
-	for (SizeType track = 0; track < numTracks; ++track)
+	for (uint32 track = 0; track < numTracks; ++track)
 	{
 		int32 trackType = nestegg_track_type(state.context, track);
 		if (trackType == NESTEGG_TRACK_VIDEO)
@@ -390,7 +389,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 			result = nestegg_packet_count(packet, &packetCount);
 			TS_ASSERT(result == 0);
 
-			for (SizeType packetIndex = 0; packetIndex < packetCount; ++packetIndex)
+			for (uint32 packetIndex = 0; packetIndex < packetCount; ++packetIndex)
 			{
 				uint8_t *data = nullptr;
 				size_t length = 0;

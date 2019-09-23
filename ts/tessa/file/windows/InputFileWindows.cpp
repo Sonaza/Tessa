@@ -80,7 +80,7 @@ void InputFile::close()
 	filesize = -1;
 }
 
-PosType InputFile::read(char *outBuffer, SizeType numBytesToRead)
+PosType InputFile::read(char *outBuffer, uint32 numBytesToRead)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
@@ -92,7 +92,6 @@ PosType InputFile::read(char *outBuffer, SizeType numBytesToRead)
 		return 0;
 
 	DWORD numBytesRead;
-
 	if (ReadFile((HANDLE)handle, outBuffer, numBytesToRead, &numBytesRead, nullptr) == FALSE)
 	{
 		TS_WLOG_ERROR("File read failed: %s\n", windows::getLastErrorAsString());
@@ -103,18 +102,18 @@ PosType InputFile::read(char *outBuffer, SizeType numBytesToRead)
 	return numBytesRead;
 }
 
-PosType InputFile::read(unsigned char *outBuffer, SizeType numBytesToRead)
+PosType InputFile::read(unsigned char *outBuffer, uint32 numBytesToRead)
 {
 	return read(reinterpret_cast<char*>(outBuffer), numBytesToRead);
 }
 
-PosType InputFile::readLine(char *outBuffer, SizeType numBytesToRead, const char linebreak)
+PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	TS_ASSERT(numBytesToRead > 0 && "numBytesToRead must be greater than 0.");
+	TS_ASSERT(size > 0 && "numBytesToRead must be greater than 0.");
 
-	if (handle == nullptr || bad == true || numBytesToRead == 0)
+	if (handle == nullptr || bad == true || size == 0)
 		return -1;
 
 	if (eof == true)
@@ -123,6 +122,7 @@ PosType InputFile::readLine(char *outBuffer, SizeType numBytesToRead, const char
 	char c;
 	char *ptr = outBuffer;
 
+	PosType numBytesToRead = size;
 	while (numBytesToRead-- > 0)
 	{
 		DWORD numBytesRead;
@@ -146,7 +146,7 @@ PosType InputFile::readLine(char *outBuffer, SizeType numBytesToRead, const char
 	return (ptr - outBuffer);
 }
 
-PosType InputFile::readLine(unsigned char *outBuffer, SizeType numBytesToRead, const char linebreak)
+PosType InputFile::readLine(unsigned char *outBuffer, uint32 numBytesToRead, const char linebreak)
 {
 	return readLine(reinterpret_cast<char*>(outBuffer), numBytesToRead, linebreak);
 }

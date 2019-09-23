@@ -58,8 +58,8 @@ public:
 	 * Input buffer must be allocated and have at least size bytes of space.
 	 * Returns: true if buffering the write succeeded (does not guarantee successful write on disk, use flush and check its return value if required).
 	 */
-	bool write(const char *inBuffer, SizeType size);
-	bool write(const unsigned char *inBuffer, SizeType size);
+	bool write(const char *inBuffer, uint32 size);
+	bool write(const unsigned char *inBuffer, uint32 size);
 
 	/* Writes the variable value to the write buffer.
 	 * In practice, reinterpret casts the value to byte pointer and calls write() on it.

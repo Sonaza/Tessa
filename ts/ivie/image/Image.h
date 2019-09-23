@@ -16,7 +16,7 @@ struct ImageData
 {
 	math::VC2U size;
 	bool hasAlpha = false;
-	SizeType numFramesTotal = 0;
+	uint32 numFramesTotal = 0;
 };
 
 struct DisplayShaderParams

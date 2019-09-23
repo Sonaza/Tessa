@@ -106,7 +106,7 @@ void OutputFile::close()
 	bad = false;
 }
 
-bool OutputFile::write(const char *inBuffer, SizeType size)
+bool OutputFile::write(const char *inBuffer, uint32 size)
 {
 	TS_ASSERT(inBuffer != nullptr);
 
@@ -125,7 +125,7 @@ bool OutputFile::write(const char *inBuffer, SizeType size)
 	return true;
 }
 
-bool OutputFile::write(const unsigned char *inBuffer, SizeType size)
+bool OutputFile::write(const unsigned char *inBuffer, uint32 size)
 {
 	return write(reinterpret_cast<const char*>(inBuffer), size);
 }

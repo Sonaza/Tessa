@@ -81,7 +81,7 @@ extern bool pathIsSubpath(const String &rootPath, const String &comparedPath)
 	if (rootSegments.size() > comparedSegments.size())
 		return false;
 
-	for (BigSizeType i = 0; i < rootSegments.size(); ++i)
+	for (BigSizeType i = 0; i < (BigSizeType)rootSegments.size(); ++i)
 	{
 		if (rootSegments[i] != comparedSegments[i])
 			return false;

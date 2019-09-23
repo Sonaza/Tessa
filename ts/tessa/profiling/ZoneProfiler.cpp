@@ -20,27 +20,22 @@
 
 TS_PACKAGE1(profiling)
 
-namespace
-{
-
-void vertexArrayAppend(const sf::VertexArray &src, sf::VertexArray &dst)
-{
-	TS_ASSERT(dst.getVertexCount() == 0 || src.getPrimitiveType() == dst.getPrimitiveType());
-
-	if (dst.getVertexCount() == 0)
-		dst.setPrimitiveType(src.getPrimitiveType());
-
-	BigSizeType startIndex = dst.getVertexCount();
-	dst.resize(src.getVertexCount() + dst.getVertexCount());
-
-	for (BigSizeType srcIndex = 0; srcIndex < src.getVertexCount(); ++srcIndex)
-	{
-		BigSizeType dstIndex = startIndex + srcIndex;
-		dst[dstIndex] = src[srcIndex];
-	}
-}
-
-}
+// static void vertexArrayAppend(const sf::VertexArray &src, sf::VertexArray &dst)
+// {
+// 	TS_ASSERT(dst.getVertexCount() == 0 || src.getPrimitiveType() == dst.getPrimitiveType());
+// 
+// 	if (dst.getVertexCount() == 0)
+// 		dst.setPrimitiveType(src.getPrimitiveType());
+// 
+// 	BigSizeType startIndex = dst.getVertexCount();
+// 	dst.resize(src.getVertexCount() + dst.getVertexCount());
+// 
+// 	for (BigSizeType srcIndex = 0; srcIndex < (BigSizeType)src.getVertexCount(); ++srcIndex)
+// 	{
+// 		BigSizeType dstIndex = startIndex + srcIndex;
+// 		dst[dstIndex] = src[srcIndex];
+// 	}
+// }
 
 class ZoneProfilerRenderer
 {

@@ -48,11 +48,11 @@ public:
 	 *    0 if already end of file,
      *    or -1 on failure or bad.
 	 */
-	PosType read(char *outBuffer, SizeType numBytesToRead);
-	PosType read(unsigned char *outBuffer, SizeType numBytesToRead);
+	PosType read(char *outBuffer, uint32 numBytesToRead);
+	PosType read(unsigned char *outBuffer, uint32 numBytesToRead);
 
-	PosType readLine(char *outBuffer, SizeType numBytesToRead, const char linebreak = '\n');
-	PosType readLine(unsigned char *outBuffer, SizeType numBytesToRead, const char linebreak = '\n');
+	PosType readLine(char *outBuffer, uint32 numBytesToRead, const char linebreak = '\n');
+	PosType readLine(unsigned char *outBuffer, uint32 numBytesToRead, const char linebreak = '\n');
 
 	/* Reads variable directly.
 	 */

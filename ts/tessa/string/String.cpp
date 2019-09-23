@@ -265,13 +265,13 @@ std::basic_string<char32_t> String::toUtf32() const
 
 char32_t &String::operator[](BigSizeType index)
 {
-	TS_ASSERT(index < buffer.size());
+	TS_ASSERT(index < (BigSizeType)buffer.size());
 	return buffer[index];
 }
 
 const char32_t &String::operator[](BigSizeType index) const
 {
-	TS_ASSERT(index < buffer.size());
+	TS_ASSERT(index < (BigSizeType)buffer.size());
 	return buffer[index];
 }
 

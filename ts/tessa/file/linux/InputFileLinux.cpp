@@ -78,7 +78,7 @@ void InputFile::close()
 	filesize = -1;
 }
 
-PosType InputFile::read(char *outBuffer, SizeType size)
+PosType InputFile::read(char *outBuffer, uint32 size)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
@@ -91,8 +91,7 @@ PosType InputFile::read(char *outBuffer, SizeType size)
 
 	FileHandle *file = static_cast<FileHandle*>(handle);
 
-	PosType numBytesRead = fread(outBuffer, sizeof(outBuffer[0]), size, file);
-
+	PosType numBytesRead = (PosType)fread(outBuffer, sizeof(outBuffer[0]), size, file);
 	if (ferror(file))
 	{
 		bad = true;
@@ -104,12 +103,12 @@ PosType InputFile::read(char *outBuffer, SizeType size)
 	return numBytesRead;
 }
 
-PosType InputFile::read(unsigned char *outBuffer, SizeType size)
+PosType InputFile::read(unsigned char *outBuffer, uint32 size)
 {
 	return read(reinterpret_cast<char*>(outBuffer), size);
 }
 
-PosType InputFile::readLine(char *outBuffer, SizeType size, const char linebreak)
+PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
@@ -125,7 +124,9 @@ PosType InputFile::readLine(char *outBuffer, SizeType size, const char linebreak
 	char *ptr = outBuffer;
 
 	FileHandle *file = static_cast<FileHandle*>(handle);
-	while (size-- > 0)
+
+	PosType bytesToRead = (PosType)size;
+	while (bytesToRead-- > 0)
 	{
 		if (fread(&c, sizeof(char), 1, file) == 0)
 			break;
@@ -140,7 +141,7 @@ PosType InputFile::readLine(char *outBuffer, SizeType size, const char linebreak
 	return (ptr - outBuffer);
 }
 
-PosType InputFile::readLine(unsigned char *outBuffer, SizeType size, const char linebreak)
+PosType InputFile::readLine(unsigned char *outBuffer, uint32 size, const char linebreak)
 {
 	return readLine(reinterpret_cast<char*>(outBuffer), size, linebreak);
 }

@@ -5,7 +5,7 @@
 
 TS_PACKAGE2(app, util)
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 class RingBuffer : public lang::Noncopyable
 {
 public:
@@ -21,11 +21,11 @@ public:
 	bool isEmpty() const;
 	bool isFull() const;
 
-	BigSizeType getBufferedAmount() const;
-	BigSizeType getFreeAmount() const;
+	uint64 getBufferedAmount() const;
+	uint64 getFreeAmount() const;
 
-	BigSizeType getSize() const;
-	BigSizeType getMaxSize() const;
+	uint64 getSize() const;
+	uint64 getMaxSize() const;
 
 	// If buffer is not full, appends a new entry to the current
 	// write position and advances the write pointer by one.
@@ -51,16 +51,16 @@ public:
 	// Useful when no more data will be written and existing data will be continuously looped through.
 	void removeReadConstraint();
 
-	const BigSizeType getWritePositionIndex() const { return writePosition; }
-	const BigSizeType getReadPositionIndex() const { return readPosition; }
+	const uint64 getWritePositionIndex() const { return writePosition; }
+	const uint64 getReadPositionIndex() const { return readPosition; }
 
-	Type &operator[](BigSizeType index) { return buffer[index]; }
-	const Type &operator[](BigSizeType index) const { return buffer[index]; }
+	Type &operator[](uint64 index) { return buffer[index]; }
+	const Type &operator[](uint64 index) const { return buffer[index]; }
 
 private:
-	std::atomic<BigSizeType> writePosition = 0;
-	std::atomic<BigSizeType> readPosition = 0;
-	std::atomic<BigSizeType> numBuffered = 0;
+	std::atomic<uint64> writePosition = 0;
+	std::atomic<uint64> readPosition = 0;
+	std::atomic<uint64> numBuffered = 0;
 	std::atomic_bool constrained = true;
 	std::vector<Type> buffer;
 
@@ -69,7 +69,7 @@ private:
 	enum { ReadReservedAmount = 1 };
 };
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 void RingBuffer<Type, capacity>::reserveFullCapacity()
 {
 	MutexGuard lock(mutex);
@@ -77,7 +77,7 @@ void RingBuffer<Type, capacity>::reserveFullCapacity()
 		buffer.resize(capacity);
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 void ts::app::util::RingBuffer<Type, capacity>::clear()
 {
 	writePosition = 0;
@@ -87,25 +87,25 @@ void ts::app::util::RingBuffer<Type, capacity>::clear()
 	buffer.clear();
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 RingBuffer<Type, capacity>::RingBuffer()
 {
 
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 RingBuffer<Type, capacity>::~RingBuffer()
 {
 
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 RingBuffer<Type, capacity>::RingBuffer(RingBuffer &&other)
 {
 	*this = other;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 RingBuffer<Type, capacity> &RingBuffer<Type, capacity>::operator=(RingBuffer &&other)
 {
 	if (this != &other)
@@ -127,44 +127,44 @@ RingBuffer<Type, capacity> &RingBuffer<Type, capacity>::operator=(RingBuffer &&o
 	return *this;
 }
 
-template<class Type, BigSizeType capacity>
-TS_FORCEINLINE BigSizeType RingBuffer<Type, capacity>::getBufferedAmount() const
+template<class Type, uint64 capacity>
+TS_FORCEINLINE uint64 RingBuffer<Type, capacity>::getBufferedAmount() const
 {
 	return constrained ? numBuffered.load() : getSize();
 }
 
-template<class Type, BigSizeType capacity>
-TS_FORCEINLINE BigSizeType RingBuffer<Type, capacity>::getFreeAmount() const
+template<class Type, uint64 capacity>
+TS_FORCEINLINE uint64 RingBuffer<Type, capacity>::getFreeAmount() const
 {
 	TS_ASSERT(capacity >= numBuffered);
 	return constrained ? capacity - numBuffered : 0;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 TS_FORCEINLINE bool RingBuffer<Type, capacity>::isEmpty() const
 {
 	return numBuffered == 0;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 TS_FORCEINLINE bool RingBuffer<Type, capacity>::isFull() const
 {
 	return numBuffered == capacity;
 }
 
-template<class Type, BigSizeType capacity>
-TS_FORCEINLINE BigSizeType RingBuffer<Type, capacity>::getSize() const
+template<class Type, uint64 capacity>
+TS_FORCEINLINE uint64 RingBuffer<Type, capacity>::getSize() const
 {
 	return buffer.size();
 }
 
-template<class Type, BigSizeType capacity>
-TS_FORCEINLINE BigSizeType RingBuffer<Type, capacity>::getMaxSize() const
+template<class Type, uint64 capacity>
+TS_FORCEINLINE uint64 RingBuffer<Type, capacity>::getMaxSize() const
 {
 	return capacity;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 bool RingBuffer<Type, capacity>::pushWrite(Type &&value)
 {
 	TS_ASSERT(constrained == true && "Read constraint has been removed and no more writes are expected.");
@@ -184,7 +184,7 @@ bool RingBuffer<Type, capacity>::pushWrite(Type &&value)
 	return false;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 bool RingBuffer<Type, capacity>::pushWrite(const Type &value)
 {
 	TS_ASSERT(constrained == true && "Read constraint has been removed and no more writes are expected.");
@@ -204,7 +204,7 @@ bool RingBuffer<Type, capacity>::pushWrite(const Type &value)
 	return false;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 Type &RingBuffer<Type, capacity>::getWritePtr()
 {
 	TS_ASSERT(constrained == true && "Read constraint has been removed and no more writes are expected.");
@@ -215,13 +215,13 @@ Type &RingBuffer<Type, capacity>::getWritePtr()
 	return buffer[writePosition];
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 bool RingBuffer<Type, capacity>::canIncrementWrite() const
 {
 	return !isFull() && constrained;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 bool RingBuffer<Type, capacity>::incrementWrite()
 {
 	if (canIncrementWrite())
@@ -233,27 +233,27 @@ bool RingBuffer<Type, capacity>::incrementWrite()
 	return false;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 TS_FORCEINLINE Type &RingBuffer<Type, capacity>::getReadPtr()
 {
 	TS_ASSERT(numBuffered > 0 && "Reading buffer when it is empty.");
 	return buffer[readPosition];
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 TS_FORCEINLINE const Type &RingBuffer<Type, capacity>::getReadPtr() const
 {
 	TS_ASSERT(numBuffered > 0 && "Reading buffer when it is empty.");
 	return buffer[readPosition];
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 TS_FORCEINLINE bool RingBuffer<Type, capacity>::canIncrementRead() const
 {
 	return constrained ? numBuffered > ReadReservedAmount : true;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 bool RingBuffer<Type, capacity>::incrementRead()
 {
 	if (canIncrementRead())
@@ -267,7 +267,7 @@ bool RingBuffer<Type, capacity>::incrementRead()
 	return false;
 }
 
-template<class Type, BigSizeType capacity>
+template<class Type, uint64 capacity>
 void RingBuffer<Type, capacity>::removeReadConstraint()
 {
 	constrained = false;

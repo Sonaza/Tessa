@@ -398,7 +398,7 @@ sf::RenderWindow &WindowManager::getRenderWindow()
 std::vector<math::VC2U> WindowManager::getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize)
 {
 	sf::VideoMode native = sf::VideoMode::getDesktopMode();
-	SizeType nativeBits = native.bitsPerPixel;
+	uint32 nativeBits = native.bitsPerPixel;
 
 	std::vector<math::VC2U> result;
 

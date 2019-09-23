@@ -125,8 +125,8 @@ typedef std::uint64_t uint64;
 
 typedef uint8 Byte;
 
-typedef uint32 SizeType;
-typedef uint64 BigSizeType;
+typedef int32 SizeType;
+typedef int64 BigSizeType;
 
 typedef int64 PosType;
 

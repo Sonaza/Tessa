@@ -232,14 +232,14 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 // 	FIICCPROFILE *icc = FreeImage_GetICCProfile(state.bitmap);
 // 	if (icc->size > 0)
 // 	{
-// 		TS_WPRINTF("%s as some profile? %u bytes\n", filepath, icc->size);
+// 		TS_WPRINTF("%s has some profile? %u bytes\n", filepath, icc->size);
 // 	}
 // 	else
 // 	{
 // 		TS_WPRINTF("%s does not have profile?\n", filepath);
 // 	}
 
-	SizeType maxSize = sf::Texture::getMaximumSize();
+	uint32 maxSize = sf::Texture::getMaximumSize();
 	if (imageSize.x > maxSize || imageSize.y > maxSize)
 	{
 		TS_LOG_ERROR("Image is too large.");
