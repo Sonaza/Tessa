@@ -34,16 +34,16 @@ OutputFile &OutputFile::operator=(OutputFile &&other)
 {
 	if (this != &other)
 	{
-		handle = std::exchange(other.handle, nullptr);
-		bad = std::exchange(other.bad, nullptr);
+		m_handle = std::exchange(other.m_handle, nullptr);
+		m_bad = std::exchange(other.m_bad, nullptr);
 	}
 	return *this;
 }
 
 bool OutputFile::open(const String &filepath, OutputFileMode modeParam, OutputFileCreation creation)
 {
-	TS_ASSERT(handle == nullptr && "OutputFile is already opened.");
-	if (handle != nullptr)
+	TS_ASSERT(m_handle == nullptr && "OutputFile is already opened.");
+	if (m_handle != nullptr)
 		return false;
 
 	if (creation == OutputFileCreation_OpenExisting && !exists(filepath))
@@ -72,36 +72,36 @@ bool OutputFile::open(const String &filepath, OutputFileMode modeParam, OutputFi
 	if ((modeParam & priv::Out_ModeAppend) == 0)
 		fseek(file, 0, SEEK_SET);
 
-	handle = file;
+	m_handle = file;
 	return true;
 }
 
 void OutputFile::close()
 {
-	if (handle != nullptr)
+	if (m_handle != nullptr)
 	{
-		FileHandle file = static_cast<FileHandle>(handle);
+		FileHandle file = static_cast<FileHandle>(m_handle);
 		fclose(file);
 	}
-	handle = nullptr;
-	bad = false;
+	m_handle = nullptr;
+	m_bad = false;
 }
 
 bool OutputFile::write(const char *inBuffer, uint32 size)
 {
 	TS_ASSERT(inBuffer != nullptr);
 
-	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "OutputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return false;
 
-	FileHandle file = static_cast<FileHandle>(handle);
+	FileHandle file = static_cast<FileHandle>(m_handle);
 	uint32 bytesWritten = (uint32)fwrite(inBuffer, sizeof(inBuffer[0]), size, file);
 	TS_ASSERT(bytesWritten == size);
 	
 	if (ferror(file))
 	{
-		bad = true;
+		m_bad = true;
 		return false;
 	}
 
@@ -135,8 +135,8 @@ PosType OutputFile::seek(PosType pos)
 
 PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	int32 origin;
@@ -148,7 +148,7 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 		case SeekFromEnd:       origin = SEEK_END; break;
 	}
 
-	FileHandle file = static_cast<FileHandle>(handle);
+	FileHandle file = static_cast<FileHandle>(m_handle);
 	if (fseek(file, (long)pos, origin) == 0)
 	{
 // 		eof = (feof(file) != 0);
@@ -159,21 +159,21 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 
 PosType OutputFile::tell() const
 {
-	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "OutputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
-	FileHandle file = static_cast<FileHandle>(handle);
+	FileHandle file = static_cast<FileHandle>(m_handle);
 	return ftell(file);
 }
 
 bool OutputFile::flush()
 {
-	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "OutputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return false;
 	
-	FileHandle file = static_cast<FileHandle>(handle);
+	FileHandle file = static_cast<FileHandle>(m_handle);
 	
 	if (fflush(file) == 0)
 		return true;
@@ -183,29 +183,29 @@ bool OutputFile::flush()
 
 bool OutputFile::isOpen() const
 {
-	return handle != nullptr && bad == false;
+	return m_handle != nullptr && m_bad == false;
 }
 
 bool OutputFile::isBad() const
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return true;
 
-	FileHandle file = static_cast<FileHandle>(handle);
+	FileHandle file = static_cast<FileHandle>(m_handle);
 	return ferror(file) != 0;
 }
 
 void OutputFile::clearFlags()
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr)
 		return;
 
-	FileHandle file = static_cast<FileHandle>(handle);
+	FileHandle file = static_cast<FileHandle>(m_handle);
 	clearerr(file);
 // 	eof = false;
-	bad = false;
+	m_bad = false;
 }
 
 OutputFile::operator bool() const

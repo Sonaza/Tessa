@@ -91,6 +91,7 @@ public:
 
 private:
 	static std::atomic_bool quitting;
+	mutable Mutex mutex;
 
 	void prepareShaders();
 	std::map<DisplayShaderTypes, String> displayShaderFiles;
@@ -167,7 +168,6 @@ private:
 	thread::SchedulerTaskId scannerTaskId = thread::InvalidTaskId;
 
 	thread::ThreadScheduler *threadScheduler = nullptr;
-	mutable Mutex mutex;
 };
 
 TS_END_PACKAGE2()

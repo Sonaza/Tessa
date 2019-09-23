@@ -216,7 +216,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 					{
 						case Normal:
 						{
-							/* blop */
+							targetImageScale = 1.f;
 						}
 						break;
 

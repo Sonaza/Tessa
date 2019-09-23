@@ -13,7 +13,7 @@ FileList::FileList()
 {
 }
 
-FileList::FileList(const String &path, FileListStyle listStyle, SizeType listFlags)
+FileList::FileList(const String &path, FileListStyle listStyle, uint32 listFlags)
 {
 	open(path, listStyle, listFlags);
 }
@@ -23,7 +23,7 @@ FileList::~FileList()
 	close();
 }
 
-bool FileList::open(const String &path, FileListStyle listStyle, SizeType listFlags)
+bool FileList::open(const String &path, FileListStyle listStyle, uint32 listFlags)
 {
 	TS_ASSERT(!path.isEmpty());
 

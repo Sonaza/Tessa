@@ -33,16 +33,16 @@ OutputFile &OutputFile::operator=(OutputFile &&other)
 {
 	if (this != &other)
 	{
-		std::swap(handle, other.handle);
-		std::swap(bad, other.bad);
+		m_handle = std::exchange(other.m_handle, nullptr);
+		m_bad = std::exchange(other.m_bad, false);
 	}
 	return *this;
 }
 
 bool OutputFile::open(const String &filepath, OutputFileMode modeParam, OutputFileCreation creation)
 {
-	TS_ASSERT(handle == nullptr && "OutputFile is already opened.");
-	if (handle != nullptr)
+	TS_ASSERT(m_handle == nullptr && "OutputFile is already opened.");
+	if (m_handle != nullptr)
 		return false;
 
 	bool truncate = (modeParam & priv::Out_ModeTruncate) > 0;
@@ -91,31 +91,31 @@ bool OutputFile::open(const String &filepath, OutputFileMode modeParam, OutputFi
 		return false;
 	}
 
-	handle = fileHandle;
+	m_handle = fileHandle;
 
 	return true;
 }
 
 void OutputFile::close()
 {
-	if (handle != nullptr && handle != INVALID_HANDLE_VALUE)
+	if (m_handle != nullptr && m_handle != INVALID_HANDLE_VALUE)
 	{
-		CloseHandle((HANDLE)handle);
+		CloseHandle((HANDLE)m_handle);
 	}
-	handle = nullptr;
-	bad = false;
+	m_handle = nullptr;
+	m_bad = false;
 }
 
 bool OutputFile::write(const char *inBuffer, uint32 size)
 {
 	TS_ASSERT(inBuffer != nullptr);
 
-	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "OutputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return false;
 
 	DWORD numBytesWritten;
-	if (WriteFile((HANDLE)handle, inBuffer, size, &numBytesWritten, nullptr) == FALSE)
+	if (WriteFile((HANDLE)m_handle, inBuffer, size, &numBytesWritten, nullptr) == FALSE)
 	{
 		TS_WLOG_ERROR("File write failed: %s\n", windows::getLastErrorAsString());
 		return false;
@@ -152,8 +152,8 @@ PosType OutputFile::seek(PosType pos)
 
 PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	DWORD method;
@@ -169,7 +169,7 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 	dist.QuadPart = pos;
 
 	LARGE_INTEGER newPos;
-	if (SetFilePointerEx((HANDLE)handle, dist, &newPos, method) == FALSE)
+	if (SetFilePointerEx((HANDLE)m_handle, dist, &newPos, method) == FALSE)
 	{
 		TS_WLOG_ERROR("Seek failed: %s\n", windows::getLastErrorAsString());
 		return -1;
@@ -179,8 +179,8 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 
 PosType OutputFile::tell() const
 {
-	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "OutputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	// Zero distance move with FILE_CURRENT returns current position in file.
@@ -188,7 +188,7 @@ PosType OutputFile::tell() const
 	dist.QuadPart = 0;
 
 	LARGE_INTEGER pos;
-	if (SetFilePointerEx((HANDLE)handle, dist, &pos, FILE_CURRENT) == FALSE)
+	if (SetFilePointerEx((HANDLE)m_handle, dist, &pos, FILE_CURRENT) == FALSE)
 	{
 		TS_WLOG_ERROR("Tell failed: %s\n", windows::getLastErrorAsString());
 		return -1;
@@ -199,22 +199,22 @@ PosType OutputFile::tell() const
 
 bool OutputFile::flush()
 {
-	TS_ASSERT(handle != nullptr && "OutputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "OutputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return false;
 	
-	return FlushFileBuffers((HANDLE)handle) == TRUE;
+	return FlushFileBuffers((HANDLE)m_handle) == TRUE;
 }
 
 bool OutputFile::isOpen() const
 {
-	return handle != nullptr && bad == false;
+	return m_handle != nullptr && m_bad == false;
 }
 
 bool OutputFile::isBad() const
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return true;
 
 	return false;
@@ -222,11 +222,11 @@ bool OutputFile::isBad() const
 
 void OutputFile::clearFlags()
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr)
 		return;
 
-	bad = false;
+	m_bad = false;
 }
 
 OutputFile::operator bool() const

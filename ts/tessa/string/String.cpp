@@ -22,7 +22,7 @@
 //
 ////////////////////////////////////////////////////////////
 
-/* Modified for Tessa engine use. Using internal types and namespacing.
+/* Modified for Tessa engine use.
  */
 
 #include "Precompiled.h"
@@ -36,37 +36,37 @@
 TS_PACKAGE1(string)
 
 Character::Character(char ansiChar, const std::locale &locale)
-	: utf32Char(Utf32::decodeAnsi(ansiChar, locale))
+	: m_utf32Char(Utf32::decodeAnsi(ansiChar, locale))
 {
 }
 
 Character::Character(wchar_t wideChar)
-	: utf32Char(Utf32::decodeWide(wideChar))
+	: m_utf32Char(Utf32::decodeWide(wideChar))
 {
 }
 
 Character::Character(char32_t utf32Char)
-	: utf32Char(utf32Char)
+	: m_utf32Char(utf32Char)
 {
 }
 
 char Character::toAnsiChar(const std::locale &locale) const
 {
 	char output = 0;
-	Utf32::encodeAnsi(utf32Char, &output, 0, locale);
+	Utf32::encodeAnsi(m_utf32Char, &output, 0, locale);
 	return output;
 }
 
 wchar_t Character::toWideChar() const
 {
 	wchar_t output = 0;
-	Utf32::encodeWide(utf32Char, &output, 0);
+	Utf32::encodeWide(m_utf32Char, &output, 0);
 	return output;
 }
 
 Character::operator char32_t() const
 {
-	return utf32Char;
+	return m_utf32Char;
 }
 
 /*************************/
@@ -79,17 +79,17 @@ String::String()
 
 String::String(char ansiChar, const std::locale &locale)
 {
-	buffer += Utf32::decodeAnsi(ansiChar, locale);
+	m_buffer += Utf32::decodeAnsi(ansiChar, locale);
 }
 
 String::String(wchar_t wideChar)
 {
-	buffer += Utf32::decodeWide(wideChar);
+	m_buffer += Utf32::decodeWide(wideChar);
 }
 
 String::String(char32_t utf32Char)
 {
-	buffer += utf32Char;
+	m_buffer += utf32Char;
 }
 
 String::String(const char *ansiString, const std::locale &locale)
@@ -99,8 +99,8 @@ String::String(const char *ansiString, const std::locale &locale)
 		BigSizeType length = strlen(ansiString);
 		if (length > 0)
 		{
-			buffer.reserve(length + 1);
-			Utf32::fromAnsi(ansiString, ansiString + length, std::back_inserter(buffer), locale);
+			m_buffer.reserve(length + 1);
+			Utf32::fromAnsi(ansiString, ansiString + length, std::back_inserter(m_buffer), locale);
 		}
 	}
 }
@@ -117,8 +117,8 @@ String::String(const char *first, const char *last, const std::locale &locale)
 
 String::String(const std::string &ansiString, const std::locale &locale)
 {
-	buffer.reserve(ansiString.length() + 1);
-	Utf32::fromAnsi(ansiString.begin(), ansiString.end(), std::back_inserter(buffer), locale);
+	m_buffer.reserve(ansiString.length() + 1);
+	Utf32::fromAnsi(ansiString.begin(), ansiString.end(), std::back_inserter(m_buffer), locale);
 }
 
 String::String(const wchar_t *wideString)
@@ -128,8 +128,8 @@ String::String(const wchar_t *wideString)
 		BigSizeType length = std::wcslen(wideString);
 		if (length > 0)
 		{
-			buffer.reserve(length + 1);
-			Utf32::fromWide(wideString, wideString + length, std::back_inserter(buffer));
+			m_buffer.reserve(length + 1);
+			Utf32::fromWide(wideString, wideString + length, std::back_inserter(m_buffer));
 		}
 	}
 }
@@ -146,34 +146,34 @@ String::String(const wchar_t *first, const wchar_t *last)
 
 String::String(const std::wstring &wideString)
 {
-	buffer.reserve(wideString.length() + 1);
-	Utf32::fromWide(wideString.begin(), wideString.end(), std::back_inserter(buffer));
+	m_buffer.reserve(wideString.length() + 1);
+	Utf32::fromWide(wideString.begin(), wideString.end(), std::back_inserter(m_buffer));
 }
 
 String::String(const char32_t *utf32String)
 {
 	if (utf32String)
-		buffer = utf32String;
+		m_buffer = utf32String;
 }
 
 String::String(const char32_t *utf32String, BigSizeType size)
-	: buffer(utf32String, size)
+	: m_buffer(utf32String, size)
 {
 }
 
 String::String(const std::basic_string<char32_t> &utf32String)
-	: buffer(utf32String)
+	: m_buffer(utf32String)
 {
 }
 
 String::String(const String &other)
-	: buffer(other.buffer)
+	: m_buffer(other.m_buffer)
 {
 }
 
 String &String::operator=(const String &other)
 {
-	buffer = other.buffer;
+	m_buffer = other.m_buffer;
 	return *this;
 }
 
@@ -186,7 +186,7 @@ String &String::operator=(String &&other)
 {
 	if (this != &other)
 	{
-		buffer = std::move(other.buffer);
+		m_buffer = std::move(other.m_buffer);
 	}
 	return *this;
 }
@@ -214,10 +214,10 @@ std::string String::toAnsiString(const std::locale &locale) const
 {
 	// Prepare the output string
 	std::string output;
-	output.reserve(buffer.length() + 1);
+	output.reserve(m_buffer.length() + 1);
 	
 	// Convert
-	Utf32::toAnsi(buffer.begin(), buffer.end(), std::back_inserter(output), 0, locale);
+	Utf32::toAnsi(m_buffer.begin(), m_buffer.end(), std::back_inserter(output), 0, locale);
 	
 	return output;
 }
@@ -226,10 +226,10 @@ std::wstring String::toWideString() const
 {
 	// Prepare the output string
 	std::wstring output;
-	output.reserve(buffer.length() + 1);
+	output.reserve(m_buffer.length() + 1);
 	
 	// Convert
-	Utf32::toWide(buffer.begin(), buffer.end(), std::back_inserter(output), 0);
+	Utf32::toWide(m_buffer.begin(), m_buffer.end(), std::back_inserter(output), 0);
 	
 	return output;
 }
@@ -238,10 +238,10 @@ std::basic_string<char> String::toUtf8() const
 {
 	// Prepare the output string
 	std::basic_string<char> output;
-	output.reserve(buffer.length());
+	output.reserve(m_buffer.length());
 	
 	// Convert
-	Utf32::toUtf8(buffer.begin(), buffer.end(), std::back_inserter(output));
+	Utf32::toUtf8(m_buffer.begin(), m_buffer.end(), std::back_inserter(output));
 	
 	return output;
 }
@@ -250,144 +250,144 @@ std::basic_string<char16_t> String::toUtf16() const
 {
 	// Prepare the output string
 	std::basic_string<char16_t> output;
-	output.reserve(buffer.length());
+	output.reserve(m_buffer.length());
 	
 	// Convert
-	Utf32::toUtf16(buffer.begin(), buffer.end(), std::back_inserter(output));
+	Utf32::toUtf16(m_buffer.begin(), m_buffer.end(), std::back_inserter(output));
 	
 	return output;
 }
 
 std::basic_string<char32_t> String::toUtf32() const
 {
-	return buffer;
+	return m_buffer;
 }
 
 char32_t &String::operator[](BigSizeType index)
 {
-	TS_ASSERT(index < (BigSizeType)buffer.size());
-	return buffer[index];
+	TS_ASSERT(index < (BigSizeType)m_buffer.size());
+	return m_buffer[index];
 }
 
 const char32_t &String::operator[](BigSizeType index) const
 {
-	TS_ASSERT(index < (BigSizeType)buffer.size());
-	return buffer[index];
+	TS_ASSERT(index < (BigSizeType)m_buffer.size());
+	return m_buffer[index];
 }
 
 Character String::front() const
 {
-	return buffer.front();
+	return m_buffer.front();
 }
 
 Character String::back() const
 {
-	return buffer.back();
+	return m_buffer.back();
 }
 
 void String::reserve(BigSizeType size)
 {
-	buffer.reserve(size);
+	m_buffer.reserve(size);
 }
 
 void String::clear()
 {
-	buffer.clear();
+	m_buffer.clear();
 }
 
 bool String::isEmpty() const
 {
-	return buffer.empty();
+	return m_buffer.empty();
 }
 
 BigSizeType String::getSize() const
 {
-	return buffer.size();
+	return m_buffer.size();
 }
 
 void String::erase(BigSizeType position, BigSizeType count)
 {
-	buffer.erase(position, count);
+	m_buffer.erase(position, count);
 }
 
 void String::erase(const_iterator pos)
 {
-	buffer.erase(pos);
+	m_buffer.erase(pos);
 }
 
 void String::erase(const_iterator first, const_iterator last)
 {
-	buffer.erase(first, last);
+	m_buffer.erase(first, last);
 }
 
 void String::append(const String &str)
 {
-	buffer += str.buffer;
+	m_buffer += str.m_buffer;
 }
 
 void String::append(const Character &chr)
 {
-	buffer += chr;
+	m_buffer += chr;
 }
 
 void String::insert(BigSizeType position, const String &str)
 {
-	buffer.insert(position, str.buffer);
+	m_buffer.insert(position, str.m_buffer);
 }
 
 void String::insert(const_iterator pos, const String &str)
 {
-	buffer.insert(pos, str.begin(), str.end());
+	m_buffer.insert(pos, str.begin(), str.end());
 }
 
 BigSizeType String::find(const String &str, BigSizeType start) const
 {
-	return buffer.find(str.buffer, start);
+	return m_buffer.find(str.m_buffer, start);
 }
 
 BigSizeType String::findFirstOf(const Character &chr, BigSizeType start) const
 {
-	return buffer.find_first_of((char32_t)chr, start);
+	return m_buffer.find_first_of((char32_t)chr, start);
 }
 
 BigSizeType String::findFirstOf(const String &str, BigSizeType start) const
 {
-	return buffer.find_first_of(str.buffer, start);
+	return m_buffer.find_first_of(str.m_buffer, start);
 }
 
 BigSizeType String::findFirstNotOf(const Character &chr, BigSizeType start) const
 {
-	return buffer.find_first_not_of((char32_t)chr, start);
+	return m_buffer.find_first_not_of((char32_t)chr, start);
 }
 
 BigSizeType String::findFirstNotOf(const String &str, BigSizeType start) const
 {
-	return buffer.find_first_not_of(str.buffer, start);
+	return m_buffer.find_first_not_of(str.m_buffer, start);
 }
 
 BigSizeType String::findLastOf(const Character &chr, BigSizeType start) const
 {
-	return buffer.find_last_of((char32_t)chr, start);
+	return m_buffer.find_last_of((char32_t)chr, start);
 }
 
 BigSizeType String::findLastOf(const String &str, BigSizeType start) const
 {
-	return buffer.find_last_of(str.buffer, start);
+	return m_buffer.find_last_of(str.m_buffer, start);
 }
 
 BigSizeType String::findLastNotOf(const Character &chr, BigSizeType start) const
 {
-	return buffer.find_last_not_of((char32_t)chr, start);
+	return m_buffer.find_last_not_of((char32_t)chr, start);
 }
 
 BigSizeType String::findLastNotOf(const String &str, BigSizeType start) const
 {
-	return buffer.find_last_not_of(str.buffer, start);
+	return m_buffer.find_last_not_of(str.m_buffer, start);
 }
 
 void String::replace(BigSizeType position, BigSizeType length, const String &replaceWith)
 {
-	buffer.replace(position, length, replaceWith.buffer);
+	m_buffer.replace(position, length, replaceWith.m_buffer);
 }
 
 void String::replace(const String &searchFor, const String &replaceWith)
@@ -406,57 +406,57 @@ void String::replace(const String &searchFor, const String &replaceWith)
 
 String String::substring(BigSizeType position, BigSizeType length) const
 {
-	return buffer.substr(position, length);
+	return m_buffer.substr(position, length);
 }
 
 const char32_t *String::getPointer() const
 {
-	return buffer.c_str();
+	return m_buffer.c_str();
 }
 
 String::iterator String::begin()
 {
-	return buffer.begin();
+	return m_buffer.begin();
 }
 
 String::iterator String::end()
 {
-	return buffer.end();
+	return m_buffer.end();
 }
 
 String::const_iterator String::begin() const
 {
-	return buffer.begin();
+	return m_buffer.begin();
 }
 
 String::const_iterator String::end() const
 {
-	return buffer.end();
+	return m_buffer.end();
 }
 
 String::reverse_iterator String::rbegin()
 {
-	return buffer.rbegin();
+	return m_buffer.rbegin();
 }
 
 String::reverse_iterator String::rend()
 {
-	return buffer.rend();
+	return m_buffer.rend();
 }
 
 String::const_reverse_iterator String::rbegin() const
 {
-	return buffer.rbegin();
+	return m_buffer.rbegin();
 }
 
 String::const_reverse_iterator String::rend() const
 {
-	return buffer.rend();
+	return m_buffer.rend();
 }
 
 bool operator==(const String &left, const String &right)
 {
-	return left.buffer == right.buffer;
+	return left.m_buffer == right.m_buffer;
 }
 
 bool operator!=(const String &left, const String &right)
@@ -466,7 +466,7 @@ bool operator!=(const String &left, const String &right)
 
 bool operator<(const String &left, const String &right)
 {
-	return left.buffer < right.buffer;
+	return left.m_buffer < right.m_buffer;
 }
 
 bool operator>(const String &left, const String &right)

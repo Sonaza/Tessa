@@ -22,7 +22,7 @@
 //
 ////////////////////////////////////////////////////////////
 
-/* Modified for Tessa engine use. Using internal types and namespacing.
+/* Modified for Tessa engine use.
  */
 
 #pragma once
@@ -55,7 +55,7 @@ public:
 	operator char32_t() const;
 
 private:
-	char32_t utf32Char = 0;
+	char32_t m_utf32Char = 0;
 };
 
 class String
@@ -193,7 +193,7 @@ private:
 	friend bool operator<(const String &left, const String &right);
 
 	// Internal string of UTF-32 characters
-	std::basic_string<char32_t> buffer;
+	std::basic_string<char32_t> m_buffer;
 };
 
 bool operator==(const String &left, const String &right);
@@ -213,7 +213,7 @@ template <typename T>
 String String::fromUtf8(T begin, T end)
 {
 	String string;
-	Utf8::toUtf32(begin, end, std::back_inserter(string.buffer));
+	Utf8::toUtf32(begin, end, std::back_inserter(string.m_buffer));
 	return string;
 }
 
@@ -221,7 +221,7 @@ template <typename T>
 String String::fromUtf16(T begin, T end)
 {
 	String string;
-	Utf16::toUtf32(begin, end, std::back_inserter(string.buffer));
+	Utf16::toUtf32(begin, end, std::back_inserter(string.m_buffer));
 	return string;
 }
 
@@ -229,7 +229,7 @@ template <typename T>
 String String::fromUtf32(T begin, T end)
 {
 	String string;
-	string.buffer.assign(begin, end);
+	string.m_buffer.assign(begin, end);
 	return string;
 }
 

@@ -108,10 +108,10 @@ public:
 	bool operator!() const;
 
 private:
-	void *handle = nullptr;
-	bool eof = false;
-	mutable bool bad = false;
-	PosType filesize = -1;
+	void *m_handle = nullptr;
+	bool m_eof = false;
+	mutable bool m_bad = false;
+	PosType m_filesize = -1;
 };
 
 template <class Type>

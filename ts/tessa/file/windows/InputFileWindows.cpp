@@ -31,18 +31,18 @@ InputFile &InputFile::operator=(InputFile &&other)
 {
 	if (this != &other)
 	{
-		handle = std::exchange(other.handle, nullptr);
-		eof = std::exchange(other.eof, false);
-		bad = std::exchange(other.bad, false);
-		filesize = std::exchange(other.filesize, -1);
+		m_handle = std::exchange(other.m_handle, nullptr);
+		m_eof = std::exchange(other.m_eof, false);
+		m_bad = std::exchange(other.m_bad, false);
+		m_filesize = std::exchange(other.m_filesize, -1);
 	}
 	return *this;
 }
 
 bool InputFile::open(const String &filepath, InputFileMode modeParam)
 {
-	TS_ASSERT(handle == nullptr && "InputFile is already opened.");
-	if (handle != nullptr)
+	TS_ASSERT(m_handle == nullptr && "InputFile is already opened.");
+	if (m_handle != nullptr)
 		return false;
 
 	DWORD modeFlags = OPEN_EXISTING;
@@ -64,41 +64,41 @@ bool InputFile::open(const String &filepath, InputFileMode modeParam)
 		return false;
 	}
 
-	handle = fileHandle;
+	m_handle = fileHandle;
 	return true;
 }
 
 void InputFile::close()
 {
-	if (handle != nullptr && handle != INVALID_HANDLE_VALUE)
+	if (m_handle != nullptr && m_handle != INVALID_HANDLE_VALUE)
 	{
-		CloseHandle((HANDLE)handle);
+		CloseHandle((HANDLE)m_handle);
 	}
-	handle = nullptr;
-	eof = false;
-	bad = false;
-	filesize = -1;
+	m_handle = nullptr;
+	m_eof = false;
+	m_bad = false;
+	m_filesize = -1;
 }
 
 PosType InputFile::read(char *outBuffer, uint32 numBytesToRead)
 {
 	TS_ASSERT(outBuffer != nullptr);
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
 
-	if (handle == nullptr || bad == true)
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
-	if (eof == true)
+	if (m_eof == true)
 		return 0;
 
 	DWORD numBytesRead;
-	if (ReadFile((HANDLE)handle, outBuffer, numBytesToRead, &numBytesRead, nullptr) == FALSE)
+	if (ReadFile((HANDLE)m_handle, outBuffer, numBytesToRead, &numBytesRead, nullptr) == FALSE)
 	{
 		TS_WLOG_ERROR("File read failed: %s\n", windows::getLastErrorAsString());
-		bad = true;
+		m_bad = true;
 		return -1;
 	}
-	eof = (numBytesRead < numBytesToRead);
+	m_eof = (numBytesRead < numBytesToRead);
 	return numBytesRead;
 }
 
@@ -110,13 +110,13 @@ PosType InputFile::read(unsigned char *outBuffer, uint32 numBytesToRead)
 PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 {
 	TS_ASSERT(outBuffer != nullptr);
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
 	TS_ASSERT(size > 0 && "numBytesToRead must be greater than 0.");
 
-	if (handle == nullptr || bad == true || size == 0)
+	if (m_handle == nullptr || m_bad == true || size == 0)
 		return -1;
 
-	if (eof == true)
+	if (m_eof == true)
 		return 0;
 
 	char c;
@@ -126,10 +126,10 @@ PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 	while (numBytesToRead-- > 0)
 	{
 		DWORD numBytesRead;
-		if (ReadFile((HANDLE)handle, &c, sizeof(c), &numBytesRead, nullptr) == FALSE)
+		if (ReadFile((HANDLE)m_handle, &c, sizeof(c), &numBytesRead, nullptr) == FALSE)
 		{
 			TS_WLOG_ERROR("File read failed: %s\n", windows::getLastErrorAsString());
-			bad = true;
+			m_bad = true;
 			return -1;
 		}
 
@@ -158,8 +158,8 @@ PosType InputFile::seek(PosType pos)
 
 PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	DWORD method;
@@ -175,20 +175,20 @@ PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 	dist.QuadPart = pos;
 
 	LARGE_INTEGER newPos;
-	if (SetFilePointerEx((HANDLE)handle, dist, &newPos, method) == FALSE)
+	if (SetFilePointerEx((HANDLE)m_handle, dist, &newPos, method) == FALSE)
 	{
 		TS_WLOG_ERROR("Seek failed: %s\n", windows::getLastErrorAsString());
 		return -1;
 	}
 	// Assume not eof anymore, any reads will re-set flag if file is still eof.
-	eof = false;
+	m_eof = false;
 	return (PosType)newPos.QuadPart;
 }
 
 PosType InputFile::tell() const
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	// Zero distance move with FILE_CURRENT returns current position in file.
@@ -196,7 +196,7 @@ PosType InputFile::tell() const
 	dist.QuadPart = 0;
 
 	LARGE_INTEGER pos;
-	if (SetFilePointerEx((HANDLE)handle, dist, &pos, FILE_CURRENT) == FALSE)
+	if (SetFilePointerEx((HANDLE)m_handle, dist, &pos, FILE_CURRENT) == FALSE)
 	{
 		TS_WLOG_ERROR("Tell failed: %s\n", windows::getLastErrorAsString());
 		return -1;
@@ -206,16 +206,16 @@ PosType InputFile::tell() const
 
 PosType InputFile::getSize()
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	// Return cached file size
-	if (filesize != -1)
-		return filesize;
+	if (m_filesize != -1)
+		return m_filesize;
 	
 	LARGE_INTEGER size;
-	if (GetFileSizeEx((HANDLE)handle, &size) == FALSE)
+	if (GetFileSizeEx((HANDLE)m_handle, &size) == FALSE)
 	{
 		TS_WLOG_ERROR("getSize failed: %s\n", windows::getLastErrorAsString());
 		return -1;
@@ -225,28 +225,28 @@ PosType InputFile::getSize()
 
 bool InputFile::isOpen() const
 {
-	return handle != nullptr && bad == false;
+	return m_handle != nullptr && m_bad == false;
 }
 
 bool InputFile::isEOF() const
 {
-	return eof;
+	return m_eof;
 }
 
 bool InputFile::isBad() const
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	return handle == nullptr || bad == true;
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	return m_handle == nullptr || m_bad == true;
 }
 
 void InputFile::clearFlags()
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr)
 		return;
 
-	eof = false;
-	bad = false;
+	m_eof = false;
+	m_bad = false;
 }
 
 InputFile::operator bool() const

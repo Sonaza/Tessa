@@ -118,8 +118,8 @@ public:
 	bool operator!() const;
 
 private:
-	void *handle = nullptr;
-	mutable bool bad = false;
+	void *m_handle = nullptr;
+	mutable bool m_bad = false;
 };
 
 template <>

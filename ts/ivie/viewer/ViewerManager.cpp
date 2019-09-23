@@ -120,8 +120,8 @@ ViewerManager::ViewerManager()
 ViewerManager::~ViewerManager()
 {
 	gigaton.unregisterClass(this);
-
 }
+
 bool ViewerManager::initialize()
 {
 	TS_ZONE();
@@ -614,7 +614,7 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 	std::vector<String> templist;
 
 	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
-	SizeType flags = file::FileListFlags_SkipDotEntries
+	uint32 flags = file::FileListFlags_SkipDotEntries
 		           | file::FileListFlags_LargeFetch
 		           | file::FileListFlags_ExcludeRootPath;
 

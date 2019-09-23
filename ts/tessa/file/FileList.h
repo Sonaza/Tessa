@@ -54,10 +54,10 @@ class FileList : public lang::Noncopyable
 {
 public:
 	FileList();
-	FileList(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, SizeType listFlags = 0);
+	FileList(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, uint32 listFlags = 0);
 	~FileList();
 
-	bool open(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, SizeType listFlags = 0);
+	bool open(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, uint32 listFlags = 0);
 	void close();
 
 	bool next(FileListEntry &entry);

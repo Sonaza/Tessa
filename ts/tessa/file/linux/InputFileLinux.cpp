@@ -32,18 +32,18 @@ InputFile &InputFile::operator=(InputFile &&other)
 {
 	if (this != &other)
 	{
-		handle = std::exchange(other.handle, nullptr);
-		eof = std::exchange(other.eof, false);
-		bad = std::exchange(other.bad, false);
-		filesize = std::exchange(other.filesize, -1);
+		m_handle = std::exchange(other.m_handle, nullptr);
+		m_eof = std::exchange(other.m_eof, false);
+		m_bad = std::exchange(other.m_bad, false);
+		m_filesize = std::exchange(other.m_filesize, -1);
 	}
 	return *this;
 }
 
 bool InputFile::open(const String &filepath, InputFileMode modeParam)
 {
-	TS_ASSERT(handle == nullptr && "InputFile is already opened.");
-	if (handle != nullptr)
+	TS_ASSERT(m_handle == nullptr && "InputFile is already opened.");
+	if (m_handle != nullptr)
 		return false;
 
 	const char *mode;
@@ -61,44 +61,44 @@ bool InputFile::open(const String &filepath, InputFileMode modeParam)
 		return false;
 	}
 
-	handle = file;
+	m_handle = file;
 	return true;
 }
 
 void InputFile::close()
 {
-	if (handle != nullptr)
+	if (m_handle != nullptr)
 	{
-		FileHandle *file = static_cast<FileHandle*>(handle);
+		FileHandle *file = static_cast<FileHandle*>(m_handle);
 		fclose(file);
 	}
-	handle = nullptr;
-	eof = false;
-	bad = false;
-	filesize = -1;
+	m_handle = nullptr;
+	m_eof = false;
+	m_bad = false;
+	m_filesize = -1;
 }
 
 PosType InputFile::read(char *outBuffer, uint32 size)
 {
 	TS_ASSERT(outBuffer != nullptr);
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
 
-	if (handle == nullptr || bad == true)
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
-	if (eof == true)
+	if (m_eof == true)
 		return 0;
 
-	FileHandle *file = static_cast<FileHandle*>(handle);
+	FileHandle *file = static_cast<FileHandle*>(m_handle);
 
 	PosType numBytesRead = (PosType)fread(outBuffer, sizeof(outBuffer[0]), size, file);
 	if (ferror(file))
 	{
-		bad = true;
+		m_bad = true;
 		return -1;
 	}
 	
-	eof = (feof(file) != 0);
+	m_eof = (feof(file) != 0);
 
 	return numBytesRead;
 }
@@ -111,19 +111,19 @@ PosType InputFile::read(unsigned char *outBuffer, uint32 size)
 PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 {
 	TS_ASSERT(outBuffer != nullptr);
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
 	TS_ASSERT(size > 0 && "Size must be greater than 0.");
 
-	if (handle == nullptr || bad == true || size == 0)
+	if (m_handle == nullptr || m_bad == true || size == 0)
 		return -1;
 
-	if (eof == true)
+	if (m_eof == true)
 		return 0;
 
 	char c;
 	char *ptr = outBuffer;
 
-	FileHandle *file = static_cast<FileHandle*>(handle);
+	FileHandle *file = static_cast<FileHandle*>(m_handle);
 
 	PosType bytesToRead = (PosType)size;
 	while (bytesToRead-- > 0)
@@ -153,8 +153,8 @@ PosType InputFile::seek(PosType pos)
 
 PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	int32 origin;
@@ -166,10 +166,10 @@ PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 		case SeekFromEnd:       origin = SEEK_END; break;
 	}
 
-	FileHandle *file = static_cast<FileHandle*>(handle);
+	FileHandle *file = static_cast<FileHandle*>(m_handle);
 	if (fseek(file, (long)pos, origin) == 0)
 	{
-		eof = (feof(file) != 0);
+		m_eof = (feof(file) != 0);
 		return ftell(file);
 	}
 
@@ -178,23 +178,23 @@ PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 
 PosType InputFile::tell() const
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
-	FileHandle *file = static_cast<FileHandle*>(handle);
+	FileHandle *file = static_cast<FileHandle*>(m_handle);
 	return ftell(file);
 }
 
 PosType InputFile::getSize()
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr || bad == true)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
 	// Return cached file size
-	if (filesize != -1)
-		return filesize;
+	if (m_filesize != -1)
+		return m_filesize;
 	
 	BigSizeType originalPosition = tell();
 
@@ -211,30 +211,30 @@ PosType InputFile::getSize()
 
 bool InputFile::isOpen() const
 {
-	return handle != nullptr && bad == false;
+	return m_handle != nullptr && m_bad == false;
 }
 
 bool InputFile::isEOF() const
 {
-	return eof;
+	return m_eof;
 }
 
 bool InputFile::isBad() const
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	return handle == nullptr || bad == true;
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	return m_handle == nullptr || m_bad == true;
 }
 
 void InputFile::clearFlags()
 {
-	TS_ASSERT(handle != nullptr && "InputFile is not opened.");
-	if (handle == nullptr)
+	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
+	if (m_handle == nullptr)
 		return;
 
-	FileHandle *file = static_cast<FileHandle*>(handle);
+	FileHandle *file = static_cast<FileHandle*>(m_handle);
 	clearerr(file);
-	eof = false;
-	bad = false;
+	m_eof = false;
+	m_bad = false;
 }
 
 InputFile::operator bool() const
