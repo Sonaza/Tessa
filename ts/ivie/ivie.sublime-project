@@ -1,0 +1,49 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		},
+		{
+			"path": "../tessa"
+		},
+		{
+			"path": "../../workdir",
+			"file_exclude_patterns":
+			[
+				"generated/*",
+				"*.zip",
+				"*.7z",
+				"*.tbz2",
+				"*.gzip",
+				"*.jpg",
+				"*.jpeg",
+				"*.png",
+				"*.gif",
+				"*.ttf",
+				"*.ttc",
+				"*.otf",
+				"*.tga",
+				"*.dds",
+				"*.ico",
+				"*.eot",
+				"*.woff",
+				"*.aps",
+				"*.pdf",
+				"*.swf",
+				"*.jar",
+				"*.zip",
+				"*.webm",
+				"*.webp",
+				"*.pcx",
+				"*.tsp",
+				"*.mp4",
+				"*.mp3",
+				"*.ogg",
+			],
+		},
+		{
+			"path": "../../tools",
+		}
+	]
+}
