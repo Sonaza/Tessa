@@ -81,14 +81,17 @@ Mat4 Mat4::getInverse() const
 			-(m_matrix[4] * A2323 - m_matrix[8] * A1323 + m_matrix[12] * A1223) * invdet,
 			 (m_matrix[4] * A2313 - m_matrix[8] * A1313 + m_matrix[12] * A1213) * invdet,
 			-(m_matrix[4] * A2312 - m_matrix[8] * A1312 + m_matrix[12] * A1212) * invdet,
+
 			-(m_matrix[1] * A2323 - m_matrix[9] * A0323 + m_matrix[13] * A0223) * invdet,
 			 (m_matrix[0] * A2323 - m_matrix[8] * A0323 + m_matrix[12] * A0223) * invdet,
 			-(m_matrix[0] * A2313 - m_matrix[8] * A0313 + m_matrix[12] * A0213) * invdet,
 			 (m_matrix[0] * A2312 - m_matrix[8] * A0312 + m_matrix[12] * A0212) * invdet,
+
 			 (m_matrix[1] * A1323 - m_matrix[5] * A0323 + m_matrix[13] * A0123) * invdet,
 			-(m_matrix[0] * A1323 - m_matrix[4] * A0323 + m_matrix[12] * A0123) * invdet,
 			 (m_matrix[0] * A1313 - m_matrix[4] * A0313 + m_matrix[12] * A0113) * invdet,
 			-(m_matrix[0] * A1312 - m_matrix[4] * A0312 + m_matrix[12] * A0112) * invdet,
+
 			-(m_matrix[1] * A1223 - m_matrix[5] * A0223 + m_matrix[9]  * A0123) * invdet,
 			 (m_matrix[0] * A1223 - m_matrix[4] * A0223 + m_matrix[8]  * A0123) * invdet,
 			-(m_matrix[0] * A1213 - m_matrix[4] * A0213 + m_matrix[8]  * A0113) * invdet,
