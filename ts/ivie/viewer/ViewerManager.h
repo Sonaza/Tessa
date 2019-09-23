@@ -15,12 +15,12 @@ struct ImageEntry
 	String filepath;
 	SizeType index;
 
-	enum Buffering
+	enum BufferingDirection
 	{
 		Buffering_Forwards,
 		Buffering_Backwards,
 	};
-	Buffering buffering;
+	BufferingDirection buffering;
 };
 
 enum SortingStyle
