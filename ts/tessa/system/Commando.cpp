@@ -143,10 +143,7 @@ bool Commando::parse(const std::vector<String> &args)
 	m_parameters.clear();
 
 	if (args.empty())
-	{
-		TS_LOG_ERROR("Failed to parse arguments: list is empty.");
-		return false;
-	}
+		return true;
 
 	for (uint32 index = 0; index < args.size(); ++index)
 	{
