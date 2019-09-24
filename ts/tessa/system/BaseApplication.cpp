@@ -18,30 +18,22 @@
 
 TS_PACKAGE1(system)
 
-BaseApplication::BaseApplication(int32 argc, const char **argv)
-	: gigaton(TS_GET_GIGATON())
-	, _commando(argc, argv)
+BaseApplication::BaseApplication(system::Commando &commando)
+	: m_gigatonInstance(TS_GET_GIGATON())
+	, m_commando(std::move(commando))
 {
 	thread::Thread::setMainThread(thread::Thread::getCurrentThread());
-
-	gigaton.registerClass(this);
-}
-
-BaseApplication::BaseApplication(int32 argc, const wchar_t **argv)
-	: gigaton(TS_GET_GIGATON())
-	, _commando(argc, argv)
-{
-	gigaton.registerClass(this);
+	m_gigatonInstance.registerClass(this);
 }
 
 BaseApplication::~BaseApplication()
 {
-	gigaton.unregisterClass(this);
+	m_gigatonInstance.unregisterClass(this);
 }
 
 int32 BaseApplication::launch()
 {
-	initializeConfigDefaults(_config);
+	initializeConfigDefaults(m_config);
 
 	String rootPath;
 	if (debugging::isDebuggerPresent())
@@ -55,12 +47,12 @@ int32 BaseApplication::launch()
 
 	const String configFilepath = file::joinPaths(rootPath, TS_CONFIG_FILE_NAME);
 
-	if (!_config.open(configFilepath))
+	if (!m_config.open(configFilepath))
 	{
 		if (!file::exists(configFilepath))
 		{
 			// Config doesn't exist, create a default.
-			_config.save(configFilepath);
+			m_config.save(configFilepath);
 			TS_WLOG_WARNING("Unable to open config file. File: %s. Created a new file with application defaults.", configFilepath);
 		}
 		else
@@ -70,7 +62,7 @@ int32 BaseApplication::launch()
 	}
 
 	const String logFilepath = file::joinPaths(
-		file::getExecutableDirectory(), _config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
+		file::getExecutableDirectory(), m_config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
 	common::Log::setLogFile(logFilepath);
 
 	if (sf::Shader::isAvailable() == false)
@@ -115,7 +107,7 @@ bool BaseApplication::quit()
 #if TS_BUILD != TS_DEBUG
 	fastExit();
 #else
-	applicationRunning = false;
+	m_applicationRunning = false;
 	system::WindowManager &windowManager = getManager<system::WindowManager>();
 	windowManager.close();
 	return true;
@@ -138,17 +130,17 @@ bool BaseApplication::initialize()
 	if (!createApplicationManagers())
 		return false;
 
-	TS_ASSERT(managerInstances.size() == managerInstancingOrder.size());
-	for (auto it = managerInstancingOrder.begin(); it != managerInstancingOrder.end(); ++it)
+	TS_ASSERT(m_managerInstances.size() == m_managerInstancingOrder.size());
+	for (auto it = m_managerInstancingOrder.begin(); it != m_managerInstancingOrder.end(); ++it)
 	{
 		const std::type_index &typeIndex = *it;
-		if (managerInstances[typeIndex]->initialize())
+		if (m_managerInstances[typeIndex]->initialize())
 		{
-			managerInstances[typeIndex]->initialized = true;
+			m_managerInstances[typeIndex]->initialized = true;
 		}
 		else
 		{
-			TS_LOG_ERROR("Initializing a manager instance failed. Manager type: %s", managerInstances[typeIndex]->getTypeName());
+			TS_LOG_ERROR("Initializing a manager instance failed. Manager type: %s", m_managerInstances[typeIndex]->getTypeName());
 			return false;
 		}
 	}
@@ -169,11 +161,11 @@ bool BaseApplication::initialize()
 
 void BaseApplication::deinitialize()
 {
-	if (currentScene != nullptr)
-		currentScene->internalStop();
+	if (m_currentScene != nullptr)
+		m_currentScene->internalStop();
 
-	pendingScene.reset();
-	currentScene.reset();
+	m_pendingScene.reset();
+	m_currentScene.reset();
 
 	destroyManagerInstances();
 }
@@ -182,36 +174,36 @@ void BaseApplication::setFramerateLimit(SizeType framerateLimit)
 {
 	if (framerateLimit == 0)
 	{
-		targetFrameTime = TimeSpan::fromMilliseconds(16);
+		m_targetFrameTime = TimeSpan::fromMilliseconds(16);
 		return;
 	}
 
-	targetFrameTime = TimeSpan::fromMilliseconds(1000 / framerateLimit);
+	m_targetFrameTime = TimeSpan::fromMilliseconds(1000 / framerateLimit);
 }
 
 SizeType BaseApplication::getCurrentFramerate() const
 {
-	return currentFramerate;
+	return m_currentFramerate;
 }
 
 const Commando &BaseApplication::getCommando() const
 {
-	return _commando;
+	return m_commando;
 }
 
 ConfigReader &BaseApplication::getConfig()
 {
-	return _config;
+	return m_config;
 }
 
 const ConfigReader &BaseApplication::getConfig() const
 {
-	return _config;
+	return m_config;
 }
 
 sf::Font &BaseApplication::getDebugFont()
 {
-	return *debugFont->getResource();
+	return *m_debugFont->getResource();
 }
 
 bool BaseApplication::createSystemManagers()
@@ -241,17 +233,17 @@ bool BaseApplication::createSystemManagers()
 
 void BaseApplication::destroyManagerInstances()
 {
-	TS_ASSERT(managerInstances.size() == managerInstancingOrder.size());
-	for (auto it = managerInstancingOrder.rbegin(); it != managerInstancingOrder.rend(); ++it)
+	TS_ASSERT(m_managerInstances.size() == m_managerInstancingOrder.size());
+	for (auto it = m_managerInstancingOrder.rbegin(); it != m_managerInstancingOrder.rend(); ++it)
 	{
 		const std::type_index &typeIndex = *it;
-		if (managerInstances[typeIndex]->isInitialized())
-			managerInstances[typeIndex]->deinitialize();
-		managerInstances[typeIndex].reset();
+		if (m_managerInstances[typeIndex]->isInitialized())
+			m_managerInstances[typeIndex]->deinitialize();
+		m_managerInstances[typeIndex].reset();
 	}
 
-	managerInstances.clear();
-	managerInstancingOrder.clear();
+	m_managerInstances.clear();
+	m_managerInstancingOrder.clear();
 }
 
 void BaseApplication::mainloop()
@@ -259,8 +251,8 @@ void BaseApplication::mainloop()
 // 	TS_ZONE_NAMED_VARIABLE(baseMainLoop, "Base Main Loop");
 
 	resource::ResourceManager &rm = getManager<resource::ResourceManager>();
-	debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "selawk.ttf", true);
-	TS_ASSERT(debugFont != nullptr && debugFont->isLoaded() && "Loading debug font failed.");
+	m_debugFont = rm.loadResource<resource::FontResource>("_application_debug_font", "selawk.ttf", true);
+	TS_ASSERT(m_debugFont != nullptr && m_debugFont->isLoaded() && "Loading debug font failed.");
 
 	TimeSpan deltaAccumulator;
 
@@ -270,56 +262,56 @@ void BaseApplication::mainloop()
 	Clock deltaClock;
 	Clock frameTimer;
 
-	while (applicationRunning)
+	while (m_applicationRunning)
 	{
 		TS_ZONE_NAMED("Main Loop");
 
 		frameTimer.restart();
 
-		if (pendingScene != nullptr)
+		if (m_pendingScene != nullptr)
 		{
-			bool successfulStart = pendingScene->internalStart();
+			bool successfulStart = m_pendingScene->internalStart();
 			if (!successfulStart)
 			{
 				TS_LOG_ERROR("Pending scene start failed. Scene will not be loaded.");
-				pendingScene.reset();
+				m_pendingScene.reset();
 			}
 
-			if (currentScene != nullptr)
+			if (m_currentScene != nullptr)
 			{
-				currentScene->internalStop();
-				currentScene.reset();
+				m_currentScene->internalStop();
+				m_currentScene.reset();
 			}
 
-			currentScene = std::move(pendingScene);
-			currentScene->loadResources(getManager<resource::ResourceManager>());
+			m_currentScene = std::move(m_pendingScene);
+			m_currentScene->loadResources(getManager<resource::ResourceManager>());
 		}
 
 		TimeSpan deltaTime = deltaClock.restart();
 
-		for (auto it = managerInstancingOrder.begin(); it != managerInstancingOrder.end(); ++it)
+		for (auto it = m_managerInstancingOrder.begin(); it != m_managerInstancingOrder.end(); ++it)
 		{
 			const std::type_index &typeIndex = *it;
-			managerInstances[typeIndex]->update(deltaTime);
+			m_managerInstances[typeIndex]->update(deltaTime);
 		}
 
 		handleEvents();
 
-		if (!applicationRunning)
+		if (!m_applicationRunning)
 			break;
 
-		if (currentScene != nullptr)
+		if (m_currentScene != nullptr)
 		{
 			TS_ZONE_NAMED("Main Loop Updates");
 
 			deltaAccumulator += deltaTime;
-			while (deltaAccumulator >= fixedDeltaTime)
+			while (deltaAccumulator >= m_fixedDeltaTime)
 			{
-				currentScene->update(fixedDeltaTime);
-				deltaAccumulator -= fixedDeltaTime;
+				m_currentScene->update(m_fixedDeltaTime);
+				deltaAccumulator -= m_fixedDeltaTime;
 			}
 
-			currentScene->updateFrequent(deltaTime);
+			m_currentScene->updateFrequent(deltaTime);
 		}
 
 		handleRendering();
@@ -327,7 +319,7 @@ void BaseApplication::mainloop()
 		{
 			TS_ZONE_NAMED("Main Loop Sleep");
 			TimeSpan elapsedFrameTime = frameTimer.getElapsedTime();
-			TimeSpan frameSleep = targetFrameTime - elapsedFrameTime;
+			TimeSpan frameSleep = m_targetFrameTime - elapsedFrameTime;
 			frameSleep = math::max(2_ms, frameSleep);
 //	 		TS_PRINTF("Frame Time %lldms / sleep %lldms\n", elapsedFrameTime.getMilliseconds(), frameSleep.getMilliseconds());
 			Thread::sleep(frameSleep);
@@ -337,16 +329,16 @@ void BaseApplication::mainloop()
 		if (framerateClock.getElapsedTime() > 500_ms)
 		{
 			float elapsedTime = framerateClock.restart().getSecondsAsFloat();
-			currentFramerate = (SizeType)(frameCounter / elapsedTime);
+			m_currentFramerate = (SizeType)(frameCounter / elapsedTime);
 			frameCounter = 0;
 		}
 
 // 		baseMainLoop.commit();
 	}
 
-	if (currentScene != nullptr)
+	if (m_currentScene != nullptr)
 	{
-		currentScene->stop();
+		m_currentScene->stop();
 	}
 }
 
@@ -369,10 +361,10 @@ void BaseApplication::handleEvents()
 		}
 		else
 #endif
-		if (currentScene != nullptr)
+		if (m_currentScene != nullptr)
 		{
 			// If event is handled by scene the rest can be skipped
-			if (currentScene->handleEvent(event))
+			if (m_currentScene->handleEvent(event))
 				continue;
 		}
 
@@ -398,7 +390,7 @@ void BaseApplication::handleEvents()
 
 					case sf::Keyboard::F9:
 					{
-						showFPS = !showFPS;
+						m_showFramesPerSecond = !m_showFramesPerSecond;
 					}
 					break;
 
@@ -437,7 +429,7 @@ void BaseApplication::handleRendering()
 
 	TS_ZONE_NAMED_VARIABLE(firstHalfZone, "First Half Zone");
 
-	if (currentScene == nullptr)
+	if (m_currentScene == nullptr)
 		return;
 	
 	system::WindowManager &windowManager = getManager<system::WindowManager>();
@@ -462,11 +454,11 @@ void BaseApplication::handleRendering()
 
 	// Application custom view step
 	windowManager.useApplicationView();
-	currentScene->renderApplication(renderWindow, windowManager.getCurrentView());
+	m_currentScene->renderApplication(renderWindow, windowManager.getCurrentView());
 
 	// Interface view step
 	windowManager.useInterfaceView();
-	currentScene->renderInterface(renderWindow, windowManager.getCurrentView());
+	m_currentScene->renderInterface(renderWindow, windowManager.getCurrentView());
 
 	TS_ZONE_VARIABLE_FINISH(secondHalfZone);
 
@@ -477,12 +469,12 @@ void BaseApplication::handleRendering()
 	}
 #endif
 
-	if (showFPS && debugFont != nullptr && debugFont->isLoaded())
+	if (m_showFramesPerSecond && m_debugFont != nullptr && m_debugFont->isLoaded())
 	{
 		TS_ZONE_NAMED("FPS Draw");
 
 		sf::Text fps(
-			TS_FMT("FPS %u", getCurrentFramerate()), *debugFont->getResource(), 30
+			TS_FMT("FPS %u", getCurrentFramerate()), *m_debugFont->getResource(), 30
 		);
 		fps.setScale(0.75f, 0.75f);
 // 		fps.setCharacterSize(30);

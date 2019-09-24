@@ -212,8 +212,8 @@ void FileWatcherWindows::update()
 
 	if (!notifyEvents.empty())
 	{
-		TS_ASSERT(parent != nullptr);
-		parent->notifySignal(notifyEvents);
+		TS_ASSERT(m_parent != nullptr);
+		m_parent->notifySignal(notifyEvents);
 		notifyEvents.clear();
 	}
 }

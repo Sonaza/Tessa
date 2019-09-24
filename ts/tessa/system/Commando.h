@@ -15,8 +15,14 @@ public:
 	Commando(int32 argc, const char **argv);
 	Commando(int32 argc, const wchar_t **argv);
 
-	void parse(int32 argc, const char **argv);
-	void parse(int32 argc, const wchar_t **argv);
+	explicit Commando(const wchar_t *args);
+
+	bool parse(int32 argc, const char **argv);
+	bool parse(int32 argc, const wchar_t **argv);
+
+	bool parse(const wchar_t *args);
+
+	bool parse(const std::vector<String> &args);
 
 	bool hasFlag(const String &flag) const;
 
@@ -32,18 +38,12 @@ public:
 	bool getNthParameter(SizeType index, Type &outParam) const;
 	bool getNthParameter(SizeType index, String &outParam) const;
 
-	const String &getExecutablePath() const;
-
 protected:
-	String executablePath;
-
 	typedef std::unordered_map<uint32, String> FlagsList;
-	FlagsList flags;
+	FlagsList m_flags;
 
 	typedef std::vector<String> ParameterList;
-	ParameterList parameters;
-
-	std::vector<String> rawArgumentsList;
+	ParameterList m_parameters;
 };
 
 template<class Type>
@@ -51,8 +51,8 @@ bool Commando::getFlagParameter(const String &flag, Type &outParam) const
 {
 	static_assert(std::is_integral<Type>::value || std::is_floating_point<Type>::value, "Commando::getParameter can realistically only handle strings, integers and floating point values.");
 
-	FlagsList::const_iterator iter = flags.find(flag);
-	if (iter == flags.end() || iter->second.empty())
+	FlagsList::const_iterator iter = m_flags.find(flag);
+	if (iter == m_flags.end() || iter->second.empty())
 		return false;
 	
 	Stringstream ss;
@@ -66,11 +66,11 @@ bool Commando::getNthParameter(SizeType index, Type &outParam) const
 {
 	static_assert(std::is_integral<Type>::value || std::is_floating_point<Type>::value, "Commando::getParameter can realistically only handle strings, integers and floating point values.");
 
-	if (index >= parameters.size())
+	if (index >= m_parameters.size())
 		return false;
 
 	Stringstream ss;
-	ss << parameters[index];
+	ss << m_parameters[index];
 	ss >> outParam;
 	return true;
 }

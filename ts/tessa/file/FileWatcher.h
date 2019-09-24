@@ -32,7 +32,7 @@ class AbstractFileWatcherImpl
 {
 public:
 	AbstractFileWatcherImpl(FileWatcher *parent)
-		: parent(parent)
+		: m_parent(parent)
 	{}
 
 	virtual ~AbstractFileWatcherImpl() = default;
@@ -46,7 +46,7 @@ public:
 	virtual bool hasError() const = 0;
 
 protected:
-	FileWatcher *parent = nullptr;
+	FileWatcher *m_parent = nullptr;
 };
 
 class FileWatcher
@@ -66,7 +66,7 @@ public:
 	lang::Signal<const std::vector<FileNotifyEvent>&> notifySignal;
 
 private:
-	ScopedPointer<AbstractFileWatcherImpl> impl;
+	ScopedPointer<AbstractFileWatcherImpl> m_impl;
 };
 
 TS_END_PACKAGE1()

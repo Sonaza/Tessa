@@ -23,9 +23,11 @@ TS_PACKAGE1(system)
 
 class BaseApplication
 {
+	friend class system::WindowManager;
+	friend class resource::ResourceManager;
+
 public:
-	BaseApplication(int32 argc, const char **argv);
-	BaseApplication(int32 argc, const wchar_t **argv);
+	BaseApplication(system::Commando &commando);
 	~BaseApplication();
 
 	int32 launch();
@@ -85,30 +87,27 @@ private:
 	void destroyManagerInstances();
 
 	typedef std::map<std::type_index, UniquePointer<system::AbstractManagerBase>> InstancedManagersList;
-	InstancedManagersList managerInstances;
-	std::vector<std::type_index> managerInstancingOrder;
+	InstancedManagersList m_managerInstances;
+	std::vector<std::type_index> m_managerInstancingOrder;
 
-	bool applicationRunning = true;
-	bool showFPS = true;
+	bool m_applicationRunning = true;
+	bool m_showFramesPerSecond = true;
 	
-	system::Gigaton &gigaton;
+	system::Gigaton &m_gigatonInstance;
 
-	Commando _commando;
-	ConfigReader _config;
+	Commando m_commando;
+	ConfigReader m_config;
 
 	// Fixed delta of all logic updates, independent of frame rate
-	const TimeSpan fixedDeltaTime = TimeSpan::fromMilliseconds(16);
+	const TimeSpan m_fixedDeltaTime = TimeSpan::fromMilliseconds(16);
 	// Target frame time affects framerate, a single update per 8 milliseconds roughly results in 120 fps
-	TimeSpan targetFrameTime = TimeSpan::fromMilliseconds(8);
-	SizeType currentFramerate = 0;
+	TimeSpan m_targetFrameTime = TimeSpan::fromMilliseconds(8);
+	SizeType m_currentFramerate = 0;
 
-	UniquePointer<system::AbstractSceneBase> pendingScene;
-	UniquePointer<system::AbstractSceneBase> currentScene;
+	UniquePointer<system::AbstractSceneBase> m_currentScene;
+	UniquePointer<system::AbstractSceneBase> m_pendingScene;
 
-	resource::FontResource *debugFont = nullptr;
-
-	friend class system::WindowManager;
-	friend class resource::ResourceManager;
+	resource::FontResource *m_debugFont = nullptr;
 };
 
 template<class SceneType>
@@ -116,15 +115,15 @@ bool BaseApplication::loadScene()
 {
 	static_assert(std::is_base_of<AbstractSceneBase, SceneType>::value, "Registered scene must inherit from SceneBase");
 
-	TS_ASSERT(pendingScene == nullptr && "Another scene is still pending load");
-	if (pendingScene != nullptr)
+	TS_ASSERT(m_pendingScene == nullptr && "Another scene is still pending load");
+	if (m_pendingScene != nullptr)
 	{
 		TS_LOG_ERROR("Cannot load new scene: Another scene is still pending load.");
 		return false;
 	}
 
-	pendingScene.reset(new SceneType(this));
-	if (pendingScene == nullptr)
+	m_pendingScene.reset(new SceneType(this));
+	if (m_pendingScene == nullptr)
 		return false;
 
 	return true;
@@ -136,7 +135,7 @@ bool BaseApplication::createManagerInstance(Args&&... args)
 	static_assert(std::is_base_of<system::AbstractManagerBase, ManagerType>::value, "Manager type must inherit from AbstractManagerBase.");
 
 	const std::type_index typeIndex = typeid(ManagerType);
-	if (managerInstances.find(typeIndex) != managerInstances.end())
+	if (m_managerInstances.find(typeIndex) != m_managerInstances.end())
 	{
 		TS_ASSERTF(false, "Manager of the type '%s' is already created.", ManagerType::TypeName);
 		return false;
@@ -147,8 +146,8 @@ bool BaseApplication::createManagerInstance(Args&&... args)
 	if (managerInstance == nullptr)
 		return false;
 
-	managerInstances.emplace(typeIndex, staticUniquePointerCast<AbstractManagerBase>(std::move(managerInstance)));
-	managerInstancingOrder.push_back(typeIndex);
+	m_managerInstances.emplace(typeIndex, staticUniquePointerCast<AbstractManagerBase>(std::move(managerInstance)));
+	m_managerInstancingOrder.push_back(typeIndex);
 	return true;
 }
 
@@ -158,8 +157,8 @@ ManagerType &BaseApplication::getManager()
 	TS_ZONE();
 
 	const std::type_index typeIndex = typeid(ManagerType);
-	InstancedManagersList::iterator it = managerInstances.find(typeIndex);
-	TS_ASSERT(it != managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
+	InstancedManagersList::iterator it = m_managerInstances.find(typeIndex);
+	TS_ASSERT(it != m_managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
 	return *static_cast<ManagerType*>(it->second.get());
 }
 
@@ -169,8 +168,8 @@ const ManagerType &BaseApplication::getManager() const
 	TS_ZONE();
 
 	const std::type_index typeIndex = typeid(ManagerType);
-	InstancedManagersList::iterator it = managerInstances.find(typeIndex);
-	TS_ASSERT(it != managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
+	InstancedManagersList::iterator it = m_managerInstances.find(typeIndex);
+	TS_ASSERT(it != m_managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
 	return *static_cast<ManagerType*>(it->second.get());
 }
 

@@ -19,8 +19,8 @@
 
 TS_PACKAGE1(app)
 
-Application::Application(int32 argc, const wchar_t **argv)
-	: system::BaseApplication(argc, argv)
+Application::Application(system::Commando &commando)
+	: system::BaseApplication(commando)
 {
 	image::FreeImageStaticInitializer::staticInitialize();
 
@@ -48,7 +48,7 @@ bool Application::start()
 	if (pathParameter.isEmpty())
 		pathParameter = file::joinPaths(file::getWorkingDirectory(), "img");
 
-	bool hasRecursiveFlag = getCommando().hasFlag("r") || getCommando().hasFlag("-recursive");
+	bool hasRecursiveFlag = getCommando().hasFlag("r") || getCommando().hasFlag("recursive");
 	viewerManager.setRecursiveScan(hasRecursiveFlag, false);
 
 	viewerManager.setFilepath(pathParameter);

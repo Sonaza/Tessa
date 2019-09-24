@@ -2,6 +2,7 @@
 #include "ts/tessa/system/Commando.h"
 
 #include "ts/tessa/math/Hash.h"
+#include <algorithm>
 
 TS_PACKAGE1(system)
 
@@ -19,101 +20,181 @@ Commando::Commando(int32 argc, const wchar_t **argv)
 	parse(argc, argv);
 }
 
-void Commando::parse(int32 argc, const char **argv)
+Commando::Commando(const wchar_t *args)
 {
-	flags.clear();
-	parameters.clear();
-
-	rawArgumentsList.clear();
-	rawArgumentsList.insert(rawArgumentsList.begin(), argv, argv + argc);
-
-	// First param should always be the executable path
-	// though it may not be the actual executable.
-	if (argc >= 1)
-		executablePath = String(argv[0]);
-
-	if (argc <= 1)
-		return;
-
-	String currentFlag;
-	for (int32 i = 1; i < argc; ++i)
-	{
-		// Flags are considered to be tokens that start with a dash
-		if (argv[i][0] == '-')
-		{
-			String flag(argv[i] + 1, std::strlen(argv[i]) - 1);
-			String parameter;
-			if ((i + 1) < argc && argv[i + 1][0] != '-')
-			{
-				parameter = String(argv[i + 1]);
-				++i;
-			}
-			
-			uint32 flagHash = math::simpleHash32(flag);
-			flags.emplace(flagHash, std::move(parameter));
-		}
-		else
-		{
-			parameters.push_back(
-				String(argv[i])
-			);
-		}
-	}
+	parse(args);
 }
 
-void Commando::parse(int32 argc, const wchar_t **argv)
+bool Commando::parse(const wchar_t *args)
 {
-	flags.clear();
-	parameters.clear();
+	SizeType argsLength = (SizeType)std::wcslen(args);
+	if (argsLength == 0)
+		return true;
 
-	rawArgumentsList.clear();
-	rawArgumentsList.insert(rawArgumentsList.begin(), argv, argv + argc);
+	std::vector<String> compiledArgs;
 
-	// First param should always be the executable path
-	// though it may not be the actual executable.
-	if (argc >= 1)
-		executablePath = String(argv[0]);
+	bool quotes = false;
 
-	if (argc <= 1)
-		return;
+	const wchar_t *startPtr = args;
+	const wchar_t *ptr = startPtr;
 
-	String currentFlag;
-	for (int32 i = 1; i < argc; ++i)
+	const wchar_t *currentStart = nullptr;
+	SizeType currentLength = 0;
+
+	while (*ptr != '\0')
 	{
-		// Flags are considered to be tokens that start with a dash
-		if (argv[i][0] == '-')
-		{
-			String flag(argv[i] + 1, std::wcslen(argv[i]) - 1);
-			String parameter;
-			if ((i + 1) < argc && argv[i + 1][0] != '-')
-			{
-				parameter = String(argv[i + 1]);
-				++i;
-			}
+		bool appendString = false;
 
-			uint32 flagHash = math::simpleHash32(flag);
-			flags.emplace(flagHash, std::move(parameter));
+		if (*ptr == L'"')
+		{
+			if (quotes)
+			{
+				const wchar_t *nextPtr = ptr + 1;
+				if (*nextPtr == '\0')
+					break;
+
+				if (*nextPtr == ' ')
+				{
+					appendString = true;
+					quotes = false;
+
+					++ptr;
+				}
+				else
+				{
+					currentLength++;
+				}
+			}
+			else
+			{
+				quotes = true;
+			}
+		}
+		else if (*ptr == ' ' && quotes == false)
+		{
+			appendString = true;
 		}
 		else
 		{
-			parameters.push_back(
-				String(argv[i])
-			);
+			if (currentStart == nullptr)
+				currentStart = ptr;
+			currentLength++;
+		}
+
+		if (appendString)
+		{
+			if (currentStart != nullptr && currentLength > 0)
+			{
+				String str(currentStart, currentLength);
+				compiledArgs.push_back(str);
+			}
+
+			currentStart = nullptr;
+			currentLength = 0;
+		}
+
+		++ptr;
+	}
+
+	if (currentStart != nullptr && currentLength > 0)
+	{
+		String str(currentStart, currentLength);
+		compiledArgs.push_back(str);
+	}
+
+	return parse(compiledArgs);
+}
+
+bool Commando::parse(int32 argc, const char **argv)
+{
+	// Ignore the first argument of the CRT args list
+	if (argc <= 1)
+		return true;
+
+	std::vector<String> args;
+	args.reserve(argc - 1);
+	for (int32 index = 1; index < argc; ++index)
+	{
+		args.push_back(argv[index]);
+	}
+
+	return parse(args);
+}
+
+bool Commando::parse(int32 argc, const wchar_t **argv)
+{
+	// Ignore the first argument of the CRT args list
+	if (argc <= 1)
+		return true;
+
+	std::vector<String> args;
+	args.reserve(argc - 1);
+	for (int32 index = 1; index < argc; ++index)
+	{
+		args.push_back(argv[index]);
+	}
+
+	return parse(args);
+}
+
+bool Commando::parse(const std::vector<String> &args)
+{
+	m_flags.clear();
+	m_parameters.clear();
+
+	if (args.empty())
+	{
+		TS_LOG_ERROR("Failed to parse arguments: list is empty.");
+		return false;
+	}
+
+	for (uint32 index = 0; index < args.size(); ++index)
+	{
+		String arg = args[index];
+
+		// Flags are considered to be tokens that start with a dash
+		if (args[index][0] == '-')
+		{
+			// Erase all dashes from the flag
+			String::iterator dashIter = std::find_if(arg.begin(), arg.end(), [](char32_t c)
+			{
+				return c != '-';
+			});
+			arg.erase(arg.begin(), dashIter);
+
+			String parameter;
+
+			// Only single-dash flags can have parameters
+			PosType numDashes = std::distance(arg.begin(), dashIter);
+			if (numDashes == 1 && (index + 1) < args.size() && args[index + 1][0] != '-')
+			{
+				parameter = String(args[index + 1]);
+				++index;
+			}
+			
+			uint32 flagHash = math::simpleHash32(arg);
+			m_flags.emplace(flagHash, std::move(parameter));
+		}
+		else
+		{
+			m_parameters.push_back(std::move(arg));
 		}
 	}
+
+	return true;
 }
 
 bool Commando::hasFlag(const String &flag) const
 {
 	uint32 flagHash = math::simpleHash32(flag);
-	return flags.find(flagHash) != flags.end();
+	return m_flags.find(flagHash) != m_flags.end();
 }
 
 bool Commando::hasFlagParameter(const String &flag) const
 {
 	uint32 flagHash = math::simpleHash32(flag);
-	FlagsList::const_iterator iter = flags.find(flagHash);
-	if (iter == flags.end())
+	FlagsList::const_iterator iter = m_flags.find(flagHash);
+	if (iter == m_flags.end())
 		return 0;
 	return !iter->second.isEmpty();
 }
@@ -121,8 +202,8 @@ bool Commando::hasFlagParameter(const String &flag) const
 bool Commando::getFlagParameter(const String &flag, String &outParam) const
 {
 	uint32 flagHash = math::simpleHash32(flag);
-	FlagsList::const_iterator iter = flags.find(flagHash);
-	if (iter == flags.end() && !iter->second.isEmpty())
+	FlagsList::const_iterator iter = m_flags.find(flagHash);
+	if (iter == m_flags.end() && !iter->second.isEmpty())
 		return false;
 
 	outParam = iter->second;
@@ -131,21 +212,16 @@ bool Commando::getFlagParameter(const String &flag, String &outParam) const
 
 SizeType Commando::getNumParameters() const
 {
-	return (SizeType)parameters.size();
+	return (SizeType)m_parameters.size();
 }
 
 bool Commando::getNthParameter(SizeType index, String &outParam) const
 {
-	if (index >= parameters.size())
+	if (index >= m_parameters.size())
 		return false;
 
-	outParam = parameters[index];
+	outParam = m_parameters[index];
 	return true;
-}
-
-const String &Commando::getExecutablePath() const
-{
-	return executablePath;
 }
 
 TS_END_PACKAGE1()
