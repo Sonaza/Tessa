@@ -95,7 +95,7 @@ private:
 
 	void prepareShaders();
 	std::map<DisplayShaderTypes, String> displayShaderFiles;
-	sf::Texture alphaCheckerPatternTexture;
+	SharedPointer<sf::Texture> alphaCheckerPatternTexture;
 
 	void applySorting(std::vector<String> &filelist);
 	void ensureImageIndex();

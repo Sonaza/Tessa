@@ -642,16 +642,19 @@ void ZoneProfiler::render(sf::RenderTarget &renderTarget, const system::WindowVi
 #endif
 }
 
+#if TS_PROFILER_ENABLED == TS_TRUE
 int64 ScopedZoneTimer::absoluteStartTime = -1;
 
 thread_local int64 ScopedZoneTimer::frameStartTime = 0;
 thread_local ZoneFrame ScopedZoneTimer::currentFrame;
 thread_local SizeType ScopedZoneTimer::eventLevel = 0;
+#endif
 
 ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 	: start(Time::now())
 	, name(zoneName != nullptr ? zoneName : functionName)
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	if (absoluteStartTime == -1)
 		absoluteStartTime = Time::now().fromEpoch().getMicroseconds();
 
@@ -668,18 +671,20 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 	};
 
 	if (currentFrame.capacity() == 0)
-		currentFrame.reserve(8);
+		currentFrame.reserve(4);
 
 	currentFrame.push_back(std::move(event));
 	frameIndex = currentFrame.size() - 1;
 
 	eventLevel++;
+#endif
 }
 
 ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool blocked)
 	: start(Time::now())
 	, name(zoneName)
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	if (absoluteStartTime == -1)
 		absoluteStartTime = Time::now().fromEpoch().getMicroseconds();
 
@@ -699,15 +704,19 @@ ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool b
 	frameIndex = currentFrame.size() - 1;
 
 	eventLevel++;
+#endif
 }
 
 ScopedZoneTimer::~ScopedZoneTimer()
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	commit();
+#endif
 }
 
 void ScopedZoneTimer::commit() const
 {
+#if TS_PROFILER_ENABLED == TS_TRUE
 	if (committed)
 		return;
 
@@ -736,6 +745,7 @@ void ScopedZoneTimer::commit() const
 // 	}
 	
 	committed = true;
+#endif
 }
 
 TS_END_PACKAGE1()

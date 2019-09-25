@@ -154,8 +154,7 @@ bool FileWatcherWindows::watch(const String &path, bool watchRecursive, SizeType
 		return false;
 	}
 
-	watchData.reset(new WatchData);
-	memset(watchData.get(), 0, sizeof(WatchData));
+	watchData = makeUnique<WatchData>();
 
 	watchData->directoryHandle = CreateFileW(
 		path.toWideString().c_str(),

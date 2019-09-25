@@ -155,6 +155,8 @@ void ViewerManager::deinitialize()
 			image->unload();
 	}
 	imageStorage.clear();
+
+	alphaCheckerPatternTexture.reset();
 }
 
 void ViewerManager::update(const TimeSpan deltaTime)
@@ -809,9 +811,13 @@ void ViewerManager::prepareShaders()
 			}
 		}
 
-		alphaCheckerPatternTexture.create(size, size);
-		alphaCheckerPatternTexture.update(&patternTexture[0], size, size, 0, 0);
-		alphaCheckerPatternTexture.setRepeated(true);
+		alphaCheckerPatternTexture = makeShared<sf::Texture>();
+		if (alphaCheckerPatternTexture != nullptr)
+		{
+			alphaCheckerPatternTexture->create(size, size);
+			alphaCheckerPatternTexture->update(&patternTexture[0], size, size, 0, 0);
+			alphaCheckerPatternTexture->setRepeated(true);
+		}
 	}
 
 	displayShaderFiles.insert(std::make_pair(DisplayShader_FreeImage, "shader/convert_freeimage.frag"));
@@ -820,6 +826,7 @@ void ViewerManager::prepareShaders()
 
 SharedPointer<resource::ShaderResource> ViewerManager::loadDisplayShader(DisplayShaderTypes type)
 {
+	TS_ASSERT(alphaCheckerPatternTexture);
 	TS_ASSERT(displayShaderFiles.find(type) != displayShaderFiles.end() && "Attempting to load an undefined display shader.");
 
 	SharedPointer<resource::ShaderResource> displayShader = makeShared<resource::ShaderResource>(displayShaderFiles[type]);
@@ -834,7 +841,7 @@ SharedPointer<resource::ShaderResource> ViewerManager::loadDisplayShader(Display
 
 	if (type == DisplayShader_FreeImage)
 	{
-		shader->setUniform("u_checkerPatternTexture", alphaCheckerPatternTexture);
+		shader->setUniform("u_checkerPatternTexture", *alphaCheckerPatternTexture);
 	}
 
 	return displayShader;
