@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ts/tessa/system/AbstractSceneBase.h"
+
+#include "ts/tessa/math/Damper.h"
 #include "ts/ivie/image/Image.h"
 
 TS_DECLARE2(app, viewer, ViewerManager);
@@ -71,14 +73,17 @@ protected:
 	};
 	CurrentState current;
 
-	float defaultScale = 1.f;
-	float targetDefaultScale = 1.f;
+// 	float defaultScale = 1.f;
+// 	float targetDefaultScale = 1.f;
+	math::FloatDamper defaultScale;
 
-	float imageScale = 1.f;
-	float targetImageScale = 1.f;
+// 	float imageScale = 1.f;
+// 	float targetImageScale = 1.f;
+	math::FloatDamper imageScale;
 
-	math::VC2 positionOffset;
-	math::VC2 targetPositionOffset;
+// 	math::VC2 positionOffset;
+// 	math::VC2 targetPositionOffset;
+	math::VC2Damper positionOffset;
 
 	Clock frameTimer;
 

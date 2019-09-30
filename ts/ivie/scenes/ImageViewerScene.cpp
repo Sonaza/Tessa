@@ -1,23 +1,19 @@
 #include "Precompiled.h"
 #include "ts/ivie/scenes/ImageViewerScene.h"
 
-#include "ts/tessa/file/FileUtils.h"
-
-#include "FreeImage.h"
-
 #include "ts/ivie/util/NaturalSort.h"
-#include "ts/ivie/viewer/ViewerManager.h"
-
 #include "ts/ivie/util/RenderUtil.h"
-#include "ts/tessa/thread/ThreadScheduler.h"
-
-#include "ts/tessa/system/WindowViewManager.h"
-
+#include "ts/ivie/viewer/ViewerManager.h"
+#include "ts/tessa/file/FileUtils.h"
 #include "ts/tessa/profiling/ZoneProfiler.h"
+#include "ts/tessa/system/WindowViewManager.h"
+#include "ts/tessa/thread/ThreadScheduler.h"
 
 #if TS_PLATFORM == TS_WINDOWS
 #include "ts/tessa/common/WindowsUtils.h"
 #endif
+
+#include "FreeImage.h"
 
 TS_PACKAGE2(app, scenes)
 
@@ -33,6 +29,10 @@ ImageViewerScene::~ImageViewerScene()
 bool ImageViewerScene::start()
 {
 	TS_ZONE();
+
+	defaultScale.reset(1.f, 10.f);
+	imageScale.reset(1.f, 17.f);
+	positionOffset.reset(math::VC2::zero, 27.f);
 
 	windowManager = &getGigaton<system::WindowManager>();
 	
@@ -114,39 +114,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				{
 					int32 dir = (event.key.code == sf::Keyboard::Subtract ? -1 : 1);
 
-// 					if (!ctrlDown)
-// 					{
-						targetImageScale += dir * 0.15f * targetImageScale;
-// 					}
-// 					else
-// 					{
-// 						float currentScale = defaultScale * targetImageScale;
-// 						
-// 						float scale = -1.f;
-// 						for (int32 i = 0; i < presetScales.size(); ++i)
-// 						{
-// 							if (dir > 0)
-// 							{
-// 								if (presetScales[i] > currentScale)
-// 								{
-// 									scale = presetScales[i];
-// 									break;
-// 								}
-// 
-// 							}
-// 							else
-// 							{
-// 
-// 							}
-// 						}
-// 
-// 						if (scale > 0.f)
-// 						{
-// 
-// 						}
-// 					}
-
-					targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
+					float targetScale = math::clamp(imageScale.getTarget() + dir * 0.15f * imageScale.getTarget(), 0.9f, 10.f);
+					imageScale.setTarget(targetScale);
 
 					return true;
 				}
@@ -216,16 +185,15 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 					{
 						case Normal:
 						{
-							targetImageScale = 1.f;
+							imageScale.setTarget(1.f);
 						}
 						break;
 
 						case Manga:
 						{
-							targetImageScale = targetImageScale = 1.f / defaultScale;
-							targetPositionOffset.x = 0.f;
-							targetPositionOffset.y = 10000.f;
-							enforceOversizeLimits(defaultScale * targetImageScale);
+							imageScale.setTarget(1.f / defaultScale.getValue());
+							positionOffset.setTarget(math::VC2(0.f, 10000.f));
+							enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 						}
 						break;
 					}
@@ -274,8 +242,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				{
 					if (displayMode == Normal)
 					{
-						targetImageScale = 1.f;
-						targetPositionOffset = math::VC2::zero;
+						imageScale.setTarget(1.f);
+						positionOffset.setTarget(math::VC2::zero);
 					}
 				}
 				return true;
@@ -301,8 +269,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				{
 					if (clickTimer.getElapsedTime() < 250_ms && dragged <= 10.f)
 					{
-						TS_ASSERT(defaultScale > 0.f);
-						targetImageScale = 1.f / defaultScale;
+						TS_ASSERT(defaultScale.getValue() > 0.f);
+						imageScale.setTarget(1.f / defaultScale.getValue());
 
 						{
 							math::VC2 mouse(
@@ -312,7 +280,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 							const system::WindowView &view = windowManager->getApplicationView();
 
-							float currentScale = defaultScale * imageScale;
+							float currentScale = defaultScale.getValue() * imageScale.getValue();
 							math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, 1.f);
 
 							float distanceFromEdgeX = math::abs(mouse.x - (view.size.x / 2.f)) / (view.size.x / 2.f);
@@ -320,9 +288,9 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 							float distanceFromEdge = math::max(distanceFromEdgeX, distanceFromEdgeY);
 							float multiplier = (float)std::pow((distanceFromEdge - 0.5f) * 2.f, 6) * 0.4f + 1.f;
 
-							targetPositionOffset = positionOffset + diff * multiplier;
+							positionOffset.setTarget(positionOffset.getValue() + diff * multiplier);
 
-							enforceOversizeLimits(defaultScale * math::max(targetImageScale, imageScale));
+							enforceOversizeLimits(defaultScale.getValue() * math::max(imageScale.getTarget(), imageScale.getValue()));
 						}
 					}
 				}
@@ -341,8 +309,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
 				dragged += mouseDelta.length();
-				targetPositionOffset += mouseDelta;
-				enforceOversizeLimits(defaultScale * imageScale);
+				positionOffset.setTarget(positionOffset.getTarget() + mouseDelta);
+				enforceOversizeLimits(defaultScale.getValue() * imageScale.getValue());
 			}
 			
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Middle))
@@ -350,9 +318,11 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				// Scales image by holding down middle mouse: moving mouse pointer up or to the right enlarges, and vice versa
 				int32 deltaSign = math::abs(mouseDelta.x) > math::abs(mouseDelta.y) ? math::sign(mouseDelta.x) : -math::sign(mouseDelta.y);
 				float delta = mouseDelta.length() * deltaSign;
-				targetImageScale += (delta / 140.f) * targetImageScale;
-				targetImageScale = math::clamp(targetImageScale, 0.9f, 10.f);
-				enforceOversizeLimits(defaultScale * imageScale);
+				
+				float targetScale = math::clamp(imageScale.getTarget() + (delta / 140.f) * imageScale.getTarget(), 0.9f, 10.f);
+				imageScale.setTarget(targetScale);
+				
+				enforceOversizeLimits(defaultScale.getValue() * imageScale.getValue());
 			}
 
 			lastMousePosition = mousePosition;
@@ -367,8 +337,10 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 			{
 				case Normal:
 				{
-					targetImageScale += delta * 0.15f * targetImageScale;
-					targetImageScale = math::clamp(targetImageScale, 1.f, 10.f);
+					{
+						float targetScale = math::clamp(imageScale.getTarget() + delta * 0.15f * imageScale.getTarget(), 1.f, 10.f);
+						imageScale.setTarget(targetScale);
+					}
 
 					{
 						math::VC2 mouse(
@@ -376,8 +348,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 							(float)event.mouseWheelScroll.y
 						);
 
-						float currentScale = defaultScale * imageScale;
-						float targetScale = defaultScale * targetImageScale;
+						float currentScale = defaultScale.getValue() * imageScale.getValue();
+						float targetScale = defaultScale.getValue() * imageScale.getTarget();
 
 						const system::WindowView &view = windowManager->getApplicationView();
 						math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, targetScale);
@@ -390,18 +362,20 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 							float distanceFromEdge = math::max(distanceFromEdgeX, distanceFromEdgeY);
 							multiplier = (float)std::pow((distanceFromEdge - 0.5f) * 2.f, 4) * 0.13f + 1.f;
 						}
-
-						targetPositionOffset = positionOffset + diff * multiplier * targetScale;
 						
-						enforceOversizeLimits(defaultScale * math::max(targetImageScale, imageScale));
+						// Here it's important the diff is added to _current_ value, not the target,
+						// otherwise the target position would grow out of hand.
+						positionOffset.setTarget(positionOffset.getValue() + diff * multiplier * targetScale);
+						
+						enforceOversizeLimits(defaultScale.getValue() * math::max(imageScale.getTarget(), imageScale.getValue()));
 					}
 				}
 				break;
 
 				case Manga:
 				{
-					targetPositionOffset.y += delta * 140.f;
-					enforceOversizeLimits(defaultScale * targetImageScale);
+					positionOffset.setTarget(positionOffset.getTarget() + math::VC2(0.f, delta * 140.f));
+					enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 				}
 				break;
 			}
@@ -431,31 +405,31 @@ bool ImageViewerScene::updateImageInfo()
 
 		TS_ASSERT(current.data.size.x > 0 && current.data.size.y > 0);
 
-		float previousDefaultScale = defaultScale;
+		float previousDefaultScale = defaultScale.getValue();
 
-		targetDefaultScale = math::min(
+		float targetScale = math::min(
 			math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
 			math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
 		);
-		defaultScale = targetDefaultScale;
+		defaultScale.setTarget(targetScale);
+		defaultScale.cutToTarget();
 
 		switch (displayMode)
 		{
 		case Normal:
 		{
-			targetImageScale = 1.f;
-			if (defaultScale == 1.f)
-				imageScale = targetImageScale;
+			imageScale.setTarget(1.f);
+			if (defaultScale.getValue() == 1.f)
+				imageScale.cutToTarget();
 
-			targetPositionOffset = math::VC2::zero;
+			positionOffset.setTarget(math::VC2::zero);
 		}
 		break;
 
 		case Manga:
 		{
-			targetPositionOffset.x = 0.f;
-			targetPositionOffset.y = 10000.f;
-			enforceOversizeLimits(defaultScale * targetImageScale);
+			positionOffset.setTarget(math::VC2(0.f, 10000.f));
+			enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 		}
 		break;
 		}
@@ -467,10 +441,16 @@ bool ImageViewerScene::updateImageInfo()
 	else if (current.image->hasError())
 	{
 		current.hasError = true;
-
-		defaultScale = targetDefaultScale = 1.f;
-		imageScale = targetImageScale = 1.f;
-		positionOffset = targetPositionOffset = math::VC2::zero;
+		
+		defaultScale.setTarget(1.f);
+		defaultScale.cutToTarget();
+		
+		imageScale.setTarget(1.f);
+		imageScale.cutToTarget();
+		
+		positionOffset.setTarget(math::VC2::zero);
+		positionOffset.cutToTarget();
+		
 		return true;
 	}
 	return false;
@@ -489,7 +469,7 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 
 	if (!sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 	{
-		targetImageScale = math::max(1.f, targetImageScale);
+		imageScale.setTarget(math::max(1.f, imageScale.getTarget()));
 	}
 }
 
@@ -499,24 +479,25 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 
 	const system::WindowView &view = windowManager->getApplicationView();
 
-	float delta = deltaTime.getSecondsAsFloat();
+	defaultScale.update(deltaTime);
 
-	defaultScale += (targetDefaultScale - defaultScale) * delta * 8.f;
+	imageScale.update(deltaTime);
 
-	imageScale += (targetImageScale - imageScale) * delta * 24.f;
+	float positionSmoothing = math::abs(imageScale.getTarget() - imageScale.getValue()) < 0.01f
+		? 28.f : imageScale.getSmoothingFactor();
+	positionOffset.setSmoothingFactor(positionSmoothing);
+	positionOffset.update(deltaTime);
 
-	float positionTweenSpeed = math::abs(targetImageScale - imageScale) < 0.01f ? 35.f : 24.f;
-	positionOffset += (targetPositionOffset - positionOffset) * delta * positionTweenSpeed;
-
+	float deltaSeconds = deltaTime.getSecondsAsFloat();
 	{
 		float targetIndexAlpha = viewerInfoMode != ViewerInfo_HideAll ? 1.f : 0.f;
-		viewerInfoAlpha.index += (targetIndexAlpha - viewerInfoAlpha.index) * delta * 16.f;
+		viewerInfoAlpha.index += (targetIndexAlpha - viewerInfoAlpha.index) * deltaSeconds * 16.f;
 
 		float targetOtherAlpha = viewerInfoMode == ViewerInfo_DisplayAll ? 1.f : 0.f;
-		viewerInfoAlpha.other += (targetOtherAlpha - viewerInfoAlpha.other) * delta * 16.f;
+		viewerInfoAlpha.other += (targetOtherAlpha - viewerInfoAlpha.other) * deltaSeconds * 16.f;
 	}
 
-	enforceOversizeLimits(defaultScale * imageScale, false);
+	enforceOversizeLimits(defaultScale.getValue() * imageScale.getValue(), false);
 }
 
 void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
@@ -536,12 +517,16 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 
 	if (enforceTarget)
 	{
-		targetPositionOffset.x = math::clamp(targetPositionOffset.x, -oversize.x, oversize.x);
-		targetPositionOffset.y = math::clamp(targetPositionOffset.y, -oversize.y, oversize.y);
+		math::VC2 targetOffset = positionOffset.getTarget();
+		targetOffset.x = math::clamp(targetOffset.x, -oversize.x, oversize.x);
+		targetOffset.y = math::clamp(targetOffset.y, -oversize.y, oversize.y);
+		positionOffset.setTarget(targetOffset);
 	}
-
-	positionOffset.x = math::clamp(positionOffset.x, -oversize.x, oversize.x);
-	positionOffset.y = math::clamp(positionOffset.y, -oversize.y, oversize.y);
+	
+	math::VC2 offset = positionOffset.getValue();
+	offset.x = math::clamp(offset.x, -oversize.x, oversize.x);
+	offset.y = math::clamp(offset.y, -oversize.y, oversize.y);
+	positionOffset.setValue(offset);
 }
 
 math::VC2 ImageViewerScene::calculateMouseDiff(const system::WindowView &view,
@@ -555,13 +540,13 @@ math::VC2 ImageViewerScene::calculateMouseDiff(const system::WindowView &view,
 
 	math::Transform currentTransform;
 	currentTransform
-		.translate(positionOffset)
+		.translate(positionOffset.getValue())
 		.scale(currentScale, currentScale)
 		.translate(-imageCenter);
 
 	math::Transform targetTransform;
 	targetTransform
-		.translate(positionOffset)
+		.translate(positionOffset.getValue())
 		.scale(targetScale, targetScale)
 		.translate(-imageCenter);
 
@@ -592,10 +577,11 @@ void ImageViewerScene::screenResized(const math::VC2U &size)
 {
 	const system::WindowView &view = windowManager->getApplicationView();
 
-	targetDefaultScale = math::min(
+	float targetScale = math::min(
 		math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
 		math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
 	);
+	defaultScale.setTarget(targetScale);
 }
 
 void ImageViewerScene::filesDropped(const std::vector<system::DroppedFile> &files)
@@ -626,7 +612,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 	if (current.image != nullptr)
 	{
-		float scale = defaultScale * imageScale;
+		float scale = defaultScale.getValue() * imageScale.getValue();
 
 		math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
 
@@ -662,14 +648,14 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 				math::Transform transform;
 				transform
-					.translate(scaledSize / -2.f + positionOffset)
+					.translate(scaledSize / -2.f + positionOffset.getValue())
 					.scale(scale, scale);
 				states.transform = (sf::Transform)transform;
 
 				image::DisplayShaderParams params;
 				params.viewSize = view.size;
 				params.scale = scale;
-				params.offset = positionOffset;
+				params.offset = positionOffset.getValue();
 				states.shader = current.image->getDisplayShader(&params);
 
 				renderTarget.draw(va, states);
@@ -697,7 +683,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 
 				math::Transform transform;
 				transform
-					.translate(scaledSize / -2.f + positionOffset)
+					.translate(scaledSize / -2.f + positionOffset.getValue())
 					.scale(scale, scale);
 				states.transform = (sf::Transform)transform;
 
@@ -823,7 +809,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const sys
 			{
 				statusText.setOrigin(0.f, 0.f);
 
-				float scale = defaultScale * imageScale;
+				float scale = defaultScale.getValue() * imageScale.getValue();
 
 				if (math::abs(scale - 1.f) < 0.001f)
 				{
