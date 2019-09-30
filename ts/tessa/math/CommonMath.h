@@ -64,4 +64,10 @@ T greatestCommonDivisor(T a, T b)
 	return (b == 0) ? a : greatestCommonDivisor(b, a % b);
 }
 
+template<class T>
+T lerp(T source, T target, float t)
+{
+	return source * (1.f - t) + target * t;
+}
+
 TS_END_PACKAGE1()
