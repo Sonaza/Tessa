@@ -5,9 +5,9 @@ Damper<T>::Damper()
 }
 
 template <class T>
-Damper<T>::Damper(const T &target, float smoothing)
-	: m_currentValue(target)
-	, m_targetValue(target)
+Damper<T>::Damper(const T &value, float smoothing)
+	: m_currentValue(value)
+	, m_targetValue(value)
 	, m_smoothingFactor(smoothing)
 {
 }
@@ -19,16 +19,17 @@ void Damper<T>::update(TimeSpan deltaTime)
 }
 
 template <class T>
-void Damper<T>::reset(const T &target, float smoothing)
+void Damper<T>::reset(const T &value, float smoothing)
 {
-	m_currentValue = target;
-	m_targetValue = target;
+	m_currentValue = value;
+	m_targetValue = value;
 	m_smoothingFactor = smoothing;
 }
 
 template <class T>
 void Damper<T>::setSmoothingFactor(float smoothing)
 {
+	TS_ASSERT(smoothing >= 0.f && "Smoothing factor value must be between zero and infinity.");
 	m_smoothingFactor = smoothing;
 }
 
