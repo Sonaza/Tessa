@@ -38,8 +38,8 @@ private:
 
 #include "Damper.inl"
 
-typedef Damper<float>	FloatDamper;
-typedef Damper<VC2>		VC2Damper;
-typedef Damper<VC3>		VC3Damper;
+typedef Damper<float> FloatDamper;
+typedef Damper<VC2>   VC2Damper;
+typedef Damper<VC3>   VC3Damper;
 
 TS_END_PACKAGE1()
