@@ -31,8 +31,8 @@ bool ImageViewerScene::start()
 	TS_ZONE();
 
 	defaultScale.reset(1.f, 10.f);
-	imageScale.reset(1.f, 17.f);
-	positionOffset.reset(math::VC2::zero, 27.f);
+	imageScale.reset(1.f, 20.f);
+	positionOffset.reset(math::VC2::zero, 30.f);
 
 	windowManager = &getGigaton<system::WindowManager>();
 	
@@ -484,7 +484,7 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 	imageScale.update(deltaTime);
 
 	float positionSmoothing = math::abs(imageScale.getTarget() - imageScale.getValue()) < 0.01f
-		? 28.f : imageScale.getSmoothingFactor();
+		? 30.f : imageScale.getSmoothingFactor();
 	positionOffset.setSmoothingFactor(positionSmoothing);
 	positionOffset.update(deltaTime);
 
