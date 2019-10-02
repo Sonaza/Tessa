@@ -14,6 +14,8 @@ TS_PACKAGE1(math)
 
 class Mat4
 {
+	friend class Quat;
+
 public:
 	static const Mat4 identity;
 

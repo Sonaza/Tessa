@@ -53,10 +53,10 @@ public:
 	Vec3 &getNormalized();
 
 	// Vector dot product
-	float dot(const Vec3 &right);
+	float dot(const Vec3 &other) const;
 
 	// Vector cross product
-	Vec3 &cross(const Vec3 &right);
+	Vec3 cross(const Vec3 &other) const;
 };
 
 template <class T>
@@ -106,18 +106,6 @@ bool operator==(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 template <class T>
 bool operator!=(const Vec3<T> &lhs, const Vec3<T> &rhs);
-
-template <class T>
-Vec3<T> normalize(const Vec3<T> &v);
-
-template <class T>
-float length(const Vec3<T> &v);
-
-template <class T>
-float dot(const Vec3<T> &a, const Vec3<T> &b);
-
-template <class T>
-Vec3<T> cross(const Vec3<T> &a, const Vec3<T> &b);
 
 #include "Vec3.inl"
 

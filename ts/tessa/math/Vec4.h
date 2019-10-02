@@ -16,7 +16,6 @@ public:
 	{
 		T v[4];
 		struct { T x, y, z, w; };
-		struct { T r, g, b, a; };
 	};
 
 	Vec4(const Vec4 &vector) = default;
@@ -42,10 +41,10 @@ public:
 	Vec4 &getNormalized();
 
 	// Vector dot product
-	float dot(const Vec4 &right);
+	float dot(const Vec4 &other) const;
 
 	// Vector cross product
-	Vec4 &cross(const Vec4 &right);
+	Vec4 cross(const Vec4 &other) const;
 };
 
 template <class T>
@@ -95,18 +94,6 @@ bool operator==(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 template <class T>
 bool operator!=(const Vec4<T> &lhs, const Vec4<T> &rhs);
-
-template <class T>
-Vec4<T> normalize(const Vec4<T> &v);
-
-template <class T>
-float length(const Vec4<T> &v);
-
-template <class T>
-float dot(const Vec4<T> &a, const Vec4<T> &b);
-
-template <class T>
-Vec4<T> cross(const Vec4<T> &a, const Vec4<T> &b);
 
 #include "Vec4.inl"
 

@@ -79,21 +79,19 @@ inline Vec4<T> &Vec4<T>::getNormalized()
 }
 
 template <class T>
-inline float Vec4<T>::dot(const Vec4<T> &b)
+inline float Vec4<T>::dot(const Vec4<T> &other) const
 {
-	return x * b.x + y * b.y + z * b.z;
+	return x * other.x + y * other.y + z * other.z;
 }
 
 template <class T>
-inline Vec4<T> &Vec4<T>::cross(const Vec4<T> &b)
+inline Vec4<T> Vec4<T>::cross(const Vec4<T> &other) const
 {
-	*this = Vec4<T>(
-		y * b.z - z * b.y,
-		z * b.x - x * b.z,
-		x * b.y - y * b.x
+	return Vec4<T>(
+		y * other.z - z * other.y,
+		z * other.x - x * other.z,
+		x * other.y - y * other.x
 	);
-
-	return *this;
 }
 
 template <class T>
@@ -220,28 +218,4 @@ template <class T>
 inline bool operator!=(const Vec4<T> &lhs, const Vec4<T> &rhs)
 {
 	return (lhs.x != rhs.x) || (lhs.y != rhs.y) || (lhs.z != rhs.z) || (lhs.w != rhs.w);
-}
-
-template <class T>
-inline Vec4<T> normalize(const Vec4<T> &v)
-{
-	return Vec4<T>(v).normalize();
-}
-
-template <class T>
-inline float length(const Vec4<T> &v)
-{
-	return v.length();
-}
-
-template <class T>
-inline float dot(const Vec4<T> &a, const Vec4<T> &b)
-{
-	return Vec4<T>(a).dot(b);
-}
-
-template <class T>
-inline Vec4<T> cross(const Vec4<T> &a, const Vec4<T> &b)
-{
-	return Vec4<T>(a).cross(b);
 }

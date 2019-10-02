@@ -70,4 +70,26 @@ T lerp(T source, T target, float t)
 	return source * (1.f - t) + target * t;
 }
 
+template<class T>
+T sqrt(T value)
+{
+	return std::sqrt(value);
+}
+
+template<class T>
+T invSqrt(T value)
+{
+	return T(1.0 / sqrt(value));
+}
+
+bool floatEquals(float lhs, float rhs, float epsilon = FLOAT_EPSILON)
+{
+	return abs(lhs - rhs) <= epsilon;
+}
+
+bool floatEquals(double lhs, double rhs, double epsilon = DOUBLE_EPSILON)
+{
+	return abs(lhs - rhs) <= epsilon;
+}
+
 TS_END_PACKAGE1()

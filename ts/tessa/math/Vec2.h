@@ -52,7 +52,7 @@ public:
 	Vec2 &getNormalized();
 
 	// Vector dot product
-	float dot(const Vec2 &right);
+	float dot(const Vec2 &other) const;
 
 	String toString() const;
 };
@@ -104,15 +104,6 @@ bool operator==(const Vec2<T> &lhs, const Vec2<T> &rhs);
 
 template <class T>
 bool operator!=(const Vec2<T> &lhs, const Vec2<T> &rhs);
-
-template <class T>
-Vec2<T> normalize(const Vec2<T> &v);
-
-template <class T>
-float length(const Vec2<T> &v);
-
-template <class T>
-float dot(const Vec2<T> &a, const Vec2<T> &b);
 
 #include "Vec2.inl"
 

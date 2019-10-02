@@ -88,9 +88,9 @@ inline Vec2<T> &Vec2<T>::getNormalized()
 }
 
 template <class T>
-inline float Vec2<T>::dot(const Vec2<T> &b)
+inline float Vec2<T>::dot(const Vec2<T> &other) const
 {
-	return x * b.x + y * b.y;
+	return x * other.x + y * other.y;
 }
 
 template <class T>
@@ -212,28 +212,3 @@ inline bool operator!=(const Vec2<T> &lhs, const Vec2<T> &rhs)
 {
 	return (lhs.x != rhs.x) || (lhs.y != rhs.y);
 }
-
-template <class T>
-inline Vec2<T> normalize(const Vec2<T> &v)
-{
-	return Vec2<T>(v).normalize();
-}
-
-template <class T>
-inline float length(const Vec2<T> &v)
-{
-	return v.length();
-}
-
-template <class T>
-inline float dot(const Vec2<T> &a, const Vec2<T> &b)
-{
-	return Vec2<T>(a).dot(b);
-}
-
-template <class T>
-inline Vec2<T> cross(const Vec2<T> &a, const Vec2<T> &b)
-{
-	return Vec2<T>(a).cross(b);
-}
-

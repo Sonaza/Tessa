@@ -247,6 +247,7 @@
     <ClInclude Include="lang\SharedPointer.h" />
     <ClInclude Include="lang\Signal.h" />
     <ClInclude Include="math\Damper.h" />
+    <ClInclude Include="math\Quaternion.h" />
     <ClInclude Include="math\Rect.h" />
     <ClInclude Include="resource\ImageResource.h" />
     <ClInclude Include="string\String.h" />
@@ -348,6 +349,7 @@
       <FileType>Document</FileType>
     </ClInclude>
     <None Include="math\Damper.inl" />
+    <None Include="math\Quaternion.inl" />
     <None Include="math\Rect.inl" />
     <None Include="string\Utf.inl" />
     <None Include="Windows.props" />

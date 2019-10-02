@@ -508,6 +508,9 @@
     <ClInclude Include="math\Damper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="math\Quaternion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Windows.props" />
@@ -518,6 +521,9 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="math\Damper.inl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="math\Quaternion.inl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
