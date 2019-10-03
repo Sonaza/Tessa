@@ -27,6 +27,7 @@
 #include "ts/tessa/math/Rect.h"
 #include "ts/tessa/math/Mat4.h"
 #include "ts/tessa/math/Quaternion.h"
+#include "ts/tessa/math/VectorStringConversion.h"
 
 #include "ts/tessa/system/Gigaton.h"
 

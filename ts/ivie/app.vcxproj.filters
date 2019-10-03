@@ -118,4 +118,7 @@
   <ItemGroup>
     <Image Include="application_icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Externals.props" />
+  </ItemGroup>
 </Project>

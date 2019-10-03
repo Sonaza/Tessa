@@ -6,90 +6,117 @@
 
 TS_PACKAGE1(math)
 
-class Quat
+template<class T>
+class Quaternion
 {
 public:
-	Quat();
-	Quat(float x, float y, float z, float w);
+	static const Quaternion zero;
+	static const Quaternion identity;
+	
+	Quaternion();
+	Quaternion(T x, T y, T z, T w);
 
-	// Quat components
+	// Quaternion components
 	union
 	{
-		float v[4];
-		struct { float x, y, z, w; };
+		T v[4];
+		struct { T x, y, z, w; };
 	};
 
-	bool operator==(const Quat &other) const;
-	bool operator!=(const Quat &other) const;
+	bool operator==(const Quaternion &other) const;
+	bool operator!=(const Quaternion &other) const;
 	
-	Quat(const Quat &other);
-	inline Quat &operator=(const Quat &other);
+	Quaternion(const Quaternion &other);
+	Quaternion &operator=(const Quaternion &other);
 
-	Quat operator+(const Quat &other) const;
+	Quaternion operator+(const Quaternion &other) const;
 
-	Quat operator*(const Quat &other) const;
-	Quat &operator*=(const Quat &other);
+	Quaternion operator*(const Quaternion &other) const;
+	Quaternion &operator*=(const Quaternion &other);
 
-	Quat operator*(float s) const;
-	Quat &operator*=(float s);
+	Quaternion operator*(T s) const;
+	Quaternion &operator*=(T s);
 
 	/* Returns a vector rotated by the quaternion.
 	 */
-	VC3 getRotated(const VC3 &vector) const;
+	Vec3<T> getRotated(const Vec3<T> &vector) const;
 
-	inline float dot(const Quat &other) const;
+	T dot(const Quaternion &other) const;
 
-	inline Quat getNormalized() const;
-	inline Quat &normalize();
-	
-	//! Creates a matrix from this Quat
-	void getMatrix(Mat4 &dest, const VC3 &translation = VC3::zero) const;
-
-	/* Fast matrix retrieve, quaternion won't be normalized.
+	/* Normalize quaternion to account for floating point errors.
 	 */
-	void getMatrixFast(Mat4 &dest) const;
+	Quaternion &normalize();
+	Quaternion getNormalized() const;
+	Quaternion &normalizeWithZeroFailsafe(const Quaternion &failsafe);
+	Quaternion getNormalizedWithZeroFailsafe(const Quaternion &failsafe) const;
+	
+	/* Retrieve matrix that represents the quaternion's rotation, with an optional offset.
+	 * The quaternion is normalized before the math is done.
+	 */
+	void getMatrix(TMatrix4<T> &outMatrix, const Vec3<T> &offset = Vec3<T>::zero) const;
+
+	/* Quick matrix retrieve, quaternion isn't be normalized within this call.
+	 */
+	void getMatrixQuickly(TMatrix4<T> &outMatrix) const;
 
 	/* Retrieve the quaternion inverse.
 	 */ 
-	Quat getInverted() const;
-	Quat &invert();
+	Quaternion getInverted() const;
+	Quaternion &invert();
 
 	/* Linear interpolation between two quaternions.
 	 * Time describes the progress where 0.f is q1 and 1.f is q2.
 	 */
-	Quat &lerp(Quat q1, Quat q2, float time);
+	Quaternion &lerp(Quaternion q1, Quaternion q2, T time);
 
 	/* Spherical interpolation between two quaternions.
 	 * Time describes the progress where 0.f is q1 and 1.f is q2.
 	 * Threshold defines how much of the remaining interpolation will
 	 * be calculated with lerp in order to avoid inaccuracies.
 	 */
-	Quat &slerp(Quat q1, Quat q2, float time, float threshold = 0.05f);
+	Quaternion &slerp(Quaternion q1, Quaternion q2, T time, T threshold = 0.05f);
+
+	/* Retrieve quaternion length squared.
+	 */
+	T squareLength();
+
+	/* Retrieve quaternion length.
+	 */
+	T length();
 
 	/* Retrieve the current rotation as the axis of rotation and angle (in radians).
 	 */
-	void getAngleAxis(float &angle, VC3 &axis) const;
+	void getAngleAxis(T &angle, Vec3<T> &axis) const;
 
 	/* Retrieve current euler angles (in radians).
 	 */
-	VC3 getEulerAngles() const;
+	Vec3<T> getEulerAngles() const;
 
 	/* Make quaternion from Euler angles (in radians)
 	*/
-	static Quat makeFromEulerAngles(float x, float y, float z);
-	static Quat makeFromEulerAngles(const VC3 &angles);
+	static Quaternion makeFromEulerAngles(T x, T y, T z);
+	static Quaternion makeFromEulerAngles(const Vec3<T> &angles);
 
 	/* Make quaternion that represents rotation angle (radians)
 	* around the specified axis. The axis must be normalized.
 	*/
-	static Quat makeFromAngleAxis(float angle, const VC3 &axis);
+	static Quaternion makeFromAngleAxis(T angle, const Vec3<T> &axis);
 
 	/* Make quaternion that represents rotation from a direction vector
 	 * to the another. The vectors must be normalized.
 	 */
-	static Quat makeFromRotation(const VC3 &from, const VC3 &to);
+	static Quaternion makeFromRotation(const Vec3<T> &from, const Vec3<T> &to);
 };
 
 #include "Quaternion.inl"
+
+const Quaternion<float> Quaternion<float>::zero(0.f, 0.f, 0.f, 0.f);
+const Quaternion<float> Quaternion<float>::identity;
+
+const Quaternion<double> Quaternion<double>::zero(0.0, 0.0, 0.0, 0.0);
+const Quaternion<double> Quaternion<double>::identity;
+
+typedef Quaternion<float> Quat;
+typedef Quaternion<double> DQuat;
 
 TS_END_PACKAGE1();

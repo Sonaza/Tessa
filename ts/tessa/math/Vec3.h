@@ -11,8 +11,8 @@ public:
 	static const Vec3<T> forward;
 	static const Vec3<T> right;
 
-	TS_FORCEINLINE Vec3();
-	TS_FORCEINLINE Vec3(T x, T y, T z);
+	Vec3();
+	Vec3(T x, T y, T z);
 	explicit Vec3(const T v[3]);
 
 	// Vector components
@@ -41,19 +41,19 @@ public:
 	const T &operator[](SizeType index) const;
 
 	// Returns length of the Vector
-	float length() const;
+	T length() const;
 
 	// Returns square length of the Vector
-	float squarelength() const;
+	T squareLength() const;
 
 	// Normalizes vector and returns current value
 	Vec3 &normalize();
-
-	// Gets normalized value without modifying current vector
-	Vec3 &getNormalized();
+	Vec3 getNormalized() const;
+	Vec3 &normalizeWithZeroFailsafe(const Vec3<T> &failsafe);
+	Vec3 getNormalizedWithZeroFailsafe(const Vec3<T> &failsafe) const;
 
 	// Vector dot product
-	float dot(const Vec3 &other) const;
+	T dot(const Vec3 &other) const;
 
 	// Vector cross product
 	Vec3 cross(const Vec3 &other) const;
@@ -109,13 +109,29 @@ bool operator!=(const Vec3<T> &lhs, const Vec3<T> &rhs);
 
 #include "Vec3.inl"
 
-typedef Vec3<float>		VC3;
-typedef Vec3<int32>		VC3I;
-typedef Vec3<uint32>	VC3U;
+typedef Vec3<float>     VC3;
+typedef Vec3<double>    VC3D;
+typedef Vec3<int32>     VC3I;
+typedef Vec3<uint32>    VC3U;
 
 const Vec3<float> Vec3<float>::zero(0.f, 0.f, 0.f);
 const Vec3<float> Vec3<float>::up(0.f, 1.f, 0.f);
 const Vec3<float> Vec3<float>::forward(0.f, 0.f, 1.f);
 const Vec3<float> Vec3<float>::right(1.f, 0.f, 0.f);
+
+const Vec3<double> Vec3<double>::zero(0.0, 0.0, 0.0);
+const Vec3<double> Vec3<double>::up(0.0, 1.0, 0.0);
+const Vec3<double> Vec3<double>::forward(0.0, 0.0, 1.0);
+const Vec3<double> Vec3<double>::right(1.0, 0.0, 0.0);
+
+const Vec3<int32> Vec3<int32>::zero(0, 0, 0);
+const Vec3<int32> Vec3<int32>::up(0, 1, 0);
+const Vec3<int32> Vec3<int32>::forward(0, 0, 1);
+const Vec3<int32> Vec3<int32>::right(1, 0, 0);
+
+const Vec3<uint32> Vec3<uint32>::zero(0, 0, 0);
+const Vec3<uint32> Vec3<uint32>::up(0, 1, 0);
+const Vec3<uint32> Vec3<uint32>::forward(0, 0, 1);
+const Vec3<uint32> Vec3<uint32>::right(1, 0, 0);
 
 TS_END_PACKAGE1()

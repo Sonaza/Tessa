@@ -1,19 +1,22 @@
 
-Quat::Quat()
-	: x(0.f)
-	, y(0.f)
-	, z(0.f)
-	, w(1.f)
+template<class T>
+Quaternion<T>::Quaternion()
+	: x(0)
+	, y(0)
+	, z(0)
+	, w(1)
 {}
 
-Quat::Quat(float x, float y, float z, float w)
+template<class T>
+Quaternion<T>::Quaternion(T x, T y, T z, T w)
 	: x(x)
 	, y(y)
 	, z(z)
 	, w(w)
 {}
 
-inline bool Quat::operator==(const Quat &other) const
+template<class T>
+inline bool Quaternion<T>::operator==(const Quaternion<T> &other) const
 {
 	return (x == other.x) &&
 	       (y == other.y) &&
@@ -21,20 +24,23 @@ inline bool Quat::operator==(const Quat &other) const
 	       (w == other.w);
 }
 
-inline bool Quat::operator!=(const Quat &other) const
+template<class T>
+inline bool Quaternion<T>::operator!=(const Quaternion<T> &other) const
 {
 	return !(*this == other);
 }
 
-Quat::Quat(const Quat &other)
+template<class T>
+Quaternion<T>::Quaternion(const Quaternion<T> &other)
 	: x(other.x)
 	, y(other.y)
 	, z(other.z)
 	, w(other.w)
 {
 }
-	
-inline Quat &Quat::operator=(const Quat &other)
+
+template<class T>
+inline Quaternion<T> &Quaternion<T>::operator=(const Quaternion<T> &other)
 {
 	x = other.x;
 	y = other.y;
@@ -43,9 +49,10 @@ inline Quat &Quat::operator=(const Quat &other)
 	return *this;
 }
 
-inline Quat Quat::operator*(const Quat &other) const
+template<class T>
+inline Quaternion<T> Quaternion<T>::operator*(const Quaternion<T> &other) const
 {
-	Quat q;
+	Quaternion<T> q;
 	q.w = (other.w * w) - (other.x * x) - (other.y * y) - (other.z * z);
 	q.x = (other.w * x) + (other.x * w) + (other.y * z) - (other.z * y);
 	q.y = (other.w * y) + (other.y * w) + (other.z * x) - (other.x * z);
@@ -53,18 +60,21 @@ inline Quat Quat::operator*(const Quat &other) const
 	return q;
 }
 
-inline Quat &Quat::operator*=(const Quat &other)
+template<class T>
+inline Quaternion<T> &Quaternion<T>::operator*=(const Quaternion<T> &other)
 {
 	*this = (*this) * other;
 	return *this;
 }
 
-inline Quat Quat::operator*(float scalar) const
+template<class T>
+inline Quaternion<T> Quaternion<T>::operator*(T scalar) const
 {
-	return Quat(x * scalar, y * scalar, z * scalar, w * scalar);
+	return Quaternion(x * scalar, y * scalar, z * scalar, w * scalar);
 }
 
-inline Quat &Quat::operator*=(float scalar)
+template<class T>
+inline Quaternion<T> &Quaternion<T>::operator*=(T scalar)
 {
 	x *= scalar;
 	y *= scalar;
@@ -73,68 +83,71 @@ inline Quat &Quat::operator*=(float scalar)
 	return *this;
 }
 
-inline Quat Quat::operator+(const Quat &other) const
+template<class T>
+inline Quaternion<T> Quaternion<T>::operator+(const Quaternion<T> &other) const
 {
-	return Quat(x + other.x, y + other.y, z + other.z, w + other.w);
+	return Quaternion(x + other.x, y + other.y, z + other.z, w + other.w);
 }
 
-inline void Quat::getMatrix(Mat4 &m, const VC3 &translation) const
+template<class T>
+inline void Quaternion<T>::getMatrix(TMatrix4<T> &m, const Vec3<T> &offset) const
 {
-	Quat q(*this);
+	Quaternion<T> q(*this);
 	q.normalize();
 
-	m.m_matrix[0]  = 1.f - 2.f * q.y * q.y - 2.f * q.z * q.z;
-	m.m_matrix[1]  = 2.f * q.x * q.y + 2.f * q.z * q.w;
-	m.m_matrix[2]  = 2.f * q.x * q.z - 2.f * q.y * q.w;
-	m.m_matrix[3]  = 0.f;
+	m.m_matrix[0]  = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
+	m.m_matrix[1]  = 2 * q.x * q.y + 2 * q.z * q.w;
+	m.m_matrix[2]  = 2 * q.x * q.z - 2 * q.y * q.w;
+	m.m_matrix[3]  = 0;
 
-	m.m_matrix[4]  = 2.f * q.x * q.y - 2.f * q.z * q.w;
-	m.m_matrix[5]  = 1.f - 2.f * q.x * q.x - 2.f * q.z * q.z;
-	m.m_matrix[6]  = 2.f * q.z * q.y + 2.f * q.x * q.w;
-	m.m_matrix[7]  = 0.f;
+	m.m_matrix[4]  = 2 * q.x * q.y - 2 * q.z * q.w;
+	m.m_matrix[5]  = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
+	m.m_matrix[6]  = 2 * q.z * q.y + 2 * q.x * q.w;
+	m.m_matrix[7]  = 0;
 
-	m.m_matrix[8]  = 2.f * q.x * q.z + 2.f * q.y * q.w;
-	m.m_matrix[9]  = 2.f * q.z * q.y - 2.f * q.x * q.w;
-	m.m_matrix[10] = 1.f - 2.f * q.x * q.x - 2.f * q.y * q.y;
-	m.m_matrix[11] = 0.f;
+	m.m_matrix[8]  = 2 * q.x * q.z + 2 * q.y * q.w;
+	m.m_matrix[9]  = 2 * q.z * q.y - 2 * q.x * q.w;
+	m.m_matrix[10] = 1 - 2 * q.x * q.x - 2 * q.y * q.y;
+	m.m_matrix[11] = 0;
 
-	m.m_matrix[12] = translation.x;
-	m.m_matrix[13] = translation.y;
-	m.m_matrix[14] = translation.z;
-	m.m_matrix[15] = 1.f;
+	m.m_matrix[12] = offset.x;
+	m.m_matrix[13] = offset.y;
+	m.m_matrix[14] = offset.z;
+	m.m_matrix[15] = 1;
 }
 
-//! Faster method to create a rotation matrix, you should normalize the Quat before!
-inline void Quat::getMatrixFast(Mat4 &m) const
+template<class T>
+inline void Quaternion<T>::getMatrixQuickly(TMatrix4<T> &m) const
 {
-	m.m_matrix[0]  = 1.f - 2.f * y * y - 2.f * z * z;
-	m.m_matrix[1]  = 2.f * x * y + 2.f * z * w;
-	m.m_matrix[2]  = 2.f * x * z - 2.f * y * w;
-	m.m_matrix[3]  = 0.f;
+	m.m_matrix[0]  = 1 - 2 * y * y - 2 * z * z;
+	m.m_matrix[1]  = 2 * x * y + 2 * z * w;
+	m.m_matrix[2]  = 2 * x * z - 2 * y * w;
+	m.m_matrix[3]  = 0;
 
-	m.m_matrix[4]  = 2.f * x * y - 2.f * z * w;
-	m.m_matrix[5]  = 1.f - 2.f * x * x - 2.f * z * z;
-	m.m_matrix[6]  = 2.f * z * y + 2.f * x * w;
-	m.m_matrix[7]  = 0.f;
+	m.m_matrix[4]  = 2 * x * y - 2 * z * w;
+	m.m_matrix[5]  = 1 - 2 * x * x - 2 * z * z;
+	m.m_matrix[6]  = 2 * z * y + 2 * x * w;
+	m.m_matrix[7]  = 0;
 
-	m.m_matrix[8]  = 2.f * x * z + 2.f * y * w;
-	m.m_matrix[9]  = 2.f * z * y - 2.f * x * w;
-	m.m_matrix[10] = 1.f - 2.f * x * x - 2.f * y * y;
-	m.m_matrix[11] = 0.f;
+	m.m_matrix[8]  = 2 * x * z + 2 * y * w;
+	m.m_matrix[9]  = 2 * z * y - 2 * x * w;
+	m.m_matrix[10] = 1 - 2 * x * x - 2 * y * y;
+	m.m_matrix[11] = 0;
 
-	m.m_matrix[12] = 0.f;
-	m.m_matrix[13] = 0.f;
-	m.m_matrix[14] = 0.f;
-	m.m_matrix[15] = 1.f;
+	m.m_matrix[12] = 0;
+	m.m_matrix[13] = 0;
+	m.m_matrix[14] = 0;
+	m.m_matrix[15] = 1;
 }
 
-
-inline Quat Quat::getInverted() const
+template<class T>
+inline Quaternion<T> Quaternion<T>::getInverted() const
 {
-	return Quat(*this).invert();
+	return Quaternion(*this).invert();
 }
 
-inline Quat &Quat::invert()
+template<class T>
+inline Quaternion<T> &Quaternion<T>::invert()
 {
 	x = -x;
 	y = -y;
@@ -142,7 +155,8 @@ inline Quat &Quat::invert()
 	return *this;
 }
 
-Quat Quat::makeFromEulerAngles(float x, float y, float z)
+template<class T>
+Quaternion<T> Quaternion<T>::makeFromEulerAngles(T x, T y, T z)
 {
 	double angle;
 
@@ -163,20 +177,21 @@ Quat Quat::makeFromEulerAngles(float x, float y, float z)
 	const double cpsy = cp * sy;
 	const double spsy = sp * sy;
 
-	Quat q;
-	q.x = (float)(sr * cpcy - cr * spsy);
-	q.y = (float)(cr * spcy + sr * cpsy);
-	q.z = (float)(cr * cpsy - sr * spcy);
-	q.w = (float)(cr * cpcy + sr * spsy);
+	Quaternion<T> q;
+	q.x = (T)(sr * cpcy - cr * spsy);
+	q.y = (T)(cr * spcy + sr * cpsy);
+	q.z = (T)(cr * cpsy - sr * spcy);
+	q.w = (T)(cr * cpcy + sr * spsy);
 	return q.getNormalized();
 }
 
-Quat Quat::makeFromAngleAxis(float angle, const VC3 &axis)
+template<class T>
+Quaternion<T> Quaternion<T>::makeFromAngleAxis(T angle, const Vec3<T> &axis)
 {
-	const float halfAngle = angle * 0.5f;
-	const float halfAngleSin = sin(halfAngle);
+	const T halfAngle = angle * 0.5;
+	const T halfAngleSin = sin(halfAngle);
 
-	Quat q;
+	Quaternion<T> q;
 	q.x = halfAngleSin * axis.x;
 	q.y = halfAngleSin * axis.y;
 	q.z = halfAngleSin * axis.z;
@@ -185,59 +200,92 @@ Quat Quat::makeFromAngleAxis(float angle, const VC3 &axis)
 	return q;
 }
 
-inline Quat Quat::makeFromEulerAngles(const VC3 &angles)
+template<class T>
+inline Quaternion<T> Quaternion<T>::makeFromEulerAngles(const Vec3<T> &angles)
 {
 	return makeFromEulerAngles(angles.x, angles.y, angles.z);
 }
 
-inline VC3 Quat::getRotated(const VC3 &vector) const
+template<class T>
+inline Vec3<T> Quaternion<T>::getRotated(const Vec3<T> &vector) const
 {
-	const VC3 qvec(x, y, z);
-	VC3 uv = qvec.cross(vector) * (2.f * w);
-	VC3 uuv = qvec.cross(uv) * 2.f;
-	return vector + uv + uuv;
+	const Vec3<T> qvector(x, y, z);
+	const Vec3<T> uv = qvector.cross(vector);
+	const Vec3<T> uuv = qvector.cross(uv);
+	return vector + ((uv * w) + uuv) * T(2);
 }
 
-inline float Quat::dot(const Quat &other) const
+template<class T>
+inline T Quaternion<T>::dot(const Quaternion<T> &other) const
 {
 	return (x * other.x) + (y * other.y) + (z * other.z) + (w * other.w);
 }
 
-inline Quat Quat::getNormalized() const
+template<class T>
+inline Quaternion<T> &Quaternion<T>::normalize()
 {
-	return Quat(*this).normalize();
-}
-
-inline Quat &Quat::normalize()
-{
-	*this *= invSqrt(x * x + y * y + z * z + w * w);
+	T slen = squareLength();
+	TS_ASSERT(slen != T(0));
+	if (slen != T(0))
+	{
+		*this *= T(1.0 / sqrt(slen));
+	}
 	return *this;
 }
 
-inline Quat &Quat::lerp(Quat q1, Quat q2, float time)
+template<class T>
+inline Quaternion<T> Quaternion<T>::getNormalized() const
 {
-	*this = q1 * (1.f - time) + (q2 * time);
+	return Quaternion(*this).normalize();
+}
+
+template<class T>
+inline Quaternion<T> &Quaternion<T>::normalizeWithZeroFailsafe(const Quaternion<T> &failsafe)
+{
+	T slen = squareLength();
+	if (slen != 0)
+	{
+		*this = T(1 / sqrt(slen));
+	}
+	else
+	{
+		*this = failsafe;
+	}
 	return *this;
 }
 
-inline Quat &Quat::slerp(Quat q1, Quat q2, float time, float threshold)
+template<class T>
+inline Quaternion<T> Quaternion<T>::getNormalizedWithZeroFailsafe(const Quaternion<T> &failsafe) const
 {
-	float angle = q1.dot(q2);
+	return Quaternion(*this).normalize(failsafe);
+}
+
+template<class T>
+inline Quaternion<T> &Quaternion<T>::lerp(Quaternion<T> q1, Quaternion<T> q2, T time)
+{
+	*this = q1 * T(1.0 - time) + q2 * time;
+	return *this;
+}
+
+template<class T>
+inline Quaternion<T> &Quaternion<T>::slerp(Quaternion<T> q1, Quaternion<T> q2, T time, T threshold)
+{
+	T angle = q1.dot(q2);
 
 	// make sure we use the short rotation
-	if (angle < 0.f)
+	if (angle < 0.0)
 	{
-		q1 *= -1.f;
-		angle *= -1.f;
+		q1 *= -1.0;
+		angle *= -1.0;
 	}
 
 	if (angle <= (1 - threshold))
 	{
 		// spherical interpolation
-		const float theta = acos(angle);
-		const float invsintheta = 1.f / sin(theta);
-		const float scale = sin(theta * (1.f - time)) * invsintheta;
-		const float invscale = sin(theta * time) * invsintheta;
+		const T theta = acos(angle);
+		const T invsintheta = 1.0 / sin(theta);
+		const T scale = sin(theta * (1.0 - time)) * invsintheta;
+		const T invscale = sin(theta * time) * invsintheta;
 
 		*this = (q1 * scale) + (q2 * invscale);
 		return *this;
@@ -249,50 +297,64 @@ inline Quat &Quat::slerp(Quat q1, Quat q2, float time, float threshold)
 	}
 }
 
-inline void Quat::getAngleAxis(float &angle, VC3 &axis) const
+template<class T>
+inline T Quaternion<T>::squareLength()
 {
-	const float scale = sqrt(x * x + y * y + z * z);
+	return x * x + y * y + z * z + w * w;
+}
 
-	if (scale == 0.f || w > 1.f || w < -1.f)
+template<class T>
+inline T Quaternion<T>::length()
+{
+	return sqrt(x * x + y * y + z * z + w * w);
+}
+
+template<class T>
+inline void Quaternion<T>::getAngleAxis(T &angle, Vec3<T> &axis) const
+{
+	const T scale = sqrt(x * x + y * y + z * z);
+
+	if (scale == 0.0 || w > 1.0 || w < -1.0)
 	{
-		angle = 0.f;
-		axis.x = 0.f;
-		axis.y = 1.f;
-		axis.z = 0.f;
+		angle = 0.0;
+		axis.x = 0.0;
+		axis.y = 1.0;
+		axis.z = 0.0;
 	}
 	else
 	{
-		const float invscale = 1.f / scale;
-		angle = 2.f * acos(w);
+		const T invscale = 1.0 / scale;
+		angle = 2.0 * acos(w);
 		axis.x = x * invscale;
 		axis.y = y * invscale;
 		axis.z = z * invscale;
 	}
 }
 
-inline VC3 Quat::getEulerAngles() const
+template<class T>
+inline Vec3<T> Quaternion<T>::getEulerAngles() const
 {
-	VC3 euler;
+	Vec3<T> euler;
 	
 	const double test = 2.0 * (y * w - x * z);
 
 	if (floatEquals(test, 1.0))
 	{
 		// heading = rotation about z-axis
-		euler.z = (float)(-2.0 * atan2(x, w));
+		euler.z = (T)(-2.0 * atan2(x, w));
 		// bank = rotation about x-axis
-		euler.x = 0.f;
+		euler.x = 0.0;
 		// attitude = rotation about y-axis
-		euler.y = (float)(PI64 / 2.0);
+		euler.y = (T)(PI64 / 2.0);
 	}
 	else if (floatEquals(test, -1.0))
 	{
 		// heading = rotation about z-axis
-		euler.z = (float)(2.0 * atan2(x, w));
+		euler.z = (T)(2.0 * atan2(x, w));
 		// bank = rotation about x-axis
-		euler.x = 0.f;
+		euler.x = 0.0;
 		// attitude = rotation about y-axis
-		euler.y = (float)(PI64 / -2.0);
+		euler.y = (T)(PI64 / -2.0);
 	}
 	else
 	{
@@ -302,50 +364,49 @@ inline VC3 Quat::getEulerAngles() const
 		const double sqw = w * w;
 
 		// heading = rotation about z-axis
-		euler.z = (float) atan2(2.0 * (x * y +z * w), (sqx - sqy - sqz + sqw));
+		euler.z = (T)atan2(2.0 * (x * y +z * w), (sqx - sqy - sqz + sqw));
 		// bank = rotation about x-axis
-		euler.x = (float) atan2(2.0 * (y * z +x * w), (-sqx - sqy + sqz + sqw));
+		euler.x = (T)atan2(2.0 * (y * z +x * w), (-sqx - sqy + sqz + sqw));
 		// attitude = rotation about y-axis
-		euler.y = (float) asin(clamp(test, -1.0, 1.0));
+		euler.y = (T)asin(clamp(test, -1.0, 1.0));
 	}
 
 	return euler;
 }
 
-inline Quat Quat::makeFromRotation(const VC3 &from, const VC3 &to)
+template<class T>
+inline Quaternion<T> Quaternion<T>::makeFromRotation(const Vec3<T> &from, const Vec3<T> &to)
 {
-	VC3 v0 = from;
-	VC3 v1 = to;
-
-	Quat q;
-
-	const float d = v0.dot(v1);
-	if (d >= 1.f) // If dot == 1, vectors are the same
+	const T d = from.dot(to);
+	if (d >= 1.0) // If dot == 1, vectors are the same
 	{
-		// Returns an indentity quaternion
-		return q;
+		return Quaternion<T>::identity;
 	}
-	else if (d <= -1.f) // exactly opposite
+	else if (d <= -1.0) // exactly opposite
 	{
-		VC3 axis(1.f, 0.f, 0.f);
+		Vec3<T> axis(1.0, 0.0, 0.0);
 
-		axis = axis.cross(v0);
-		if (axis.length() == 0.f)
+		axis = axis.cross(from);
+		if (axis.length() == 0.0)
 		{
-			axis = VC3(0.f, 1.f, 0.f);
-			axis = axis.cross(v0);
+			axis = Vec3<T>(0.0, 1.0, 0.0);
+			axis = axis.cross(from);
 		}
 
+		Quaternion<T> q;
 		q.x = axis.x;
 		q.y = axis.y;
 		q.z = axis.z;
-		q.w = 0.f;
+		q.w = 0.0;
 		return q.getNormalized();
 	}
 
-	const float s = sqrt((1.f + d) * 2.f);
-	const VC3 c = v0.cross(v1) * (1.f / s);
+	const T s = sqrt(T((1.0 + d) * 2.0));
+	TS_ASSERT(s != 0.f);
 
+	const Vec3<T> c = from.cross(to) * T(1.0 / s);
+
+	Quaternion<T> q;
 	q.x = c.x;
 	q.y = c.y;
 	q.z = c.z;

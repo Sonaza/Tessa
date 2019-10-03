@@ -10,8 +10,8 @@ public:
 	static const Vec2<T> up;
 	static const Vec2<T> right;
 
-	TS_FORCEINLINE Vec2();
-	TS_FORCEINLINE Vec2(T x, T y);
+	Vec2();
+	Vec2(T x, T y);
 	explicit Vec2(const T v[2]);
 
 	// Vector components
@@ -40,21 +40,19 @@ public:
 	const T &operator[](SizeType index) const;
 
 	// Returns length of the Vector
-	float length() const;
+	T length() const;
 
 	// Returns square length of the Vector
-	float squarelength() const;
+	T squareLength() const;
 
-	// Normalizes vector and returns current value
+	// Normalizes the vector
 	Vec2 &normalize();
-
-	// Gets normalized value without modifying current vector
-	Vec2 &getNormalized();
+	Vec2 getNormalized() const;
+	Vec2 &normalizeWithZeroFailsafe(const Vec2<T> &failsafe);
+	Vec2 getNormalizedWithZeroFailsafe(const Vec2<T> &failsafe) const;
 
 	// Vector dot product
-	float dot(const Vec2 &other) const;
-
-	String toString() const;
+	T dot(const Vec2 &other) const;
 };
 
 template <class T>
@@ -107,13 +105,18 @@ bool operator!=(const Vec2<T> &lhs, const Vec2<T> &rhs);
 
 #include "Vec2.inl"
 
-typedef Vec2<float>		VC2;
-typedef Vec2<int32>		VC2I;
-typedef Vec2<uint32>	VC2U;
+typedef Vec2<float>     VC2;
+typedef Vec2<double>    VC2D;
+typedef Vec2<int32>     VC2I;
+typedef Vec2<uint32>    VC2U;
 
 const Vec2<float> Vec2<float>::zero(0.f, 0.f);
 const Vec2<float> Vec2<float>::up(0.f, 1.f);
 const Vec2<float> Vec2<float>::right(1.f, 0.f);
+
+const Vec2<double> Vec2<double>::zero(0.0, 0.0);
+const Vec2<double> Vec2<double>::up(0.0, 1.0);
+const Vec2<double> Vec2<double>::right(1.0, 0.0);
 
 const Vec2<int32> Vec2<int32>::zero(0, 0);
 const Vec2<int32> Vec2<int32>::up(0, 1);
@@ -122,25 +125,5 @@ const Vec2<int32> Vec2<int32>::right(1, 0);
 const Vec2<uint32> Vec2<uint32>::zero(0, 0);
 const Vec2<uint32> Vec2<uint32>::up(0, 1);
 const Vec2<uint32> Vec2<uint32>::right(1, 0);
-
-template<class T>
-String Vec2<T>::toString() const
-{
-	return String().format("({}, {})", x, y);
-}
-
-template<class T>
-std::basic_ostream<char> &operator<<(std::basic_ostream<char> &strm, const Vec2<T> &vec)
-{
-	strm << vec.toString();
-	return strm;
-}
-
-template<class T>
-std::basic_ostream<wchar_t> &operator<<(std::basic_ostream<wchar_t> &strm, const Vec2<T> &vec)
-{
-	strm << vec.toString();
-	return strm;
-}
 
 TS_END_PACKAGE1()

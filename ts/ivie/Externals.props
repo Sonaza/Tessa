@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(ExternalsDir)CommonExternals.props" />
+    
+    <!-- Project specific externals -->
+    <Import Project="$(ExternalsDir)FreeImage\FreeImage.props" />
+    <Import Project="$(ExternalsDir)libvpx\libvpx.props" />
+    <Import Project="$(ExternalsDir)nestegg\nestegg.props" />
+    <Import Project="$(ExternalsDir)header_only_externals\header_only_externals.props" />
+  </ImportGroup>
+</Project>

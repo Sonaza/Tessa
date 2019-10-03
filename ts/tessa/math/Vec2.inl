@@ -1,19 +1,22 @@
 
 template <class T>
-TS_FORCEINLINE Vec2<T>::Vec2()
-	: x(0), y(0)
+Vec2<T>::Vec2()
+	: x(0)
+	, y(0)
 {
 }
 
 template <class T>
-TS_FORCEINLINE Vec2<T>::Vec2(T x, T y)
-	: x(x), y(y)
+Vec2<T>::Vec2(T x, T y)
+	: x(x)
+	, y(y)
 {
 }
 
 template <class T>
 Vec2<T>::Vec2(const T v[2])
-	: x(v[0]), y(v[1])
+	: x(v[0])
+	, y(v[1])
 {
 }
 
@@ -58,13 +61,13 @@ const T &Vec2<T>::operator[](SizeType index) const
 }
 
 template <class T>
-inline float Vec2<T>::length() const
+inline T Vec2<T>::length() const
 {
-	return std::sqrt(x * x + y * y);
+	return sqrt(x * x + y * y);
 }
 
 template <class T>
-inline float Vec2<T>::squarelength() const
+inline T Vec2<T>::squareLength() const
 {
 	return x * x + y * y;
 }
@@ -72,23 +75,46 @@ inline float Vec2<T>::squarelength() const
 template <class T>
 inline Vec2<T> &Vec2<T>::normalize()
 {
-	float len = length();
-	if(len != 0.f)
+	T slen = squareLength();
+	TS_ASSERT(slen != T(0));
+	if (slen != T(0))
 	{
-		x /= len;
-		y /= len;
+		T inv = 1 / sqrt(slen);
+		*this *= inv;
 	}
 	return *this;
 }
 
 template <class T>
-inline Vec2<T> &Vec2<T>::getNormalized()
+inline Vec2<T> Vec2<T>::getNormalized() const
 {
 	return Vec2<T>(*this).normalize();
 }
 
 template <class T>
-inline float Vec2<T>::dot(const Vec2<T> &other) const
+inline Vec2<T> &Vec2<T>::normalizeWithZeroFailsafe(const Vec2<T> &failsafe)
+{
+	T slen = squareLength();
+	if (slen != T(0))
+	{
+		T inv = 1 / sqrt(slen);
+		*this *= inv;
+	}
+	else
+	{
+		*this = failsafe;
+	}
+	return *this;
+}
+
+template <class T>
+inline Vec2<T> Vec2<T>::getNormalizedWithZeroFailsafe(const Vec2<T> &failsafe) const
+{
+	return Vec2<T>(*this).normalize(failsafe);
+}
+
+template <class T>
+inline T Vec2<T>::dot(const Vec2<T> &other) const
 {
 	return x * other.x + y * other.y;
 }
@@ -112,7 +138,7 @@ inline Vec2<T> operator*(const Vec2<T> &lhs, T v)
 }
 
 template <class T>
-inline Vec2<T> operator*(float v, const Vec2<T> &rhs)
+inline Vec2<T> operator*(T v, const Vec2<T> &rhs)
 {
 	return rhs * v;
 }

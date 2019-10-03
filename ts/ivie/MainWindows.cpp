@@ -15,6 +15,7 @@ extern void makepack();
 int __stdcall wWinMain(HINSTANCE hInstance, HINSTANCE unused, LPWSTR cmdArgs, int windowShowCmd)
 {
 // 	makepack();
+// 	test();
 	
 	system::Commando commando(cmdArgs);
 

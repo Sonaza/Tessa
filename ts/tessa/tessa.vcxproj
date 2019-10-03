@@ -51,17 +51,17 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(SolutionDir)..\tessa\Windows.props" />
-    <Import Project="$(ExternalsDir)Externals.props" />
+    <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(SolutionDir)..\tessa\Windows.props" />
-    <Import Project="$(ExternalsDir)Externals.props" />
+    <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(SolutionDir)..\tessa\Windows.props" />
-    <Import Project="$(ExternalsDir)Externals.props" />
+    <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CustomBuildBeforeTargets>
@@ -185,7 +185,8 @@
     <ClCompile Include="file\windows\FileWatcherWindows.cpp" />
     <ClCompile Include="input\InputManager.cpp" />
     <ClCompile Include="lang\Signal.cpp" />
-    <ClCompile Include="math\Vec2.cpp" />
+    <ClCompile Include="math\CommonMath.cpp" />
+    <ClCompile Include="math\VectorStringConversion.cpp" />
     <ClCompile Include="resource\ImageResource.cpp" />
     <ClCompile Include="string\String.cpp" />
     <ClCompile Include="string\StringUtils.cpp" />
@@ -249,6 +250,7 @@
     <ClInclude Include="math\Damper.h" />
     <ClInclude Include="math\Quaternion.h" />
     <ClInclude Include="math\Rect.h" />
+    <ClInclude Include="math\VectorStringConversion.h" />
     <ClInclude Include="resource\ImageResource.h" />
     <ClInclude Include="string\String.h" />
     <ClInclude Include="string\StringUtils.h" />
@@ -259,9 +261,7 @@
     <ClInclude Include="profiling\ZoneProfiler.h" />
     <ClInclude Include="resource\ArchivistInputStream.h" />
     <ClInclude Include="resource\MusicResource.h" />
-    <ClInclude Include="resource\ResourceBase.inl">
-      <FileType>CppCode</FileType>
-    </ClInclude>
+    <ClInclude Include="resource\ResourceBase.inl" />
     <ClCompile Include="resource\ResourceManager.cpp" />
     <ClCompile Include="resource\TextureResource.cpp" />
     <ClCompile Include="system\BaseApplication.cpp" />
@@ -294,8 +294,6 @@
     <ClInclude Include="time\TimeSpan.h" />
     <ClInclude Include="util\ContainerUtil.h" />
     <ClInclude Include="util\PriorityQueue.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="common\Common.h" />
     <ClInclude Include="common\FourCC.h" />
     <ClInclude Include="lang\Pointers.h" />
@@ -325,36 +323,20 @@
     <ClInclude Include="system\AbstractSceneBase.h" />
     <ClInclude Include="thread\ThreadScheduler.h" />
     <ClInclude Include="system\WindowManager.h" />
+    <ClInclude Include="lang\SharedPointer.inl" />
+    <ClInclude Include="lang\ScopedPointer.inl" />
+    <ClInclude Include="lang\UniquePointer.inl" />
+    <ClInclude Include="math\Mat4.inl" />
+    <ClInclude Include="math\Vec2.inl" />
+    <ClInclude Include="math\Vec3.inl" />
+    <ClInclude Include="math\Vec4.inl" />
+    <ClInclude Include="math\Damper.inl" />
+    <ClInclude Include="math\Quaternion.inl" />
+    <ClInclude Include="math\Rect.inl" />
+    <ClInclude Include="string\Utf.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="lang\SharedPointer.inl">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <ClInclude Include="lang\ScopedPointer.inl">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <ClInclude Include="lang\UniquePointer.inl">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <ClCompile Include="math\Mat4.cpp">
-      <FileType>Document</FileType>
-    </ClCompile>
-    <ClInclude Include="math\Vec2.inl">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <ClInclude Include="math\Vec3.inl">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <ClInclude Include="math\Vec4.inl">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <None Include="math\Damper.inl" />
-    <None Include="math\Quaternion.inl" />
-    <None Include="math\Rect.inl" />
-    <None Include="string\Utf.inl" />
     <None Include="Windows.props" />
-  </ItemGroup>
-  <ItemGroup>
     <Natvis Include="Tessa.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

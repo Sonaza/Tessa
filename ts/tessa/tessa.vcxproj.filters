@@ -164,9 +164,6 @@
     <ClCompile Include="resource\ImageResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="math\Vec2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="profiling\ZoneProfiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -186,9 +183,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="thread\AbstractMutexBase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="math\Mat4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file\windows\FileUtilsWindows.cpp">
@@ -231,6 +225,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="string\StringView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math\CommonMath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math\VectorStringConversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -509,6 +509,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="math\Quaternion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Mat4.inl">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math\VectorStringConversion.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

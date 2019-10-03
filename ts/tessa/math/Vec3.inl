@@ -60,13 +60,13 @@ const T &Vec3<T>::operator[](SizeType index) const
 }
 
 template <class T>
-inline float Vec3<T>::length() const
+inline T Vec3<T>::length() const
 {
-	return std::sqrt(x * x + y * y + z * z);
+	return sqrt(x * x + y * y + z * z);
 }
 
 template <class T>
-inline float Vec3<T>::squarelength() const
+inline T Vec3<T>::squareLength() const
 {
 	return x * x + y * y + z * z;
 }
@@ -74,24 +74,46 @@ inline float Vec3<T>::squarelength() const
 template <class T>
 inline Vec3<T> &Vec3<T>::normalize()
 {
-	float len = length();
-	if (len != 0.f)
+	T slen = squareLength();
+	TS_ASSERT(slen != T(0));
+	if (slen != T(0))
 	{
-		x /= len;
-		y /= len;
-		z /= len;
+		T inv = 1 / sqrt(slen);
+		*this *= inv;
 	}
 	return *this;
 }
 
 template <class T>
-inline Vec3<T> &Vec3<T>::getNormalized()
+inline Vec3<T> Vec3<T>::getNormalized() const
 {
 	return Vec3<T>(*this).normalize();
 }
 
 template <class T>
-inline float Vec3<T>::dot(const Vec3<T> &other) const
+inline Vec3<T> &Vec3<T>::normalizeWithZeroFailsafe(const Vec3<T> &failsafe)
+{
+	T slen = squareLength();
+	if (slen != T(0))
+	{
+		T inv = 1 / sqrt(slen);
+		*this *= inv;
+	}
+	else
+	{
+		*this = failsafe;
+	}
+	return *this;
+}
+
+template <class T>
+inline Vec3<T> Vec3<T>::getNormalizedWithZeroFailsafe(const Vec3<T> &failsafe) const
+{
+	return Vec3<T>(*this).normalize(failsafe);
+}
+
+template <class T>
+inline T Vec3<T>::dot(const Vec3<T> &other) const
 {
 	return x * other.x + y * other.y + z * other.z;
 }
@@ -127,7 +149,7 @@ inline Vec3<T> operator*(const Vec3<T> &lhs, T v)
 }
 
 template <class T>
-inline Vec3<T> operator*(float v, const Vec3<T> &rhs)
+inline Vec3<T> operator*(T v, const Vec3<T> &rhs)
 {
 	return rhs * v;
 }

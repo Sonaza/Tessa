@@ -9,83 +9,82 @@
 #endif
 
 #include <cmath>
+#include "ts/tessa/math/Angle.h"
 
 TS_PACKAGE1(math)
 
-class Mat4
+template<class T>
+class TMatrix4
 {
-	friend class Quat;
+	template<class> friend class Quaternion;
 
 public:
-	static const Mat4 identity;
+	static const TMatrix4 identity;
 
 	// Constructs an identity matrix
-	Mat4();
+	TMatrix4();
 
 	// Constructs from 3x3 matrix by expanding to 4x4
-	Mat4(float m00, float m01, float m02,
-		 float m10, float m11, float m12,
-		 float m20, float m21, float m22);
+	TMatrix4(T m00, T m01, T m02,
+	         T m10, T m11, T m12,
+	         T m20, T m21, T m22);
 
 	// Construct directly from individual components
-	Mat4(float m00, float m01, float m02, float m03,
-		 float m10, float m11, float m12, float m13,
-		 float m20, float m21, float m22, float m23,
-		 float m30, float m31, float m32, float m33);
+	TMatrix4(T m00, T m01, T m02, T m03,
+	         T m10, T m11, T m12, T m13,
+	         T m20, T m21, T m22, T m23,
+	         T m30, T m31, T m32, T m33);
 
 	// Default copy operations
-	Mat4(const Mat4 &other) = default;
-	Mat4 &operator=(const Mat4 &other) = default;
+	TMatrix4(const TMatrix4 &other) = default;
+	TMatrix4 &operator=(const TMatrix4 &other) = default;
 
 	// Retrieve current matrix
-	const float *getMatrix() const;
+	const T *getMatrix() const;
 
 	// Calculate inverse matrix
-	Mat4 getInverse() const;
+	TMatrix4 &invert();
+	TMatrix4 getInverse() const;
 
 	// Matrix multiplication
-	Mat4 &combine(const Mat4 &matrix);
+	TMatrix4 &combine(const TMatrix4 &matrix);
 
 	// Translate matrix by offset
-	Mat4 &translate(const VC2 &offset);
-	Mat4 &translate(float x, float y);
-	Mat4 &translate(const VC3 &offset);
+	TMatrix4 &translate(const Vec2<T> &offset);
+	TMatrix4 &translate(T x, T y);
+	TMatrix4 &translate(const Vec3<T> &offset);
 
 	// Rotates matrix by given amount on Z axis (for 2D graphics)
-	Mat4 &rotate(float degrees, const VC2 &center = VC2::zero);
+	TMatrix4 &rotate(T degrees, const Vec2<T> &center = Vec2<T>::zero);
 
 	// Rotate matrix by amount on specified axis
-	Mat4 &rotate(float degrees, const VC3 &axis);
+	TMatrix4 &rotate(T degrees, const Vec3<T> &axis);
 
-	// Scales matrix by amount
-	Mat4 &scale(const VC2 &scale, const VC2 &center = VC2::zero);
-	Mat4 &scale(float scaleX, float scaleY, float centerX = 0.f, float centerY = 0.f);
-	Mat4 &scale(const VC3 &scale);
+	// Scale the matrix by amount
+	TMatrix4 &scale(const Vec2<T> &scale, const Vec2<T> &center = Vec2<T>::zero);
+	TMatrix4 &scale(T scaleX, T scaleY, T centerX = T(0.0), T centerY = T(0.0));
+	TMatrix4 &scale(const Vec3<T> &scale);
 
-	// Calculate matrix transpose
-	Mat4 &transpose();
+	// Transpose the matrix
+	TMatrix4 &transpose();
 
-	// Transforms a VC2 point by the current matrix
-	VC2 transformPoint(const VC2 &point) const;
-
-	// Transforms a VC3 point by the current matrix
-	VC3 transformPoint(const VC3 &point) const;
-
-	// Transforms a VC4 point by the current matrix
-	VC4 transformPoint(const VC4 &point) const;
+	// Transforms a vector point by the current matrix
+	Vec2<T> transformPoint(const Vec2<T> &point) const;
+	Vec3<T> transformPoint(const Vec3<T> &point) const;
+	Vec4<T> transformPoint(const Vec4<T> &point) const;
 
 	// Calculate a lookat matrix 
-	static Mat4 makeLookAt(const VC3 &eye, const VC3 &target, const VC3 &up);
+	static TMatrix4 makeLookAt(const Vec3<T> &eye, const Vec3<T> &target, const Vec3<T> &up);
 
 	// Calculates 3D projection matrix
-	static Mat4 makePerspective(float fovInDegrees, float aspect, float znear, float zfar);
+	static TMatrix4 makePerspective(T fovInDegrees, T aspect, T znear, T zfar);
 
 	// Calculates orthographic projection matrix
-	static Mat4 makeOrtho(float left, float right,
-		float bottom, float top, float znear = -1.f, float zfar = 1.f);
+	static TMatrix4 makeOrtho(T left, T right,
+		T bottom, T top, T znear = T(-1.9), T zfar = T(1.0));
 
 #if TS_GLOBAL_USING_SFML == TS_TRUE
-	Mat4(const sf::Transform &transform);
+	TMatrix4(const sf::Transform &transform);
 	explicit operator sf::Transform() const;
 #endif
 
@@ -93,7 +92,7 @@ public:
 	class Row
 	{
 	public:
-		Row(float a, float b, float c, float d)
+		Row(T a, T b, T c, T d)
 		{
 			m_row[0] = a;
 			m_row[1] = b;
@@ -101,14 +100,14 @@ public:
 			m_row[3] = d;
 		}
 
-		float operator[](unsigned int i) const
+		T operator[](unsigned int i) const
 		{
 			TS_ASSERT(i >= 0 && i < 4);
 			return m_row[i];
 		}
 
 	private:
-		float m_row[4];
+		T m_row[4];
 	};
 
 	// Overload brackets to retrieve a single row
@@ -116,7 +115,7 @@ public:
 	{
 		TS_ASSERT(i >= 0 && i < 4);
 		return Row(
-			m_matrix[i * 4],
+			m_matrix[i * 4 + 0],
 			m_matrix[i * 4 + 1],
 			m_matrix[i * 4 + 2],
 			m_matrix[i * 4 + 3]
@@ -124,18 +123,24 @@ public:
 	}
 
 private:
-	float m_matrix[16];
+	T m_matrix[16];
 };
 
-bool operator==(const Mat4 &lhs, const Mat4 &rhs);
-bool operator!=(const Mat4 &lhs, const Mat4 &rhs);
+template<class T>
+bool operator==(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs);
+template<class T>
+bool operator!=(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs);
 
-Mat4 operator*(const Mat4 &lhs, const Mat4 &rhs);
+template<class T>
+TMatrix4<T> operator*(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs);
 
-// Transform Vector by matrix
-VC2 operator*(const Mat4 &mat, const VC2 &point);
-VC3 operator*(const Mat4 &mat, const VC3 &point);
-VC4 operator*(const Mat4 &mat, const VC4 &point);
+#include "Mat4.inl"
+
+typedef TMatrix4<float> Mat4;
+typedef TMatrix4<double> DMat4;
+
+const TMatrix4<float> TMatrix4<float>::identity;
+const TMatrix4<double> TMatrix4<double>::identity;
 
 typedef Mat4 Transform;
 
