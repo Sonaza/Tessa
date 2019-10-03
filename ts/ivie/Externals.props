@@ -7,6 +7,5 @@
     <Import Project="$(ExternalsDir)FreeImage\FreeImage.props" />
     <Import Project="$(ExternalsDir)libvpx\libvpx.props" />
     <Import Project="$(ExternalsDir)nestegg\nestegg.props" />
-    <Import Project="$(ExternalsDir)header_only_externals\header_only_externals.props" />
   </ImportGroup>
 </Project>
