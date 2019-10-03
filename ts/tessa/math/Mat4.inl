@@ -73,7 +73,7 @@ inline TMatrix4<T> &TMatrix4<T>::invert()
 	if (det != 0)
 	{
 		T invdet = 1 / det;
-		*this = TMatrix4(
+		*this = TMatrix4<T>(
 			 (m_matrix[5] * A2323 - m_matrix[9] * A1323 + m_matrix[13] * A1223) * invdet,
 			-(m_matrix[4] * A2323 - m_matrix[8] * A1323 + m_matrix[12] * A1223) * invdet,
 			 (m_matrix[4] * A2313 - m_matrix[8] * A1313 + m_matrix[12] * A1213) * invdet,
@@ -116,7 +116,7 @@ inline TMatrix4<T> &TMatrix4<T>::combine(const TMatrix4<T> &matrix)
 	const T *b = matrix.m_matrix;
 
 	// Calculate square 4x4 matrix multiplication
-	*this = TMatrix4(
+	*this = TMatrix4<T>(
 		a[0] * b[0]     + a[4] * b[1]   + a[8] * b[2]   + a[12] * b[3],
 		a[0] * b[4]     + a[4] * b[5]   + a[8] * b[6]   + a[12] * b[7],
 		a[0] * b[8]     + a[4] * b[9]   + a[8] * b[10]  + a[12] * b[11],
@@ -241,7 +241,7 @@ inline TMatrix4<T> &TMatrix4<T>::scale(const Vec3<T> &s)
 template<class T>
 inline TMatrix4<T> &TMatrix4<T>::transpose()
 {
-	*this = TMatrix4(
+	*this = TMatrix4<T>(
 		m_matrix[0],  m_matrix[1],  m_matrix[2],  m_matrix[3],
 		m_matrix[4],  m_matrix[5],  m_matrix[6],  m_matrix[7],
 		m_matrix[8],  m_matrix[9],  m_matrix[10], m_matrix[11],
@@ -288,7 +288,7 @@ inline TMatrix4<T> TMatrix4<T>::makeLookAt(const Vec3<T> &eye, const Vec3<T> &ta
 	Vec3<T> s = f.cross(u).getNormalized();
 	u = s.cross(f);
 
-	return TMatrix4(
+	return TMatrix4<T>(
 		 s.x,  s.y,  s.z, -s.dot(eye),
 		 u.x,  u.y,  u.z, -u.dot(eye),
 		-f.x, -f.y, -f.z,  f.dot(eye),
@@ -305,7 +305,7 @@ inline TMatrix4<T> TMatrix4<T>::makePerspective(T fovInDegrees, T aspect, T znea
 	T bottom = -range;
 	T top = range;
 
-	return TMatrix4(
+	return TMatrix4<T>(
 		(2 * znear) / (right - left), 0, 0, 0,
 		0, (2 * znear) / (top - bottom), 0, 0,
 		0, 0, -(zfar + znear) / (zfar - znear), -(2 * zfar * znear) / (zfar - znear),
@@ -316,7 +316,7 @@ inline TMatrix4<T> TMatrix4<T>::makePerspective(T fovInDegrees, T aspect, T znea
 template<class T>
 inline TMatrix4<T> TMatrix4<T>::makeOrtho(T left, T right, T bottom, T top, T znear, T zfar)
 {
-	return TMatrix4(
+	return TMatrix4<T>(
 		2 / (right - left), 0, 0, -(right + left) / (right - left),
 		0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom),
 		0, 0, -2 / (zfar - znear), -(zfar + znear) / (zfar - znear),
@@ -330,7 +330,7 @@ template<class T>
 inline TMatrix4<T>::TMatrix4(const sf::Transform &transform)
 {
 	const T *m = transform.getMatrix();
-	*this = TMatrix4(
+	*this = TMatrix4<T>(
 		m[0], m[4], m[8],  m[12],
 		m[1], m[5], m[9],  m[13],
 		m[2], m[6], m[10], m[14],
@@ -373,5 +373,5 @@ bool operator!=(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs)
 template<class T>
 TMatrix4<T> operator*(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs)
 {
-	return TMatrix4(lhs).combine(rhs);
+	return TMatrix4<T>(lhs).combine(rhs);
 }

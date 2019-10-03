@@ -70,7 +70,7 @@ inline Quaternion<T> &Quaternion<T>::operator*=(const Quaternion<T> &other)
 template<class T>
 inline Quaternion<T> Quaternion<T>::operator*(T scalar) const
 {
-	return Quaternion(x * scalar, y * scalar, z * scalar, w * scalar);
+	return Quaternion<T>(x * scalar, y * scalar, z * scalar, w * scalar);
 }
 
 template<class T>
@@ -86,38 +86,11 @@ inline Quaternion<T> &Quaternion<T>::operator*=(T scalar)
 template<class T>
 inline Quaternion<T> Quaternion<T>::operator+(const Quaternion<T> &other) const
 {
-	return Quaternion(x + other.x, y + other.y, z + other.z, w + other.w);
+	return Quaternion<T>(x + other.x, y + other.y, z + other.z, w + other.w);
 }
 
 template<class T>
 inline void Quaternion<T>::getMatrix(TMatrix4<T> &m, const Vec3<T> &offset) const
-{
-	Quaternion<T> q(*this);
-	q.normalize();
-
-	m.m_matrix[0]  = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
-	m.m_matrix[1]  = 2 * q.x * q.y + 2 * q.z * q.w;
-	m.m_matrix[2]  = 2 * q.x * q.z - 2 * q.y * q.w;
-	m.m_matrix[3]  = 0;
-
-	m.m_matrix[4]  = 2 * q.x * q.y - 2 * q.z * q.w;
-	m.m_matrix[5]  = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
-	m.m_matrix[6]  = 2 * q.z * q.y + 2 * q.x * q.w;
-	m.m_matrix[7]  = 0;
-
-	m.m_matrix[8]  = 2 * q.x * q.z + 2 * q.y * q.w;
-	m.m_matrix[9]  = 2 * q.z * q.y - 2 * q.x * q.w;
-	m.m_matrix[10] = 1 - 2 * q.x * q.x - 2 * q.y * q.y;
-	m.m_matrix[11] = 0;
-
-	m.m_matrix[12] = offset.x;
-	m.m_matrix[13] = offset.y;
-	m.m_matrix[14] = offset.z;
-	m.m_matrix[15] = 1;
-}
-
-template<class T>
-inline void Quaternion<T>::getMatrixQuickly(TMatrix4<T> &m) const
 {
 	m.m_matrix[0]  = 1 - 2 * y * y - 2 * z * z;
 	m.m_matrix[1]  = 2 * x * y + 2 * z * w;
@@ -134,16 +107,16 @@ inline void Quaternion<T>::getMatrixQuickly(TMatrix4<T> &m) const
 	m.m_matrix[10] = 1 - 2 * x * x - 2 * y * y;
 	m.m_matrix[11] = 0;
 
-	m.m_matrix[12] = 0;
-	m.m_matrix[13] = 0;
-	m.m_matrix[14] = 0;
+	m.m_matrix[12] = offset.x;
+	m.m_matrix[13] = offset.y;
+	m.m_matrix[14] = offset.z;
 	m.m_matrix[15] = 1;
 }
 
 template<class T>
 inline Quaternion<T> Quaternion<T>::getInverted() const
 {
-	return Quaternion(*this).invert();
+	return Quaternion<T>(*this).invert();
 }
 
 template<class T>
@@ -228,7 +201,8 @@ inline Quaternion<T> &Quaternion<T>::normalize()
 	TS_ASSERT(slen != T(0));
 	if (slen != T(0))
 	{
-		*this *= T(1.0 / sqrt(slen));
+		T inv = 1 / sqrt(slen);
+		*this *= inv;
 	}
 	return *this;
 }
@@ -236,16 +210,17 @@ inline Quaternion<T> &Quaternion<T>::normalize()
 template<class T>
 inline Quaternion<T> Quaternion<T>::getNormalized() const
 {
-	return Quaternion(*this).normalize();
+	return Quaternion<T>(*this).normalize();
 }
 
 template<class T>
 inline Quaternion<T> &Quaternion<T>::normalizeWithZeroFailsafe(const Quaternion<T> &failsafe)
 {
 	T slen = squareLength();
-	if (slen != 0)
+	if (slen != T(0))
 	{
-		*this = T(1 / sqrt(slen));
+		T inv = 1 / sqrt(slen);
+		*this *= inv;
 	}
 	else
 	{
@@ -257,7 +232,7 @@ inline Quaternion<T> &Quaternion<T>::normalizeWithZeroFailsafe(const Quaternion<
 template<class T>
 inline Quaternion<T> Quaternion<T>::getNormalizedWithZeroFailsafe(const Quaternion<T> &failsafe) const
 {
-	return Quaternion(*this).normalize(failsafe);
+	return Quaternion<T>(*this).normalizeWithZeroFailsafe(failsafe);
 }
 
 template<class T>
@@ -298,13 +273,13 @@ inline Quaternion<T> &Quaternion<T>::slerp(Quaternion<T> q1, Quaternion<T> q2, T
 }
 
 template<class T>
-inline T Quaternion<T>::squareLength()
+inline T Quaternion<T>::squareLength() const
 {
 	return x * x + y * y + z * z + w * w;
 }
 
 template<class T>
-inline T Quaternion<T>::length()
+inline T Quaternion<T>::length() const
 {
 	return sqrt(x * x + y * y + z * z + w * w);
 }

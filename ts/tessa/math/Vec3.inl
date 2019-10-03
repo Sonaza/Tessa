@@ -109,7 +109,7 @@ inline Vec3<T> &Vec3<T>::normalizeWithZeroFailsafe(const Vec3<T> &failsafe)
 template <class T>
 inline Vec3<T> Vec3<T>::getNormalizedWithZeroFailsafe(const Vec3<T> &failsafe) const
 {
-	return Vec3<T>(*this).normalize(failsafe);
+	return Vec3<T>(*this).normalizeWithZeroFailsafe(failsafe);
 }
 
 template <class T>

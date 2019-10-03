@@ -11,11 +11,19 @@ using namespace ts;
 
 extern void makepack();
 
+void mathtest()
+{
+	math::Mat4 mt;
+	math::Quat q = math::Quat::makeFromRotation(math::VC3::up, math::VC3::forward);
+	q.normalize().getMatrix(mt);
+}
+
+
 // int wmain(int argc, const wchar_t **argv)
 int __stdcall wWinMain(HINSTANCE hInstance, HINSTANCE unused, LPWSTR cmdArgs, int windowShowCmd)
 {
 // 	makepack();
-// 	test();
+	mathtest();
 	
 	system::Commando commando(cmdArgs);
 

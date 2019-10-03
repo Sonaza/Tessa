@@ -51,13 +51,9 @@ public:
 	Quaternion getNormalizedWithZeroFailsafe(const Quaternion &failsafe) const;
 	
 	/* Retrieve matrix that represents the quaternion's rotation, with an optional offset.
-	 * The quaternion is normalized before the math is done.
+	 * The quaternion must be normalized before calling this function.
 	 */
 	void getMatrix(TMatrix4<T> &outMatrix, const Vec3<T> &offset = Vec3<T>::zero) const;
-
-	/* Quick matrix retrieve, quaternion isn't be normalized within this call.
-	 */
-	void getMatrixQuickly(TMatrix4<T> &outMatrix) const;
 
 	/* Retrieve the quaternion inverse.
 	 */ 
@@ -78,11 +74,11 @@ public:
 
 	/* Retrieve quaternion length squared.
 	 */
-	T squareLength();
+	T squareLength() const;
 
 	/* Retrieve quaternion length.
 	 */
-	T length();
+	T length() const;
 
 	/* Retrieve the current rotation as the axis of rotation and angle (in radians).
 	 */
