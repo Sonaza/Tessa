@@ -48,18 +48,18 @@
   </Type>
   
   <Type Name="ts::string::String">
-    <DisplayString Condition="buffer._Mypair._Myval2._Myres &lt; buffer._Mypair._Myval2._BUF_SIZE">{buffer._Mypair._Myval2._Bx._Buf,s32}</DisplayString>
-    <DisplayString Condition="buffer._Mypair._Myval2._Myres &gt;= buffer._Mypair._Myval2._BUF_SIZE">{buffer._Mypair._Myval2._Bx._Ptr,s32}</DisplayString>
-    <StringView Condition="buffer._Mypair._Myval2._Myres &lt; buffer._Mypair._Myval2._BUF_SIZE">buffer._Mypair._Myval2._Bx._Buf,s32</StringView>
-    <StringView Condition="buffer._Mypair._Myval2._Myres &gt;= buffer._Mypair._Myval2._BUF_SIZE">buffer._Mypair._Myval2._Bx._Ptr,s32</StringView>
+    <DisplayString Condition="m_buffer._Mypair._Myval2._Myres &lt; m_buffer._Mypair._Myval2._BUF_SIZE">{m_buffer._Mypair._Myval2._Bx._Buf,s32}</DisplayString>
+    <DisplayString Condition="m_buffer._Mypair._Myval2._Myres &gt;= m_buffer._Mypair._Myval2._BUF_SIZE">{m_buffer._Mypair._Myval2._Bx._Ptr,s32}</DisplayString>
+    <StringView Condition="m_buffer._Mypair._Myval2._Myres &lt; m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Buf,s32</StringView>
+    <StringView Condition="m_buffer._Mypair._Myval2._Myres &gt;= m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Ptr,s32</StringView>
     <Expand>
-      <Item Name="[size]" ExcludeView="simple">buffer._Mypair._Myval2._Mysize</Item>
-      <Item Name="[capacity]" ExcludeView="simple">buffer._Mypair._Myval2._Myres</Item>
-      <Item Name="[allocator]" ExcludeView="simple">buffer._Mypair</Item>
+      <Item Name="[size]" ExcludeView="simple">m_buffer._Mypair._Myval2._Mysize</Item>
+      <Item Name="[capacity]" ExcludeView="simple">m_buffer._Mypair._Myval2._Myres</Item>
+      <Item Name="[allocator]" ExcludeView="simple">m_buffer._Mypair</Item>
       <ArrayItems>
-        <Size>buffer._Mypair._Myval2._Mysize</Size>
-        <ValuePointer Condition="buffer._Mypair._Myval2._Myres &lt; buffer._Mypair._Myval2._BUF_SIZE">buffer._Mypair._Myval2._Bx._Buf</ValuePointer>
-        <ValuePointer Condition="buffer._Mypair._Myval2._Myres &gt;= buffer._Mypair._Myval2._BUF_SIZE">buffer._Mypair._Myval2._Bx._Ptr</ValuePointer>
+        <Size>m_buffer._Mypair._Myval2._Mysize</Size>
+        <ValuePointer Condition="m_buffer._Mypair._Myval2._Myres &lt; m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Buf</ValuePointer>
+        <ValuePointer Condition="m_buffer._Mypair._Myval2._Myres &gt;= m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Ptr</ValuePointer>
       </ArrayItems>
     </Expand>
   </Type>
