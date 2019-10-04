@@ -35,6 +35,9 @@ public:
 	         T m20, T m21, T m22, T m23,
 	         T m30, T m31, T m32, T m33);
 
+	// Construct from component array (note order is different compared to other constructors)
+	explicit TMatrix4(T m[16]);
+
 	// Default copy operations
 	TMatrix4(const TMatrix4 &other) = default;
 	TMatrix4 &operator=(const TMatrix4 &other) = default;
