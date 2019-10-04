@@ -51,56 +51,46 @@ inline const T *TMatrix4<T>::getMatrix() const
 template<class T>
 inline TMatrix4<T> &TMatrix4<T>::invert()
 {
-	T A2323 = m_matrix[10] * m_matrix[15] - m_matrix[14] * m_matrix[11];
-	T A1223 = m_matrix[6]  * m_matrix[11] - m_matrix[10] * m_matrix[7];
-	T A1323 = m_matrix[6]  * m_matrix[15] - m_matrix[14] * m_matrix[7];
-	T A0323 = m_matrix[2]  * m_matrix[15] - m_matrix[14] * m_matrix[3];
-	T A0223 = m_matrix[2]  * m_matrix[11] - m_matrix[10] * m_matrix[3];
-	T A0123 = m_matrix[2]  * m_matrix[7]  - m_matrix[6]  * m_matrix[3];
-	T A2313 = m_matrix[9]  * m_matrix[15] - m_matrix[13] * m_matrix[11];
-	T A1313 = m_matrix[5]  * m_matrix[15] - m_matrix[13] * m_matrix[7];
-	T A1213 = m_matrix[5]  * m_matrix[11] - m_matrix[9]  * m_matrix[7];
-	T A2312 = m_matrix[9]  * m_matrix[14] - m_matrix[13] * m_matrix[10];
-	T A1312 = m_matrix[5]  * m_matrix[14] - m_matrix[13] * m_matrix[6];
-	T A1212 = m_matrix[5]  * m_matrix[10] - m_matrix[9]  * m_matrix[6];
-	T A0313 = m_matrix[1]  * m_matrix[15] - m_matrix[13] * m_matrix[3];
-	T A0213 = m_matrix[1]  * m_matrix[11] - m_matrix[9]  * m_matrix[3];
-	T A0312 = m_matrix[1]  * m_matrix[14] - m_matrix[13] * m_matrix[2];
-	T A0212 = m_matrix[1]  * m_matrix[10] - m_matrix[9]  * m_matrix[2];
-	T A0113 = m_matrix[1]  * m_matrix[7]  - m_matrix[5]  * m_matrix[3];
-	T A0112 = m_matrix[1]  * m_matrix[6]  - m_matrix[5]  * m_matrix[2];
-
-	T det = m_matrix[0]  * (m_matrix[5] * A2323 - m_matrix[9] * A1323 + m_matrix[13] * A1223)
-	      - m_matrix[4]  * (m_matrix[1] * A2323 - m_matrix[9] * A0323 + m_matrix[13] * A0223)
-	      + m_matrix[8]  * (m_matrix[1] * A1323 - m_matrix[5] * A0323 + m_matrix[13] * A0123)
-	      - m_matrix[12] * (m_matrix[1] * A1223 - m_matrix[5] * A0223 + m_matrix[9]  * A0123);
+	T det = m_matrix[0] * (m_matrix[5] * m_matrix[10] - m_matrix[9] * m_matrix[6]) -
+	        m_matrix[4] * (m_matrix[1] * m_matrix[10] - m_matrix[9] * m_matrix[2]) +
+	        m_matrix[8] * (m_matrix[1] * m_matrix[6]  - m_matrix[5] * m_matrix[2]);
 
 	// Check determinant to avoid division by zero
 	if (det != 0)
 	{
 		T invdet = 1 / det;
-		T invmat[16];
+		T invmat[16] = {};
 		
-		invmat[0]  =  (m_matrix[5] * A2323 - m_matrix[9] * A1323 + m_matrix[13] * A1223) * invdet;
-		invmat[1]  = -(m_matrix[1] * A2323 - m_matrix[9] * A0323 + m_matrix[13] * A0223) * invdet;
-		invmat[2]  =  (m_matrix[1] * A1323 - m_matrix[5] * A0323 + m_matrix[13] * A0123) * invdet;
-		invmat[3]  = -(m_matrix[1] * A1223 - m_matrix[5] * A0223 + m_matrix[9]  * A0123) * invdet;
+		invmat[0]  =  (m_matrix[5] * m_matrix[10] - m_matrix[9] * m_matrix[6]) * invdet;
+		invmat[1]  = -(m_matrix[1] * m_matrix[10] - m_matrix[9] * m_matrix[2]) * invdet;
+		invmat[2]  =  (m_matrix[1] * m_matrix[6] - m_matrix[5] * m_matrix[2]) * invdet;
+		invmat[3]  =  0;
 		
-		invmat[4]  = -(m_matrix[4] * A2323 - m_matrix[8] * A1323 + m_matrix[12] * A1223) * invdet;
-		invmat[5]  =  (m_matrix[0] * A2323 - m_matrix[8] * A0323 + m_matrix[12] * A0223) * invdet;
-		invmat[6]  = -(m_matrix[0] * A1323 - m_matrix[4] * A0323 + m_matrix[12] * A0123) * invdet;
-		invmat[7]  =  (m_matrix[0] * A1223 - m_matrix[4] * A0223 + m_matrix[8]  * A0123) * invdet;
+		invmat[4]  = -(m_matrix[4] * m_matrix[10] - m_matrix[8] * m_matrix[6]) * invdet;
+		invmat[5]  =  (m_matrix[0] * m_matrix[10] - m_matrix[8] * m_matrix[2]) * invdet;
+		invmat[6]  = -(m_matrix[0] * m_matrix[6] - m_matrix[4] * m_matrix[2]) * invdet;
+		invmat[7]  =  0;
 		
-		invmat[8]  =  (m_matrix[4] * A2313 - m_matrix[8] * A1313 + m_matrix[12] * A1213) * invdet;
-		invmat[9]  = -(m_matrix[0] * A2313 - m_matrix[8] * A0313 + m_matrix[12] * A0213) * invdet;
-		invmat[10] =  (m_matrix[0] * A1313 - m_matrix[4] * A0313 + m_matrix[12] * A0113) * invdet;
-		invmat[11] = -(m_matrix[0] * A1213 - m_matrix[4] * A0213 + m_matrix[8]  * A0113) * invdet;
+		invmat[8]  =  (m_matrix[4] * m_matrix[9] - m_matrix[8] * m_matrix[5]) * invdet;
+		invmat[9]  = -(m_matrix[0] * m_matrix[9] - m_matrix[8] * m_matrix[1]) * invdet;
+		invmat[10] =  (m_matrix[0] * m_matrix[5] - m_matrix[4] * m_matrix[1]) * invdet;
+		invmat[11] =  0;
 
-		invmat[12] = -(m_matrix[4] * A2312 - m_matrix[8] * A1312 + m_matrix[12] * A1212) * invdet;
-		invmat[13] =  (m_matrix[0] * A2312 - m_matrix[8] * A0312 + m_matrix[12] * A0212) * invdet;
-		invmat[14] = -(m_matrix[0] * A1312 - m_matrix[4] * A0312 + m_matrix[12] * A0112) * invdet;
-		invmat[15] =  (m_matrix[0] * A1212 - m_matrix[4] * A0212 + m_matrix[8]  * A0112) * invdet;
+		invmat[12] = -(m_matrix[12] * invmat[0] + m_matrix[13] * invmat[4] + m_matrix[14] * invmat[8]);
+		invmat[13] = -(m_matrix[12] * invmat[1] + m_matrix[13] * invmat[5] + m_matrix[14] * invmat[9]);
+		invmat[14] = -(m_matrix[12] * invmat[2] + m_matrix[13] * invmat[6] + m_matrix[14] * invmat[10]);
+		invmat[15] =  1;
 		
+		// T A2312 = m_matrix[9] * m_matrix[14] - m_matrix[13] * m_matrix[10];
+		// T A1312 = m_matrix[5] * m_matrix[14] - m_matrix[13] * m_matrix[6];
+		// T A1212 = m_matrix[5] * m_matrix[10] - m_matrix[9]  * m_matrix[6];
+		// T A0312 = m_matrix[1] * m_matrix[14] - m_matrix[13] * m_matrix[2];
+		// T A0212 = m_matrix[1] * m_matrix[10] - m_matrix[9]  * m_matrix[2];
+		// T A0112 = m_matrix[1] * m_matrix[6]  - m_matrix[5]  * m_matrix[2];
+		// invmat[12] = -(m_matrix[4] * A2312 - m_matrix[8] * A1312 + m_matrix[12] * A1212) * invdet;
+		// invmat[13] =  (m_matrix[0] * A2312 - m_matrix[8] * A0312 + m_matrix[12] * A0212) * invdet;
+		// invmat[14] = -(m_matrix[0] * A1312 - m_matrix[4] * A0312 + m_matrix[12] * A0112) * invdet;
+
 		*this = TMatrix4<T>(invmat);
 	}
 	else
