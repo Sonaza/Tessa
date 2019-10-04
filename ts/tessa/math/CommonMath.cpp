@@ -3,12 +3,12 @@
 
 TS_PACKAGE1(math)
 
-bool floatEquals(float lhs, float rhs, float epsilon)
+bool equalsWithEpsilon(float lhs, float rhs, float epsilon)
 {
 	return abs(lhs - rhs) <= epsilon;
 }
 
-bool floatEquals(double lhs, double rhs, double epsilon)
+bool equalsWithEpsilon(double lhs, double rhs, double epsilon)
 {
 	return abs(lhs - rhs) <= epsilon;
 }

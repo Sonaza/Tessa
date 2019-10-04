@@ -82,7 +82,7 @@ T invSqrt(T value)
 	return T(1.0 / sqrt(value));
 }
 
-extern bool floatEquals(float lhs, float rhs, float epsilon = FLOAT_EPSILON);
-extern bool floatEquals(double lhs, double rhs, double epsilon = DOUBLE_EPSILON);
+extern bool equalsWithEpsilon(float lhs, float rhs, float epsilon = FLOAT_EPSILON);
+extern bool equalsWithEpsilon(double lhs, double rhs, double epsilon = DOUBLE_EPSILON);
 
 TS_END_PACKAGE1()

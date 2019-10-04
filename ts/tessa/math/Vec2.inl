@@ -63,7 +63,7 @@ const T &Vec2<T>::operator[](SizeType index) const
 template <class T>
 inline T Vec2<T>::length() const
 {
-	return sqrt(x * x + y * y);
+	return (T)sqrt(x * x + y * y);
 }
 
 template <class T>

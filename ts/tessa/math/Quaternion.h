@@ -29,19 +29,17 @@ public:
 	Quaternion(const Quaternion &other);
 	Quaternion &operator=(const Quaternion &other);
 
-	Quaternion operator+(const Quaternion &other) const;
-
 	Quaternion operator*(const Quaternion &other) const;
 	Quaternion &operator*=(const Quaternion &other);
 
-	Quaternion operator*(T s) const;
-	Quaternion &operator*=(T s);
+	Quaternion operator*(T scalar) const;
+	Quaternion &operator*=(T scalar);
+
+	Quaternion operator+(const Quaternion &other) const;
 
 	/* Returns a vector rotated by the quaternion.
 	 */
 	Vec3<T> getRotated(const Vec3<T> &vector) const;
-
-	T dot(const Quaternion &other) const;
 
 	/* Normalize quaternion to account for floating point errors.
 	 */
@@ -79,6 +77,10 @@ public:
 	/* Retrieve quaternion length.
 	 */
 	T length() const;
+
+	/* Returns dot product with another quaternion. Not very many useful use cases for this though.
+	*/
+	T dot(const Quaternion &other) const;
 
 	/* Retrieve the current rotation as the axis of rotation and angle (in radians).
 	 */

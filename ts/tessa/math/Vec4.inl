@@ -50,7 +50,7 @@ const T &Vec4<T>::operator[](SizeType index) const
 template <class T>
 inline T Vec4<T>::length() const
 {
-	return sqrt(x * x + y * y + z * z);
+	return (T)sqrt(x * x + y * y + z * z);
 }
 
 template <class T>
