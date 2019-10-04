@@ -10,19 +10,8 @@ Commando::Commando()
 {
 }
 
-Commando::Commando(int32 argc, const char **argv)
+Commando::~Commando()
 {
-	parse(argc, argv);
-}
-
-Commando::Commando(int32 argc, const wchar_t **argv)
-{
-	parse(argc, argv);
-}
-
-Commando::Commando(const wchar_t *args)
-{
-	parse(args);
 }
 
 bool Commando::parse(const wchar_t *args)
@@ -107,33 +96,23 @@ bool Commando::parse(const wchar_t *args)
 
 bool Commando::parse(int32 argc, const char **argv)
 {
-	// Ignore the first argument of the CRT args list
-	if (argc <= 1)
-		return true;
-
 	std::vector<String> args;
-	args.reserve(argc - 1);
-	for (int32 index = 1; index < argc; ++index)
+	args.reserve(argc);
+	for (int32 index = 0; index < argc; ++index)
 	{
-		args.push_back(argv[index]);
+		args.push_back(String(argv[index]));
 	}
-
 	return parse(args);
 }
 
 bool Commando::parse(int32 argc, const wchar_t **argv)
 {
-	// Ignore the first argument of the CRT args list
-	if (argc <= 1)
-		return true;
-
 	std::vector<String> args;
-	args.reserve(argc - 1);
-	for (int32 index = 1; index < argc; ++index)
+	args.reserve(argc);
+	for (int32 index = 0; index < argc; ++index)
 	{
-		args.push_back(argv[index]);
+		args.push_back(String(argv[index]));
 	}
-
 	return parse(args);
 }
 
