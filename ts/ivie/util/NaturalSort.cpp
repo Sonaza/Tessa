@@ -1,7 +1,7 @@
 #include "Precompiled.h"
 #include "NaturalSort.h"
 
-#include "ts/tessa/file/FileUtils.h"
+#include "ts/file/FileUtils.h"
 
 // #pragma warning( push, 3 )
 // #include "ext/naturalorder.h"

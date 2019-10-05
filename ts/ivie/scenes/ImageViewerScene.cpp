@@ -4,20 +4,20 @@
 #include "ts/ivie/util/NaturalSort.h"
 #include "ts/ivie/util/RenderUtil.h"
 #include "ts/ivie/viewer/ViewerManager.h"
-#include "ts/tessa/file/FileUtils.h"
-#include "ts/tessa/profiling/ZoneProfiler.h"
-#include "ts/tessa/system/WindowViewManager.h"
-#include "ts/tessa/thread/ThreadScheduler.h"
+#include "ts/file/FileUtils.h"
+#include "ts/profiling/ZoneProfiler.h"
+#include "ts/engine/window/WindowViewManager.h"
+#include "ts/thread/ThreadScheduler.h"
 
 #if TS_PLATFORM == TS_WINDOWS
-#include "ts/tessa/common/WindowsUtils.h"
+#include "ts/lang/common/WindowsUtils.h"
 #endif
 
 #include "FreeImage.h"
 
 TS_PACKAGE2(app, scenes)
 
-ImageViewerScene::ImageViewerScene(system::BaseApplication *application)
+ImageViewerScene::ImageViewerScene(engine::system::BaseApplication *application)
 	: AbstractSceneBase(application)
 {
 }
@@ -34,7 +34,7 @@ bool ImageViewerScene::start()
 	imageScale.reset(1.f, 20.f);
 	positionOffset.reset(math::VC2::zero, 30.f);
 
-	windowManager = &getGigaton<system::WindowManager>();
+	windowManager = &getGigaton<engine::window::WindowManager>();
 	
 	filesDroppedBind.connect(windowManager->filesDroppedSignal, &ThisClass::filesDropped, this);
 	screenResizedBind.connect(windowManager->screenSizeChangedSignal, &ThisClass::screenResized, this);
@@ -278,7 +278,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 								(float)event.mouseButton.y
 							);
 
-							const system::WindowView &view = windowManager->getApplicationView();
+							const engine::window::WindowView &view = windowManager->getApplicationView();
 
 							float currentScale = defaultScale.getValue() * imageScale.getValue();
 							math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, 1.f);
@@ -351,7 +351,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 						float currentScale = defaultScale.getValue() * imageScale.getValue();
 						float targetScale = defaultScale.getValue() * imageScale.getTarget();
 
-						const system::WindowView &view = windowManager->getApplicationView();
+						const engine::window::WindowView &view = windowManager->getApplicationView();
 						math::VC2 diff = calculateMouseDiff(view, mouse, currentScale, targetScale);
 
 						float multiplier = 1.f;
@@ -401,7 +401,7 @@ bool ImageViewerScene::updateImageInfo()
 		current.data = std::move(imageData);
 		current.hasData = true;
 
-		const system::WindowView &view = windowManager->getApplicationView();
+		const engine::window::WindowView &view = windowManager->getApplicationView();
 
 		TS_ASSERT(current.data.size.x > 0 && current.data.size.y > 0);
 
@@ -460,7 +460,7 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 {
 	TS_ZONE();
 
-	const system::WindowView &view = windowManager->getApplicationView();
+	const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	framePadding = math::max(20.f, view.size.x * 0.02f);
 
@@ -477,7 +477,7 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 {
 	TS_ZONE();
 
-	const system::WindowView &view = windowManager->getApplicationView();
+	const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	defaultScale.update(deltaTime);
 
@@ -505,7 +505,7 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 	if (!current.hasData)
 		return;
 
-	const system::WindowView &view = windowManager->getApplicationView();
+	const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
 
@@ -529,7 +529,7 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 	positionOffset.setValue(offset);
 }
 
-math::VC2 ImageViewerScene::calculateMouseDiff(const system::WindowView &view,
+math::VC2 ImageViewerScene::calculateMouseDiff(const engine::window::WindowView &view,
 	const math::VC2 &mousePos, float currentScale, float targetScale)
 {
 	if (!current.hasData)
@@ -575,7 +575,7 @@ void ImageViewerScene::filelistChanged(SizeType numFiles)
 
 void ImageViewerScene::screenResized(const math::VC2U &size)
 {
-	const system::WindowView &view = windowManager->getApplicationView();
+	const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	float targetScale = math::min(
 		math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
@@ -584,7 +584,7 @@ void ImageViewerScene::screenResized(const math::VC2U &size)
 	defaultScale.setTarget(targetScale);
 }
 
-void ImageViewerScene::filesDropped(const std::vector<system::DroppedFile> &files)
+void ImageViewerScene::filesDropped(const std::vector<engine::window::DroppedFile> &files)
 {
 	if (files.empty())
 		return;
@@ -592,7 +592,7 @@ void ImageViewerScene::filesDropped(const std::vector<system::DroppedFile> &file
 	viewerManager->setFilepath(files[0].filepath);
 }
 
-void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view)
+void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const engine::window::WindowView &view)
 {
 	TS_ZONE();
 
@@ -699,7 +699,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const s
 	}
 }
 
-void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const system::WindowView &view)
+void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const engine::window::WindowView &view)
 {
 	TS_ZONE();
 

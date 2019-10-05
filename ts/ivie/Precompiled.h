@@ -4,17 +4,20 @@
 
 #pragma once
 
-#include "ts/tessa/Precompiled.h"
+#include "ts/lang/Precompiled.h"
+#include "ts/math/Precompiled.h"
+#include "ts/engine/Precompiled.h"
+#include "ts/string/String.h"
 
-#include "ts/tessa/system/BaseApplication.h"
+#include "ts/engine/system/BaseApplication.h"
 
-#include "ts/tessa/input/InputManager.h"
+#include "ts/input/InputManager.h"
 
-#include "ts/tessa/system/WindowManager.h"
-#include "ts/tessa/resource/ResourceManager.h"
+#include "ts/engine/window/WindowManager.h"
+#include "ts/resource/ResourceManager.h"
 
-#include "ts/tessa/resource/TextureResource.h"
-#include "ts/tessa/resource/FontResource.h"
-#include "ts/tessa/resource/ShaderResource.h"
-#include "ts/tessa/resource/SoundResource.h"
-#include "ts/tessa/resource/MusicResource.h"
+#include "ts/resource/TextureResource.h"
+#include "ts/resource/FontResource.h"
+#include "ts/resource/ShaderResource.h"
+#include "ts/resource/SoundResource.h"
+#include "ts/resource/MusicResource.h"

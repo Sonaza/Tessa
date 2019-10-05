@@ -1,14 +1,14 @@
 #include "Precompiled.h"
 #include "Application.h"
 
-#include "ts/tessa/common/Debugging.h"
+#include "ts/lang/common/Debugging.h"
 
-#include "ts/tessa/system/WindowManager.h"
-#include "ts/tessa/file/ArchivistFilesystem.h"
+#include "ts/engine/window/WindowManager.h"
+#include "ts/resource/archivist/ArchivistFilesystem.h"
 
 
-#include "ts/tessa/resource/ResourceManager.h"
-#include "ts/tessa/file/FileUtils.h"
+#include "ts/resource/ResourceManager.h"
+#include "ts/file/FileUtils.h"
 
 #include "ts/ivie/AppConfig.h"
 #include "ts/ivie/scenes/ImageViewerScene.h"
@@ -19,8 +19,8 @@
 
 TS_PACKAGE1(app)
 
-Application::Application(system::Commando &commando)
-	: system::BaseApplication(commando)
+Application::Application(engine::system::Commando &commando)
+	: engine::system::BaseApplication(commando)
 {
 	image::FreeImageStaticInitializer::staticInitialize();
 
@@ -68,7 +68,7 @@ bool Application::createApplicationManagers()
 	return true;
 }
 
-void Application::initializeConfigDefaults(system::ConfigReader &config)
+void Application::initializeConfigDefaults(engine::system::ConfigReader &config)
 {
 	config.setString("General.LogFile", "output.log");
 
@@ -85,9 +85,9 @@ bool Application::initializeScene()
 	return loadScene<scenes::ImageViewerScene>();
 }
 
-bool Application::createWindow(system::WindowManager &windowManager)
+bool Application::createWindow(engine::window::WindowManager &windowManager)
 {
-	system::ConfigReader &config = getConfig();
+	engine::system::ConfigReader &config = getConfig();
 
 	bool automaticResolution = true;
 
@@ -117,7 +117,7 @@ bool Application::createWindow(system::WindowManager &windowManager)
 	windowManager.create(windowSize, APP_WINDOW_TITLE, true, fullscreen);
 
 	if (maximized)
-		windowManager.setWindowState(system::WindowManager::WindowState_Maximized);
+		windowManager.setWindowState(engine::window::WindowManager::WindowState_Maximized);
 
 	windowManager.setWindowIcon(APP_WINDOW_ICON_PATH);
 	windowManager.setVSyncEnabled(vsyncEnabled);
@@ -129,7 +129,7 @@ bool Application::createWindow(system::WindowManager &windowManager)
 	return true;
 }
 
-bool Application::loadArchives(file::ArchivistFilesystem &fileSystem)
+bool Application::loadArchives(resource::archivist::ArchivistFilesystem &fileSystem)
 {
 	fileSystem.addArchive(resource::ResourceManager::getAbsoluteResourcePath("resources.tsp"));
 	return true;

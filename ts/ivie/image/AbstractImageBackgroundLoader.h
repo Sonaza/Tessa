@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ts/tessa/thread/AbstractThreadEntry.h"
+#include "ts/thread/AbstractThreadEntry.h"
 
-#include "ts/tessa/thread/ThreadScheduler.h"
+#include "ts/thread/ThreadScheduler.h"
 #include "ts/ivie/image/Image.h"
 
 TS_PACKAGE2(app, image)

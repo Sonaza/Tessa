@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <!--
+    Natvis docs
+    https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2019
+  -->
+  
+  <Type Name="ts::string::String">
+    <DisplayString Condition="m_buffer._Mypair._Myval2._Myres &lt; m_buffer._Mypair._Myval2._BUF_SIZE">{m_buffer._Mypair._Myval2._Bx._Buf,s32}</DisplayString>
+    <DisplayString Condition="m_buffer._Mypair._Myval2._Myres &gt;= m_buffer._Mypair._Myval2._BUF_SIZE">{m_buffer._Mypair._Myval2._Bx._Ptr,s32}</DisplayString>
+    <StringView Condition="m_buffer._Mypair._Myval2._Myres &lt; m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Buf,s32</StringView>
+    <StringView Condition="m_buffer._Mypair._Myval2._Myres &gt;= m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Ptr,s32</StringView>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">m_buffer._Mypair._Myval2._Mysize</Item>
+      <Item Name="[capacity]" ExcludeView="simple">m_buffer._Mypair._Myval2._Myres</Item>
+      <Item Name="[allocator]" ExcludeView="simple">m_buffer._Mypair</Item>
+      <ArrayItems>
+        <Size>m_buffer._Mypair._Myval2._Mysize</Size>
+        <ValuePointer Condition="m_buffer._Mypair._Myval2._Myres &lt; m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Buf</ValuePointer>
+        <ValuePointer Condition="m_buffer._Mypair._Myval2._Myres &gt;= m_buffer._Mypair._Myval2._BUF_SIZE">m_buffer._Mypair._Myval2._Bx._Ptr</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  
+</AutoVisualizer>

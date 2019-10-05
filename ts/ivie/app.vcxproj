@@ -17,7 +17,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{02C16045-DEC1-45D1-90D6-7DB760C1ED9D}</ProjectGuid>
     <RootNamespace>ivie</RootNamespace>
-    <ProjectName>01 ivie</ProjectName>
+    <ProjectName>04 ivie</ProjectName>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -50,17 +50,17 @@
   </PropertyGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\tessa\Windows.props" />
+    <Import Project="$(SolutionDir)..\platform\Windows.props" />
     <Import Project="Externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\tessa\Windows.props" />
+    <Import Project="$(SolutionDir)..\platform\Windows.props" />
     <Import Project="Externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\tessa\Windows.props" />
+    <Import Project="$(SolutionDir)..\platform\Windows.props" />
     <Import Project="Externals.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -68,7 +68,7 @@
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
     <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -76,14 +76,14 @@
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
     <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
     <CustomBuildBeforeTargets />
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
     <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -183,7 +183,6 @@
     <ClCompile Include="scenes\ImageViewerScene.cpp" />
     <ClCompile Include="util\NaturalSort.cpp" />
     <ClCompile Include="util\RenderUtil.cpp" />
-    <ClCompile Include="util\RingBuffer.cpp" />
     <ClCompile Include="image\AbstractImageBackgroundLoader.cpp" />
     <ClCompile Include="image\FreeImageStaticInitializer.cpp" />
     <ClCompile Include="image\Image.cpp" />
@@ -207,7 +206,6 @@
     <ClInclude Include="scenes\ImageViewerScene.h" />
     <ClInclude Include="util\NaturalSort.h" />
     <ClInclude Include="util\RenderUtil.h" />
-    <ClInclude Include="util\RingBuffer.h" />
     <ClInclude Include="image\AbstractImageBackgroundLoader.h" />
     <ClInclude Include="image\FreeImageStaticInitializer.h" />
     <ClInclude Include="image\Image.h" />
@@ -217,8 +215,44 @@
     <ClInclude Include="viewer\ViewerManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tessa\tessa.vcxproj">
-      <Project>{de986e68-23c8-446b-9562-846cacf157d2}</Project>
+    <ProjectReference Include="..\container\container.vcxproj">
+      <Project>{48721815-1e85-4550-80ab-80a4e4b8dc2f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\engine\engine.vcxproj">
+      <Project>{01495013-099a-489d-ab5e-992031db1d84}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\file\file.vcxproj">
+      <Project>{94ee82b5-fb0a-4302-9a09-5a982b1f845c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\input\input.vcxproj">
+      <Project>{82afb899-a306-4318-ba25-9066975f71e9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lang\lang.vcxproj">
+      <Project>{46d6454b-aa9c-4081-812d-400d49233354}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\math\math.vcxproj">
+      <Project>{52575650-40d9-4aa5-8b3d-f81bbf59ec5d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\platform\platform.vcxproj">
+      <Project>{833d2ed0-476f-4a4d-962a-f4dd7bfd9814}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\profiling\profiling.vcxproj">
+      <Project>{5532b210-0547-4c72-9865-4d02c6d370ef}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\renderer\renderer.vcxproj">
+      <Project>{a11bedc9-d3b9-48c2-8c91-c3e9c830b895}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\resource\resource.vcxproj">
+      <Project>{aa4fed4f-407d-44e9-a2da-c21c42933119}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\string\string.vcxproj">
+      <Project>{89bf05e7-f77d-4ac9-94c7-ccb3d6c4b447}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thread\thread.vcxproj">
+      <Project>{335b7098-df8b-4ed4-850a-dc38e8fac15b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\time\time.vcxproj">
+      <Project>{d072547c-4526-4bd0-8072-406f6eddc884}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -34,9 +34,6 @@
     <ClCompile Include="viewer\SupportedFormats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util\RingBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="util\RenderUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -82,9 +79,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="viewer\SupportedFormats.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="util\RingBuffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="util\RenderUtil.h">

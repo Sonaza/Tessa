@@ -1,9 +1,9 @@
 #include "Precompiled.h"
 #include "AbstractImageBackgroundLoader.h"
 
-#include "ts/tessa/thread/Thread.h"
+#include "ts/thread/Thread.h"
 
-#include "ts/tessa/profiling/ZoneProfiler.h"
+#include "ts/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, image)
 

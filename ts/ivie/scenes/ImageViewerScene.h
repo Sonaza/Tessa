@@ -1,21 +1,23 @@
 #pragma once
 
-#include "ts/tessa/system/AbstractSceneBase.h"
+#include "ts/engine/system/AbstractSceneBase.h"
 
-#include "ts/tessa/math/Damper.h"
+#include "ts/math/Damper.h"
 #include "ts/ivie/image/Image.h"
 
+#include "ts/engine/window/WindowManager.h"
+
 TS_DECLARE2(app, viewer, ViewerManager);
-TS_DECLARE_STRUCT1(system, WindowView);
+TS_DECLARE_STRUCT2(engine, system, WindowView);
 
 TS_PACKAGE2(app, scenes)
 
-class ImageViewerScene : public system::AbstractSceneBase
+class ImageViewerScene : public engine::system::AbstractSceneBase
 {
 	TS_DECLARE_SCENE(ImageViewerScene);
 
 public:
-	ImageViewerScene(system::BaseApplication *application);
+	ImageViewerScene(engine::system::BaseApplication *application);
 	virtual ~ImageViewerScene();
 
 	virtual bool start();
@@ -28,8 +30,8 @@ public:
 	virtual void update(const TimeSpan deltaTime) override;
 	virtual void updateFrequent(const TimeSpan deltaTime) override;
 
-	virtual void renderApplication(sf::RenderTarget &renderTarget, const system::WindowView &view) override;
-	virtual void renderInterface(sf::RenderTarget &renderTarget, const system::WindowView &view) override;
+	virtual void renderApplication(sf::RenderTarget &renderTarget, const engine::window::WindowView &view) override;
+	virtual void renderInterface(sf::RenderTarget &renderTarget, const engine::window::WindowView &view) override;
 
 protected:
 	void imageChanged(SharedPointer<image::Image> image);
@@ -41,7 +43,7 @@ protected:
 	void screenResized(const math::VC2U &size);
 	lang::SignalBind screenResizedBind;
 
-	void filesDropped(const std::vector<system::DroppedFile> &files);
+	void filesDropped(const std::vector<engine::window::DroppedFile> &files);
 	lang::SignalBind filesDroppedBind;
 
 	resource::FontResource *font = nullptr;
@@ -82,7 +84,7 @@ protected:
 	void enforceOversizeLimits(float scale, bool enforceTarget = true);
 	math::VC2 positionOversizeLimit;
 
-	math::VC2 calculateMouseDiff(const system::WindowView &view, 
+	math::VC2 calculateMouseDiff(const engine::window::WindowView &view, 
 		const math::VC2 &mousePos, float currentScale, float targetScale);
 
 	enum DisplayMode
@@ -117,7 +119,7 @@ protected:
 	bool showManagerStatus = false;
 	bool showSchedulerStatus = false;
 
-	system::WindowManager *windowManager = nullptr;
+	engine::window::WindowManager *windowManager = nullptr;
 	viewer::ViewerManager *viewerManager = nullptr;
 };
 

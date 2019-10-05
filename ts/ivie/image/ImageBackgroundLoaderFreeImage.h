@@ -2,7 +2,7 @@
 
 #include "ts/ivie/image/AbstractImageBackgroundLoader.h"
 
-#include "ts/tessa/file/InputFile.h"
+#include "ts/file/InputFile.h"
 
 #include "SFML/Graphics.hpp"
 #include "FreeImage.h"

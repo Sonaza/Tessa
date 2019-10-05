@@ -4,10 +4,10 @@
 
 #include "Application.h"
 
-#include "ts/tessa/common/IncludeWindows.h"
+#include "ts/lang/common/IncludeWindows.h"
 #include <shellapi.h>
 
-#include "ts/tessa/system/Commando.h"
+#include "ts/engine/system/Commando.h"
 
 using namespace ts;
 
@@ -29,16 +29,16 @@ int __stdcall wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR cmdArgs, int window
 // 	makepack();
 	mathtest();
 	
-	system::Commando commando;
+	engine::system::Commando commando;
 	
-	int32 numArgs;
+	int32 numArgs = 0;
 	LPWSTR *argList = CommandLineToArgvW(cmdArgs, &numArgs);
-	if (argList != nullptr)
+	if (argList != nullptr && numArgs > 0)
 	{
 		// Gotta const cast here because parser expects const parameter.
 		const wchar_t **argv = const_cast<const wchar_t **>(argList);
 
-		if (numArgs > 0 && !commando.parse(numArgs, argv))
+		if (!commando.parse(numArgs, argv))
 			TS_LOG_WARNING("Failed to parse command line arguments.");
 
 		LocalFree(argList);

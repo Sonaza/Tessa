@@ -1,13 +1,13 @@
 #include "Precompiled.h"
 #include "ImageBackgroundLoaderFreeImage.h"
 
-#include "ts/tessa/thread/Thread.h"
-#include "ts/tessa/file/FileUtils.h"
+#include "ts/thread/Thread.h"
+#include "ts/file/FileUtils.h"
 
 #include "ts/ivie/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
-#include "ts/tessa/profiling/ZoneProfiler.h"
+#include "ts/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, image)
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <!--
+    Natvis docs
+    https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2019
+  -->
+  
+  <Type Name="ts::profiling::EventFrame">
+    <DisplayString>[{level}]  {name,sb}  [elapsed {elapsed} µs]</DisplayString>
+    <Expand>
+      <Item Name="[name]">name</Item>
+      <Item Name="[start]">start</Item>
+      <Item Name="[elapsed]">elapsed</Item>
+      <Item Name="[level]">level</Item>
+    </Expand>
+  </Type>
+  
+</AutoVisualizer>

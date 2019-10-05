@@ -1,12 +1,12 @@
 #include "Precompiled.h"
 
-#include "ts/tessa/file/ArchivistWriter.h"
+#include "ts/resource/archivist/ArchivistWriter.h"
 
 using namespace ts;
 
 void makepack()
 {
-	file::ArchivistWriter aw;
+	resource::archivist::ArchivistWriter aw;
 
 	std::vector<String> files = {
 		"shader/area_clip.frag",
@@ -20,7 +20,7 @@ void makepack()
 
 	for (const String &f : files)
 	{
-		aw.stageFile(f, f, file::CompressionType_LZ4FullBlock);
+		aw.stageFile(f, f, resource::archivist::CompressionType_LZ4FullBlock);
 	}
 
 	if (!aw.saveToFile("resources.tsp"))

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ts/ivie/util/RingBuffer.h"
+#include "ts/container/RingBuffer.h"
 
 TS_DECLARE2(app, image, AbstractImageBackgroundLoader);
 

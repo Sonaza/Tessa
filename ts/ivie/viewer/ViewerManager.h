@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ts/tessa/system/AbstractManagerBase.h"
-#include "ts/tessa/thread/ThreadScheduler.h"
+#include "ts/engine/system/AbstractManagerBase.h"
+#include "ts/thread/ThreadScheduler.h"
 
-#include "ts/tessa/file/FileList.h"
-#include "ts/tessa/file/FileWatcher.h"
+#include "ts/file/FileList.h"
+#include "ts/file/FileWatcher.h"
 
 TS_DECLARE2(app, image, Image);
 
@@ -32,7 +32,7 @@ enum SortingStyle
 	SortingStyle_NumOptions,
 };
 
-class ViewerManager : public system::AbstractManagerBase
+class ViewerManager : public engine::system::AbstractManagerBase
 {
 	TS_DECLARE_MANAGER_TYPE(app::viewer::ViewerManager);
 
