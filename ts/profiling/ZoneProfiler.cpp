@@ -7,7 +7,6 @@
 #include "ts/engine/window/WindowViewManager.h"
 #include "ts/thread/CurrentThread.h"
 #include "ts/thread/Thread.h"
-#include "ts/time/TimeSpan.h"
 #include "ts/resource/ResourceManager.h"
 #include "ts/resource/ShaderResource.h"
 

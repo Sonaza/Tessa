@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ts/time/TimeSpan.h"
 #include "ts/engine/Gigaton.h"
 
 #define TS_DECLARE_MANAGER_TYPE(__class_name) \

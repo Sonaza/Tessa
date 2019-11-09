@@ -14,33 +14,9 @@
     <ClCompile Include="Precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Clock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GlobalTimer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Time.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TimeSpan.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Clock.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalTimer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Time.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TimeSpan.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

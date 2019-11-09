@@ -256,10 +256,10 @@ void BaseApplication::mainloop()
 	TimeSpan deltaAccumulator;
 
 	SizeType frameCounter = 0;
-	Clock framerateClock;
+	SteadyTimer framerateClock;
 
-	Clock deltaClock;
-	Clock frameTimer;
+	SteadyTimer deltaClock;
+	SteadyTimer frameTimer;
 
 	while (m_applicationRunning)
 	{

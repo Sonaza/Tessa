@@ -1,19 +1,19 @@
 #include "Precompiled.h"
-#include "Clock.h"
+#include "SteadyTimer.h"
 
 TS_PACKAGE0()
 
-Clock::Clock()
+SteadyTimer::SteadyTimer()
 	: startTimePoint(Time::now())
 {
 }
 
-TimeSpan Clock::getElapsedTime() const
+TimeSpan SteadyTimer::getElapsedTime() const
 {
 	return Time::now() - startTimePoint;
 }
 
-TimeSpan Clock::restart()
+TimeSpan SteadyTimer::restart()
 {
 	TimeSpan elapsed = getElapsedTime();
 	startTimePoint = Time::now();

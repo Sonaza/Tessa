@@ -1,8 +1,6 @@
 #include "Precompiled.h"
 #include "Time.h"
 
-#include "ts/time/TimeSpan.h"
-
 TS_PACKAGE0()
 
 const Time Time::zero = Time();

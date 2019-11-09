@@ -3,7 +3,7 @@
 
 TS_PACKAGE0()
 
-Clock GlobalTimer::globalTimer;
+SteadyTimer GlobalTimer::globalTimer;
 
 TimeSpan GlobalTimer::getElapsedTime()
 {

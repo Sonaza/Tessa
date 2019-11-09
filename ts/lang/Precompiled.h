@@ -18,3 +18,9 @@
 #include "ts/lang/Noncopyable.h"
 
 #include "ts/lang/Signal.h"
+
+#include "ts/lang/time/Time.h"
+#include "ts/lang/time/TimeSpan.h"
+#include "ts/lang/time/SteadyTimer.h"
+
+#include "ts/math/Precompiled.h"

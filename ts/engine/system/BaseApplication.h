@@ -9,8 +9,6 @@
 #include "ts/engine/system/AbstractManagerBase.h"
 #include "ts/engine/system/AbstractSceneBase.h"
 
-#include "ts/time/Clock.h"
-
 #include "ts/profiling/ZoneProfiler.h"
 
 TS_DECLARE2(engine, window, WindowManager);

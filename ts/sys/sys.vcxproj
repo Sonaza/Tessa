@@ -15,9 +15,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{D072547C-4526-4BD0-8072-406F6EDDC884}</ProjectGuid>
-    <RootNamespace>time</RootNamespace>
-    <ProjectName>00 time</ProjectName>
+    <ProjectGuid>{833D2ED0-476F-4A4D-962A-F4DD7BFD9814}</ProjectGuid>
+    <RootNamespace>sys</RootNamespace>
+    <ProjectName>01 sys</ProjectName>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -50,17 +50,17 @@
   </PropertyGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\platform\Windows.props" />
+    <Import Project="$(SolutionDir)..\lang\platform\Windows.props" />
     <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\platform\Windows.props" />
+    <Import Project="$(SolutionDir)..\lang\platform\Windows.props" />
     <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\platform\Windows.props" />
+    <Import Project="$(SolutionDir)..\lang\platform\Windows.props" />
     <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -162,10 +162,6 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Time.cpp" />
-    <ClCompile Include="TimeSpan.cpp" />
-    <ClInclude Include="Clock.h" />
-    <ClInclude Include="GlobalTimer.h" />
     <ClInclude Include="Precompiled.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
@@ -174,15 +170,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
       </ExcludedFromBuild>
     </ClInclude>
-    <ClCompile Include="Clock.cpp" />
-    <ClCompile Include="GlobalTimer.cpp" />
     <ClCompile Include="Precompiled.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClInclude Include="Time.h" />
-    <ClInclude Include="TimeSpan.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -13,15 +13,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00 lang", "..\lang\lang.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01 file", "..\file\file.vcxproj", "{94EE82B5-FB0A-4302-9A09-5A982B1F845C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01 string", "..\string\string.vcxproj", "{89BF05E7-F77D-4AC9-94C7-CCB3D6C4B447}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00 string", "..\string\string.vcxproj", "{89BF05E7-F77D-4AC9-94C7-CCB3D6C4B447}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03 engine", "..\engine\engine.vcxproj", "{01495013-099A-489D-AB5E-992031DB1D84}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01 container", "..\container\container.vcxproj", "{48721815-1E85-4550-80AB-80A4E4B8DC2F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00 container", "..\container\container.vcxproj", "{48721815-1E85-4550-80AB-80A4E4B8DC2F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00 time", "..\time\time.vcxproj", "{D072547C-4526-4BD0-8072-406F6EDDC884}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01 platform", "..\platform\platform.vcxproj", "{833D2ED0-476F-4A4D-962A-F4DD7BFD9814}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01 sys", "..\sys\sys.vcxproj", "{833D2ED0-476F-4A4D-962A-F4DD7BFD9814}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03 resource", "..\resource\resource.vcxproj", "{AA4FED4F-407D-44E9-A2DA-C21C42933119}"
 EndProject
@@ -29,7 +27,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02 renderer", "..\renderer\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03 profiling", "..\profiling\profiling.vcxproj", "{5532B210-0547-4C72-9865-4D02C6D370EF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02 input", "..\input\input.vcxproj", "{82AFB899-A306-4318-BA25-9066975F71E9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03 input", "..\input\input.vcxproj", "{82AFB899-A306-4318-BA25-9066975F71E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -86,12 +84,6 @@ Global
 		{48721815-1E85-4550-80AB-80A4E4B8DC2F}.FinalRelease|x64.Build.0 = FinalRelease|x64
 		{48721815-1E85-4550-80AB-80A4E4B8DC2F}.Release|x64.ActiveCfg = Release|x64
 		{48721815-1E85-4550-80AB-80A4E4B8DC2F}.Release|x64.Build.0 = Release|x64
-		{D072547C-4526-4BD0-8072-406F6EDDC884}.Debug|x64.ActiveCfg = Debug|x64
-		{D072547C-4526-4BD0-8072-406F6EDDC884}.Debug|x64.Build.0 = Debug|x64
-		{D072547C-4526-4BD0-8072-406F6EDDC884}.FinalRelease|x64.ActiveCfg = FinalRelease|x64
-		{D072547C-4526-4BD0-8072-406F6EDDC884}.FinalRelease|x64.Build.0 = FinalRelease|x64
-		{D072547C-4526-4BD0-8072-406F6EDDC884}.Release|x64.ActiveCfg = Release|x64
-		{D072547C-4526-4BD0-8072-406F6EDDC884}.Release|x64.Build.0 = Release|x64
 		{833D2ED0-476F-4A4D-962A-F4DD7BFD9814}.Debug|x64.ActiveCfg = Debug|x64
 		{833D2ED0-476F-4A4D-962A-F4DD7BFD9814}.Debug|x64.Build.0 = Debug|x64
 		{833D2ED0-476F-4A4D-962A-F4DD7BFD9814}.FinalRelease|x64.ActiveCfg = FinalRelease|x64

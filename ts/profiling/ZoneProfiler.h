@@ -2,9 +2,6 @@
 
 #include "ts/lang/common/Common.h"
 
-#include "ts/time/Time.h"
-#include "ts/time/TimeSpan.h"
-
 #include "ts/thread/RecursiveMutex.h"
 #include "ts/thread/MutexGuard.h"
 

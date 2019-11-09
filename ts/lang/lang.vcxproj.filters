@@ -29,6 +29,18 @@
     <ClCompile Include="common\WindowsUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="time\GlobalTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time\Time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time\TimeSpan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time\SteadyTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -82,6 +94,18 @@
     <ClInclude Include="GlobalConfig.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="time\GlobalTimer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="time\Time.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="time\TimeSpan.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="time\SteadyTimer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="UniquePointer.inl">
@@ -93,6 +117,7 @@
     <None Include="SharedPointer.inl">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="platform\Windows.props" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lang.natvis" />

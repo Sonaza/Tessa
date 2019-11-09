@@ -50,17 +50,17 @@
   </PropertyGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\platform\Windows.props" />
+    <Import Project="$(SolutionDir)..\lang\platform\Windows.props" />
     <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\platform\Windows.props" />
+    <Import Project="$(SolutionDir)..\lang\platform\Windows.props" />
     <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)..\platform\Windows.props" />
+    <Import Project="$(SolutionDir)..\lang\platform\Windows.props" />
     <Import Project="$(ExternalsDir)CommonExternals.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -167,6 +167,10 @@
     <ClCompile Include="common\Log.cpp" />
     <ClCompile Include="common\WindowsUtils.cpp" />
     <ClCompile Include="Signal.cpp" />
+    <ClCompile Include="time\SteadyTimer.cpp" />
+    <ClCompile Include="time\GlobalTimer.cpp" />
+    <ClCompile Include="time\Time.cpp" />
+    <ClCompile Include="time\TimeSpan.cpp" />
     <ClInclude Include="common\Assert.h" />
     <ClInclude Include="common\Common.h" />
     <ClInclude Include="common\Debugging.h" />
@@ -195,9 +199,14 @@
     <ClInclude Include="ScopedPointer.h" />
     <ClInclude Include="SharedPointer.h" />
     <ClInclude Include="Signal.h" />
+    <ClInclude Include="time\SteadyTimer.h" />
+    <ClInclude Include="time\GlobalTimer.h" />
+    <ClInclude Include="time\Time.h" />
+    <ClInclude Include="time\TimeSpan.h" />
     <ClInclude Include="UniquePointer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="platform\Windows.props" />
     <None Include="ScopedPointer.inl" />
     <None Include="SharedPointer.inl" />
     <None Include="UniquePointer.inl" />

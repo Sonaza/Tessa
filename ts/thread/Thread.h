@@ -5,8 +5,6 @@
 
 #include "ts/thread/CurrentThread.h"
 
-#include "ts/time/TimeSpan.h"
-
 TS_DECLARE1(thread, AbstractThreadEntry);
 
 TS_PACKAGE1(thread)

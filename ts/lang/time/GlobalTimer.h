@@ -1,8 +1,5 @@
 #pragma once
 
-#include "ts/time/TimeSpan.h"
-#include "ts/time/Clock.h"
-
 TS_PACKAGE0()
 
 class GlobalTimer
@@ -12,7 +9,7 @@ public:
 
 private:
 	GlobalTimer();
-	static Clock globalTimer;
+	static SteadyTimer globalTimer;
 };
 
 TS_END_PACKAGE0()

@@ -50,10 +50,10 @@ protected:
 
 	float framePadding = 20.f;
 	
-	Clock elapsedTimer;
+	SteadyTimer elapsedTimer;
 
-	Clock clickTimer;
-	Clock changeTimer;
+	SteadyTimer clickTimer;
+	SteadyTimer changeTimer;
 
 	bool updateImageInfo();
 
@@ -79,7 +79,7 @@ protected:
 	math::FloatDamper imageScale;
 	math::VC2Damper positionOffset;
 
-	Clock frameTimer;
+	SteadyTimer frameTimer;
 
 	void enforceOversizeLimits(float scale, bool enforceTarget = true);
 	math::VC2 positionOversizeLimit;

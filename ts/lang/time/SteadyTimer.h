@@ -1,14 +1,11 @@
 #pragma once
 
-#include "ts/time/Time.h"
-#include "ts/time/TimeSpan.h"
-
 TS_PACKAGE0()
 
-class Clock
+class SteadyTimer
 {
 public:
-	Clock();
+	SteadyTimer();
 
 	TimeSpan getElapsedTime() const;
 	TimeSpan restart();

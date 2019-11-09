@@ -3,8 +3,6 @@
 #include "ts/thread/Mutex.h"
 #include "ts/thread/MutexGuard.h"
 
-#include "ts/time/TimeSpan.h"
-
 #include <condition_variable>
 #include <functional>
 

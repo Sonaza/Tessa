@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ts/time/TimeSpan.h"
-
 #define TS_DECLARE_SCENE(__class_name) \
 	private: \
 		typedef __class_name ThisClass;
