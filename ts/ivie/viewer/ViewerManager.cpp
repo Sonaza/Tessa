@@ -560,7 +560,7 @@ const std::vector<ImageEntry> ViewerManager::getListSliceForBuffering(SizeType n
 
 bool ViewerManager::isExtensionAllowed(const String &filename)
 {
-	const String ext = file::getExtension(filename);
+	const String ext = string::toLowercaseCopy(file::getExtension(filename));
 	return std::find(allowedExtensions.begin(), allowedExtensions.end(), ext) != allowedExtensions.end();
 }
 
