@@ -97,6 +97,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 					}
 					return true;
 				}
+
 				case sf::Keyboard::PageUp:
 				case sf::Keyboard::PageDown:
 				{
@@ -230,7 +231,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 			{
 				case sf::Mouse::Left:
 				{
-					if (displayMode == Normal)
+					if (displayMode == Normal || ctrlDown)
 					{
 						clickTimer.restart();
 						dragged = 0.f;
@@ -240,7 +241,7 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 				case sf::Mouse::Right:
 				{
-					if (displayMode == Normal)
+					if (displayMode == Normal || ctrlDown)
 					{
 						imageScale.setTarget(1.f);
 						positionOffset.setTarget(math::VC2::zero);
@@ -333,7 +334,11 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 		{
 			float delta = event.mouseWheelScroll.delta;
 
-			switch (displayMode)
+			DisplayMode zoomMode = displayMode;
+			if (ctrlDown)
+				zoomMode = Normal;
+
+			switch (zoomMode)
 			{
 				case Normal:
 				{
@@ -470,6 +475,26 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 	if (!sf::Mouse::isButtonPressed(sf::Mouse::Middle))
 	{
 		imageScale.setTarget(math::max(1.f, imageScale.getTarget()));
+	}
+
+	switch (displayMode)
+	{
+		case Manga:
+		{
+			const bool upPressed   = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+			const bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+
+			if (upPressed || downPressed)
+			{
+				const float delta = (upPressed ? 1.f : -1.f);
+				const math::VC2 move = math::VC2(0.f, delta * 1400.f * deltaTime.getSecondsAsFloat());
+				positionOffset.setTarget(positionOffset.getTarget() + move);
+				enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
+			}
+		}
+		break;
+
+		default: break;
 	}
 }
 
