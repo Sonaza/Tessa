@@ -120,22 +120,22 @@ struct ScheduledTask
 
 	ScheduledTask(TaskPriority priority, Time time, std::function<bool()> &&task)
 		: initialized(true)
+		, taskId(ScheduledTask::nextTaskId++)
+		, priority(priority)
 		, scheduledTime(time)
 		, interval(TimeSpan::zero)
 		, task(std::move(task))
-		, taskId(ScheduledTask::nextTaskId++)
-		, priority(priority)
 	{
 		future = promise.get_future();
 	}
 
 	ScheduledTask(TaskPriority priority, TimeSpan interval, bool startImmediately, std::function<bool()> &&task)
 		: initialized(true)
+		, taskId(ScheduledTask::nextTaskId++)
+		, priority(priority)
 		, scheduledTime(startImmediately ? Time::now() : Time::now() + interval)
 		, interval(interval)
 		, task(std::move(task))
-		, taskId(ScheduledTask::nextTaskId++)
-		, priority(priority)
 	{
 		future = promise.get_future();
 	}

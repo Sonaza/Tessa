@@ -19,8 +19,13 @@ FileWatcher::FileWatcher(const String &path, bool watchRecursive, SizeType flags
 
 bool FileWatcher::watch(const String &path, bool watchRecursive, SizeType flags)
 {
+#if TS_PLATFORM == TS_WINDOWS
 	m_impl.reset(new FileWatcherWindows(this));
 	return m_impl->watch(path, watchRecursive, flags);
+#endif
+	
+	TS_ASSERT(false && "Not implemented on this platform");
+	return false;
 }
 
 void FileWatcher::reset()

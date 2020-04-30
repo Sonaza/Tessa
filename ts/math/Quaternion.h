@@ -108,11 +108,11 @@ public:
 
 #include "Quaternion.inl"
 
-const Quaternion<float> Quaternion<float>::zero(0.f, 0.f, 0.f, 0.f);
-const Quaternion<float> Quaternion<float>::identity;
+template<> const Quaternion<float> Quaternion<float>::zero(0.f, 0.f, 0.f, 0.f);
+template<> const Quaternion<float> Quaternion<float>::identity;
 
-const Quaternion<double> Quaternion<double>::zero(0.0, 0.0, 0.0, 0.0);
-const Quaternion<double> Quaternion<double>::identity;
+template<> const Quaternion<double> Quaternion<double>::zero(0.0, 0.0, 0.0, 0.0);
+template<> const Quaternion<double> Quaternion<double>::identity;
 
 typedef Quaternion<float> Quat;
 typedef Quaternion<double> DQuat;

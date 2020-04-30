@@ -20,6 +20,9 @@ enum SignalPriority : SizeType
 	SignalPriority_VeryLow  = 20,
 };
 
+template<class... Args>
+class Signal;
+
 class SignalBind : public lang::NoncopyableAndNonmovable
 {
 	template<class... Args>
@@ -214,7 +217,7 @@ void Signal<Args...>::disconnect(SignalBind &signalBind)
 	if (signalBind.connectedSignalIndex == InvalidSignalIndex)
 		return;
 
-	ConnectedSignalsList::iterator it = connectedSignals.find(signalBind.connectedSignalIndex);
+	typename ConnectedSignalsList::iterator it = connectedSignals.find(signalBind.connectedSignalIndex);
 	if (it != connectedSignals.end())
 		connectedSignals.erase(it);
 }

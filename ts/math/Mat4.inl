@@ -255,7 +255,7 @@ inline Vec2<T> TMatrix4<T>::transformPoint(const Vec2<T> &point) const
 		point.x * m_matrix[0] + point.y * m_matrix[4] + m_matrix[12],
 		point.x * m_matrix[1] + point.y * m_matrix[5] + m_matrix[13]
 	);
-};
+}
 
 template<class T>
 inline Vec3<T> TMatrix4<T>::transformPoint(const Vec3<T> &point) const
@@ -265,7 +265,7 @@ inline Vec3<T> TMatrix4<T>::transformPoint(const Vec3<T> &point) const
 		point.x * m_matrix[1] + point.y * m_matrix[5] + point.z * m_matrix[9]  + m_matrix[13],
 		point.x * m_matrix[2] + point.y * m_matrix[6] + point.z * m_matrix[10] + m_matrix[14]
 	);
-};
+}
 
 template<class T>
 inline Vec4<T> TMatrix4<T>::transformPoint(const Vec4<T> &point) const
@@ -276,7 +276,7 @@ inline Vec4<T> TMatrix4<T>::transformPoint(const Vec4<T> &point) const
 		point.x * m_matrix[2] + point.y * m_matrix[6] + point.z * m_matrix[10] + point.w * m_matrix[14],
 		point.x * m_matrix[3] + point.y * m_matrix[7] + point.z * m_matrix[11] + point.w * m_matrix[15]
 	);
-};
+}
 
 template<class T>
 inline TMatrix4<T> TMatrix4<T>::makeLookAt(const Vec3<T> &eye, const Vec3<T> &target, const Vec3<T> &up)

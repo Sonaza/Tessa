@@ -141,17 +141,17 @@ TimeSpan operator-(TimeSpan lhs, TimeSpan rhs)
 	return TimeSpan::fromMicroseconds(lhs.getMicroseconds() - rhs.getMicroseconds());
 }
 
-TimeSpan operator""_hrs(uint64 value)
+TimeSpan operator""_hrs(unsigned long long int value)
 {
 	return TimeSpan::fromSeconds((int64)value * 3600);
 }
 
-TimeSpan operator""_min(uint64 value)
+TimeSpan operator""_min(unsigned long long int value)
 {
 	return TimeSpan::fromSeconds((int64)value * 60);
 }
 
-TimeSpan operator""_s(uint64 value)
+TimeSpan operator""_s(unsigned long long int value)
 {
 	return TimeSpan::fromSeconds((int64)value);
 }
@@ -161,17 +161,17 @@ TimeSpan operator""_sf(long double value)
 	return TimeSpan::fromSecondsFloat((float)value);
 }
 
-TimeSpan operator""_ms(uint64 value)
+TimeSpan operator""_ms(unsigned long long int value)
 {
 	return TimeSpan::fromMilliseconds((int64)value);
 }
 
-TimeSpan operator""_us(uint64 value)
+TimeSpan operator""_us(unsigned long long int value)
 {
 	return TimeSpan::fromMicroseconds(value);
 }
 
-TimeSpan operator""_ns(uint64 value)
+TimeSpan operator""_ns(unsigned long long int value)
 {
 	return TimeSpan::fromNanoseconds(value);
 }

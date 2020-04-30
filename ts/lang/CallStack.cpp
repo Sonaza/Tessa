@@ -1,7 +1,9 @@
 #include "Precompiled.h"
+
+#if 0
 #include "CallStack.h"
 
-#include "ts/tessa/lang/StringUtils.h"
+#include "ts/lang/StringUtils.h"
 
 #if TS_PLATFORM == TS_WINDOWS
 	#include "StackWalker.h"
@@ -98,3 +100,5 @@ std::string CallStack::getCallstackAsString()
 }
 
 TS_END_PACKAGE1()
+
+#endif

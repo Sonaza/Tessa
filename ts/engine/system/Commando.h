@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ts/math/Hash.h"
+
 TS_PACKAGE2(engine, system)
 
 class Commando
@@ -78,8 +80,9 @@ bool Commando::getFlagParameter(const String &flag, Type &outParam) const
 {
 	static_assert(std::is_integral<Type>::value || std::is_floating_point<Type>::value, "Commando::getParameter can only handle strings, integers and floating point values.");
 
-	FlagsList::const_iterator iter = m_flags.find(flag);
-	if (iter == m_flags.end() || iter->second.empty())
+	uint32 flagHash = math::simpleHash32(flag);
+	FlagsList::const_iterator iter = m_flags.find(flagHash);
+	if (iter == m_flags.end() || iter->second.isEmpty())
 		return false;
 	
 	// Using string stream to perform lexical casting

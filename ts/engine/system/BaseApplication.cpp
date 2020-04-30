@@ -2,7 +2,7 @@
 #include "BaseApplication.h"
 
 #include "ts/lang/common/Debugging.h"
-#include "ts/resource/archivist/ArchivistFileSystem.h"
+#include "ts/resource/archivist/ArchivistFilesystem.h"
 #include "ts/file/FileUtils.h"
 #include "ts/input/InputManager.h"
 #include "ts/profiling/ZoneProfiler.h"
@@ -30,7 +30,7 @@ BaseApplication::~BaseApplication()
 	m_gigatonInstance.unregisterClass(this);
 }
 
-int32 BaseApplication::launch()
+	int32 BaseApplication::launch()
 {
 	initializeConfigDefaults(m_config);
 
@@ -414,10 +414,12 @@ void BaseApplication::handleEvents()
 					}
 					break;
 
-
+					default: break;
 				}
 			}
 			break;
+			
+			default: break;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <intrin.h>
+// #include <intrin.h>
 
 #if TS_COMPILER == TS_MSC
 	#define TS_DEBUG_BREAK  __debugbreak()

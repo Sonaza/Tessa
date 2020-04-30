@@ -7,6 +7,8 @@
 #include <queue>
 #include <future>
 
+TS_DECLARE1(thread, Thread)
+
 TS_PACKAGE1(thread)
 
 class AbstractThreadEntry

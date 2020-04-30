@@ -7,53 +7,89 @@
 #include <memory>
 #include <fstream>
 
-#define TS_FMT(__format, ...) \
-	::ts::common::Log::getSingleton().format(__format, ## __VA_ARGS__)
+#define TS_FMT(formatParam, ...) \
+	::ts::common::Log::getSingleton().format(formatParam, ## __VA_ARGS__)
 
-#define TS_WFMT(__format, ...) \
-	::ts::common::Log::getSingleton().format(L ## __format, ## __VA_ARGS__)
-
-#define __TS_PRINTF_IMPL(__format, ...) \
-	::ts::common::Log::getSingleton().write(__format, ## __VA_ARGS__)
-
-#define __TS_WPRINTF_IMPL(__format, ...) \
-	::ts::common::Log::getSingleton().write(L ## __format, ## __VA_ARGS__)
-
+#define TS_PRINTF_IMPL(formatParam, ...) \
+	::ts::common::Log::getSingleton().write(formatParam, ## __VA_ARGS__)
+	
 #if TS_BUILD != TS_FINALRELEASE
-	#define TS_PRINTF(__format, ...)  __TS_PRINTF_IMPL(__format, ## __VA_ARGS__)
-	#define TS_WPRINTF(__format, ...) __TS_WPRINTF_IMPL(__format, ## __VA_ARGS__)
+	#define TS_PRINTF(formatParam, ...)  TS_PRINTF_IMPL(formatParam, ## __VA_ARGS__)
 #else
 	#define TS_PRINTF(...)  ((void)0)
-	#define TS_WPRINTF(...) ((void)0)
+#endif
+	
+
+#if TS_PLATFORM == TS_WINDOWS
+	
+	#define TS_WFMT(formatParam, ...) \
+		::ts::common::Log::getSingleton().format(L ## formatParam, ## __VA_ARGS__)
+
+	#define TS_WPRINTF_IMPL(formatParam, ...) \
+		::ts::common::Log::getSingleton().write(L ## formatParam, ## __VA_ARGS__)
+
+	#if TS_BUILD != TS_FINALRELEASE
+		#define TS_WPRINTF(formatParam, ...) TS_WPRINTF_IMPL(formatParam, ## __VA_ARGS__)
+	#else
+		#define TS_WPRINTF(...) ((void)0)
+	#endif
+
+	#define TS_WIDE_INNER(textParam) L##textParam
+	#define TS_WIDE(textParam) TS_WIDE_INNER(textParam)
+		
+#else
+	
+	#define TS_WFMT(formatParam, ...) TS_FMT(formatParam, __VA_ARGS__)
+	#define TS_WPRINTF(formatParam, ...) TS_PRINTF(formatParam, __VA_ARGS__)
+	
+	#define TS_WIDE(textParam) (textParam)
+	
 #endif
 
-#define __TS_WIDE(text) L##text
-#define TS_WIDE(text) __TS_WIDE(text)
-
-#define __TS_LOG_WITH_SEVERITY_IMPL(__severity, __message, ...) \
+#define TS_LOG_WITH_SEVERITY_IMPL(severityParam, messageParam, ...) \
 	do { \
-		__TS_PRINTF_IMPL("[%s] %s - %s\n", __severity, TS_FUNCTION_LOG_SIMPLE, TS_FMT(__message, ##__VA_ARGS__)/*, __FILE__, __LINE__*/); \
+		TS_PRINTF_IMPL("[%s] %s - %s\n", severityParam, TS_FUNCTION_LOG_SIMPLE, TS_FMT(messageParam, ##__VA_ARGS__)/*, __FILE__, __LINE__*/); \
 	} while(false)
 
-#define __TS_WLOG_WITH_SEVERITY_IMPL(__severity, __message, ...) \
-	do { \
-		__TS_WPRINTF_IMPL("[%s] %s - %s\n", __severity, TS_WIDE(TS_FUNCTION_LOG_SIMPLE), TS_FMT(TS_WIDE(__message), ##__VA_ARGS__)/*, __FILE__, __LINE__*/); \
-	} while(false)
-
-#define TS_LOG_ERROR(__message, ...)   __TS_LOG_WITH_SEVERITY_IMPL("Error", __message, ##__VA_ARGS__)
-#define TS_LOG_WARNING(__message, ...) __TS_LOG_WITH_SEVERITY_IMPL("Warning", __message, ##__VA_ARGS__)
-#define TS_LOG_INFO(__message, ...)    __TS_LOG_WITH_SEVERITY_IMPL("Info", __message, ##__VA_ARGS__)
-
-#define TS_WLOG_ERROR(__message, ...)   __TS_WLOG_WITH_SEVERITY_IMPL(L"Error", __message, ##__VA_ARGS__)
-#define TS_WLOG_WARNING(__message, ...) __TS_WLOG_WITH_SEVERITY_IMPL(L"Warning", __message, ##__VA_ARGS__)
-#define TS_WLOG_INFO(__message, ...)    __TS_WLOG_WITH_SEVERITY_IMPL(L"Info", __message, ##__VA_ARGS__)
+#define TS_LOG_ERROR(messageParam, ...)   TS_LOG_WITH_SEVERITY_IMPL("Error", messageParam, ##__VA_ARGS__)
+#define TS_LOG_WARNING(messageParam, ...) TS_LOG_WITH_SEVERITY_IMPL("Warning", messageParam, ##__VA_ARGS__)
+#define TS_LOG_INFO(messageParam, ...)    TS_LOG_WITH_SEVERITY_IMPL("Info", messageParam, ##__VA_ARGS__)
 
 #if TS_BUILD != TS_FINALRELEASE
-	#define TS_LOG_DEBUG(__message, ...)  __TS_LOG_WITH_SEVERITY_IMPL("Debug", __message, ##__VA_ARGS__)
-	#define TS_WLOG_DEBUG(__message, ...) __TS_WLOG_WITH_SEVERITY_IMPL(L"Debug", __message, ##__VA_ARGS__)
+	#define TS_LOG_DEBUG(messageParam, ...)  TS_LOG_WITH_SEVERITY_IMPL("Debug", messageParam, ##__VA_ARGS__)
 #else
-	#define TS_LOG_DEBUG(__message, ...) ((void)0)
-	#define TS_WLOG_DEBUG(__message, ...) ((void)0)
+	#define TS_LOG_DEBUG(messageParam, ...) ((void)0)
+#endif
+
+#if TS_PLATFORM == TS_WINDOWS
+	
+	#define TS_WLOG_WITH_SEVERITY_IMPL(severityParam, messageParam, ...) \
+	do { \
+		TS_WPRINTF_IMPL("[%s] %s - %s\n", severityParam, TS_WIDE(TS_FUNCTION_LOG_SIMPLE), TS_FMT(TS_WIDE(messageParam), ##__VA_ARGS__)/*, __FILE__, __LINE__*/); \
+	} while(false)
+	
+	#define TS_WLOG_ERROR(messageParam, ...)   TS_WLOG_WITH_SEVERITY_IMPL(L"Error", messageParam, ##__VA_ARGS__)
+	#define TS_WLOG_WARNING(messageParam, ...) TS_WLOG_WITH_SEVERITY_IMPL(L"Warning", messageParam, ##__VA_ARGS__)
+	#define TS_WLOG_INFO(messageParam, ...)    TS_WLOG_WITH_SEVERITY_IMPL(L"Info", messageParam, ##__VA_ARGS__)
+
+	#if TS_BUILD != TS_FINALRELEASE
+		#define TS_WLOG_DEBUG(messageParam, ...) TS_WLOG_WITH_SEVERITY_IMPL(L"Debug", messageParam, ##__VA_ARGS__)
+	#else
+		#define TS_WLOG_DEBUG(messageParam, ...) ((void)0)
+	#endif
+	
+#else
+	
+	#define TS_WLOG_ERROR(messageParam, ...)   TS_LOG_ERROR(messageParam, __VA_ARGS__)
+	#define TS_WLOG_WARNING(messageParam, ...) TS_LOG_WARNING(messageParam, __VA_ARGS__)
+	#define TS_WLOG_INFO(messageParam, ...)    TS_LOG_INFO(messageParam, __VA_ARGS__)
+
+	#if TS_BUILD != TS_FINALRELEASE
+		#define TS_WLOG_DEBUG(messageParam, ...) TS_LOG_DEBUG(messageParam, __VA_ARGS__)
+	#else
+		#define TS_WLOG_DEBUG(messageParam, ...) ((void)0)
+	#endif
+	
 #endif
 
 #include "ts/lang/common/Package.h"

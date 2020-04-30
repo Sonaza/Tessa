@@ -27,12 +27,12 @@ static void rightTrim(String &str)
 
 extern void toUppercase(String &str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), std::toupper);
+	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 }
 
 extern void toLowercase(String &str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
 extern String toUppercaseCopy(const String &str)

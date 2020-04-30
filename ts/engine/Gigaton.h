@@ -61,7 +61,7 @@ T &Gigaton::getGigaton()
 {
 	std::type_index index = typeid(T);
 	TS_ASSERT(instances.count(index) > 0 && "No instance of the class is registered to Gigaton.");
-	return *static_cast<T*>(instances[index]);
+	return *static_cast<T*>(instances.at(index));
 }
 
 template <class T>
@@ -69,7 +69,7 @@ const T &Gigaton::getGigaton() const
 {
 	std::type_index index = typeid(T);
 	TS_ASSERT(instances.count(index) > 0 && "No instance of the class is registered to Gigaton.");
-	return *static_cast<T*>(instances[index]);
+	return *static_cast<T*>(instances.at(index));
 }
 
 template <class T>
@@ -77,7 +77,7 @@ T *Gigaton::getGigatonOptional()
 {
 	std::type_index index = typeid(T);
 	if (instances.count(index) > 0)
-		return static_cast<T*>(instances[index]);
+		return static_cast<T*>(instances.at(index));
 	return nullptr;
 }
 

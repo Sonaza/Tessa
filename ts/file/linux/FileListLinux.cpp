@@ -5,6 +5,9 @@
 #include "ts/file/FileList.h"
 #include "ts/file/FileUtils.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <dirent.h>
 
 TS_PACKAGE1(file)

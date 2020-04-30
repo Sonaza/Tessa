@@ -56,12 +56,12 @@ bool operator>=(TimeSpan lhs, TimeSpan rhs);
 TimeSpan operator+(TimeSpan lhs, TimeSpan rhs);
 TimeSpan operator-(TimeSpan lhs, TimeSpan rhs);
 
-TimeSpan operator""_hrs(uint64 value);
-TimeSpan operator""_min(uint64 value);
-TimeSpan operator""_s(uint64 value);
+TimeSpan operator""_hrs(unsigned long long int value);
+TimeSpan operator""_min(unsigned long long int value);
+TimeSpan operator""_s(unsigned long long int value);
 TimeSpan operator""_sf(long double value);
-TimeSpan operator""_ms(uint64 value);
-TimeSpan operator""_us(uint64 value);
-TimeSpan operator""_ns(uint64 value);
+TimeSpan operator""_ms(unsigned long long int value);
+TimeSpan operator""_us(unsigned long long int value);
+TimeSpan operator""_ns(unsigned long long int value);
 
 TS_END_PACKAGE0()

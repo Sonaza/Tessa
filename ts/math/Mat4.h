@@ -142,8 +142,8 @@ TMatrix4<T> operator*(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs);
 typedef TMatrix4<float> Mat4;
 typedef TMatrix4<double> DMat4;
 
-const TMatrix4<float> TMatrix4<float>::identity;
-const TMatrix4<double> TMatrix4<double>::identity;
+template<> const TMatrix4<float> TMatrix4<float>::identity;
+template<> const TMatrix4<double> TMatrix4<double>::identity;
 
 typedef Mat4 Transform;
 

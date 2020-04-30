@@ -74,6 +74,7 @@ private:
 	{
 		void *handle;
 		String absolutePath;
+		String relativePath;
 	};
 	std::stack<DirectoryFrame> m_directoryStack;
 

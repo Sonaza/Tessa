@@ -1,4 +1,7 @@
 #include "Precompiled.h"
+
+#if TS_PLATFORM == TS_WINDOWS
+
 #include "ts/file/InputFile.h"
 
 #include "ts/lang/common/IncludeWindows.h"
@@ -260,3 +263,5 @@ bool InputFile::operator!() const
 }
 
 TS_END_PACKAGE1()
+
+#endif

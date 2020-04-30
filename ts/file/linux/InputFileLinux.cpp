@@ -49,7 +49,6 @@ bool InputFile::open(const String &filepath, InputFileMode modeParam)
 	const char *mode;
 	switch (modeParam)
 	{
-		case InputFileMode_Read:       mode = "r";  break;
 		case InputFileMode_ReadBinary: mode = "rb"; break;
 		default: TS_ASSERT(!"Unhandled mode"); return false;
 	}

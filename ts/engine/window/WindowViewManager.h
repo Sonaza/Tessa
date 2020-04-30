@@ -2,7 +2,7 @@
 
 #include "ts/engine/system/AbstractManagerBase.h"
 
-#include "ts/engine/window/WIndowView.h"
+#include "ts/engine/window/WindowView.h"
 
 TS_DECLARE2(engine, window, WindowManager);
 

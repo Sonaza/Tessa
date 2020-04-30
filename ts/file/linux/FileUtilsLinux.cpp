@@ -8,7 +8,10 @@
 #include <stack>
 #include <cstdio>
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <linux/limits.h>
 
 #define MAX_PATH_LENGTH PATH_MAX
 
@@ -113,7 +116,7 @@ extern String getExecutableDirectory()
 		return executablePath;
 
 	char buffer[MAX_PATH_LENGTH] = { 0 };
-	BigSizeType count = readlink("/proc/self/exe", buffer, MAX_PATH_LENGTH);
+	ssize_t count = readlink("/proc/self/exe", buffer, MAX_PATH_LENGTH);
 	if (count != -1)
 		executablePath = getDirname(String(buffer));
 
@@ -123,14 +126,18 @@ extern String getExecutableDirectory()
 extern String getWorkingDirectory()
 {
 	char buffer[MAX_PATH_LENGTH] = { 0 };
-	getcwd(buffer, MAX_PATH_LENGTH);
+	if (getcwd(buffer, MAX_PATH_LENGTH) == NULL)
+		TS_PRINTF("getcwd failed\n");
 	return String(buffer);
 }
 
 extern void setWorkingDirectory(const String &path)
 {
 	TS_ASSERT(path.getSize() < MAX_PATH_LENGTH);
-	chdir(path.toUtf8().c_str());
+	if (chdir(path.toUtf8().c_str()) != 0)
+	{
+		TS_PRINTF("chdir failed\n");
+	}
 }
 
 TS_END_PACKAGE1()

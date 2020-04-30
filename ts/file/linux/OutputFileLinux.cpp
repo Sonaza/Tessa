@@ -35,7 +35,7 @@ OutputFile &OutputFile::operator=(OutputFile &&other)
 	if (this != &other)
 	{
 		m_handle = std::exchange(other.m_handle, nullptr);
-		m_bad = std::exchange(other.m_bad, nullptr);
+		m_bad = std::exchange(other.m_bad, false);
 	}
 	return *this;
 }
