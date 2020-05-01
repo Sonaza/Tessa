@@ -9,11 +9,19 @@
 #elif TS_PLATFORM == TS_LINUX
 	#include <sys/socket.h>
 	#include <netinet/in.h>
+	#include <netinet/ip.h>
+	#include <netdb.h>
+
+	#define SOCKADDR_STORAGE sockaddr_storage
+	#define SOCKADDR_IN sockaddr_in
+	#define SOCKADDR_IN6 sockaddr_in6
+
+	#define DWORD int32
 #else
 	#error "Address class not implemented on this platform"
 #endif
 
-#define ADDRESS_GET_NUM_BYTES(type) ((type) == ts::net::Address::AddressTypeIPv4 ? ts::net::Address::NumBytesAddressIPv4 : ts::net::Address::NumBytesAddressIPv6)
+#define ADDRESS_GET_NUM_BYTES(type) ((type) == ts::engine::net::Address::AddressTypeIPv4 ? ts::engine::net::Address::NumBytesAddressIPv4 : ts::engine::net::Address::NumBytesAddressIPv6)
 #define SWAP_SHORT_BYTE_ORDER(value) ((((value) >> 8) & 0x00FFu) | (((value) << 8) & 0xFF00u))
 
 TS_PACKAGE2(engine, net)
@@ -101,7 +109,11 @@ std::string Address::getHostName()
 			SOCKADDR_IN temp;
 			memset(&temp, 0, sizeof(SOCKADDR_IN));
 			temp.sin_family = AF_INET6;
+#if TS_PLATFORM == TS_WINDOWS
 			temp.sin_addr.S_un.S_addr = getIPv4AsInt();
+#else
+			temp.sin_addr.s_addr = getIPv4AsInt();
+#endif
 			temp.sin_port = htons(u_short(port));
 			hostAddress = *reinterpret_cast<SOCKADDR_STORAGE*>(&temp);
 		}
@@ -637,9 +649,16 @@ bool resolveAddress(const char* hostname, Address &address, ResolveAddressType p
 			case AF_INET:
 			{
 				SOCKADDR_IN addr = *reinterpret_cast<SOCKADDR_IN*>(ptr->ai_addr);
+				
+#if TS_PLATFORM == TS_WINDOWS
+				uint8_t *addr_data = reinterpret_cast<uint8_t*>(&addr.sin_addr.S_addr);
+#else
+				uint8_t *addr_data = reinterpret_cast<uint8_t*>(&addr.sin_addr.s_addr);
+#endif
+				
 				address = Address(
 					Address::AddressTypeIPv4,
-					reinterpret_cast<uint8_t*>(&addr.sin_addr.S_un.S_un_b),
+					addr_data,
 					ntohs(addr.sin_port)
 				);
 				found = true;

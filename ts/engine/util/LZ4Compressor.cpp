@@ -1,5 +1,8 @@
 #include "Precompiled.h"
-#include "ts/tessa/util/LZ4Compressor.h"
+
+#if 0
+
+#include "ts/engine/util/LZ4Compressor.h"
 
 #include "lz4.h"
 
@@ -177,3 +180,6 @@ PosType LZ4Compressor::decompressFullStream(const char *TS_RESTRICT srcPtrStart,
 }
 
 TS_END_PACKAGE2()
+
+#endif
+

@@ -1,5 +1,5 @@
 #include "Precompiled.h"
-#include "ts/tessa/instance/ComponentBase.h"
+#include "ts/engine/instance/ComponentBase.h"
 
 TS_PACKAGE2(engine, instance)
 

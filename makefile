@@ -3,39 +3,48 @@ MAKE_DIR = $(PWD)
 BUILD_DIR   := $(MAKE_DIR)/builds
 INT_DIR     := $(MAKE_DIR)/obj
 
-# ROOT_DIR    := $(MAKE_DIR)/root 
-# DRV_DIR     := $(MAKE_DIR)/driver
-# INCLUDE_DIR := $(MAKE_DIR)/include
-# DEBUG_DIR   := $(MAKE_DIR)/debug
-
 EXTERNALS_DIR := $(MAKE_DIR)/linuxext
 
 INC_PATH := 
 INC_PATH += -I$(MAKE_DIR)
 INC_PATH += -I$(EXTERNALS_DIR)/include
-INC_PATH += -I$(ROOT_DIR)
 
 LIB_PATH :=
+LIB_PATH += -L$(INT_DIR)
 LIB_PATH += -L$(EXTERNALS_DIR)/libs
 
+CC  = cc
 CXX = g++
 LD  = ld
-RM  = rm
+RM  = rm -f
 AR  = ar
 
 CXXFLAGS :=
 CXXFLAGS += $(INC_PATH) $(LIB_PATH) 
-CXXFLAGS += -Wall -O -ggdb -Wno-unknown-pragmas -std=c++17 -fms-extensions
+CXXFLAGS += -Wall -Werror -O -ggdb -Wno-unknown-pragmas -std=c++17 -fms-extensions
 CXXFLAGS += -DTS_BUILD_DEBUG -DDEBUG
 
-MODULES := -lcontainer -llang -lmath -lstring -lfile -lsys -lthread -lrenderer -lengine -linput -lprofiling -lresource
+CCFLAGS :=
+CCFLAGS += $(INC_PATH) $(LIB_PATH) 
+CCFLAGS += -Wall -Werror -O -ggdb -Wno-unknown-pragmas -std=c11
+CCFLAGS += -DTS_BUILD_DEBUG -DDEBUG
+# CCFLAGS += -DSFML_STATIC
 
-LDFLAGS := $(MODULES)
+MODULES := 
+MODULES += -lts-container -lts-lang -lts-math -lts-string
+MODULES += -lts-file -lts-sys -lts-thread 
+MODULES += -lts-renderer
+MODULES += -lts-engine -lts-input -lts-profiling -lts-resource
+
+LDFLAGS := 
+LDFLAGS += $(MODULES)
+LDFLAGS += -lpthread
+LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-system 
 LDFLAGS += -lfreeimage
-LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-system
-LDFLAGS += -lfmt -lvpx -lnestegg -lsiphash -llz4
+LDFLAGS += -lfmt -lvpx -lnestegg -lsiphash -llz4 
+LDFLAGS += -Wl,--verbose
 
-export MAKE_DIR CXX LD RM AR CXXFLAGS LDFLAGS LIBS INC_PATH BUILD_DIR INT_DIR
+export MAKE_DIR CC CXX LD RM AR CCFLAGS CXXFLAGS LDFLAGS INC_PATH BUILD_DIR INT_DIR
 
 all:
 	# Level 0
@@ -55,11 +64,11 @@ all:
 	# Level 3
 	@$(MAKE) -C ts/engine -f engine.mk
 	@$(MAKE) -C ts/input -f input.mk
-# 	@$(MAKE) -C ts/profiling -f profiling.mk
-# 	@$(MAKE) -C ts/resource -f resource.mk
+	@$(MAKE) -C ts/profiling -f profiling.mk
+	@$(MAKE) -C ts/resource -f resource.mk
 
-# 	# Level 4
-# 	@$(MAKE) -C ts/ivie -f ivie.mk
+	# Level 4
+	@$(MAKE) -C ts/ivie -f ivie.mk
 
 .PHONY: clean
 clean:

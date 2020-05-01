@@ -204,6 +204,8 @@ bool WindowManager::pollEvent(sf::Event &eventParam)
 				screenSizeChangedSignal(size);
 			}
 			break;
+			
+			default: break;
 		}
 
 		break;

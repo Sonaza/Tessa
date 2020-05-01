@@ -2,9 +2,11 @@
 #include "ts/thread/ThreadUtils.h"
 
 #if TS_PLATFORM == TS_WINDOWS
-#include "ts/lang/common/IncludeWindows.h"
-#include <processthreadsapi.h>
-#pragma warning( disable : 4702 ) // Unreachable code warning, it's just the NYI asserts.
+	#include "ts/lang/common/IncludeWindows.h"
+	#include <processthreadsapi.h>
+	#pragma warning( disable : 4702 ) // Unreachable code warning, it's just the NYI asserts.
+#elif TS_PLATFORM == TS_LINUX
+	#include <pthread.h>
 #endif
 
 TS_PACKAGE2(thread, utils)
@@ -12,9 +14,10 @@ TS_PACKAGE2(thread, utils)
 namespace
 {
 
+#if TS_PLATFORM == TS_WINDOWS
+
 int32 convertToSystemThreadPriority(ThreadPriority priority)
 {
-#if TS_PLATFORM == TS_WINDOWS
 	switch(priority)
 	{
 		case ThreadPriority_Critical:    return THREAD_PRIORITY_TIME_CRITICAL;
@@ -24,13 +27,12 @@ int32 convertToSystemThreadPriority(ThreadPriority priority)
 		case ThreadPriority_BelowNormal: return THREAD_PRIORITY_BELOW_NORMAL;
 		case ThreadPriority_Low:         return THREAD_PRIORITY_LOWEST;
 		case ThreadPriority_Idle:        return THREAD_PRIORITY_IDLE;
+		
+		default: TS_ASSERT(!"Invalid priority") break;
 	}
-#endif
-	TS_ASSERT(!"Not implemented on this platform.");
-	return 0;
+	
+	return -1;
 }
-
-#if TS_PLATFORM == TS_WINDOWS
 
 void setThreadName(DWORD nativeThreadID, const std::string &threadName)
 {
@@ -96,8 +98,29 @@ extern void setCurrentThreadName(const std::string &threadName)
 extern void setThreadPriority(std::thread &thread, ThreadPriority priority)
 {
 #if TS_PLATFORM == TS_WINDOWS
+	
 	SetThreadPriority(thread.native_handle(), convertToSystemThreadPriority(priority));
 	return;
+	
+#elif TS_PLATFORM == TS_WINDOWS
+	
+	// pthread_t threadId = thread.native_handle();
+	// pthread_attr_t threadAttr;
+
+	// int32 policy = 0;
+	// int32 min_prio_for_policy = 0;
+	// int32 max_prio_for_policy = 0;
+
+	// pthread_attr_init(&threadAttr);
+	// pthread_attr_getschedpolicy(&threadAttr, &policy);
+
+	// min_prio_for_policy = sched_get_priority_min(policy);
+	// max_prio_for_policy = sched_get_priority_max(policy);
+
+	// pthread_setschedprio(threadId, max_prio_for_policy);
+	// pthread_attr_destroy(&threadAttr);
+	return;
+	
 #endif
 
 	TS_ASSERT(!"Not implemented on this platform.");

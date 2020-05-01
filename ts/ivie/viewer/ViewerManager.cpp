@@ -719,6 +719,10 @@ void ViewerManager::applySorting(std::vector<String> &filelist)
 		case SortingStyle_ByExtension:
 			std::sort(filelist.begin(), filelist.end(), util::naturalSortByExtension);
 		break;
+		
+		default:
+			TS_PRINTF("Sorting algorithm not set up for this style.\n");
+		break;
 	}
 }
 
@@ -860,7 +864,7 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 	if (imagesToLoad.empty())
 		currentImage = nullptr;
 
-	uint32 currentImageHash = 0;
+	// uint32 currentImageHash = 0;
 
 	for (const ImageEntry &entry : imagesToLoad)
 	{
@@ -878,7 +882,7 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 		bool isCurrentImage = (entry.index == current.imageIndex);
 		if (isCurrentImage)
 		{
-			currentImageHash = imageHash;
+			// currentImageHash = imageHash;
 			currentImage = image;
 		}
 

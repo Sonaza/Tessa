@@ -56,6 +56,8 @@ bool InputManager::handleEvent(const sf::Event &event)
 			storage.mousePosition = math::VC2I(event.mouseMove.x, event.mouseMove.y);
 		}
 		break;
+		
+		default: break;
 	}
 
 	return false;

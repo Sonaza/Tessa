@@ -60,7 +60,7 @@ bool ArchivistReader::openArchive(const String &filepath)
 	{
 		ArchivistFileHeader header;
 		PosType bytesRead = archive.readVariable(header);
-		if (bytesRead < sizeof(ArchivistFileHeader))
+		if (bytesRead < (PosType)sizeof(ArchivistFileHeader))
 		{
 			TS_LOG_ERROR("Failed to read header index %u.\n", index);
 			return false;

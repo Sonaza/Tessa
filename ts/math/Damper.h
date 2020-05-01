@@ -4,6 +4,8 @@
 #include "ts/math/Vec3.h"
 #include "ts/math/CommonMath.h"
 
+#include <cfloat>
+
 TS_PACKAGE1(math)
 
 template <class T>

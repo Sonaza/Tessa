@@ -1,4 +1,7 @@
 #include "Precompiled.h"
+
+#if 0
+
 #include "DisplayImage.h"
 
 #include "ts/ivie/image/Image.h"
@@ -40,3 +43,5 @@ void DisplayImage::draw(sf::RenderTarget &renderTarget, const math::VC2 &positio
 }
 
 TS_END_PACKAGE2()
+
+#endif

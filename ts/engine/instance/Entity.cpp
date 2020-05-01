@@ -1,5 +1,5 @@
 #include "Precompiled.h"
-#include "ts/tessa/instance/Entity.h"
+#include "ts/engine/instance/Entity.h"
 
 TS_PACKAGE2(engine, instance)
 

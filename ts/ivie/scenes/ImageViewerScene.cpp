@@ -384,11 +384,10 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				}
 				break;
 			}
-			
-			
-
 		}
 		break;
+		
+		default: /* bop */ break;
 	}
 
 	return false;
@@ -410,7 +409,7 @@ bool ImageViewerScene::updateImageInfo()
 
 		TS_ASSERT(current.data.size.x > 0 && current.data.size.y > 0);
 
-		float previousDefaultScale = defaultScale.getValue();
+		// float previousDefaultScale = defaultScale.getValue();
 
 		float targetScale = math::min(
 			math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
@@ -502,7 +501,7 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 {
 	TS_ZONE();
 
-	const engine::window::WindowView &view = windowManager->getApplicationView();
+	// const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	defaultScale.update(deltaTime);
 

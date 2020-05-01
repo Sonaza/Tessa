@@ -1,6 +1,10 @@
 #include "Precompiled.h"
 #include "ts/math/CRC.h"
 
+#define crcpp_uint8  ::ts::uint8
+#define crcpp_uint16 ::ts::uint16
+#define crcpp_uint32 ::ts::uint32
+#define crcpp_uint64 ::ts::uint64
 #define CRCPP_USE_CPP11
 #define CRCPP_INCLUDE_ESOTERIC_CRC_DEFINITIONS
 #include "ext/CRC.h"

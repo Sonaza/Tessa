@@ -307,7 +307,7 @@ bool Image::advanceToNextFrame()
 {
 	TS_ZONE();
 
-	static SizeType lastFrameIndex = ~0U;
+	// static SizeType lastFrameIndex = ~0U;
 
 	MutexGuard lock(mutex);
 

@@ -146,6 +146,8 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 					flags |= JPEG_EXIFROTATE | JPEG_ACCURATE;
 				}
 				break;
+				
+				default: break;
 			}
 
 			state.bitmap = FreeImage_LoadFromMemory(state.format, state.memory, flags);
@@ -189,6 +191,8 @@ void ImageBackgroundLoaderFreeImage::cleanup(bool soft)
 			}
 		}
 		break;
+		
+		default: TS_ASSERT(!"Unhandled format"); break;
 	}
 
 	state.format = FIF_UNKNOWN;
@@ -494,6 +498,8 @@ bool ImageBackgroundLoaderFreeImage::loadNextFrame(FrameStorage &bufferStorage)
 				return false;
 		}
 		break;
+		
+		default: TS_ASSERT(!"Unhandled format"); break;
 	}
 
 	if (imageDataUpdated == false)

@@ -62,12 +62,12 @@ static void nestegg_log_callback(nestegg *context, unsigned int severity, char c
 	va_start(args, format);
 
 	const SizeType bufferSize = 1024;
-	char buffer[1024] = { 0 };
+	char buffer[bufferSize] = { 0 };
 
 #if TS_PLATFORM == TS_WINDOWS
 	vsprintf_s(buffer, bufferSize, format, args);
 #else
-	vsprintf(buffer, format, args);
+	vsnprintf(buffer, bufferSize, format, args);
 #endif
 	va_end(args);
 
@@ -153,14 +153,14 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 
 	TS_ASSERT(state.context != nullptr);
 
-	uint64 streamTotalDuration = 0;
+	std::uint64_t streamTotalDuration = 0;
 	if (nestegg_duration(state.context, &streamTotalDuration) == -1)
 	{
 		errorText = "Failed to retrieve duration.";
 		return false;
 	}
 
-	totalDuration = TimeSpan::fromNanoseconds(streamTotalDuration);
+	totalDuration = TimeSpan::fromNanoseconds((uint64)streamTotalDuration);
 
 // 	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration.getMilliseconds());
 
@@ -206,7 +206,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 				return false;
 			}
 
-			uint64 defaultDuration = 0;
+			uint64_t defaultDuration = 0;
 			if (nestegg_track_default_duration(state.context, track, &defaultDuration) == -1)
 			{
 // 				defaultDuration = 33000000;
@@ -214,7 +214,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 			}
 			else
 			{
-				frameTime = TimeSpan::fromNanoseconds(defaultDuration);
+				frameTime = TimeSpan::fromNanoseconds((uint64)defaultDuration);
 			}
 			
 			numTotalFrames = (uint32)(totalDuration / frameTime);

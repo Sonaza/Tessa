@@ -101,9 +101,13 @@ public:
 						
 					}
 					break;
+					
+					default: break;
 				}
 			}
 			break;
+			
+			default: break;
 		}
 
 		return false;
@@ -146,8 +150,12 @@ public:
 		std::vector<Label> labels;
 
 		float offsetAccumulator = 0;
+		
 		int64 startTimeLimit = 0;
 		float timeDisplayOffset = 0.f;
+		
+		TS_UNUSED_VARIABLE(startTimeLimit);
+		TS_UNUSED_VARIABLE(timeDisplayOffset);
 
 		baseStartTime = profiler.storage[0].back().front().start;
 
@@ -220,7 +228,7 @@ public:
 			{
 				const ZoneFrame &frame = *frameIter;
 				PosType frameIndex = std::distance(collection.begin(), frameIter.base());
-				PosType frameIndexInverted = std::distance(collection.rbegin(), frameIter);
+				// PosType frameIndexInverted = std::distance(collection.rbegin(), frameIter);
 
 				int64 startTime = math::max<int64>(0, frame.front().start);
 
@@ -259,7 +267,7 @@ public:
 
 					math::FloatRect rect(pos, size, math::Rect_PositionAndSize);
 
-					sf::Color color = event.level < colors.size() ? colors[event.level] : sf::Color::Magenta;
+					sf::Color color = event.level < (int32)colors.size() ? colors[event.level] : sf::Color::Magenta;
 					if (rect.isPointWithin(mousePosition))
 					{
 						color += sf::Color(30, 30, 30);
@@ -423,7 +431,6 @@ ZoneProfiler &ZoneProfiler::get()
 #define WRITE(format, ...) do { \
 	const std::string str = TS_FMT("%s" format, std::string(indent, '\t'), ## __VA_ARGS__); \
 	output.writeString(str); } while(0)
-	// TS_PRINTF(str); \
 
 void ZoneProfiler::save(const String &filepath)
 {
