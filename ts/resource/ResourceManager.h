@@ -27,10 +27,10 @@ public:
 	ResourceManager();
 	virtual ~ResourceManager();
 
-	virtual bool initialize();
-	virtual void deinitialize();
+	virtual bool initialize() override;
+	virtual void deinitialize() override;
 
-	virtual void update(const TimeSpan deltaTime);
+	virtual void update(const TimeSpan deltaTime) override;
 
 	// Loads resource anonymously, the unique handle is generated on the fly.
 	template<class ResourceType>

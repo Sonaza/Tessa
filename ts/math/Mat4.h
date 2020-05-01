@@ -19,7 +19,7 @@ class TMatrix4
 	template<class> friend class Quaternion;
 
 public:
-	static const TMatrix4 identity;
+	static const TMatrix4<T> identity;
 
 	// Constructs an identity matrix
 	TMatrix4();
@@ -144,6 +144,9 @@ typedef TMatrix4<double> DMat4;
 
 template<> const TMatrix4<float> TMatrix4<float>::identity;
 template<> const TMatrix4<double> TMatrix4<double>::identity;
+
+extern template class TMatrix4<float>;
+extern template class TMatrix4<double>;
 
 typedef Mat4 Transform;
 

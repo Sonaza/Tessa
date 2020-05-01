@@ -3,6 +3,11 @@
 
 TS_PACKAGE1(math)
 
+template class Vec4<float>;
+template class Vec4<double>;
+template class Vec4<int32>;
+template class Vec4<uint32>;
+
 template<> const Vec4<float> Vec4<float>::zero(0.f, 0.f, 0.f);
 template<> const Vec4<float> Vec4<float>::up(0.f, 1.f, 0.f);
 template<> const Vec4<float> Vec4<float>::forward(0.f, 0.f, 1.f);

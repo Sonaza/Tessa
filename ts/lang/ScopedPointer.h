@@ -17,7 +17,7 @@ public:
 	typedef T ElementType;
 
 	ScopedPointer() = default;
-	ScopedPointer(nullptr_t);
+	ScopedPointer(std::nullptr_t);
 	explicit ScopedPointer(T *pointer);
 	~ScopedPointer();
 
@@ -45,8 +45,8 @@ public:
 	explicit operator void *() const;
 
 	bool operator!() const;
-	bool operator==(nullptr_t) const;
-	bool operator!=(nullptr_t) const;
+	bool operator==(std::nullptr_t) const;
+	bool operator!=(std::nullptr_t) const;
 	bool operator==(const ScopedPointer &other) const;
 	bool operator!=(const ScopedPointer &other) const;
 

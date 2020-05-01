@@ -15,20 +15,20 @@ public:
 	Application(engine::system::Commando &commando);
 	virtual ~Application();
 
-	virtual bool start();
-	virtual void stop();
+	virtual bool start() override;
+	virtual void stop() override;
 
 protected:
-	virtual bool createApplicationManagers();
+	virtual bool createApplicationManagers() override;
 
-	virtual void initializeConfigDefaults(engine::system::ConfigReader &config);
+	virtual void initializeConfigDefaults(engine::system::ConfigReader &config) override;
 
-	virtual bool initializeScene();
+	virtual bool initializeScene() override;
 
-	virtual bool createWindow(engine::window::WindowManager &windowManager);
-	virtual bool loadArchives(resource::archivist::ArchivistFilesystem &fileSystem);
+	virtual bool createWindow(engine::window::WindowManager &windowManager) override;
+	virtual bool loadArchives(resource::archivist::ArchivistFilesystem &fileSystem) override;
 
-	virtual bool customQuitHandler();
+	virtual bool customQuitHandler() override;
 };
 
 TS_END_PACKAGE1()

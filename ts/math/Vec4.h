@@ -107,4 +107,29 @@ typedef Vec4<double>   VC4D;
 typedef Vec4<int32>    VC4I;
 typedef Vec4<uint32>   VC4U;
 
+template<> const Vec4<float> Vec4<float>::zero;
+template<> const Vec4<float> Vec4<float>::up;
+template<> const Vec4<float> Vec4<float>::forward;
+template<> const Vec4<float> Vec4<float>::right;
+
+template<> const Vec4<double> Vec4<double>::zero;
+template<> const Vec4<double> Vec4<double>::up;
+template<> const Vec4<double> Vec4<double>::forward;
+template<> const Vec4<double> Vec4<double>::right;
+
+template<> const Vec4<int32> Vec4<int32>::zero;
+template<> const Vec4<int32> Vec4<int32>::up;
+template<> const Vec4<int32> Vec4<int32>::forward;
+template<> const Vec4<int32> Vec4<int32>::right;
+
+template<> const Vec4<uint32> Vec4<uint32>::zero;
+template<> const Vec4<uint32> Vec4<uint32>::up;
+template<> const Vec4<uint32> Vec4<uint32>::forward;
+template<> const Vec4<uint32> Vec4<uint32>::right;
+
+extern template class Vec4<float>;
+extern template class Vec4<double>;
+extern template class Vec4<int32>;
+extern template class Vec4<uint32>;
+
 TS_END_PACKAGE1()

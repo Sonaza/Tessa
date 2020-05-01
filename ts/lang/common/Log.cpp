@@ -49,7 +49,7 @@ protected:
 		return traits_type::eof();
 	}
 
-	int32 sync()
+	int32 sync() override
 	{
 		if (pbase() != pptr())
 		{

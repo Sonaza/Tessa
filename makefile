@@ -13,36 +13,45 @@ LIB_PATH :=
 LIB_PATH += -L$(INT_DIR)
 LIB_PATH += -L$(EXTERNALS_DIR)/libs
 
-CC  = cc
-CXX = g++
+CC  = clang
+CXX = clang++
 LD  = ld
 RM  = rm -f
 AR  = ar
 
+WFLAGS :=
+WFLAGS += -Wall -Werror
+WFLAGS += -Wno-unknown-pragmas
+WFLAGS += -Wno-unused-private-field
+
 CXXFLAGS :=
-CXXFLAGS += $(INC_PATH) $(LIB_PATH) 
-CXXFLAGS += -Wall -Werror -O -ggdb -Wno-unknown-pragmas -std=c++17 -fms-extensions
+CXXFLAGS += $(INC_PATH)
+CXXFLAGS += $(WFLAGS) -ggdb -std=c++17 -fms-extensions
 CXXFLAGS += -DTS_BUILD_DEBUG -DDEBUG
+# CXXFLAGS += -DSFML_STATIC
 
 CCFLAGS :=
-CCFLAGS += $(INC_PATH) $(LIB_PATH) 
-CCFLAGS += -Wall -Werror -O -ggdb -Wno-unknown-pragmas -std=c11
+CCFLAGS += $(INC_PATH)
+CCFLAGS += $(WFLAGS) -ggdb -std=c11
 CCFLAGS += -DTS_BUILD_DEBUG -DDEBUG
-# CCFLAGS += -DSFML_STATIC
 
 MODULES := 
+# MODULES += -Wl,--whole-archive
 MODULES += -lts-container -lts-lang -lts-math -lts-string
-MODULES += -lts-file -lts-sys -lts-thread 
+# MODULES += -lts-file -lts-sys -lts-thread 
+MODULES += -lts-file -lts-thread 
 MODULES += -lts-renderer
 MODULES += -lts-engine -lts-input -lts-profiling -lts-resource
+# MODULES += -Wl,--no-whole-archive
 
 LDFLAGS := 
+LDFLAGS += $(LIB_PATH)
 LDFLAGS += $(MODULES)
 LDFLAGS += -lpthread
 LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-system 
 LDFLAGS += -lfreeimage
 LDFLAGS += -lfmt -lvpx -lnestegg -lsiphash -llz4 
-LDFLAGS += -Wl,--verbose
+# LDFLAGS += -Wl,--verbose
 
 export MAKE_DIR CC CXX LD RM AR CCFLAGS CXXFLAGS LDFLAGS INC_PATH BUILD_DIR INT_DIR
 
@@ -55,7 +64,7 @@ all:
 
 	# Level 1
 	@$(MAKE) -C ts/file -f file.mk
-	@$(MAKE) -C ts/sys -f sys.mk
+# 	@$(MAKE) -C ts/sys -f sys.mk
 	@$(MAKE) -C ts/thread -f thread.mk
 
 	# Level 2
@@ -94,3 +103,27 @@ clean:
 
 	# Level 4
 	@$(MAKE) -C ts/ivie -f ivie.mk clean
+
+
+# Foreground colors
+FBLACK   :=$(shell tput setaf 0)
+FRED     :=$(shell tput setaf 1)
+FGREEN   :=$(shell tput setaf 2)
+FYELLOW  :=$(shell tput setaf 3)
+FBLUE    :=$(shell tput setaf 4)
+FMAGENTA :=$(shell tput setaf 5)
+FCYAN    :=$(shell tput setaf 6)
+FGRAY    :=$(shell tput setaf 7)
+# Background colors
+BBLACK   :=$(shell tput setab 0)
+BRED     :=$(shell tput setab 1)
+BGREEN   :=$(shell tput setab 2)
+BYELLOW  :=$(shell tput setab 3)
+BBLUE    :=$(shell tput setab 4)
+BMAGENTA :=$(shell tput setab 5)
+BCYAN    :=$(shell tput setab 6)
+BGRAY    :=$(shell tput setab 7)
+# Reset colors
+NC       :=$(shell tput sgr0)
+
+export FBLACK FRED FGREEN FYELLOW FBLUE FMAGENTA FCYAN FGRAY BBLACK BRED BGREEN BYELLOW BBLUE BMAGENTA BCYAN BGRAY NC

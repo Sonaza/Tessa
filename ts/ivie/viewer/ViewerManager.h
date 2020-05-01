@@ -40,10 +40,10 @@ public:
 	ViewerManager();
 	~ViewerManager();
 
-	virtual bool initialize();
-	virtual void deinitialize();
+	virtual bool initialize() override;
+	virtual void deinitialize() override;
 
-	void update(const TimeSpan deltaTime);
+	virtual void update(const TimeSpan deltaTime) override;
 
 	void setFilepath(const String &filepath);
 	const String &getFilepath() const;

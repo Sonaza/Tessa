@@ -235,8 +235,8 @@ public:
 	ThreadScheduler();
 	virtual ~ThreadScheduler();
 
-	virtual bool initialize();
-	virtual void deinitialize();
+	virtual bool initialize() override;
+	virtual void deinitialize() override;
 
 	bool hasTasks() const;
 	SizeType getNumTasks() const;

@@ -12,4 +12,3 @@ bool findIfContains(const std::vector<DataType> &container, const DataType &valu
 }
 
 TS_END_PACKAGE1()
-

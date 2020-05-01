@@ -57,7 +57,7 @@ public:
 		return "Unknown";
 	}
 
-	virtual String getDebugString() const
+	virtual String getDebugString() const override
 	{
 		return TS_FMT("Task ID %u", taskId);
 	}

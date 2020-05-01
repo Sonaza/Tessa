@@ -20,7 +20,7 @@ UniquePointer<T, Deleter>::UniquePointer(T *pointer)
 }
 
 template <class T, class Deleter>
-UniquePointer<T, Deleter>::UniquePointer(nullptr_t)
+UniquePointer<T, Deleter>::UniquePointer(std::nullptr_t)
 {
 }
 
@@ -110,13 +110,13 @@ bool UniquePointer<T, Deleter>::operator!() const
 }
 
 template <class T, class Deleter>
-bool UniquePointer<T, Deleter>::operator==(nullptr_t) const
+bool UniquePointer<T, Deleter>::operator==(std::nullptr_t) const
 {
 	return pointer == nullptr;
 }
 
 template <class T, class Deleter>
-bool UniquePointer<T, Deleter>::operator!=(nullptr_t) const
+bool UniquePointer<T, Deleter>::operator!=(std::nullptr_t) const
 {
 	return pointer != nullptr;
 }

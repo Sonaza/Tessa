@@ -30,8 +30,10 @@ BaseApplication::~BaseApplication()
 	m_gigatonInstance.unregisterClass(this);
 }
 
-	int32 BaseApplication::launch()
+int32 BaseApplication::launch()
 {
+	printf("HELLO WORLD\n");
+	
 	initializeConfigDefaults(m_config);
 
 	String rootPath;

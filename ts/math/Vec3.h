@@ -114,4 +114,29 @@ typedef Vec3<double>    VC3D;
 typedef Vec3<int32>     VC3I;
 typedef Vec3<uint32>    VC3U;
 
+template<> const Vec3<float> Vec3<float>::zero;
+template<> const Vec3<float> Vec3<float>::up;
+template<> const Vec3<float> Vec3<float>::forward;
+template<> const Vec3<float> Vec3<float>::right;
+
+template<> const Vec3<double> Vec3<double>::zero;
+template<> const Vec3<double> Vec3<double>::up;
+template<> const Vec3<double> Vec3<double>::forward;
+template<> const Vec3<double> Vec3<double>::right;
+
+template<> const Vec3<int32> Vec3<int32>::zero;
+template<> const Vec3<int32> Vec3<int32>::up;
+template<> const Vec3<int32> Vec3<int32>::forward;
+template<> const Vec3<int32> Vec3<int32>::right;
+
+template<> const Vec3<uint32> Vec3<uint32>::zero;
+template<> const Vec3<uint32> Vec3<uint32>::up;
+template<> const Vec3<uint32> Vec3<uint32>::forward;
+template<> const Vec3<uint32> Vec3<uint32>::right;
+
+extern template class Vec3<float>;
+extern template class Vec3<double>;
+extern template class Vec3<int32>;
+extern template class Vec3<uint32>;
+
 TS_END_PACKAGE1()

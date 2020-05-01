@@ -17,7 +17,7 @@ public:
 	typedef T ElementType;
 
 	UniquePointer() = default;
-	UniquePointer(nullptr_t);
+	UniquePointer(std::nullptr_t);
 	explicit UniquePointer(T *pointer);
 	~UniquePointer();
 
@@ -45,8 +45,8 @@ public:
 	explicit operator void *() const;
 
 	bool operator!() const;
-	bool operator==(nullptr_t) const;
-	bool operator!=(nullptr_t) const;
+	bool operator==(std::nullptr_t) const;
+	bool operator!=(std::nullptr_t) const;
 	bool operator==(const UniquePointer &other) const;
 	bool operator!=(const UniquePointer &other) const;
 	

@@ -20,7 +20,7 @@ ScopedPointer<T, Deleter>::ScopedPointer(T *pointer)
 }
 
 template <class T, class Deleter>
-ScopedPointer<T, Deleter>::ScopedPointer(nullptr_t)
+ScopedPointer<T, Deleter>::ScopedPointer(std::nullptr_t)
 {
 }
 
@@ -91,13 +91,13 @@ bool ScopedPointer<T, Deleter>::operator!() const
 }
 
 template <class T, class Deleter>
-bool ScopedPointer<T, Deleter>::operator==(nullptr_t) const
+bool ScopedPointer<T, Deleter>::operator==(std::nullptr_t) const
 {
 	return pointer == nullptr;
 }
 
 template <class T, class Deleter>
-bool ScopedPointer<T, Deleter>::operator!=(nullptr_t) const
+bool ScopedPointer<T, Deleter>::operator!=(std::nullptr_t) const
 {
 	return pointer != nullptr;
 }

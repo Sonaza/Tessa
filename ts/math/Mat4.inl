@@ -327,7 +327,7 @@ inline TMatrix4<T> TMatrix4<T>::makeOrtho(T left, T right, T bottom, T top, T zn
 template<class T>
 inline TMatrix4<T>::TMatrix4(const sf::Transform &transform)
 {
-	const T *m = transform.getMatrix();
+	const float *m = transform.getMatrix();
 	*this = TMatrix4<T>(
 		m[0], m[4], m[8],  m[12],
 		m[1], m[5], m[9],  m[13],

@@ -3,6 +3,11 @@
 
 TS_PACKAGE1(math)
 
+template class Vec2<float>;
+template class Vec2<double>;
+template class Vec2<int32>;
+template class Vec2<uint32>;
+
 template<> const Vec2<float> Vec2<float>::zero(0.f, 0.f);
 template<> const Vec2<float> Vec2<float>::up(0.f, 1.f);
 template<> const Vec2<float> Vec2<float>::right(1.f, 0.f);

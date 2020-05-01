@@ -20,7 +20,7 @@ SharedPointer<T>::SharedPointer(T *ptr)
 }
 
 template <class T>
-SharedPointer<T>::SharedPointer(nullptr_t)
+SharedPointer<T>::SharedPointer(std::nullptr_t)
 {
 	reset(nullptr);
 }
@@ -168,13 +168,13 @@ bool SharedPointer<T>::operator!() const
 }
 
 template <class T>
-bool SharedPointer<T>::operator==(nullptr_t) const
+bool SharedPointer<T>::operator==(std::nullptr_t) const
 {
 	return pointer == nullptr;
 }
 
 template <class T>
-bool SharedPointer<T>::operator!=(nullptr_t) const
+bool SharedPointer<T>::operator!=(std::nullptr_t) const
 {
 	return pointer != nullptr;
 }

@@ -16,8 +16,8 @@ public:
 	InputManager();
 	virtual ~InputManager();
 
-	virtual bool initialize();
-	virtual void deinitialize();
+	virtual bool initialize() override;
+	virtual void deinitialize() override;
 
 	static math::VC2I getMousePosition();
 

@@ -261,7 +261,7 @@ PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const String &filepath
 	LZ4_initStream(lz4Stream, sizeof(*lz4Stream));
 
 	SizeType srcBufferIndex = 0;
-	char srcDoubleBuffer[2][ArchivistConstants::CompressionBlockSize] = { 0 };
+	char srcDoubleBuffer[2][ArchivistConstants::CompressionBlockSize] = { {0} };
 
 // 	TS_PRINTF("File %s (total size %lld bytes):\n", filepath, filesize);
 

@@ -165,7 +165,7 @@ const ManagerType &BaseApplication::getManager() const
 	TS_ZONE();
 
 	const std::type_index typeIndex = typeid(ManagerType);
-	InstancedManagersList::iterator it = m_managerInstances.find(typeIndex);
+	InstancedManagersList::const_iterator it = m_managerInstances.find(typeIndex);
 	TS_ASSERT(it != m_managerInstances.end() && "Attempting to retrieve a manager that has not been created.");
 	return *static_cast<ManagerType*>(it->second.get());
 }

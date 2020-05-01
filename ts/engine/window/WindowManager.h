@@ -24,10 +24,10 @@ public:
 	WindowManager();
 	virtual ~WindowManager();
 
-	virtual bool initialize();
-	virtual void deinitialize();
+	virtual bool initialize() override;
+	virtual void deinitialize() override;
 
-	virtual void update(const TimeSpan deltaTime);
+	virtual void update(const TimeSpan deltaTime)  override;
 
 	void create(const math::VC2U &videomode, const String &windowTitle, const bool resizable, const bool fullscreen);
 	void close();

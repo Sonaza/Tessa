@@ -20,7 +20,7 @@ public:
 	typedef T ElementType;
 
 	SharedPointer() = default;
-	SharedPointer(nullptr_t);
+	SharedPointer(std::nullptr_t);
 	explicit SharedPointer(T *ptr);
 
 	template <class Deleter>
@@ -56,8 +56,8 @@ public:
 	explicit operator void *() const;
 
 	bool operator!() const;
-	bool operator==(nullptr_t) const;
-	bool operator!=(nullptr_t) const;
+	bool operator==(std::nullptr_t) const;
+	bool operator!=(std::nullptr_t) const;
 	bool operator==(const SharedPointer &other) const;
 	bool operator!=(const SharedPointer &other) const;
 

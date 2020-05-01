@@ -10,8 +10,8 @@ template<class T>
 class Quaternion
 {
 public:
-	static const Quaternion zero;
-	static const Quaternion identity;
+	static const Quaternion<T> zero;
+	static const Quaternion<T> identity;
 	
 	Quaternion();
 	Quaternion(T x, T y, T z, T w);
@@ -110,5 +110,14 @@ public:
 
 typedef Quaternion<float> Quat;
 typedef Quaternion<double> DQuat;
+
+template<> const Quaternion<float> Quaternion<float>::zero;
+template<> const Quaternion<float> Quaternion<float>::identity;
+
+template<> const Quaternion<double> Quaternion<double>::zero;
+template<> const Quaternion<double> Quaternion<double>::identity;
+
+extern template class Quaternion<float>;
+extern template class Quaternion<double>;
 
 TS_END_PACKAGE1()

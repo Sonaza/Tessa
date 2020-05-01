@@ -10,6 +10,8 @@ using namespace ts;
 
 int main(int numArgs, const char **argv)
 {
+	printf("DOING ANYTHING AT ALL!\n");
+	
 	engine::system::Commando commando;
 	
 	if (!commando.parse(numArgs, argv))

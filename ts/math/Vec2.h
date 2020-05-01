@@ -110,4 +110,25 @@ typedef Vec2<double>    VC2D;
 typedef Vec2<int32>     VC2I;
 typedef Vec2<uint32>    VC2U;
 
+template<> const Vec2<float> Vec2<float>::zero;
+template<> const Vec2<float> Vec2<float>::up;
+template<> const Vec2<float> Vec2<float>::right;
+
+template<> const Vec2<double> Vec2<double>::zero;
+template<> const Vec2<double> Vec2<double>::up;
+template<> const Vec2<double> Vec2<double>::right;
+
+template<> const Vec2<int32> Vec2<int32>::zero;
+template<> const Vec2<int32> Vec2<int32>::up;
+template<> const Vec2<int32> Vec2<int32>::right;
+
+template<> const Vec2<uint32> Vec2<uint32>::zero;
+template<> const Vec2<uint32> Vec2<uint32>::up;
+template<> const Vec2<uint32> Vec2<uint32>::right;
+
+extern template class Vec2<float>;
+extern template class Vec2<double>;
+extern template class Vec2<int32>;
+extern template class Vec2<uint32>;
+
 TS_END_PACKAGE1()

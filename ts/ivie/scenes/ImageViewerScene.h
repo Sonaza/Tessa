@@ -20,8 +20,8 @@ public:
 	ImageViewerScene(engine::system::BaseApplication *application);
 	virtual ~ImageViewerScene();
 
-	virtual bool start();
-	virtual void stop();
+	virtual bool start() override;
+	virtual void stop() override;
 
 	virtual void loadResources(resource::ResourceManager &rm) override;
 
