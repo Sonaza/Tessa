@@ -26,13 +26,13 @@ WFLAGS += -Wno-unused-private-field
 
 CXXFLAGS :=
 CXXFLAGS += $(INC_PATH)
-CXXFLAGS += $(WFLAGS) -ggdb -std=c++17 -fms-extensions
+CXXFLAGS += $(WFLAGS) -ggdb -std=c++17 -fms-extensions -pthread
 CXXFLAGS += -DTS_BUILD_DEBUG -DDEBUG
 # CXXFLAGS += -DSFML_STATIC
 
 CCFLAGS :=
 CCFLAGS += $(INC_PATH)
-CCFLAGS += $(WFLAGS) -ggdb -std=c11
+CCFLAGS += $(WFLAGS) -ggdb -std=c11 -pthread
 CCFLAGS += -DTS_BUILD_DEBUG -DDEBUG
 
 MODULES := 
@@ -47,7 +47,7 @@ MODULES += -lts-engine -lts-input -lts-profiling -lts-resource
 LDFLAGS := 
 LDFLAGS += $(LIB_PATH)
 LDFLAGS += $(MODULES)
-LDFLAGS += -lpthread
+# LDFLAGS += -lpthread
 LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-system 
 LDFLAGS += -lfreeimage
 LDFLAGS += -lfmt -lvpx -lnestegg -lsiphash -llz4 

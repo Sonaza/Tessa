@@ -41,21 +41,27 @@
 static inline int
 nat_isdigit(nat_char a)
 {
-     return isdigit((unsigned char) a);
+	if (a < 256)
+    	return isdigit((unsigned char) a);
+    return 0;
 }
 
 
 static inline int
 nat_isspace(nat_char a)
 {
-     return isspace((unsigned char) a);
+    if (a < 256)
+    	return isspace((unsigned char) a);
+    return 0;
 }
 
 
 static inline nat_char
 nat_toupper(nat_char a)
 {
-     return toupper((unsigned char) a);
+    if (a < 256)
+    	return toupper((unsigned char) a);
+    return a;
 }
 
 

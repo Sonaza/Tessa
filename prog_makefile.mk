@@ -1,47 +1,45 @@
-MODULE_DIR  = $(CURDIR)
+SOURCE_DIR  = $(CURDIR)
 MODULE_NAME = $(shell basename $(CURDIR))
 
-OBJ_DIR := $(INT_DIR)/$(MODULE_NAME)
-TARGET  := $(BUILD_DIR)/$(MODULE_NAME)
+OBJS_DIR    := $(INT_DIR)/$(MODULE_NAME)
+PROG_TARGET := $(BUILD_DIR)/$(MODULE_NAME)
 
 SRCS := $(wildcard *.cpp) $(wildcard */*.cpp) $(wildcard *.c) $(wildcard */*.c)
 SRCS := $(filter-out Precompiled.cpp, $(SRCS))
 SRCS := $(filter-out %Windows.cpp, $(SRCS))
 
-LIB_DEPS := $(wildcard $(INT_DIR)/*.so)
+SHARED_OBJECT_DEPS := $(wildcard $(INT_DIR)/*.so)
 
 OBJS := $(SRCS:.cpp=.o)
 OBJS := $(OBJS:.c=.o)
-OBJS_TARGET := $(addprefix $(OBJ_DIR)/, $(OBJS))
-DEPS := $(OBJS_TARGET:.o=.d)
+OBJS_TARGET := $(addprefix $(OBJS_DIR)/, $(OBJS))
+DEPFILES    := $(OBJS_TARGET:.o=.d)
 
-CXXFLAGS := -I$(MODULE_DIR) $(CXXFLAGS)
+CXXFLAGS := -I$(SOURCE_DIR) $(CXXFLAGS)
 
-$(TARGET): $(OBJS_TARGET) $(LIB_DEPS)
+$(PROG_TARGET): $(OBJS_TARGET) $(SHARED_OBJECT_DEPS)
 	@mkdir -p $(BUILD_DIR)
-	@echo "\n    $(FYELLOW)Linking program binary $(FBLUE)$(notdir $(TARGET))"
+	@echo "\n    $(FYELLOW)Linking program binary $(FBLUE)$(notdir $(PROG_TARGET))"
 	@echo "    $(FYELLOW)Using: $(FGRAY)$^$(NC)\n\n"
-	$(CXX) $^ $(CXXFLAGS) -Wl,-Map=$(TARGET).map $(LDFLAGS) -o $@
-	cp $(TARGET) $(MAKE_DIR)/workdir/ivie
-	
+	@$(CXX) $^ $(CXXFLAGS) -Wl,-Map=$(PROG_TARGET).map $(LDFLAGS) -o $@
+	@cp $(PROG_TARGET) $(MAKE_DIR)/workdir/ivie
 	@echo "    $(FGREEN)Build finished.$(NC)\n"
 	
-$(OBJ_DIR)/%.o: %.cpp
+$(OBJS_DIR)/%.o: %.cpp
 	@echo "    $(FGREEN)CXX            $(FMAGENTA)$<$(NC)"
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) -MMD -c $< -o $@
 
-$(OBJ_DIR)/%.o: %.c
+$(OBJS_DIR)/%.o: %.c
 	@echo "    $(FGREEN)CC             $(FMAGENTA)$<$(NC)"
 	@mkdir -p $(dir $@)
 	@$(CC) $(CCFLAGS) -MMD -c $< -o $@
 
 .PHONY: clean
 clean:
-	@$(RM) $(TARGET) $(OBJS) $(DEPS)
+	@$(RM) $(PROG_TARGET) $(OBJS_TARGET) $(DEPFILES)
 	@$(RM) -r $(INT_DIR) $(BUILD_DIR)
-	@echo "    Remove Objects:   $(OBJS)"
-	@echo "    Remove Libraries:  $(notdir $(TARGET))"
-# 	@$(RM) *.expand
+	@echo "\n"
+	@echo "    $(FRED)Removing program objects and target:   $(FYELLOW)$(MODULE_NAME)$(NC)"
 
--include $(DEPS)
+-include $(DEPFILES)

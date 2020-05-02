@@ -29,7 +29,7 @@
 #elif defined(__linux__)
 	#define TS_PLATFORM TS_LINUX
 #else
-// 	#error "Platform not supported."
+	#error "Platform not supported."
 #endif
 
 ///////////////////////////////////////////////////////

@@ -10,7 +10,13 @@
 #include "ts/thread/ThreadScheduler.h"
 
 #if TS_PLATFORM == TS_WINDOWS
-#include "ts/lang/common/WindowsUtils.h"
+
+	#include "ts/lang/common/WindowsUtils.h"
+
+#elif TS_PLATFORM == TS_LINUX
+
+	#include "ts/lang/common/LinuxUtils.h"
+
 #endif
 
 #include "FreeImage.h"
@@ -164,8 +170,15 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 				case sf::Keyboard::G:
 				{
 #if TS_PLATFORM == TS_WINDOWS
+					
 					windows::openExplorerToFile(viewerManager->getCurrentFilepath());
 					return true;
+					
+#elif TS_PLATFORM == TS_LINUX
+					
+					linux::openExplorerToFile(viewerManager->getCurrentFilepath());
+					return true;
+					
 #endif
 				}
 				break;

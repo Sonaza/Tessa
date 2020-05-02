@@ -5,6 +5,18 @@
 #include "ts/file/FileList.h"
 #include "ts/file/FileUtils.h"
 
+#if __has_include(<filesystem>)
+
+	#include <filesystem>
+	namespace fs = std::filesystem;
+
+#elif __has_include(<experimental/filesystem>)
+
+	#include <experimental/filesystem>
+	namespace fs = std::experimental::filesystem;
+
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -144,12 +156,14 @@ bool FileList::next(FileListEntry &entry)
 			entry.m_directory = isDir;
 			return true;
 		}
+		
 		if (depth > 1)
 		{
 			readdir((DIR*)frame.handle);
 			m_directoryStack.pop();
 			continue;
 		}
+		
 		break;
 	}
 	m_done = true;

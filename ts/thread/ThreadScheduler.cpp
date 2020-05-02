@@ -23,7 +23,7 @@ public:
 	BackgroundScheduler(ThreadScheduler *scheduler)
 		: scheduler(scheduler)
 	{
-		thread = Thread::createThread(this, "ThreadScheduler::BackgroundScheduler");
+		thread = Thread::createThread(this, "ThrdScheduler");
 	}
 
 	~BackgroundScheduler()
@@ -82,7 +82,7 @@ public:
 		: scheduler(scheduler)
 		, workerIndex(workerIndex)
 	{
-		thread = Thread::createThread(this, TS_FMT("ThreadScheduler::BackgroundWorker %u", workerIndex));
+		thread = Thread::createThread(this, TS_FMT("Worker %u", workerIndex));
 	}
 
 	~BackgroundWorker()

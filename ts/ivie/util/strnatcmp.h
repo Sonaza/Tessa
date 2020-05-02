@@ -27,11 +27,13 @@
 extern "C" {
 #endif
 
+#include <uchar.h>
+
 /* CUSTOMIZATION SECTION
  *
  * You can change this typedef, but must then also change the inline
  * functions in strnatcmp.c */
-typedef char nat_char;
+typedef char32_t nat_char;
 
 int strnatcmp(nat_char const *a, nat_char const *b);
 int strnatcasecmp(nat_char const *a, nat_char const *b);

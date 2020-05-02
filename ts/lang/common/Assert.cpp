@@ -3,9 +3,15 @@
 #include "ts/string/String.h"
 
 #if TS_PLATFORM == TS_WINDOWS
+
 	#include "ts/lang/common/IncludeWindows.h"
 	#include <codecvt>
 	#include <sstream>
+
+#elif TS_PLATFORM == TS_LINUX
+
+	#include "ts/lang/common/LinuxUtils.h"
+
 #endif
 
 #include "ts/string/StringUtils.h"
@@ -57,23 +63,29 @@ extern bool _assert_impl(const String &expression, const String &message, const 
 		String messageNoLinebreaks = message;
 		string::replaceCharacter(messageNoLinebreaks, '\n', ' ');
 		
-		// TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n",
-		// 	messageNoLinebreaks, expression, filepath, line);
 		TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n",
-			messageNoLinebreaks.toAnsiString().c_str(),
-			expression.toAnsiString().c_str(),
-			filepath.toAnsiString().c_str(),
-			line);
+			messageNoLinebreaks, expression, filepath, line);
+		// TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n",
+		// 	messageNoLinebreaks.toAnsiString().c_str(),
+		// 	expression.toAnsiString().c_str(),
+		// 	filepath.toAnsiString().c_str(),
+		// 	line);
 	}
 	else
 	{
-		// TS_PRINTF("Assertion failed: %s in %s on line %u\n",
-		// 	expression, filepath, line);
 		TS_PRINTF("Assertion failed: %s in %s on line %u\n",
-			expression.toAnsiString().c_str(),
-			filepath.toAnsiString().c_str(),
-			line);
+			expression, filepath, line);
+		// TS_PRINTF("Assertion failed: %s in %s on line %u\n",
+		// 	expression.toAnsiString().c_str(),
+		// 	filepath.toAnsiString().c_str(),
+		// 	line);
 	}
+	
+#if TS_PLATFORM == TS_LINUX
+	// Don't crash the program if debugger is not attached
+	if (!linux::isDebuggerAttached())
+		return false;
+#endif
 
 	DialogAction action = dialog(expression, message, filepath, line);
 	switch (action)

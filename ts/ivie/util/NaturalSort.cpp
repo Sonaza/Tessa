@@ -20,7 +20,7 @@ extern bool naturalSort(const String &lhs, const String &rhs)
 #if TS_PLATFORM == TS_WINDOWS
 	return StrCmpLogicalW(lhs.toWideString().c_str(), rhs.toWideString().c_str()) < 0;
 #else
-	return strnatcmp(lhs.toUtf8().c_str(), rhs.toUtf8().c_str()) < 0;
+	return strnatcmp(lhs.toUtf32().c_str(), rhs.toUtf32().c_str()) < 0;
 #endif
 }
 
