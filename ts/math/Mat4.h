@@ -142,8 +142,12 @@ TMatrix4<T> operator*(const TMatrix4<T> &lhs, const TMatrix4<T> &rhs);
 typedef TMatrix4<float> Mat4;
 typedef TMatrix4<double> DMat4;
 
+#if TS_COMPILER != TS_MSC
+
 template<> const TMatrix4<float> TMatrix4<float>::identity;
 template<> const TMatrix4<double> TMatrix4<double>::identity;
+
+#endif
 
 extern template class TMatrix4<float>;
 extern template class TMatrix4<double>;

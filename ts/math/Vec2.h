@@ -110,6 +110,8 @@ typedef Vec2<double>    VC2D;
 typedef Vec2<int32>     VC2I;
 typedef Vec2<uint32>    VC2U;
 
+#if TS_COMPILER != TS_MSC
+
 template<> const Vec2<float> Vec2<float>::zero;
 template<> const Vec2<float> Vec2<float>::up;
 template<> const Vec2<float> Vec2<float>::right;
@@ -125,6 +127,8 @@ template<> const Vec2<int32> Vec2<int32>::right;
 template<> const Vec2<uint32> Vec2<uint32>::zero;
 template<> const Vec2<uint32> Vec2<uint32>::up;
 template<> const Vec2<uint32> Vec2<uint32>::right;
+
+#endif
 
 extern template class Vec2<float>;
 extern template class Vec2<double>;

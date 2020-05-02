@@ -114,6 +114,8 @@ typedef Vec3<double>    VC3D;
 typedef Vec3<int32>     VC3I;
 typedef Vec3<uint32>    VC3U;
 
+#if TS_COMPILER != TS_MSC
+
 template<> const Vec3<float> Vec3<float>::zero;
 template<> const Vec3<float> Vec3<float>::up;
 template<> const Vec3<float> Vec3<float>::forward;
@@ -133,6 +135,8 @@ template<> const Vec3<uint32> Vec3<uint32>::zero;
 template<> const Vec3<uint32> Vec3<uint32>::up;
 template<> const Vec3<uint32> Vec3<uint32>::forward;
 template<> const Vec3<uint32> Vec3<uint32>::right;
+
+#endif
 
 extern template class Vec3<float>;
 extern template class Vec3<double>;

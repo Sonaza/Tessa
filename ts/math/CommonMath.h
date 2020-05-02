@@ -73,7 +73,7 @@ T lerp(T source, T target, float t)
 template<class T>
 T sqrt(T value)
 {
-	return std::sqrt(value);
+	return (T)std::sqrt(value);
 }
 
 template<class T>

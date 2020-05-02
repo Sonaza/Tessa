@@ -111,11 +111,15 @@ public:
 typedef Quaternion<float> Quat;
 typedef Quaternion<double> DQuat;
 
+#if TS_COMPILER != TS_MSC
+
 template<> const Quaternion<float> Quaternion<float>::zero;
 template<> const Quaternion<float> Quaternion<float>::identity;
 
 template<> const Quaternion<double> Quaternion<double>::zero;
 template<> const Quaternion<double> Quaternion<double>::identity;
+
+#endif
 
 extern template class Quaternion<float>;
 extern template class Quaternion<double>;

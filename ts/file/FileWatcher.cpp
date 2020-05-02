@@ -29,10 +29,12 @@ bool FileWatcher::watch(const String &path, bool watchRecursive, SizeType flags)
 	// TODO
 	return false;
 	
-#endif
-	
+#else
+
 	TS_ASSERT(false && "Not implemented on this platform");
 	return false;
+
+#endif
 }
 
 void FileWatcher::reset()

@@ -210,10 +210,10 @@ inline Quaternion<T> &Quaternion<T>::slerp(Quaternion<T> q1, Quaternion<T> q2, T
 	if (angle <= (1 - threshold))
 	{
 		// spherical interpolation
-		const T theta = acos(angle);
-		const T invsintheta = 1.0 / sin(theta);
-		const T scale = sin(theta * (1.0 - time)) * invsintheta;
-		const T invscale = sin(theta * time) * invsintheta;
+		const T theta = (T)acos(angle);
+		const T invsintheta = T(1.0 / sin(theta));
+		const T scale = (T)sin(theta * (1.0 - time)) * invsintheta;
+		const T invscale = (T)sin(theta * time) * invsintheta;
 
 		*this = (q1 * scale) + (q2 * invscale);
 		return *this;
@@ -347,14 +347,14 @@ inline Quaternion<T> Quaternion<T>::makeFromEulerAngles(const Vec3<T> &angles)
 template<class T>
 Quaternion<T> Quaternion<T>::makeFromAngleAxis(T angle, const Vec3<T> &axis)
 {
-	const T halfAngle = angle * 0.5;
-	const T halfAngleSin = sin(halfAngle);
+	const T halfAngle = angle * (T)0.5;
+	const T halfAngleSin = (T)sin(halfAngle);
 
 	Quaternion<T> q;
 	q.x = halfAngleSin * axis.x;
 	q.y = halfAngleSin * axis.y;
 	q.z = halfAngleSin * axis.z;
-	q.w = cos(halfAngle);
+	q.w = (T)cos(halfAngle);
 
 	return q;
 }

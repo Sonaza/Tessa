@@ -32,7 +32,7 @@ int32 convertToSystemThreadPriority(ThreadPriority priority)
 		case ThreadPriority_Low:         return THREAD_PRIORITY_LOWEST;
 		case ThreadPriority_Idle:        return THREAD_PRIORITY_IDLE;
 		
-		default: TS_ASSERT(!"Invalid priority") break;
+		default: TS_ASSERT(!"Invalid priority"); break;
 	}
 	
 	return -1;

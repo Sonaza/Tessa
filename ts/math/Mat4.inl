@@ -171,9 +171,9 @@ inline TMatrix4<T> &TMatrix4<T>::translate(const Vec3<T> &v)
 template<class T>
 inline TMatrix4<T> &TMatrix4<T>::rotate(T degrees, const Vec2<T> &center)
 {
-	T rad = degToRad(degrees);
-	T cos = std::cos(rad);
-	T sin = std::sin(rad);
+	T rad = (T)degToRad(degrees);
+	T cos = (T)std::cos(rad);
+	T sin = (T)std::sin(rad);
 
 	TMatrix4<T> rotation(
 		cos, -sin, 0, center.x * (1 - cos) + center.y * sin,
@@ -188,9 +188,9 @@ inline TMatrix4<T> &TMatrix4<T>::rotate(T degrees, const Vec2<T> &center)
 template<class T>
 inline TMatrix4<T> &TMatrix4<T>::rotate(T degrees, const Vec3<T> &axis)
 {
-	T rad = degToRad(degrees);
-	T cos = 1.f - std::cos(rad);
-	T sin = std::sin(rad);
+	T rad = (T)degToRad((T)degrees);
+	T cos = (T)(1.0 - std::cos(rad));
+	T sin = (T)std::sin(rad);
 
 	// Normalize axis Vector
 	Vec3<T> u = axis.getNormalized();

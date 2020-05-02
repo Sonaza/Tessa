@@ -489,24 +489,27 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 		imageScale.setTarget(math::max(1.f, imageScale.getTarget()));
 	}
 
-	switch (displayMode)
+	if (windowManager->isInFocus())
 	{
-		case Manga:
+		switch (displayMode)
 		{
-			const bool upPressed   = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
-			const bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
-
-			if (upPressed || downPressed)
+			case Manga:
 			{
-				const float delta = (upPressed ? 1.f : -1.f);
-				const math::VC2 move = math::VC2(0.f, delta * 1400.f * deltaTime.getSecondsAsFloat());
-				positionOffset.setTarget(positionOffset.getTarget() + move);
-				enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
-			}
-		}
-		break;
+				const bool upPressed   = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+				const bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
 
-		default: break;
+				if (upPressed || downPressed)
+				{
+					const float delta = (upPressed ? 1.f : -1.f);
+					const math::VC2 move = math::VC2(0.f, delta * 1400.f * deltaTime.getSecondsAsFloat());
+					positionOffset.setTarget(positionOffset.getTarget() + move);
+					enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
+				}
+			}
+			break;
+
+			default: break;
+		}
 	}
 }
 
