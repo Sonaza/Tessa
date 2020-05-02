@@ -2,11 +2,15 @@
 #include "ts/thread/ThreadUtils.h"
 
 #if TS_PLATFORM == TS_WINDOWS
+
 	#include "ts/lang/common/IncludeWindows.h"
 	#include <processthreadsapi.h>
 	#pragma warning( disable : 4702 ) // Unreachable code warning, it's just the NYI asserts.
+
 #elif TS_PLATFORM == TS_LINUX
+
 	#include <pthread.h>
+
 #endif
 
 TS_PACKAGE2(thread, utils)
@@ -78,8 +82,17 @@ void setThreadName(DWORD nativeThreadID, const std::string &threadName)
 extern void setThreadName(std::thread &thread, const std::string &threadName)
 {
 #if TS_PLATFORM == TS_WINDOWS
+	
 	setThreadName(GetThreadId(thread.native_handle()), threadName);
 	return;
+
+#elif TS_PLATFORM == TS_LINUX
+
+	if (pthread_setname_np(thread.native_handle(), threadName.c_str()) != 0)
+		printf("Failed to set thread name");
+	
+	return;
+
 #endif
 
 	TS_ASSERT(!"Not implemented on this platform.");
@@ -88,9 +101,19 @@ extern void setThreadName(std::thread &thread, const std::string &threadName)
 extern void setCurrentThreadName(const std::string &threadName)
 {
 #if TS_PLATFORM == TS_WINDOWS
+
 	setThreadName(GetCurrentThreadId(), threadName);
 	return;
+
+#elif TS_PLATFORM == TS_LINUX
+
+	if (pthread_setname_np(pthread_self(), threadName.c_str()) != 0)
+		printf("Failed to set thread name");
+	
+	return;
+
 #endif
+	
 
 	TS_ASSERT(!"Not implemented on this platform.");
 }
@@ -131,6 +154,11 @@ extern void setCurrentThreadPriority(ThreadPriority priority)
 #if TS_PLATFORM == TS_WINDOWS
 	SetThreadPriority(GetCurrentThread(), convertToSystemThreadPriority(priority));
 	return;
+
+#elif TS_PLATFORM == TS_WINDOWS
+	
+	return;
+	
 #endif
 
 	TS_ASSERT(!"Not implemented on this platform.");

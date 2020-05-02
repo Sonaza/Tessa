@@ -32,6 +32,8 @@ extern String normalizePath(const String &path, string::Character delimiter)
 	std::vector<String> splitPath = string::splitString(workpath, TS_ALL_PATH_DELIMITERS);
 
 	// TODO: probably doesn't support /../asdfasd style paths
+	
+	const bool absolute = isAbsolutePath(path);
 
 	int32 ignore = 0;
 	std::stack<String*> pathTokens;
@@ -58,7 +60,10 @@ extern String normalizePath(const String &path, string::Character delimiter)
 	}
 
 	String normalized;
-	normalized.reserve(path.getSize() / 2);
+	normalized.reserve(path.getSize() / 2 + 1);
+
+	if (absolute)
+		normalized.append('/');
 
 	while (!pathTokens.empty())
 	{

@@ -4,5 +4,14 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"file_exclude_patterns":
+	[
+		"*.d"
+	],
+	"folder_exclude_patterns":
+	[
+		"ext_build",
+		"obj"
+	],
 }

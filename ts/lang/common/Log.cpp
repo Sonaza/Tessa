@@ -147,7 +147,8 @@ bool Log::openLogfile()
 
 	if (!isLogFileOpen())
 	{
-		TS_LOG_ERROR("Opening log file for writing failed! File path: %s", filepathToBeOpened);
+		printf("Opening log file for writing failed! File path: %s", filepathToBeOpened.toAnsiString().c_str());
+		// TS_LOG_ERROR("Opening log file for writing failed! File path: %s", filepathToBeOpened);
 		return false;
 	}
 

@@ -18,18 +18,18 @@ CXXFLAGS := -I$(MODULE_DIR) $(CXXFLAGS)
 
 $(TARGET): $(OBJS_TARGET)
 	@mkdir -p $(INT_DIR)
-	@echo "\n    $(FCYAN)Archive   $(FMAGENTA)$(notdir $@)$(NC)\n"
-	@$(AR) crv $@ $^
-	@echo " $(OBJS)\n"
+	@echo "    $(FCYAN)Archive        $(FMAGENTA)$(notdir $@)$(NC)"
+	@$(AR) cr $@ $^
+	@echo "    $(FYELLOW)Shared Object  $(FMAGENTA)$(notdir $(patsubst %.a,%.so,$@))$(NC)\n"
 	$(CXX) $^ -shared -o $(patsubst %.a,%.so,$@)
 
 $(OBJ_DIR)/%.o: %.cpp
-	@echo "    $(FGREEN)CXX       $(FMAGENTA)$<$(NC)"
+	@echo "    $(FGREEN)CXX            $(FMAGENTA)$<$(NC)"
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) -fPIC -MMD -c $< -o $@
 
 $(OBJ_DIR)/%.o: %.c
-	@echo "    $(FGREEN)CC        $(FMAGENTA)$<$(NC)"
+	@echo "    $(FGREEN)CC             $(FMAGENTA)$<$(NC)"
 	@mkdir -p $(dir $@)
 	@$(CC) $(CXXFLAGS) -fPIC -MMD -c $< -o $@
 

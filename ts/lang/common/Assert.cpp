@@ -56,12 +56,23 @@ extern bool _assert_impl(const String &expression, const String &message, const 
 	{
 		String messageNoLinebreaks = message;
 		string::replaceCharacter(messageNoLinebreaks, '\n', ' ');
+		
+		// TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n",
+		// 	messageNoLinebreaks, expression, filepath, line);
 		TS_PRINTF("Assertion failed (%s): %s in %s on line %u\n",
-			messageNoLinebreaks, expression, filepath, line);
+			messageNoLinebreaks.toAnsiString().c_str(),
+			expression.toAnsiString().c_str(),
+			filepath.toAnsiString().c_str(),
+			line);
 	}
 	else
 	{
-		TS_PRINTF("Assertion failed: %s in %s on line %u\n", expression, filepath, line);
+		// TS_PRINTF("Assertion failed: %s in %s on line %u\n",
+		// 	expression, filepath, line);
+		TS_PRINTF("Assertion failed: %s in %s on line %u\n",
+			expression.toAnsiString().c_str(),
+			filepath.toAnsiString().c_str(),
+			line);
 	}
 
 	DialogAction action = dialog(expression, message, filepath, line);

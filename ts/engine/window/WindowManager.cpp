@@ -9,8 +9,12 @@
 
 #if TS_PLATFORM == TS_WINDOWS
 
-#include "ts/lang/common/IncludeWindows.h"
-#include "shellapi.h"
+	#include "ts/lang/common/IncludeWindows.h"
+	#include "shellapi.h"
+
+#elif TS_PLATFORM == TS_LINUX
+
+	#include <X11/Xlib.h>
 
 #endif
 
@@ -64,6 +68,13 @@ bool WindowManager::initialize()
 
 	inputManager = gigaton.getGigatonOptional<input::InputManager>();
 	TS_VERIFY_POINTERS_WITH_RETURN_VALUE(false, inputManager);
+
+#if TS_PLATFORM == TS_LINUX
+	if (XInitThreads() != 0)
+		TS_PRINTF("XInitThreads was succesful\n");
+	else
+		TS_PRINTF("XInitThreads failed\n");
+#endif
 
 	return true;
 }
@@ -136,6 +147,7 @@ void WindowManager::setWindowState(WindowState state)
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
 #if TS_PLATFORM == TS_WINDOWS
+
 	int32 flags = SW_NORMAL;
 	switch (state)
 	{
@@ -145,8 +157,15 @@ void WindowManager::setWindowState(WindowState state)
 		default: TS_ASSERT(!"Unhandled window state"); break;
 	}
 	ShowWindow(renderWindow->getSystemHandle(), flags);
+
+#elif TS_PLATFORM == TS_LINUX
+	
+	// TODO
+
 #else
+	
 	TS_ASSERT(!"Not implemented on this platform.");
+	
 #endif
 
 	renderWindow->clear();
@@ -158,6 +177,7 @@ WindowManager::WindowState WindowManager::getWindowState() const
 	TS_ASSERT(renderWindow != nullptr && "Window should be created before using.");
 
 #if TS_PLATFORM == TS_WINDOWS
+	
 	WINDOWPLACEMENT placement;
 	placement.length = sizeof(WINDOWPLACEMENT);
 	if (GetWindowPlacement(renderWindow->getSystemHandle(), &placement))
@@ -171,8 +191,14 @@ WindowManager::WindowState WindowManager::getWindowState() const
 		}
 	}
 
+#elif TS_PLATFORM == TS_LINUX
+	
+	// TODO
+	
 #else
+	
 	TS_ASSERT(!"Not implemented on this platform.");
+
 #endif
 
 	// Unknown state, just return normal
@@ -226,9 +252,17 @@ bool WindowManager::isOpen() const
 void WindowManager::setAcceptDropfiles(bool enabled)
 {
 #if TS_PLATFORM == TS_WINDOWS
+	
 	DragAcceptFiles(renderWindow->getSystemHandle(), enabled);
+
+#elif TS_PLATFORM == TS_LINUX
+	 
+	 // TODO
+	 	
 #else
+
 	TS_ASSERT(!"Not implemented on this platform.");
+
 #endif
 }
 

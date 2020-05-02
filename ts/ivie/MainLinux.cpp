@@ -8,6 +8,12 @@
 
 using namespace ts;
 
+// int main(int numArgs, const char **argv)
+// {
+// 	printf("Hello World!\n");
+// 	return 0;
+// }
+
 int main(int numArgs, const char **argv)
 {
 	printf("DOING ANYTHING AT ALL!\n");
