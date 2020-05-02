@@ -38,10 +38,9 @@ $(OBJS_DIR)/%.o: %.c
 
 .PHONY: clean
 clean:
-	@echo $(LIB_TARGET) $(OBJS_TARGET) $(SHARED_OBJS) $(DEPFILES)
-	@echo $(OBJS_DIR)
+	@$(RM) $(LIB_TARGET) $(OBJS_TARGET) $(SHARED_OBJS) $(DEPFILES)
+	@$(RM) -r $(OBJS_DIR)
 	@echo "    $(FRED)Removing module objects and targets:   $(FYELLOW)$(MODULE_NAME)$(NC)"
 	@echo "\n"
-# 	@$(RM) -r $(OBJS_DIR)
 
 -include $(DEPFILES)

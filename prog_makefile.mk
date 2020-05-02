@@ -37,7 +37,7 @@ $(OBJS_DIR)/%.o: %.c
 
 .PHONY: clean
 clean:
-	@$(RM) $(PROG_TARGET) $(OBJS_TARGET) $(DEPFILES)
+	@$(RM) $(PROG_TARGET) $(PROG_TARGET).map $(OBJS_TARGET) $(DEPFILES)
 	@$(RM) -r $(INT_DIR) $(BUILD_DIR)
 	@echo "\n"
 	@echo "    $(FRED)Removing program objects and target:   $(FYELLOW)$(MODULE_NAME)$(NC)"
