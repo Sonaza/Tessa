@@ -20,8 +20,8 @@ RM  = rm -f
 AR  = ar
 
 WFLAGS :=
-WFLAGS += -Wall -Werror
-WFLAGS += -Wno-unknown-pragmas
+WFLAGS += -Wall -Werror -Wextra
+WFLAGS += -Wno-unknown-pragmas -Wno-unused-parameter
 WFLAGS += -Wno-unused-private-field
 
 CXXFLAGS :=
@@ -37,17 +37,19 @@ CCFLAGS += -DTS_BUILD_DEBUG -DDEBUG
 
 MODULES := 
 # MODULES += -Wl,--whole-archive
+MODULES += -Wl,-Bstatic
 MODULES += -lts-container -lts-lang -lts-math -lts-string
 # MODULES += -lts-file -lts-sys -lts-thread 
 MODULES += -lts-file -lts-thread 
 MODULES += -lts-renderer
 MODULES += -lts-engine -lts-input -lts-profiling -lts-resource
+MODULES += -Wl,-Bdynamic
 # MODULES += -Wl,--no-whole-archive
 
 LDFLAGS := 
 LDFLAGS += $(LIB_PATH)
 LDFLAGS += $(MODULES)
-# LDFLAGS += -lpthread
+LDFLAGS += -lstdc++fs
 LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-system 
 LDFLAGS += -lfreeimage
 LDFLAGS += -lfmt -lvpx -lnestegg -lsiphash -llz4 

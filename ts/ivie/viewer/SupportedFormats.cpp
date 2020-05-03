@@ -10,7 +10,7 @@ const std::vector<String> &SupportedFormats::getSupportedFormatExtensions()
 	return SupportedFormats::instance.supportedFormatExtensions;
 }
 
-const bool SupportedFormats::isFormatAnimated(const String &extension)
+bool SupportedFormats::isFormatAnimated(const String &extension)
 {
 	FormatInfoList::const_iterator it = SupportedFormats::instance.supportedFormatInfo.find(extension);
 	return it != SupportedFormats::instance.supportedFormatInfo.end() ? it->second.animated : false;

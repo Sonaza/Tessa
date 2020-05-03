@@ -15,7 +15,7 @@ class SupportedFormats
 public:
 	static const std::vector<String> &getSupportedFormatExtensions();
 
-	static const bool isFormatAnimated(const String &extension);
+	static bool isFormatAnimated(const String &extension);
 
 private:
 	static SupportedFormats instance;

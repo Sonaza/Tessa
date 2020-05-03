@@ -17,12 +17,18 @@
 
 #endif
 
-#include <sys/types.h>
+// #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <dirent.h>
+
+#include <iostream>
 
 TS_PACKAGE1(file)
+
+struct FileListInfo
+{
+	fs::recursive_directory_iterator iter;
+};
 
 FileList::FileList()
 {
@@ -42,154 +48,160 @@ bool FileList::open(const String &path, FileListStyle listStyle, uint32 listFlag
 {
 	TS_ASSERT(!path.isEmpty());
 
-	TS_ASSERT(m_directoryStack.empty() && "FileList is already opened.");
-	if (!m_directoryStack.empty())
+	TS_ASSERT(m_info == nullptr && "FileList is already opened.");
+	if (m_info != nullptr)
 		return false;
-
-	DIR *dir = opendir(path.toUtf8().c_str());
-	if (dir == nullptr)
+	
+	m_info = new(std::nothrow) FileListInfo;
+	if (m_info == nullptr)
+	{
+		TS_ASSERT(!"Failed to init file list info.");
 		return false;
+	}
+	
+	std::error_code ec;
+	m_info->iter = fs::recursive_directory_iterator(path.toUtf8().c_str(), ec);
+	if (ec)
+	{
+		TS_LOG_ERROR("Failed to initialize FileList iterator: %s  Path: %s", ec.message(), path);
+		return false;
+	}
 
 	m_directoryPath = path;
 	m_listStyle = listStyle;
 	m_listFlags = listFlags;
-
-	m_directoryStack.push(DirectoryFrame{ dir, m_directoryPath });
 
 	return true;
 }
 
 void FileList::close()
 {
-	while (!m_directoryStack.empty())
+	if (m_info != nullptr)
 	{
-		readdir((DIR*)m_directoryStack.top().handle);
-		m_directoryStack.pop();
+		delete m_info;
+		m_info = nullptr;
 	}
 
-	if (m_globRegex != nullptr)
+	if (m_regex != nullptr)
 	{
-		std::regex *regex = static_cast<std::regex *>(m_globRegex);
+		std::regex *regex = static_cast<std::regex *>(m_regex);
 		delete regex;
-		m_globRegex = nullptr;
+		m_regex = nullptr;
 	}
 }
 
-bool FileList::next(FileListEntry &entry)
+bool FileList::next(FileListEntry &output)
 {
-	TS_ASSERT(!m_directoryStack.empty() && "FileList is not opened.");
-	if (m_directoryStack.empty() || m_done == true)
+	TS_ASSERT(m_info != nullptr && "FileList is not opened.");
+	
+	if (m_done == true)
 		return false;
 
-	dirent *ent;
-	while (true)
+	while (m_info->iter != fs::end(m_info->iter))
 	{
-		const size_t depth = m_directoryStack.size();
-
-		DirectoryFrame &frame = m_directoryStack.top();
-		ent = readdir((DIR*)frame.handle);
-		if (ent != nullptr)
+		const fs::directory_entry &entry = *m_info->iter;
+		
+		if ((m_listStyle & priv::ListStyleBits_Recursive) == 0)
+			m_info->iter.disable_recursion_pending();
+		
+		std::error_code ec;
+		m_info->iter.increment(ec);
+		if (ec)
 		{
-			String filename(ent->d_name);
-
-			String relativePath = joinPaths(frame.relativePath, filename);
-
-			const bool isDir = (ent->d_type & DT_DIR) > 0;
-			if (isDir == true)
-			{
-				if (filename == "." || filename == "..")
-				{
-					if ((m_listFlags & FileListFlags_SkipDotEntries) != 0)
-						continue;
-				}
-				else if ((m_listStyle & priv::ListStyleBits_Recursive) > 0)
-				{
-					String absolutePath = joinPaths(frame.absolutePath, filename);
-
-					DIR *dirPtr = opendir(absolutePath.toUtf8().c_str());
-					TS_ASSERT(dirPtr != nullptr);
-					if (dirPtr != nullptr)
-						m_directoryStack.push(
-							DirectoryFrame{ dirPtr, absolutePath, }
-						);
-				}
-
-				if ((m_listStyle & priv::ListStyleBits_Directories) == 0)
-					continue;
-			}
-			else
-			{
-				if ((m_listStyle & priv::ListStyleBits_Files) == 0)
-					continue;
-
-				if (m_globRegex != nullptr)
-				{
-					std::regex &regex = *static_cast<std::regex *>(m_globRegex);
-					if (!std::regex_search(filename.toUtf8(), regex))
-					{
-						TS_PRINTF("File %s does not match the glob.\n", filename);
-						continue;
-					}
-				}
-			}
-
-			if ((m_listFlags & FileListFlags_FileNameOnly) != 0 || depth == 1)
-			{
-				entry.m_filename = std::move(filename);
-			}
-			else
-			{
-				String relativePath = stripRootPath(frame.absolutePath, m_directoryPath);
-				entry.m_filename = joinPaths(relativePath, filename);
-			}
-
-			if ((m_listFlags & FileListFlags_ExcludeRootPath) == 0)
-				entry.m_rootpath = frame.absolutePath;
-			
-			struct stat st;
-			if (stat(entry.getFullPath().toUtf8().c_str(), &st) == 0)
-			{
-				entry.m_lastModified = convertUnixTimeToWindowsFileTime(st.st_mtim);
-				entry.m_filesize = st.st_size;
-			}
-
-			entry.m_directory = isDir;
-			return true;
+			TS_LOG_ERROR("Directory iterator increment failed.");
+			return false;
 		}
 		
-		if (depth > 1)
+		String relativePath(entry.path().u32string());
+		String filename(entry.path().filename().u32string());
+		
+		// std::cout << entry.path() << "\n";
+		std::cout << relativePath.toUtf8() << "\n";
+		// TS_PRINTF("%s\n", relativePath.toUtf8());
+		
+		const bool isDir = fs::is_directory(entry.status());
+		const bool isFile = fs::is_regular_file(entry.status());
+		
+		if (isDir == true)
 		{
-			readdir((DIR*)frame.handle);
-			m_directoryStack.pop();
+			if (filename == "." || filename == "..")
+				continue;
+
+			if ((m_listStyle & priv::ListStyleBits_Directories) == 0)
+				continue;
+		}
+		else if (isFile == true)
+		{
+			if ((m_listStyle & priv::ListStyleBits_Files) == 0)
+				continue;
+
+			if (m_regex != nullptr)
+			{
+				std::regex &regex = *static_cast<std::regex *>(m_regex);
+				if (!std::regex_search(filename.toUtf8(), regex))
+				{
+					TS_PRINTF("File %s does not match the regex.\n", filename);
+					continue;
+				}
+			}
+		}
+		else
+		{
 			continue;
 		}
+
+		if ((m_listFlags & FileListFlags_FileNameOnly) != 0)
+		{
+			output.m_filename = std::move(filename);
+		}
+		else
+		{
+			String path = stripRootPath(relativePath, m_directoryPath);
+			output.m_filename = std::move(path);
+		}
+
+		if ((m_listFlags & FileListFlags_ExcludeRootPath) == 0)
+			output.m_rootpath = m_directoryPath;
 		
-		break;
+		struct stat st;
+		if (stat(relativePath.toUtf8().c_str(), &st) == 0)
+		{
+			output.m_lastModified = convertUnixTimeToWindowsFileTime(st.st_mtim);
+			output.m_filesize = st.st_size;
+		}
+
+		output.m_directory = isDir;
+		return true;
 	}
+	
 	m_done = true;
 	return false;
 }
 
-void FileList::rewind()
+bool FileList::rewind()
 {
-	TS_ASSERT(!m_directoryStack.empty() && "FileList is not opened.");
-
-	// Close all other directories but the bottom-most
-	while (m_directoryStack.size() > 1)
+	TS_ASSERT(m_info != nullptr && "FileList is not opened.");
+	if (m_info == nullptr)
+		return false;
+	
+	std::error_code ec;
+	m_info->iter = fs::recursive_directory_iterator(m_directoryPath.toUtf8().c_str(), ec);
+	if (ec)
 	{
-		readdir((DIR*)m_directoryStack.top().handle);
-		m_directoryStack.pop();
+		TS_LOG_ERROR("Failed to reinitialize FileList iterator: %s  Path: %s", ec.message(), m_directoryPath);
+		return false;
 	}
-	rewinddir((DIR*)m_directoryStack.top().handle);
+	
 	m_done = false;
+	return true;
 }
 
 bool FileList::isDone() const
 {
-	return m_done;
+	return m_info != nullptr && m_done;
 }
 
-void FileList::setGlobRegex(const String &pattern)
+void FileList::setRegex(const String &pattern)
 {
 	std::regex *regex = nullptr;
 	try
@@ -203,7 +215,7 @@ void FileList::setGlobRegex(const String &pattern)
 		return;
 	}
 
-	m_globRegex = regex;
+	m_regex = regex;
 }
 
 std::vector<FileListEntry> FileList::getFullListing()

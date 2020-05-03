@@ -616,9 +616,8 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 	std::vector<String> templist;
 
 	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
-	uint32 flags = file::FileListFlags_SkipDotEntries
-		           | file::FileListFlags_LargeFetch
-		           | file::FileListFlags_ExcludeRootPath;
+	uint32 flags = file::FileListFlags_LargeFetch
+		         | file::FileListFlags_ExcludeRootPath;
 
 	while (!quitting)
 	{

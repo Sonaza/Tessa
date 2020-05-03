@@ -9,6 +9,16 @@
 
 TS_PACKAGE1(file)
 
+struct FileListInfo
+{
+	struct DirectoryFrame
+	{
+		HANDLE handle;
+		String absolutePath;
+	};
+	std::stack<DirectoryFrame> directoryStack;
+};
+
 FileList::FileList()
 {
 }
@@ -26,9 +36,19 @@ FileList::~FileList()
 bool FileList::open(const String &path, FileListStyle listStyle, uint32 listFlags)
 {
 	TS_ASSERT(!path.isEmpty());
+	
+	TS_ASSERT(m_info == nullptr && "FileList is already opened.");
+	if (m_info != nullptr)
+		return false;
+	
+	m_info = new(std::nothrow) FileListInfo;
+	if (m_info == nullptr)
+	{
+		TS_ASSERT(!"Failed to init file list info.");
+		return false;
+	}
 
-	TS_ASSERT(m_directoryStack.empty() && "FileList is already opened.");
-	if (!m_directoryStack.empty())
+	if (!m_info->directoryStack.empty())
 		return false;
 
 	if (!exists(path) || !isDirectory(path))
@@ -43,38 +63,49 @@ bool FileList::open(const String &path, FileListStyle listStyle, uint32 listFlag
 
 	// Entries are pushed with null handles since "opening"
 	// the handle already also queries for the first file.
-	m_directoryStack.push(DirectoryFrame{ nullptr, m_directoryPath });
+	m_info->directoryStack.push(DirectoryFrame{ nullptr, m_directoryPath });
 
 	return true;
 }
 
 void FileList::close()
 {
-	while (!m_directoryStack.empty())
+	if (m_info != nullptr)
 	{
-		FindClose((HANDLE)m_directoryStack.top().handle);
-		m_directoryStack.pop();
+		while (!m_info->directoryStack.empty())
+		{
+			FindClose(m_info->directoryStack.top().handle);
+			m_info->directoryStack.pop();
+		}
+	
+		delete m_info;
+		m_info = nullptr;
 	}
-
-	if (m_globRegex != nullptr)
+	
+	if (m_regex != nullptr)
 	{
-		std::wregex *regex = static_cast<std::wregex *>(m_globRegex);
+		std::wregex *regex = static_cast<std::wregex *>(m_regex);
 		delete regex;
-		m_globRegex = nullptr;
+		m_regex = nullptr;
 	}
 }
 
 bool FileList::next(FileListEntry &entry)
 {
-	TS_ASSERT(!m_directoryStack.empty() && "FileList is not opened.");
-	if (m_directoryStack.empty() || m_done == true)
+	TS_ASSERT(m_info != nullptr && "FileList is not opened.");
+	TS_ASSERT(!m_info->directoryStack.empty() && "FileList is not opened.");
+	
+	if (m_info == nullptr)
+		return false;
+	
+	if (m_info->directoryStack.empty() || m_done == true)
 		return false;
 
 	while (true)
 	{
-		const size_t depth = m_directoryStack.size();
+		const size_t depth = m_info->directoryStack.size();
 
-		DirectoryFrame &frame = m_directoryStack.top();
+		DirectoryFrame &frame = m_info->directoryStack.top();
 
 		WIN32_FIND_DATAW findData = {};
 
@@ -111,7 +142,7 @@ bool FileList::next(FileListEntry &entry)
 		}
 		else
 		{
-			if (FindNextFileW((HANDLE)frame.handle, &findData) == TRUE)
+			if (FindNextFileW(frame.handle, &findData) == TRUE)
 			{
 				entryFound = true;
 			}
@@ -132,8 +163,7 @@ bool FileList::next(FileListEntry &entry)
 			{
 				if (filename == "." || filename == "..")
 				{
-					if ((m_listFlags & FileListFlags_SkipDotEntries) != 0)
-						continue;
+					continue;
 				}
 				else if ((m_listStyle & priv::ListStyleBits_Recursive) != 0)
 				{
@@ -141,7 +171,7 @@ bool FileList::next(FileListEntry &entry)
 
 					// Sanity check assert
 					TS_ASSERT(exists(absolutePath) && isDirectory(absolutePath));
-					m_directoryStack.push(
+					m_info->directoryStack.push(
 						DirectoryFrame{ nullptr, absolutePath }
 					);
 				}
@@ -154,12 +184,12 @@ bool FileList::next(FileListEntry &entry)
 				if ((m_listStyle & priv::ListStyleBits_Files) == 0)
 					continue;
 
-				if (m_globRegex != nullptr)
+				if (m_regex != nullptr)
 				{
-					std::wregex &regex = *static_cast<std::wregex *>(m_globRegex);
+					std::wregex &regex = *static_cast<std::wregex *>(m_regex);
 					if (!std::regex_search(filename.toWideString(), regex))
 					{
-						TS_PRINTF("File %s does not match the glob.\n", filename);
+						TS_PRINTF("File %s does not match the regex.\n", filename);
 						continue;
 					}
 				}
@@ -192,8 +222,8 @@ bool FileList::next(FileListEntry &entry)
 
 		if (depth > 1)
 		{
-			FindClose((HANDLE)frame.handle);
-			m_directoryStack.pop();
+			FindClose(frame.handle);
+			m_info->directoryStack.pop();
 			continue;
 		}
 
@@ -203,33 +233,38 @@ bool FileList::next(FileListEntry &entry)
 	return false;
 }
 
-void FileList::rewind()
+bool FileList::rewind()
 {
-	TS_ASSERT(!m_directoryStack.empty() && "FileList is not opened.");
-
+	TS_ASSERT(m_info != nullptr && "FileList is not opened.");
+	TS_ASSERT(!m_info->directoryStack.empty() && "FileList is not opened.");
+	
+	if (m_info == nullptr)
+		return false;
+	
 	// Close and pop all other directories but the bottom-most
-	while (m_directoryStack.size() > 1)
+	while (m_info->directoryStack.size() > 1)
 	{
-		FindClose((HANDLE)m_directoryStack.top().handle);
-		m_directoryStack.pop();
+		FindClose(m_info->directoryStack.top().handle);
+		m_info->directoryStack.pop();
 	}
 	
 	// Close the last one and reset handle to null
-	DirectoryFrame &top = m_directoryStack.top();
+	DirectoryFrame &top = m_info->directoryStack.top();
 	if (top.handle != nullptr)
-		FindClose((HANDLE)top.handle);
+		FindClose(top.handle);
 
 	top.handle = nullptr;
 
 	m_done = false;
+	return true;
 }
 
 bool FileList::isDone() const
 {
-	return m_done;
+	return m_info != nullptr && m_done;
 }
 
-void FileList::setGlobRegex(const String &pattern)
+void FileList::setRegex(const String &pattern)
 {
 	std::wregex *regex = nullptr;
 	try
@@ -243,11 +278,13 @@ void FileList::setGlobRegex(const String &pattern)
 		return;
 	}
 
-	m_globRegex = regex;
+	m_regex = regex;
 }
 
 std::vector<FileListEntry> FileList::getFullListing()
 {
+	TS_ASSERT(m_info != nullptr && "FileList is not opened.");
+	
 	rewind();
 
 	std::vector<FileListEntry> list;

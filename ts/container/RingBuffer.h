@@ -53,8 +53,8 @@ public:
 	// Useful when no more data will be written and existing data will be continuously looped through.
 	void removeReadConstraint();
 
-	const uint64 getWritePositionIndex() const { return writePosition; }
-	const uint64 getReadPositionIndex() const { return readPosition; }
+	uint64 getWritePositionIndex() const { return writePosition; }
+	uint64 getReadPositionIndex() const { return readPosition; }
 
 	Type &operator[](uint64 index) { return buffer[index]; }
 	const Type &operator[](uint64 index) const { return buffer[index]; }

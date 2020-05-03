@@ -35,20 +35,20 @@ enum FileListStyle : uint8
 
 enum FileListFlags
 {
-	// Skips . and .. in directories.
-	FileListFlags_SkipDotEntries     = (1 << 0),
 	// Windows only: Uses large fetch. Can more optimal when scanning whole directory contents.
-	FileListFlags_LargeFetch         = (1 << 1),
+	FileListFlags_LargeFetch         = (1 << 0),
 
 	// File list omits setting the root path in FileListEntry.
 	// Can be more optimal when root path is not required.
-	FileListFlags_ExcludeRootPath    = (1 << 2),
+	FileListFlags_ExcludeRootPath    = (1 << 1),
 
 	// File list sets FileListEntry's file name to be the file name only,
 	// excluding the relative path section to scan root path.
 	// Only applies when using recursive scans.
-	FileListFlags_FileNameOnly       = (1 << 3),
+	FileListFlags_FileNameOnly       = (1 << 2),
 };
+
+struct FileListInfo;
 
 class FileList : public lang::Noncopyable
 {
@@ -61,22 +61,17 @@ public:
 	void close();
 
 	bool next(FileListEntry &entry);
-	void rewind();
+	bool rewind();
 
 	bool isDone() const;
-	void setGlobRegex(const String &pattern);
+	
+	void setRegex(const String &pattern);
 
 	std::vector<FileListEntry> getFullListing();
 
 private:
-	// Storing as void pointer to avoid having to include dirent.h in header
-	struct DirectoryFrame
-	{
-		void *handle;
-		String absolutePath;
-		String relativePath;
-	};
-	std::stack<DirectoryFrame> m_directoryStack;
+	// Hidden implementation details
+	FileListInfo *m_info = nullptr;
 
 	bool m_done = false;
 
@@ -84,7 +79,7 @@ private:
 	FileListStyle m_listStyle = FileListStyle_All;
 	SizeType m_listFlags = 0;
 
-	void *m_globRegex = nullptr;
+	void *m_regex = nullptr;
 };
 
 TS_END_PACKAGE1()

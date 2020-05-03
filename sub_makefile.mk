@@ -23,8 +23,8 @@ $(LIB_TARGET): $(OBJS_TARGET)
 	@mkdir -p $(INT_DIR)
 	@echo "    $(FCYAN)Archive        $(FMAGENTA)$(notdir $@)$(NC)"
 	@$(AR) cr $@ $^
-	@echo "    $(FYELLOW)Shared Object  $(FMAGENTA)$(notdir $(patsubst %.a,%.so,$@))$(NC)\n"
-	@$(CXX) $^ -shared -o $(LIB_TARGET)
+	@echo "    $(FYELLOW)Shared Object  $(FMAGENTA)$(notdir $(SO_TARGET))$(NC)\n"
+	@$(CXX) $^ -shared -o $(SO_TARGET)
 
 $(OBJS_DIR)/%.o: %.cpp
 	@echo "    $(FGREEN)CXX            $(FMAGENTA)$<$(NC)"

@@ -6,16 +6,29 @@
 
 #include "ts/engine/system/Commando.h"
 
+#include "ts/file/FileList.h"
+
 using namespace ts;
 
-// int main(int numArgs, const char **argv)
-// {
-// 	printf("Hello World!\n");
-// 	return 0;
-// }
+void stuff()
+{
+	file::FileList fl("img", file::FileListStyle_All);
+	
+	TS_PRINTF("\n---------------------------------------\n\n");
+	
+	std::vector<file::FileListEntry> all = fl.getFullListing();
+	TS_UNUSED_VARIABLE(all);
+	// for (const file::FileListEntry &e : all)
+	// {
+	// 	TS_PRINTF("%s\n", e.getFullPath());
+	// }
+}
 
 int main(int numArgs, const char **argv)
 {
+	// stuff();
+	// return 0;
+	
 	printf("DOING ANYTHING AT ALL!\n");
 	
 	printf(" Got %d args\n", numArgs);
