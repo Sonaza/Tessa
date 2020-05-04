@@ -63,7 +63,7 @@ bool FileList::open(const String &path, FileListStyle listStyle, uint32 listFlag
 
 	// Entries are pushed with null handles since "opening"
 	// the handle already also queries for the first file.
-	m_info->directoryStack.push(DirectoryFrame{ nullptr, m_directoryPath });
+	m_info->directoryStack.push(FileListInfo::DirectoryFrame{ nullptr, m_directoryPath });
 
 	return true;
 }
@@ -105,7 +105,7 @@ bool FileList::next(FileListEntry &entry)
 	{
 		const size_t depth = m_info->directoryStack.size();
 
-		DirectoryFrame &frame = m_info->directoryStack.top();
+		FileListInfo::DirectoryFrame &frame = m_info->directoryStack.top();
 
 		WIN32_FIND_DATAW findData = {};
 
@@ -172,7 +172,7 @@ bool FileList::next(FileListEntry &entry)
 					// Sanity check assert
 					TS_ASSERT(exists(absolutePath) && isDirectory(absolutePath));
 					m_info->directoryStack.push(
-						DirectoryFrame{ nullptr, absolutePath }
+						FileListInfo::DirectoryFrame{ nullptr, absolutePath }
 					);
 				}
 
@@ -249,7 +249,7 @@ bool FileList::rewind()
 	}
 	
 	// Close the last one and reset handle to null
-	DirectoryFrame &top = m_info->directoryStack.top();
+	FileListInfo::DirectoryFrame &top = m_info->directoryStack.top();
 	if (top.handle != nullptr)
 		FindClose(top.handle);
 
