@@ -105,10 +105,10 @@ bool operator!=(TimeSpan lhs, TimeSpan rhs)
 	return lhs.getMicroseconds() != rhs.getMicroseconds();
 }
 
-int64 operator/(TimeSpan lhs, TimeSpan rhs)
+double operator/(TimeSpan lhs, TimeSpan rhs)
 {
 	TS_ASSERT(rhs != TimeSpan::zero && "Division by zero.");
-	return lhs.getNanoseconds() / rhs.getNanoseconds();
+	return lhs.getNanoseconds() / (double)rhs.getNanoseconds();
 }
 
 bool operator<(TimeSpan lhs, TimeSpan rhs)

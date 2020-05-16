@@ -3,16 +3,13 @@
 
 #include "ts/file/InputFile.h"
 #include "ts/file/FileUtils.h"
-
+#include "ts/thread/ThreadScheduler.h"
 #include "ts/ivie/util/RenderUtil.h"
-
 #include "ts/ivie/viewer/ViewerManager.h"
 #include "ts/ivie/image/ImageBackgroundLoaderFreeImage.h"
-
-#include "ts/thread/ThreadScheduler.h"
 #include "ts/ivie/image/ImageBackgroundLoaderWebm.h"
 
-#include "ts/profiling/ZoneProfiler.h"
+// #include "ts/profiling/ZoneProfiler.h"
 
 TS_PACKAGE2(app, image)
 
@@ -359,6 +356,32 @@ SharedPointer<sf::Texture> Image::getThumbnail() const
 
 	MutexGuard lock(mutex);
 	return thumbnail;
+}
+
+bool Image::rotate(RotateDirection direction, bool saveToDisk)
+{
+	int32 directionInt = (direction == Clockwise ? 1 : -1);
+
+	switch (currentLoaderType)
+	{
+		case LoaderFreeImage:
+			return ImageBackgroundLoaderFreeImage::rotate(filepath, directionInt);
+
+		case LoaderWebm:
+			return false;
+
+		default: TS_ASSERT("Rotate method not implemented for this loader type"); break;
+	}
+
+	return false;
+}
+
+bool Image::canImageBeRotated() const
+{
+// 	if (currentLoaderType == LoaderFreeImage)
+// 		return ImageBackgroundLoaderFreeImage::canImageBeRotated(filepath);
+
+	return imageData.canBeRotated;
 }
 
 void Image::setImageData(const ImageData &dataParam)

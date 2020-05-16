@@ -229,24 +229,33 @@ void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notify
 		{
 			case file::FileNotify_FileAdded:
 			{
+				TS_PRINTF("FileNotify_FileAdded: %s\n", notifyEvent.name);
 				currentFileList.push_back(notifyEvent.name);
 			}
 			break;
 
 			case file::FileNotify_FileRemoved:
 			{
-				if (current.filepath == notifyEvent.name)
-					previousImage();
+				TS_PRINTF("FileNotify_FileRemoved: %s\n", notifyEvent.name);
+				TS_PRINTF("  current %s\n", current.filepath);
+
+// 				if (current.filepath == notifyEvent.name)
+// 					previousImage();
 
 				auto it = std::find(currentFileList.begin(), currentFileList.end(), notifyEvent.name);
 				if (it != currentFileList.end())
 					currentFileList.erase(it);
+
+				if (!currentFileList.empty())
+				{
+					jumpToImage(current.imageIndex);
+				}
 			}
 			break;
 
 			case file::FileNotify_FileRenamed:
 			{
-				TS_WPRINTF("File renamed! %s -> %s\n", notifyEvent.name, notifyEvent.lastName);
+				TS_WPRINTF("FileNotify_FileRenamed: %s -> %s\n", notifyEvent.name, notifyEvent.lastName);
 
 				auto it = std::find(currentFileList.begin(), currentFileList.end(), notifyEvent.lastName);
 				if (it != currentFileList.end())
@@ -286,7 +295,7 @@ void ViewerManager::resetFileWatcher(bool recursive)
 	watchNotifyBind.connect(fileWatcher.notifySignal, &ThisClass::watchNotify, this);
 }
 
-void ViewerManager::setFilepath(const String &filepath)
+void ViewerManager::setViewerPath(const String &filepath)
 {
 	TS_ZONE();
 
@@ -352,7 +361,7 @@ void ViewerManager::setFilepath(const String &filepath)
 	).getTaskId();
 }
 
-const String &ViewerManager::getFilepath() const
+const String &ViewerManager::getViewerPath() const
 {
 	return currentDirectoryPath;
 }
@@ -399,8 +408,8 @@ void ViewerManager::jumpToImage(SizeType index)
 	if (index >= numImagesTotal)
 		index = numImagesTotal - 1;
 
-	if (index == current.imageIndex)
-		return;
+// 	if (index == current.imageIndex)
+// 		return;
 
 	setPendingImage(index);
 }
@@ -460,6 +469,26 @@ void ViewerManager::changeImage(int32 amount)
 
 	SizeType index = (current.imageIndex + numImagesTotal + amount) % numImagesTotal;
 	jumpToImage(index);
+}
+
+bool ViewerManager::deleteCurrentImage()
+{
+	
+	if (currentImage == nullptr)
+		return false;
+	
+	const String filepath = currentImage->getFilepath();
+
+	TS_PRINTF("CURRENT FILE (IMAGE): %s\n", filepath);
+	TS_PRINTF("CURRENT FILE (META): %s\n", current.filepath);
+	currentImage->unload();
+	
+	if (file::removeFile(filepath))
+	{
+		return true;
+	}
+	
+	return false;
 }
 
 SizeType ViewerManager::getCurrentImageIndex() const
@@ -671,11 +700,12 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 			break;
 
 			case IndexingAction_KeepCurrentFile:
+				TS_PRINTF("IndexingAction_KeepCurrentFile\n");
 				ensureImageIndex();
 			break;
 
 			case IndexingAction_Reset:
-				TS_PRINTF("ASDASDASD\n");
+				TS_PRINTF("IndexingAction_Reset\n");
 				setPendingImage(0);
 			break;
 		}

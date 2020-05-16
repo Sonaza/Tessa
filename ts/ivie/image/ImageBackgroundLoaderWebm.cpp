@@ -193,7 +193,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 				default:
 					errorText = "Unsupported codec.";
 					TS_ASSERTF(false, "Unsupported codec id: %d", codec_id);
-				return false;
+					return false;
 			}
 			TS_ASSERT(state.interface != nullptr);
 
@@ -542,20 +542,16 @@ bool ImageBackgroundLoaderWebm::isValidWebmFile(const String &filepath)
 	return nestegg_sniff(&buffer[0], nesteggSniffBytesAmount) == 1;
 }
 
-bool ImageBackgroundLoaderWebm::restartImpl(bool *shouldRestart)
+int32 ImageBackgroundLoaderWebm::restartImpl()
 {
-	TS_ASSERT(shouldRestart != nullptr);
-
 	if (nestegg_track_seek(state.context, state.trackIndex, 0) == -1)
 	{
 		errorText = "Track seek error.";
-		return false;
+		return -1;
 	}
 
-	*shouldRestart = true;
-
 	numFrames = 0;
-	return true;
+	return 1;
 }
 
 bool ImageBackgroundLoaderWebm::loadNextFrame(FrameStorage &bufferStorage)

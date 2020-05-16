@@ -162,6 +162,7 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Color.cpp" />
     <ClCompile Include="CommonMath.cpp" />
     <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="Quaternion.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="Angle.cpp" />
     <ClCompile Include="CRC.cpp" />
     <ClCompile Include="Hash.cpp" />
+    <ClInclude Include="Color.h" />
     <ClInclude Include="Precompiled.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
@@ -208,6 +210,9 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="math.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Color.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

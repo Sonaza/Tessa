@@ -38,7 +38,7 @@ protected:
 	virtual void onResume() override;
 	virtual void onSuspend() override;
 
-	virtual bool restartImpl(bool *shouldRestart) override;
+	virtual int32 restartImpl() override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
 	virtual bool wasLoadingCompleted() const override;

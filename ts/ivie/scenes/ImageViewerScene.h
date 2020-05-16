@@ -10,7 +10,8 @@
 TS_DECLARE2(app, viewer, ViewerManager);
 TS_DECLARE_STRUCT2(engine, system, WindowView);
 
-TS_PACKAGE2(app, scenes)
+// TS_PACKAGE2(app, scenes)
+namespace ts { namespace app { namespace scenes {
 
 class ImageViewerScene : public engine::system::AbstractSceneBase
 {
@@ -26,6 +27,8 @@ public:
 	virtual void loadResources(resource::ResourceManager &rm) override;
 
 	virtual bool handleEvent(const sf::Event event) override;
+
+	virtual void handleInput(const input::InputManager &input) override;
 
 	virtual void update(const TimeSpan deltaTime) override;
 	virtual void updateFrequent(const TimeSpan deltaTime) override;
@@ -75,6 +78,20 @@ protected:
 	};
 	CurrentState current;
 
+	void updateEventNotifications(TimeSpan delta);
+	void drawEventNotifications(sf::RenderTarget &target, const engine::window::WindowView &view);
+	void addEventNotification(String text, math::COL color = math::COL::white);
+
+	struct EventNotification
+	{
+		String text;
+		math::COL color;
+		Time expiry;
+		float offset;
+	};
+	std::vector<EventNotification> eventNotifications;
+	const TimeSpan eventNotificationDuration = TimeSpan::fromMilliseconds(2500);
+
 	math::FloatDamper defaultScale;
 	math::FloatDamper imageScale;
 	math::VC2Damper positionOffset;
@@ -95,6 +112,7 @@ protected:
 	DisplayMode displayMode = Normal;
 
 	float dragged = 0.f;
+	bool deleteWasReleased = true;
 
 	//////////////////////
 

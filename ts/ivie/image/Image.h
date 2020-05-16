@@ -17,6 +17,7 @@ struct ImageData
 	math::VC2U size;
 	bool hasAlpha = false;
 	uint32 numFramesTotal = 0;
+	bool canBeRotated = false;
 };
 
 struct DisplayShaderParams
@@ -76,6 +77,14 @@ public:
 
 	bool hasThumbnail() const;
 	SharedPointer<sf::Texture> getThumbnail() const;
+
+	enum RotateDirection
+	{
+		Clockwise,
+		CounterClockwise,
+	};
+	bool rotate(RotateDirection direction, bool saveToDisk = true);
+	bool canImageBeRotated() const;
 
 	enum ImageLoaderState
 	{

@@ -104,6 +104,8 @@
 
 #define TS_UNUSED_VARIABLE(variable) ((void)variable)
 
+#define TS_ARRAY_SIZE(array) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
 #include <cstdint>
 #include <cinttypes>
 

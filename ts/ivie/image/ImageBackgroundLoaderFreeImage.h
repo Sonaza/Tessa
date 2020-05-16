@@ -24,6 +24,9 @@ public:
 
 	static bool isValidFreeImageFile(const String &filepath);
 
+	static bool canImageBeRotated(const String &filepath);
+	static bool rotate(const String &filepath, int32 direction);
+
 protected:
 	virtual bool initialize() override;
 	virtual void deinitialize() override;
@@ -31,12 +34,14 @@ protected:
 	virtual void onResume() override;
 	virtual void onSuspend() override;
 
-	virtual bool restartImpl(bool *shouldRestart) override;
+	virtual int32 restartImpl() override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
 	virtual bool wasLoadingCompleted() const override;
 
 private:
+	static bool isValidRotateFormat(FREE_IMAGE_FORMAT format);
+
 	bool prepareForLoading();
 	void cleanup(bool soft = false);
 

@@ -6,6 +6,7 @@
 
 TS_DECLARE2(engine, system, BaseApplication);
 TS_DECLARE1(resource, ResourceManager);
+TS_DECLARE1(input, InputManager);
 
 TS_DECLARE_STRUCT2(engine, window, WindowView);
 
@@ -23,6 +24,8 @@ public:
 	virtual void loadResources(resource::ResourceManager &rm) = 0;
 
 	virtual bool handleEvent(const sf::Event event) = 0;
+
+	virtual void handleInput(const input::InputManager &input) = 0;
 
 	virtual void update(const TimeSpan deltaTime) = 0;
 	virtual void updateFrequent(const TimeSpan deltaTime) = 0;

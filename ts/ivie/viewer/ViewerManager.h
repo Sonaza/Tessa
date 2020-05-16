@@ -45,8 +45,8 @@ public:
 
 	virtual void update(const TimeSpan deltaTime) override;
 
-	void setFilepath(const String &filepath);
-	const String &getFilepath() const;
+	void setViewerPath(const String &filepath);
+	const String &getViewerPath() const;
 
 	bool getIsRecursiveScan() const;
 	void setRecursiveScan(bool recursiveEnabled, bool immediateRescan = true);
@@ -63,6 +63,7 @@ public:
 	void nextImage();
 	void previousImage();
 	void changeImage(int32 direction);
+	bool deleteCurrentImage();
 
 	SizeType getCurrentImageIndex() const;
 	SizeType getNumImages() const;

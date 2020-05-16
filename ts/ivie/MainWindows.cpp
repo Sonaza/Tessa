@@ -27,7 +27,7 @@ void mathtest()
 int __stdcall wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR cmdArgs, int windowShowCmd)
 {
 // 	makepack();
-	mathtest();
+// 	mathtest();
 	
 	engine::system::Commando commando;
 	
@@ -38,7 +38,7 @@ int __stdcall wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR cmdArgs, int window
 		// Gotta const cast here because parser expects const parameter.
 		const wchar_t **argv = const_cast<const wchar_t **>(argList);
 
-		if (!commando.parse(numArgs - 1, argv + 1))
+		if (!commando.parse(numArgs, argv))
 			TS_LOG_WARNING("Failed to parse command line arguments.");
 
 		LocalFree(argList);

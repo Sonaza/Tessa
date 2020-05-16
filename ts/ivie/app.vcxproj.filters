@@ -61,6 +61,12 @@
     <ClCompile Include="MainWindows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="viewer\ViewerEventManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="viewer\ViewerEvent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -103,6 +109,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="image\ImageBackgroundLoaderWebm.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\ViewerEventManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\ViewerEvent.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

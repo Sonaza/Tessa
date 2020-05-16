@@ -44,7 +44,7 @@ private:
 	internal_duration duration;
 };
 
-int64 operator/(TimeSpan lhs, TimeSpan rhs);
+double operator/(TimeSpan lhs, TimeSpan rhs);
 
 bool operator==(TimeSpan lhs, TimeSpan rhs);
 bool operator!=(TimeSpan lhs, TimeSpan rhs);

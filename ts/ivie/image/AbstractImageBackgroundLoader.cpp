@@ -273,16 +273,15 @@ void AbstractImageBackgroundLoader::requestNextFrame()
 
 bool AbstractImageBackgroundLoader::restart(bool suspendAfterBufferFullParam)
 {
-	bool shouldRestart;
-	if (!restartImpl(&shouldRestart))
+	int32 status = restartImpl();
+	if (status < 0)
 	{
 		TS_ASSERT(!false);
 		ownerImage->setState(Image::Error);
 		loaderState = Finished;
 		return false;
 	}
-
-	if (shouldRestart)
+	else if (status > 0)
 	{
 		{
 			MutexGuard lock(mutex);
@@ -292,6 +291,7 @@ bool AbstractImageBackgroundLoader::restart(bool suspendAfterBufferFullParam)
 		condition.notifyOne();
 		return true;
 	}
+
 	return false;
 }
 

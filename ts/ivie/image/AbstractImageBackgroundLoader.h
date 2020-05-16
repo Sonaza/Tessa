@@ -62,6 +62,8 @@ public:
 		return TS_FMT("Task ID %u", taskId);
 	}
 
+	bool hasError() const { return !errorText.isEmpty(); }
+
 protected:
 	virtual void entry() override;
 
@@ -71,11 +73,11 @@ protected:
 	virtual void onResume() = 0;
 	virtual void onSuspend() = 0;
 
-	/* Returns if restart was successful.
-	 * shouldRestart will be set to determine if restart was required
-	 * since loader does not need to be restarted for still images.
+	/* Returns zero or >0 if restart was successful.
+	 * In case >0 a restart was necessary.
+	 * If return is <0 there was an error.
 	 */
-	virtual bool restartImpl(bool *shouldRestart) = 0;
+	virtual int32 restartImpl() = 0;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) = 0;
 	virtual bool wasLoadingCompleted() const = 0;

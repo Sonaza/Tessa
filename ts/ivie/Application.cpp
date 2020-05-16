@@ -15,6 +15,7 @@
 #include "ts/ivie/viewer/SupportedFormats.h"
 
 #include "ts/ivie/viewer/ViewerManager.h"
+#include "ts/ivie/viewer/ViewerEventManager.h"
 #include "ts/ivie/image/FreeImageStaticInitializer.h"
 
 TS_PACKAGE1(app)
@@ -51,7 +52,7 @@ bool Application::start()
 	bool hasRecursiveFlag = getCommando().hasFlag("r") || getCommando().hasFlag("recursive");
 	viewerManager.setRecursiveScan(hasRecursiveFlag, false);
 
-	viewerManager.setFilepath(pathParameter);
+	viewerManager.setViewerPath(pathParameter);
 
 	return true;
 }
@@ -64,6 +65,7 @@ void Application::stop()
 bool Application::createApplicationManagers()
 {
 	createManagerInstance<viewer::ViewerManager>();
+	createManagerInstance<viewer::ViewerEventManager>();
 
 	return true;
 }

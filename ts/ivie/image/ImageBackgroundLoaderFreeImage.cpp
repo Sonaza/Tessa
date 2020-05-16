@@ -3,11 +3,11 @@
 
 #include "ts/thread/Thread.h"
 #include "ts/file/FileUtils.h"
-
+#include "ts/profiling/ZoneProfiler.h"
 #include "ts/ivie/image/Image.h"
 #include "ts/ivie/util/RenderUtil.h"
 
-#include "ts/profiling/ZoneProfiler.h"
+#include <set>
 
 TS_PACKAGE2(app, image)
 
@@ -96,11 +96,8 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 	}
 
 	state.format = FreeImage_GetFileTypeFromMemory(state.memory);
-// 	if (state.format == FIF_UNKNOWN)
-// 	{
-// 		// Try to get file type from file name instead
-// 		state.format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
-// 	}
+
+	imageData.canBeRotated = isValidRotateFormat(state.format);
 
 	int32 flags = 0;
 
@@ -445,24 +442,47 @@ bool ImageBackgroundLoaderFreeImage::isValidFreeImageFile(const String &filepath
 	return FreeImage_FIFSupportsReading(format) == 1;
 }
 
-bool ImageBackgroundLoaderFreeImage::restartImpl(bool *shouldRestart)
+bool ImageBackgroundLoaderFreeImage::canImageBeRotated(const String &filepath)
 {
-	TS_ASSERT(shouldRestart != nullptr);
+#if TS_PLATFORM == TS_WINDOWS
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(filepath.toWideString().c_str());
+#else
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filepath.toUtf8().c_str());
+#endif
+	
+	return isValidRotateFormat(format);
+}
 
+bool ImageBackgroundLoaderFreeImage::isValidRotateFormat(FREE_IMAGE_FORMAT format)
+{
+	if (format == FIF_UNKNOWN)
+		return false;
+
+	const std::set<FREE_IMAGE_FORMAT> validRotateFormats{
+		FIF_BMP, FIF_JPEG, FIF_PNG, FIF_WEBP, FIF_TARGA, FIF_TIFF,
+	};
+
+	return validRotateFormats.find(format) != validRotateFormats.end();
+}
+
+bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32 direction)
+{
+	TS_PRINTF("Rotate: %s\n", filepath);
+}
+
+int32 ImageBackgroundLoaderFreeImage::restartImpl()
+{
 	// Only restart for multibitmaps
 	if (loaderFormat == MultiBitmapFormat)
 	{
 		loaderIsComplete = false;
 		currentPage = 0;
-
-		*shouldRestart = true;
+		return 1;
 	}
 	else
 	{
-		*shouldRestart = false;
+		return 0;
 	}
-
-	return true;
 }
 
 bool ImageBackgroundLoaderFreeImage::loadNextFrame(FrameStorage &bufferStorage)
@@ -518,5 +538,4 @@ bool ImageBackgroundLoaderFreeImage::wasLoadingCompleted() const
 }
 
 TS_END_PACKAGE2()
-
 

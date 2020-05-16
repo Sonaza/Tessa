@@ -308,6 +308,8 @@ void BaseApplication::mainloop()
 		{
 			TS_ZONE_NAMED("Main Loop Updates");
 
+			m_currentScene->handleInput(getManager<input::InputManager>());
+
 			deltaAccumulator += deltaTime;
 			while (deltaAccumulator >= m_fixedDeltaTime)
 			{

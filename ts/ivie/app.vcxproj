@@ -189,6 +189,8 @@
     <ClCompile Include="image\ImageBackgroundLoaderFreeImage.cpp" />
     <ClCompile Include="image\ImageBackgroundLoaderWebm.cpp" />
     <ClCompile Include="viewer\SupportedFormats.cpp" />
+    <ClCompile Include="viewer\ViewerEvent.cpp" />
+    <ClCompile Include="viewer\ViewerEventManager.cpp" />
     <ClCompile Include="viewer\ViewerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -212,6 +214,8 @@
     <ClInclude Include="image\ImageBackgroundLoaderFreeImage.h" />
     <ClInclude Include="image\ImageBackgroundLoaderWebm.h" />
     <ClInclude Include="viewer\SupportedFormats.h" />
+    <ClInclude Include="viewer\ViewerEvent.h" />
+    <ClInclude Include="viewer\ViewerEventManager.h" />
     <ClInclude Include="viewer\ViewerManager.h" />
   </ItemGroup>
   <ItemGroup>

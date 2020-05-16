@@ -44,6 +44,9 @@
     <ClCompile Include="Mat4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Color.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -109,8 +112,16 @@
     <ClInclude Include="Vec4.inl">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Color.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="math.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Color.inl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

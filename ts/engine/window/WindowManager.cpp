@@ -219,7 +219,6 @@ bool WindowManager::pollEvent(sf::Event &eventParam)
 			// Inputmanager may override event in some cases
 			if (inputManager->handleEvent(eventParam))
 				continue;
-			
 		}
 
 		switch (eventParam.type)

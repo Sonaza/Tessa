@@ -25,4 +25,5 @@
 #include "ts/math/Rect.h"
 #include "ts/math/Mat4.h"
 #include "ts/math/Quaternion.h"
+#include "ts/math/Color.h"
 #include "ts/math/VectorStringConversion.h"
