@@ -10,7 +10,6 @@
 #include "ts/thread/AbstractThreadEntry.h"
 #include "ts/thread/Thread.h"
 
-#include "ts/ivie/image/Image.h"
 #include "ts/ivie/util/NaturalSort.h"
 #include "ts/ivie/viewer/SupportedFormats.h"
 
@@ -489,6 +488,14 @@ bool ViewerManager::deleteCurrentImage()
 	}
 	
 	return false;
+}
+
+bool ViewerManager::rotateCurrentImage(image::Image::RotateDirection direction)
+{
+	if (currentImage == nullptr)
+		return false;
+
+	return currentImage->rotate(direction);
 }
 
 SizeType ViewerManager::getCurrentImageIndex() const

@@ -180,6 +180,14 @@ inline Quaternion<T> &Quaternion<T>::invert()
 }
 
 template<class T>
+inline Vec2<T> Quaternion<T>::getRotated(const Vec2<T> &vector) const
+{
+	math::Vec3<T> temp(vector.x, vector.y, 0.f);
+	temp = getRotated(temp);
+	return math::Vec2<T>(temp.x, temp.y);
+}
+
+template<class T>
 inline Vec3<T> Quaternion<T>::getRotated(const Vec3<T> &vector) const
 {
 	const Vec3<T> qvector(x, y, z);

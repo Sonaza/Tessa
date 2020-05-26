@@ -52,6 +52,9 @@ protected:
 	resource::FontResource *font = nullptr;
 
 	float framePadding = 20.f;
+
+	math::FloatDamper temporaryRotation;
+	math::Quat temporaryRotationQuat;
 	
 	SteadyTimer elapsedTimer;
 

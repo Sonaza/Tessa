@@ -7,12 +7,11 @@ TS_FORCEINLINE Color<T>::Color()
 
 template <class T>
 TS_FORCEINLINE Color<T>::Color(T r, T g, T b, T a)
-	: r(r), g(g), b(b), a(a)
+	: r(math::clamp(r, T(0), T(1)))
+	, g(math::clamp(g, T(0), T(1)))
+	, b(math::clamp(b, T(0), T(1)))
+	, a(math::clamp(a, T(0), T(1)))
 {
-	TS_ASSERT(r >= 0.f && r <= 1.f);
-	TS_ASSERT(g >= 0.f && g <= 1.f);
-	TS_ASSERT(b >= 0.f && b <= 1.f);
-	TS_ASSERT(a >= 0.f && a <= 1.f);
 }
 
 template <class T>
@@ -22,10 +21,6 @@ Color<T>::Color(const uint32 color)
 	, b(((color >> 8)  & 0xff) / T(255))
 	, a(((color >> 0)  & 0xff) / T(255))
 {
-	TS_ASSERT(r >= 0.f && r <= 1.f);
-	TS_ASSERT(g >= 0.f && g <= 1.f);
-	TS_ASSERT(b >= 0.f && b <= 1.f);
-	TS_ASSERT(a >= 0.f && a <= 1.f);
 }
 
 template <class T>
@@ -57,10 +52,6 @@ Color<T>::Color(const sf::Color &color)
 	, b(color.b / T(255))
 	, a(color.a / T(255))
 {
-	TS_ASSERT(r >= 0.f && r <= 1.f);
-	TS_ASSERT(g >= 0.f && g <= 1.f);
-	TS_ASSERT(b >= 0.f && b <= 1.f);
-	TS_ASSERT(a >= 0.f && a <= 1.f);
 }
 
 template <class T>

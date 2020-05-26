@@ -22,7 +22,13 @@
 
 #endif
 
-TS_PACKAGE2(app, scenes)
+// TS_PACKAGE2(app, scenes)
+namespace ts { namespace app { namespace scenes {
+
+static const math::COL ColorSuccess(0.3f, 1.0f, 0.1f);
+static const math::COL ColorWarning(1.0f, 0.9f, 0.1f);
+static const math::COL ColorError  (1.0f, 0.2f, 0.1f);
+static const math::COL ColorInfo   (0.1f, 0.9f, 1.0f);
 
 ImageViewerScene::ImageViewerScene(engine::system::BaseApplication *application)
 	: AbstractSceneBase(application)
@@ -320,10 +326,10 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		switch ((viewer::SortingStyle)option)
 		{
 			case viewer::SortingStyle_ByName:
-				addEventNotification("Sorting by name");
+				addEventNotification("Sorting by name", ColorInfo);
 			break;
 			case viewer::SortingStyle_ByExtension:
-				addEventNotification("Sorting by extension");
+				addEventNotification("Sorting by extension", ColorInfo);
 			break;
 			default: break;
 		}
@@ -386,7 +392,7 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 			{
 				imageScale.setTarget(1.f);
 
-				addEventNotification("Normal mode", math::COL(0.4f, 0.75f, 1.f));
+				addEventNotification("Normal mode", ColorInfo);
 			}
 			break;
 
@@ -396,7 +402,7 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 				positionOffset.setTarget(math::VC2(0.f, 10000.f));
 				enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 
-				addEventNotification("Manga mode", math::COL(1.f, 0.8f, 0.2f));
+				addEventNotification("Manga mode", ColorInfo);
 			}
 			break;
 		}
@@ -409,11 +415,11 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 		if (recursiveState)
 		{
-			addEventNotification("Recursive scan enabled");
+			addEventNotification("Recursive scan enabled", ColorInfo);
 		}
 		else
 		{
-			addEventNotification("Recursive scan disabled");
+			addEventNotification("Recursive scan disabled", ColorInfo);
 		}
 	}
 
@@ -434,35 +440,69 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		bool success = viewerManager->deleteCurrentImage();
 		if (success)
 		{
-			addEventNotification("Image deleted", math::COL(1.f, 0.3f, 0.3f));
+			addEventNotification("Image deleted", ColorSuccess);
 		}
 		else
 		{
-			addEventNotification("Delete failed", math::COL(1.f, 0.3f, 0.3f));
+			addEventNotification("Delete failed", ColorError);
+		}
+	}
+	
+	if (current.image != nullptr && current.hasData && !current.hasError)
+	{
+		const bool rotateLeftPressed = input.wasKeyPressed(Keyboard::Comma);
+		const bool rotateRightPressed = input.wasKeyPressed(Keyboard::Period);
+
+		if (rotateLeftPressed || rotateRightPressed)
+		{
+			if (current.image->canImageBeRotated())
+			{
+				bool success = false;
+				if (rotateLeftPressed)
+				{
+					success = viewerManager->rotateCurrentImage(image::Image::Rotation_CounterClockwise);
+					if (success)
+						addEventNotification("Rotated counter-clockwise", ColorSuccess);
+				}
+				else if (rotateRightPressed)
+				{
+					success = viewerManager->rotateCurrentImage(image::Image::Rotation_Clockwise);
+					if (success)
+						addEventNotification("Rotated clockwise", ColorSuccess);
+				}
+
+				if (!success)
+					addEventNotification("Rotation failed", ColorError);
+			}
+			else
+			{
+				addEventNotification("Not rotatable", ColorWarning);
+			}
 		}
 	}
 
 	if (input.wasKeyPressed(Keyboard::Num1))
-		addEventNotification("Random notification 1", math::COL::yellow);
+	{
+		addEventNotification("Rotate LEFT");
+		temporaryRotation.setTarget(temporaryRotation.getTarget() -  90.f);
+		temporaryRotationQuat.makeFromAngleAxis(temporaryRotation.getTarget(), math::VC3(0.f, 0.f, 1.f));
 
-	if (input.wasKeyPressed(Keyboard::Num2))
-		addEventNotification("Foobar");
+		imageScale.setTarget(1.f);
+		positionOffset.setTarget(math::VC2::zero);
 
-	if (input.wasKeyPressed(Keyboard::Num3))
-		addEventNotification("Play Trine 4", math::COL::green);
+		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
+	}
+	else if(input.wasKeyPressed(Keyboard::Num2))
+	{
+		addEventNotification("Rotate RIGHT");
+		imageScale.setTarget(1.f);
+		positionOffset.setTarget(math::VC2::zero);
 
-	if (input.wasKeyPressed(Keyboard::Num4))
-		addEventNotification("Mango Mode is OP, pls nerf");
+		temporaryRotation.setTarget(temporaryRotation.getTarget() + 90.f);
+		temporaryRotationQuat.makeFromAngleAxis(temporaryRotation.getTarget(), math::VC3(0.f, 0.f, 1.f));
 
-	if (input.wasKeyPressed(Keyboard::Num5))
-		addEventNotification("Rotated");
-
-	if (input.wasKeyPressed(Keyboard::Num6))
-		addEventNotification("Random notification 4234");
-
-	if (input.wasKeyPressed(Keyboard::Num7))
-		addEventNotification("Log Horizon S3 IS A THING!");
-
+		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
+	}
 }
 
 bool ImageViewerScene::updateImageInfo()
@@ -583,6 +623,8 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 
 	// const engine::window::WindowView &view = windowManager->getApplicationView();
 
+	temporaryRotation.update(deltaTime);
+
 	defaultScale.update(deltaTime);
 
 	imageScale.update(deltaTime);
@@ -614,10 +656,12 @@ void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 	const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
+	scaledSize = temporaryRotationQuat.getRotated(scaledSize);
 
 	math::VC2 oversize = (scaledSize - view.size) / 2.f;
 	oversize.x = math::max(0.f, oversize.x);
 	oversize.y = math::max(0.f, oversize.y);
+	oversize = temporaryRotationQuat.getRotated(oversize);
 
 	positionOversizeLimit = oversize;
 
@@ -671,6 +715,9 @@ void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 
 	if (current.image != nullptr)
 		updateImageInfo();
+
+	temporaryRotation.reset(0.f, 50.f);
+	temporaryRotationQuat = math::Quat::identity;
 }
 
 void ImageViewerScene::filelistChanged(SizeType numFiles)
@@ -752,10 +799,20 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 				sf::RenderStates states;
 				states.texture = currentFrame.texture.get();
 
+				math::Transform rotationTransform;
+				rotationTransform.rotate(temporaryRotation.getValue());
+
 				math::Transform transform;
+				
+				transform.combine(rotationTransform);
+
+				math::VC2 poffset = rotationTransform.transformPoint(positionOffset.getValue());
+
 				transform
-					.translate(scaledSize / -2.f + positionOffset.getValue())
+					.translate(scaledSize * -0.5f + poffset)
 					.scale(scale, scale);
+
+
 				states.transform = (sf::Transform)transform;
 
 				image::DisplayShaderParams params;
@@ -791,6 +848,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 				transform
 					.translate(scaledSize / -2.f + positionOffset.getValue())
 					.scale(scale, scale);
+
 				states.transform = (sf::Transform)transform;
 
 				sf::Shader &gaussian = *gaussianShader->getResource();

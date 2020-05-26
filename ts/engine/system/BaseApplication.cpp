@@ -65,9 +65,9 @@ int32 BaseApplication::launch()
 		}
 	}
 
-	const String logFilepath = file::joinPaths(
-		file::getExecutableDirectory(), m_config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
-	common::Log::setLogFile(logFilepath);
+// 	const String logFilepath = file::joinPaths(
+// 		file::getExecutableDirectory(), m_config.getString("General.LogFile", TS_DEFAULT_LOG_FILE_NAME));
+// 	common::Log::setLogFile(logFilepath);
 
 	if (sf::Shader::isAvailable() == false)
 	{

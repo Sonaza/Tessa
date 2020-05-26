@@ -8,10 +8,10 @@
 #include <fstream>
 
 #define TS_FMT(formatParam, ...) \
-	::ts::common::Log::getSingleton().format(formatParam, ## __VA_ARGS__)
+	::ts::common::Log::format(formatParam, ## __VA_ARGS__)
 
 #define TS_PRINTF_IMPL(formatParam, ...) \
-	::ts::common::Log::getSingleton().write(formatParam, ## __VA_ARGS__)
+	::ts::common::Log::write(formatParam, ## __VA_ARGS__)
 	
 #if TS_BUILD != TS_FINALRELEASE
 	#define TS_PRINTF(formatParam, ...)  TS_PRINTF_IMPL(formatParam, ## __VA_ARGS__)
@@ -23,10 +23,10 @@
 #if TS_PLATFORM == TS_WINDOWS
 	
 	#define TS_WFMT(formatParam, ...) \
-		::ts::common::Log::getSingleton().format(L ## formatParam, ## __VA_ARGS__)
+		::ts::common::Log::format(L ## formatParam, ## __VA_ARGS__)
 
 	#define TS_WPRINTF_IMPL(formatParam, ...) \
-		::ts::common::Log::getSingleton().write(L ## formatParam, ## __VA_ARGS__)
+		::ts::common::Log::write(L ## formatParam, ## __VA_ARGS__)
 
 	#if TS_BUILD != TS_FINALRELEASE
 		#define TS_WPRINTF(formatParam, ...) TS_WPRINTF_IMPL(formatParam, ## __VA_ARGS__)
@@ -99,49 +99,35 @@ TS_PACKAGE1(common)
 class Log
 {
 public:
-	static Log &getSingleton();
+	static bool isLogFileOpen();
 
-	static bool setLogFile(const String &filepath);
-
-	bool isLogFileOpen() const;
-
-	void write(const String &str);
+	static void write(const String &str);
 
 	template<class... Args>
-	void write(const std::string &format, const Args&... args);
+	static void write(const std::string &format, const Args&... args);
 
 	template<class... Args>
-	void write(const std::wstring &format, const Args&... args);
+	static void write(const std::wstring &format, const Args&... args);
 
 	template<class... Args>
-	String format(const std::string &format, const Args&... args);
+	static String format(const std::string &format, const Args&... args);
 
 	template<class... Args>
-	String format(const std::wstring &format, const Args&... args);
+	static String format(const std::wstring &format, const Args&... args);
 
-	String makeTimestampString();
+	static String makeTimestampString();
 
 private:
-	Log();
-	~Log();
+	friend class LogStaticInitializer;
 
+	Log() = delete;
+	~Log() = delete;
 	Log(const Log&) = delete;
 	void operator=(const Log&) = delete;
 
-	bool openLogfile();
-	void closeLogfile();
-	
-	String currentFilepath;
-	std::ofstream fileStream;
-
-	static String filepathToBeOpened;
+	static bool openLogfile();
+	static void closeLogfile();
 };
-
-// template<class FormatType, class... Args>
-// TS_FORCEINLINE void Log::write(FormatType formatStr, const Args&... args)
-// {
-// 	write(format(formatStr, args...));
-// }
 
 template<class... Args>
 TS_FORCEINLINE void Log::write(const std::string &formatStr, const Args&... args)

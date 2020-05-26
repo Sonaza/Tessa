@@ -7,12 +7,13 @@
 #include <ctime>
 
 #include <streambuf>
+#include <array>
 
 #include "ts/lang/common/Assert.h"
 #include "ts/string/StringUtils.h"
 #include "ts/file/FileUtils.h"
-
-#include <array>
+#include "ts/thread/MutexGuard.h"
+#include "ts/thread/RecursiveMutex.h"
 
 #if TS_PLATFORM == TS_WINDOWS
 #include "ts/lang/common/IncludeWindows.h"
@@ -45,7 +46,6 @@ protected:
 			*pptr() = (char)ch;
 			pbump(1);
 		}
-// 		return this->sync() ? traits_type::not_eof(ch) : traits_type::eof();
 		return traits_type::eof();
 	}
 
@@ -84,87 +84,73 @@ public:
 	}
 };
 
-String Log::filepathToBeOpened = file::joinPaths(file::getExecutableDirectory(), TS_DEFAULT_LOG_FILE_NAME);
+static RecursiveMutex mutex;
 
-Log &Log::getSingleton()
+static String defaultFilepath = file::joinPaths(file::getExecutableDirectory(), TS_DEFAULT_LOG_FILE_NAME);
+
+static String currentFilepath;
+static std::ofstream outputFileStream;
+
+class LogStaticInitializer
 {
-	static Log instance;
-	return instance;
-}
-
-bool Log::setLogFile(const String &filepathParam)
-{
-	if (filepathParam.isEmpty())
-		return false;
-
-	Log::filepathToBeOpened = filepathParam;
-
-	Log &log = getSingleton();
-	if (log.openLogfile())
-		return false;
-
-	return true;
-}
-
-bool Log::isLogFileOpen() const
-{
-	return fileStream.is_open() && fileStream.good();
-}
-
-Log::Log()
-{
-	openLogfile();
+public:
+	LogStaticInitializer()
+	{
+		Log::openLogfile();
 
 #if TS_GLOBAL_USING_SFML == TS_TRUE
-	static CustomLoggerOutputStream customLogger("SFML Error", true);
-	sf::err().rdbuf(customLogger.rdbuf());
+		static CustomLoggerOutputStream customLogger("SFML Error", true);
+		sf::err().rdbuf(customLogger.rdbuf());
 #endif
-}
+	}
 
-Log::~Log()
+	~LogStaticInitializer()
+	{
+		Log::closeLogfile();
+	}
+};
+static LogStaticInitializer logStaticInitializer;
+
+bool Log::isLogFileOpen()
 {
-	closeLogfile();
+	MutexGuard mg(mutex);
+	return outputFileStream.is_open() && outputFileStream.good();
 }
 
 bool Log::openLogfile()
 {
-	TS_ASSERT(!Log::filepathToBeOpened.isEmpty());
-
-	// Check that the requested file isn't already opened
-	if (Log::filepathToBeOpened == currentFilepath && isLogFileOpen())
-		return true;
-
-	closeLogfile();
-
 	static const std::locale utf8_locale = std::locale(std::locale(), new std::codecvt_utf8<wchar_t>());
-	fileStream.imbue(utf8_locale);
+	outputFileStream.imbue(utf8_locale);
 
 #if TS_PLATFORM == TS_WINDOWS
-	fileStream.open(Log::filepathToBeOpened.toWideString(), std::ios::out | std::ios::trunc);
+	outputFileStream.open(defaultFilepath.toWideString(), std::ios::out | std::ios::trunc);
 #else
-	fileStream.open(Log::filepathToBeOpened.toUtf8().c_str(), std::ios::out | std::ios::trunc);
+	outputFileStream.open(defaultFilepath.toUtf8().c_str(), std::ios::out | std::ios::trunc);
 #endif
 
-	if (!isLogFileOpen())
+	if (!outputFileStream)
 	{
-		printf("Opening log file for writing failed! File path: %s", filepathToBeOpened.toAnsiString().c_str());
-		// TS_LOG_ERROR("Opening log file for writing failed! File path: %s", filepathToBeOpened);
+		TS_LOG_ERROR("Opening log file for writing failed! File path: %s", defaultFilepath);
 		return false;
 	}
 
-	currentFilepath = Log::filepathToBeOpened;
+	currentFilepath = defaultFilepath;
 
 	return true;
 }
 
 void Log::closeLogfile()
 {
-	if (fileStream.is_open())
-		fileStream.close();
+	MutexGuard mg(mutex);
+
+	if (outputFileStream.is_open())
+		outputFileStream.close();
 }
 
 void Log::write(const String &str)
 {
+	MutexGuard mg(mutex);
+
 #if TS_PLATFORM == TS_WINDOWS
 	std::wcout << str;
 	OutputDebugStringW(str.toWideString().c_str());
@@ -172,10 +158,10 @@ void Log::write(const String &str)
 	std::cout << str.toUtf8().c_str();
 #endif
 
-	if (isLogFileOpen())
+	if (outputFileStream)
 	{
-		fileStream << makeTimestampString() << " " << str.toUtf8().c_str();
-		fileStream.flush();
+		outputFileStream << makeTimestampString() << " " << str.toUtf8().c_str();
+		outputFileStream.flush();
 	}
 }
 

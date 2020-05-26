@@ -80,8 +80,8 @@ public:
 
 	enum RotateDirection
 	{
-		Clockwise,
-		CounterClockwise,
+		Rotation_Clockwise,
+		Rotation_CounterClockwise,
 	};
 	bool rotate(RotateDirection direction, bool saveToDisk = true);
 	bool canImageBeRotated() const;

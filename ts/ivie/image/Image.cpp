@@ -358,14 +358,16 @@ SharedPointer<sf::Texture> Image::getThumbnail() const
 	return thumbnail;
 }
 
-bool Image::rotate(RotateDirection direction, bool saveToDisk)
+bool Image::rotate(RotateDirection directionParam, bool saveToDisk)
 {
-	int32 directionInt = (direction == Clockwise ? 1 : -1);
+	TS_PRINTF("Can be rotated? %s\n", imageData.canBeRotated ? "yes" : "no");
+
+	int32 direction = (directionParam == Rotation_Clockwise ? 1 : -1);
 
 	switch (currentLoaderType)
 	{
 		case LoaderFreeImage:
-			return ImageBackgroundLoaderFreeImage::rotate(filepath, directionInt);
+			return ImageBackgroundLoaderFreeImage::rotate(filepath, direction);
 
 		case LoaderWebm:
 			return false;

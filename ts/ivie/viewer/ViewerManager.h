@@ -6,7 +6,7 @@
 #include "ts/file/FileList.h"
 #include "ts/file/FileWatcher.h"
 
-TS_DECLARE2(app, image, Image);
+#include "ts/ivie/image/Image.h"
 
 TS_PACKAGE2(app, viewer)
 
@@ -63,7 +63,9 @@ public:
 	void nextImage();
 	void previousImage();
 	void changeImage(int32 direction);
+
 	bool deleteCurrentImage();
+	bool rotateCurrentImage(image::Image::RotateDirection direction);
 
 	SizeType getCurrentImageIndex() const;
 	SizeType getNumImages() const;

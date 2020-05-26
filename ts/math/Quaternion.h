@@ -39,6 +39,7 @@ public:
 
 	/* Returns a vector rotated by the quaternion.
 	 */
+	Vec2<T> getRotated(const Vec2<T> &vector) const;
 	Vec3<T> getRotated(const Vec3<T> &vector) const;
 
 	/* Normalize quaternion to account for floating point errors.

@@ -427,29 +427,25 @@ bool ImageBackgroundLoaderFreeImage::isLoadingComplete() const
 	return BaseClass::isLoadingComplete() && loaderIsComplete;
 }
 
-bool ImageBackgroundLoaderFreeImage::isValidFreeImageFile(const String &filepath)
+static FREE_IMAGE_FORMAT getFreeImageFormatForFile(const String &filepath)
 {
 #if TS_PLATFORM == TS_WINDOWS
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(filepath.toWideString().c_str());
 #else
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filepath.toUtf8().c_str());
 #endif
-// 	if (format == FIF_UNKNOWN)
-// 	{
-// 		// Try to get file type from file name instead
-// 		format = FreeImage_GetFIFFromFilenameU(filepath.c_str());
-// 	}
+	return format;
+}
+
+bool ImageBackgroundLoaderFreeImage::isValidFreeImageFile(const String &filepath)
+{
+	FREE_IMAGE_FORMAT format = getFreeImageFormatForFile(filepath);
 	return FreeImage_FIFSupportsReading(format) == 1;
 }
 
 bool ImageBackgroundLoaderFreeImage::canImageBeRotated(const String &filepath)
 {
-#if TS_PLATFORM == TS_WINDOWS
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeU(filepath.toWideString().c_str());
-#else
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filepath.toUtf8().c_str());
-#endif
-	
+	FREE_IMAGE_FORMAT format = getFreeImageFormatForFile(filepath);
 	return isValidRotateFormat(format);
 }
 
@@ -462,12 +458,48 @@ bool ImageBackgroundLoaderFreeImage::isValidRotateFormat(FREE_IMAGE_FORMAT forma
 		FIF_BMP, FIF_JPEG, FIF_PNG, FIF_WEBP, FIF_TARGA, FIF_TIFF,
 	};
 
-	return validRotateFormats.find(format) != validRotateFormats.end();
+	return validRotateFormats.count(format) > 0;
+}
+
+static bool transformJPEG(const String &srcFile, const String &dstFile, FREE_IMAGE_JPEG_OPERATION operation)
+{
+#if TS_PLATFORM == TS_WINDOWS
+	return FreeImage_JPEGTransformU(srcFile.toWideString().c_str(), dstFile.toWideString().c_str(), operation, FALSE) == TRUE;
+#else
+	return FreeImage_JPEGTransform(srcFile.toUtf8().c_str(), dstFile.toUtf8().c_str(), operation, FALSE) == TRUE;
+#endif
 }
 
 bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32 direction)
 {
+	TS_ASSERTF(direction == 1 || direction == -1, "Invalid direction, must be 1 or -1");
+	if (direction != 1 && direction != -1)
+		return false;
+
+	FREE_IMAGE_FORMAT format = getFreeImageFormatForFile(filepath);
+	bool validFormat = isValidRotateFormat(format);
+	
 	TS_PRINTF("Rotate: %s\n", filepath);
+	TS_PRINTF("  Valid format: %s\n", validFormat ? "yes" : "no");
+
+	if (format == FIF_JPEG)
+	{
+		TS_PRINTF("ASDASD!\n");
+
+		String dstFile = filepath;
+		dstFile.replace(".jpg", "_rotated.jpg");
+
+		if (direction > 0)
+			return transformJPEG(filepath, dstFile, FIJPEG_OP_ROTATE_90);
+		else
+			return transformJPEG(filepath, dstFile, FIJPEG_OP_ROTATE_270);
+	}
+	else
+	{
+		TS_PRINTF("HELLO!\n");
+	}
+
+	return true;
 }
 
 int32 ImageBackgroundLoaderFreeImage::restartImpl()
