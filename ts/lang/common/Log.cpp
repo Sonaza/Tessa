@@ -9,6 +9,7 @@
 #include <streambuf>
 #include <array>
 
+#include "ts/lang/AppConfig.h"
 #include "ts/lang/common/Assert.h"
 #include "ts/string/StringUtils.h"
 #include "ts/file/FileUtils.h"
@@ -86,7 +87,7 @@ public:
 
 static RecursiveMutex mutex;
 
-static String defaultFilepath = file::joinPaths(file::getExecutableDirectory(), TS_DEFAULT_LOG_FILE_NAME);
+static String defaultFilepath = file::joinPaths(file::getExecutableDirectory(), getApplicationLogFile());
 
 static String currentFilepath;
 static std::ofstream outputFileStream;

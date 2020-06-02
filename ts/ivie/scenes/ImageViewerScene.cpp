@@ -280,7 +280,7 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 	const bool ctrlDown = input.isKeyPressed(Keyboard::LControl) || input.isKeyPressed(Keyboard::RControl);
 	const bool shiftDown = input.isKeyPressed(Keyboard::LShift) || input.isKeyPressed(Keyboard::RShift);
 
-	if (changeTimer.getElapsedTime() >= 400_ms)
+	if (changeTimer.getElapsedTime() >= 300_ms)
 	{
 		bool changed = false;
 
@@ -307,6 +307,17 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 		if (changed)
 			changeTimer.restart();
+	}
+	else
+	{
+		if (!input.isKeyPressed(Keyboard::Left) &&
+			!input.isKeyPressed(Keyboard::Right) &&
+			!input.isKeyPressed(Keyboard::PageUp) &&
+			!input.isKeyPressed(Keyboard::PageDown))
+		{
+			// In effect clears the timer
+			changeTimer.set(1000_ms);
+		}
 	}
 	
 	if (input.wasKeyPressed(Keyboard::Add) || input.wasKeyPressed(Keyboard::Subtract))

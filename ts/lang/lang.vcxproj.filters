@@ -106,6 +106,9 @@
     <ClInclude Include="time\SteadyTimer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="AppConfig.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="UniquePointer.inl">

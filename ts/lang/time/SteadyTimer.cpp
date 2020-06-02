@@ -20,4 +20,9 @@ TimeSpan SteadyTimer::restart()
 	return elapsed;
 }
 
+void SteadyTimer::set(const TimeSpan elapsed)
+{
+	startTimePoint = Time::now() - elapsed;
+}
+
 TS_END_PACKAGE0()

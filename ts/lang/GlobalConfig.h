@@ -10,8 +10,8 @@
 * General configuration
 */
 
-#define TS_CONFIG_FILE_NAME "options.ini"
-#define TS_DEFAULT_LOG_FILE_NAME "output.log"
+// #define TS_CONFIG_FILE_NAME "options.ini"
+// #define TS_DEFAULT_LOG_FILE_NAME getApplicationLogFile()
 
 /************************************
  * Systems configuration

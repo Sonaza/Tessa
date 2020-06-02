@@ -116,7 +116,7 @@ bool Application::createWindow(engine::window::WindowManager &windowManager)
 		windowSize.y = math::max(config.getUint32("Display.ScreenHeight", APP_DEFAULT_SCREEN_HEIGHT), APP_MINIMUM_SCREEN_HEIGHT);
 	}
 
-	windowManager.create(windowSize, APP_WINDOW_TITLE, true, fullscreen);
+	windowManager.create(windowSize, getApplicationDefaultWindowTitle().toUtf8().c_str(), true, fullscreen);
 
 	if (maximized)
 		windowManager.setWindowState(engine::window::WindowManager::WindowState_Maximized);

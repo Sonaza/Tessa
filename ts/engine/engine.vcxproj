@@ -172,7 +172,6 @@
     <ClCompile Include="window\WindowManager.cpp" />
     <ClCompile Include="window\WindowView.cpp" />
     <ClCompile Include="window\WindowViewManager.cpp" />
-    <ClInclude Include="Config.h" />
     <ClInclude Include="Precompiled.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>

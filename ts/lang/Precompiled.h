@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "ts/lang/GlobalConfig.h"
-
 #include "ts/lang/common/Common.h"
+
+#include "ts/lang/GlobalConfig.h"
 
 #include "ts/lang/common/Package.h"
 

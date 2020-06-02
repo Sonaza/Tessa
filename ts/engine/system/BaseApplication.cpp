@@ -48,7 +48,7 @@ int32 BaseApplication::launch()
 	
 	TS_PRINTF("rootpath %s\n", rootPath);
 
-	const String configFilepath = file::joinPaths(rootPath, TS_CONFIG_FILE_NAME);
+	const String configFilepath = file::joinPaths(rootPath, getApplicationConfigFile());
 	TS_PRINTF("configFilepath %s\n", configFilepath);
 
 	if (!m_config.open(configFilepath))

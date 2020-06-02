@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include "ts/lang/AppConfig.h"
+
 #include "ts/engine/system/Commando.h"
 #include "ts/engine/system/ConfigReader.h"
 

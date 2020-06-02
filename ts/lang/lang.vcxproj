@@ -171,6 +171,7 @@
     <ClCompile Include="time\GlobalTimer.cpp" />
     <ClCompile Include="time\Time.cpp" />
     <ClCompile Include="time\TimeSpan.cpp" />
+    <ClInclude Include="AppConfig.h" />
     <ClInclude Include="common\Assert.h" />
     <ClInclude Include="common\Common.h" />
     <ClInclude Include="common\Debugging.h" />

@@ -67,9 +67,6 @@
     <ClInclude Include="GUID.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Gigaton.h">
       <Filter>Source Files</Filter>
     </ClInclude>
