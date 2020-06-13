@@ -25,10 +25,11 @@
 // TS_PACKAGE2(app, scenes)
 namespace ts { namespace app { namespace scenes {
 
-static const math::COL ColorSuccess(0.3f, 1.0f, 0.1f);
-static const math::COL ColorWarning(1.0f, 0.9f, 0.1f);
-static const math::COL ColorError  (1.0f, 0.2f, 0.1f);
-static const math::COL ColorInfo   (0.1f, 0.9f, 1.0f);
+static const math::COL ColorSuccess  (0.3f, 1.0f, 0.1f);
+static const math::COL ColorWarning  (1.0f, 0.9f, 0.1f);
+static const math::COL ColorError    (1.0f, 0.2f, 0.1f);
+static const math::COL ColorInfo     (0.1f, 0.9f, 1.0f);
+static const math::COL ColorInfoLight(0.6f, 0.9f, 1.0f);
 
 ImageViewerScene::ImageViewerScene(engine::system::BaseApplication *application)
 	: AbstractSceneBase(application)
@@ -330,20 +331,41 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 	if (input.wasKeyPressed(Keyboard::S))
 	{
-		SizeType option = (SizeType)viewerManager->getSorting();
-		option = (option + 1) % viewer::SortingStyle_NumOptions;
-		viewerManager->setSorting((viewer::SortingStyle)option);
+		uint16 style = (uint16)viewerManager->getSortingStyle();
+		bool reversed = viewerManager->getSortingReversed();
 
-		switch ((viewer::SortingStyle)option)
+		if (!shiftDown)
+		{
+			style = (style + 1) % viewer::SortingStyle_NumOptions;
+			reversed = false;
+		}
+		else
+		{
+			reversed = !reversed;
+		}
+
+		viewerManager->setSorting((viewer::SortingStyle)style, reversed);
+
+		String sortingStyle = "<UNSET>";
+		String sortingOrder = !reversed ? "(asc)" : "(desc)";
+
+		switch ((viewer::SortingStyle)style)
+
 		{
 			case viewer::SortingStyle_ByName:
-				addEventNotification("Sorting by name", ColorInfo);
+				sortingStyle = "Name";
 			break;
-			case viewer::SortingStyle_ByExtension:
-				addEventNotification("Sorting by extension", ColorInfo);
+			case viewer::SortingStyle_ByType:
+				sortingStyle = "Type";
+			break;
+			case viewer::SortingStyle_ByLastModified:
+				sortingStyle = "Last Modified";
 			break;
 			default: break;
 		}
+		
+		addEventNotification(
+			TS_FMT("Sorting by %s %s", sortingStyle, sortingOrder), ColorInfoLight);
 	}
 
 	if (input.wasKeyPressed(Keyboard::P))
@@ -780,7 +802,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 
 		math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
 
-		bool displayable = current.image->isDisplayable() && current.hasData && !sf::Keyboard::isKeyPressed(sf::Keyboard::Tab);
+		bool displayable = current.image->isDisplayable() && current.hasData;
 		if (displayable)
 		{
 			image::FrameStorage currentFrame = *current.image->getCurrentFrameStorage();

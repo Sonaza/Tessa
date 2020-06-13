@@ -94,4 +94,9 @@ extern String getWorkingDirectory();
  */
 extern void setWorkingDirectory(const String &path);
 
+/* Windows only: Retrieve shell file type string.
+ * Returns file extension on Linux.
+ */
+extern String getShellFileType(const String &path);
+
 TS_END_PACKAGE1()

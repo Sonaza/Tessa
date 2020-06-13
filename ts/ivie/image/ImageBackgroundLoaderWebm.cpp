@@ -535,6 +535,9 @@ bool ImageBackgroundLoaderWebm::isValidWebmFile(const String &filepath)
 
 	file::InputFile file(filepath, file::InputFileMode_ReadBinary);
 
+	if (!file)
+		return false;
+
 	Byte buffer[nesteggSniffBytesAmount] = { 0 };
 	file.read(&buffer[0], nesteggSniffBytesAmount);
 	file.close();

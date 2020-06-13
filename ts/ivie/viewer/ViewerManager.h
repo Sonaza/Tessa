@@ -5,8 +5,8 @@
 
 #include "ts/file/FileList.h"
 #include "ts/file/FileWatcher.h"
-
 #include "ts/ivie/image/Image.h"
+#include "ts/ivie/viewer/ViewerImageFile.h"
 
 TS_PACKAGE2(app, viewer)
 
@@ -23,11 +23,12 @@ struct ImageEntry
 	BufferingDirection buffering;
 };
 
-enum SortingStyle
+enum SortingStyle : uint16
 {
-	SortingStyle_ByName,
-	SortingStyle_ByExtension,
-// 	SortingStyle_ByLastModified,
+	SortingStyle_ByName           = 0,
+	SortingStyle_ByType           = 1,
+	SortingStyle_ByLastModified   = 2,
+// 	SortingStyle_ByExtension      = 3,
 
 	SortingStyle_NumOptions,
 };
@@ -51,8 +52,9 @@ public:
 	bool getIsRecursiveScan() const;
 	void setRecursiveScan(bool recursiveEnabled, bool immediateRescan = true);
 
-	void setSorting(SortingStyle sorting);
-	SortingStyle getSorting() const;
+	void setSorting(SortingStyle style, bool reversed);
+	SortingStyle getSortingStyle() const;
+	bool getSortingReversed() const;
 
 	//////////////////////////////////////////////////////
 	// Image state
@@ -100,7 +102,7 @@ private:
 	std::map<DisplayShaderTypes, String> displayShaderFiles;
 	SharedPointer<sf::Texture> alphaCheckerPatternTexture;
 
-	void applySorting(std::vector<String> &filelist);
+	void applySorting(std::vector<ViewerImageFile> &filelist);
 	void ensureImageIndex();
 
 	enum IndexingAction
@@ -119,7 +121,7 @@ private:
 
 	const std::vector<ImageEntry> getListSliceForBuffering(SizeType numForward, SizeType numBackward);
 
-	PosType findFileIndexByName(const String &filepath, const std::vector<String> &filelist);
+	PosType findFileIndexByName(const String &filepath, const std::vector<ViewerImageFile> &filelist);
 
 	file::FileListStyle scanStyle = file::FileListStyle_Files_Recursive;
 
@@ -136,7 +138,7 @@ private:
 	{
 		SizeType imageIndex = INVALID_IMAGE_INDEX;
 		uint32 directoryHash = 0;
-		String filepath;
+		ViewerImageFile viewerFile;
 	};
 	DisplayState current;
 
@@ -149,13 +151,10 @@ private:
 
 	bool pendingImageUpdate = true;
 
-	struct ImageFile
-	{
-		String filepath;
-		int64 lastModifiedTime;
-	};
-	std::vector<String> currentFileList;
-	SortingStyle currentSortingStyle = SortingStyle_ByName;
+	std::vector<ViewerImageFile> currentFileList;
+
+	SortingStyle sortingStyle = SortingStyle_ByType;
+	bool sortingReversed = false;
 
 	void updateCurrentImage(SizeType previousDirectoryHash, SizeType previousImageIndex);
 

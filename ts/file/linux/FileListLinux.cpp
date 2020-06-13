@@ -116,7 +116,7 @@ bool FileList::next(FileListEntry &output)
 		String filename(entry.path().filename().u32string());
 		
 		// std::cout << entry.path() << "\n";
-		std::cout << relativePath.toUtf8() << "\n";
+		// std::cout << relativePath.toUtf8() << "\n";
 		// TS_PRINTF("%s\n", relativePath.toUtf8());
 		
 		const bool isDir = fs::is_directory(entry.status());
@@ -171,6 +171,12 @@ bool FileList::next(FileListEntry &output)
 		}
 
 		output.m_directory = isDir;
+
+		if ((m_listFlags & FileListFlags_GetTypeStrings) != 0)
+		{
+			output.m_typestring = getShellFileType(filename);
+		}
+
 		return true;
 	}
 	

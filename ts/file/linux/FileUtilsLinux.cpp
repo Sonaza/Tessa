@@ -145,6 +145,11 @@ extern void setWorkingDirectory(const String &path)
 	}
 }
 
+extern String getShellFileType(const String &path)
+{
+	return getExtension(path);
+}
+
 TS_END_PACKAGE1()
 
 #endif

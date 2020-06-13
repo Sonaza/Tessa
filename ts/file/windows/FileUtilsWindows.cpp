@@ -4,9 +4,10 @@
 
 #include "ts/file/FileUtils.h"
 #include "ts/string/StringUtils.h"
-#include "ts/lang/common/IncludeWindows.h"
 
+#include "ts/lang/common/IncludeWindows.h"
 #include <shlwapi.h>
+#include <shellapi.h>
 
 #define MAX_PATH_LENGTH MAX_PATH
 
@@ -82,6 +83,13 @@ extern void setWorkingDirectory(const String &path)
 {
 	TS_ASSERT(path.getSize() <= MAX_PATH_LENGTH);
 	SetCurrentDirectoryW(path.toWideString().c_str());
+}
+
+extern String getShellFileType(const String &path)
+{
+	SHFILEINFOW shfi;
+	SHGetFileInfoW(path.toWideString().c_str(), 0, &shfi, sizeof(shfi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES);
+	return String(shfi.szTypeName);
 }
 
 TS_END_PACKAGE1()

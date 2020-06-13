@@ -13,6 +13,8 @@
 #include "ts/ivie/util/NaturalSort.h"
 #include "ts/ivie/viewer/SupportedFormats.h"
 
+#include <functional>
+
 TS_DEFINE_MANAGER_TYPE(app::viewer::ViewerManager);
 
 TS_PACKAGE2(app, viewer)
@@ -198,7 +200,7 @@ void ViewerManager::setPendingImage(SizeType imageIndex)
 	{
 		pending.imageIndex = imageIndex;
 		pending.directoryHash = currentDirectoryPathHash;
-		pending.filepath = currentFileList[imageIndex];
+		pending.viewerFile = currentFileList[imageIndex];
 	}
 	else
 	{
@@ -229,25 +231,31 @@ void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notify
 			case file::FileNotify_FileAdded:
 			{
 				TS_PRINTF("FileNotify_FileAdded: %s\n", notifyEvent.name);
-				currentFileList.push_back(notifyEvent.name);
+
+				String fullpath = file::joinPaths(currentDirectoryPath, notifyEvent.name);
+				ViewerImageFile file = getViewerImageFileDataForFile(fullpath, notifyEvent.name);
+				currentFileList.push_back(file);
 			}
 			break;
 
 			case file::FileNotify_FileRemoved:
 			{
 				TS_PRINTF("FileNotify_FileRemoved: %s\n", notifyEvent.name);
-				TS_PRINTF("  current %s\n", current.filepath);
+				TS_PRINTF("  current %s\n", current.viewerFile.filepath);
 
-// 				if (current.filepath == notifyEvent.name)
-// 					previousImage();
-
-				auto it = std::find(currentFileList.begin(), currentFileList.end(), notifyEvent.name);
+				auto it = std::find_if(
+					currentFileList.begin(), currentFileList.end(),
+					[&notifyEvent](const ViewerImageFile &x) { return x.filepath == notifyEvent.name; }
+				);
 				if (it != currentFileList.end())
 					currentFileList.erase(it);
 
 				if (!currentFileList.empty())
 				{
-					jumpToImage(current.imageIndex);
+					if (current.viewerFile.filepath == notifyEvent.name)
+						jumpToImage(current.imageIndex);
+					else
+						ensureImageIndexNeeded = true;
 				}
 			}
 			break;
@@ -256,16 +264,19 @@ void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notify
 			{
 				TS_WPRINTF("FileNotify_FileRenamed: %s -> %s\n", notifyEvent.name, notifyEvent.lastName);
 
-				auto it = std::find(currentFileList.begin(), currentFileList.end(), notifyEvent.lastName);
+				auto it = std::find_if(
+					currentFileList.begin(), currentFileList.end(),
+					[&notifyEvent](const ViewerImageFile &x) { return x.filepath == notifyEvent.lastName; }
+				);
 				if (it != currentFileList.end())
 				{
-					*it = notifyEvent.name;
+					it->filepath = notifyEvent.name;
 					sortNeeded = true;
 				}
 
-				if (current.filepath == notifyEvent.lastName)
+				if (current.viewerFile.filepath == notifyEvent.lastName)
 				{
-					current.filepath = notifyEvent.name;
+					current.viewerFile.filepath = notifyEvent.name;
 					ensureImageIndexNeeded = true;
 				}
 			}
@@ -344,7 +355,9 @@ void ViewerManager::setViewerPath(const String &filepath)
 		const String relativePath = file::stripRootPath(filepath, currentDirectoryPath);
 
 		currentFileList.clear();
-		currentFileList.push_back(relativePath);
+
+		ViewerImageFile file = getViewerImageFileDataForFile(filepath, relativePath);
+		currentFileList.push_back(file);
 
 		setPendingImage(0);
 	}
@@ -428,14 +441,12 @@ void ViewerManager::jumpToImageByDirectory(const String &filename)
 {
 	const String relativePath = file::stripRootPath(filename, currentDirectoryPath);
 
-	auto pred = [&](const String &path)
-	{
-		return path.find(relativePath) == 0;
-	};
-
 	PosType index = -1;
 
-	auto it = std::find_if(currentFileList.begin(), currentFileList.end(), pred);
+	auto it = std::find_if(
+		currentFileList.begin(), currentFileList.end(),
+		[&](const ViewerImageFile &x) { return x.filepath.find(relativePath) == 0; }
+	);
 	if (it != currentFileList.end())
 	{
 		index = std::distance(currentFileList.begin(), it);
@@ -479,7 +490,7 @@ bool ViewerManager::deleteCurrentImage()
 	const String filepath = currentImage->getFilepath();
 
 	TS_PRINTF("CURRENT FILE (IMAGE): %s\n", filepath);
-	TS_PRINTF("CURRENT FILE (META): %s\n", current.filepath);
+	TS_PRINTF("CURRENT FILE (META): %s\n", current.viewerFile.filepath);
 	currentImage->unload();
 	
 	if (file::removeFile(filepath))
@@ -523,33 +534,39 @@ bool ViewerManager::isFirstScanComplete() const
 const String ViewerManager::getCurrentFilepath(bool absolute) const
 {
 	MutexGuard lock(mutex);
-	return absolute ? file::joinPaths(currentDirectoryPath, current.filepath) : current.filepath;
+	return absolute ? file::joinPaths(currentDirectoryPath, current.viewerFile.filepath) : current.viewerFile.filepath;
 }
 
 //////////////////////////////////////////////////////
 
-void ViewerManager::setSorting(SortingStyle sorting)
+void ViewerManager::setSorting(SortingStyle style, bool reversed)
 {
 	MutexGuard lock(mutex);
-	if (currentSortingStyle != sorting)
+	if (sortingStyle == style && sortingReversed == reversed)
+		return;
+
+	sortingStyle = style;
+	sortingReversed = reversed;
+
+	if (!currentFileList.empty())
 	{
-		currentSortingStyle = sorting;
+		applySorting(currentFileList);
+		ensureImageIndex();
 
-		if (!currentFileList.empty())
-		{
-			applySorting(currentFileList);
-			ensureImageIndex();
+		updateCurrentImage(current.directoryHash, current.imageIndex);
 
-			updateCurrentImage(current.directoryHash, current.imageIndex);
-
-			filelistChangedSignal((SizeType)currentFileList.size());
-		}
+		filelistChangedSignal((SizeType)currentFileList.size());
 	}
 }
 
-SortingStyle ViewerManager::getSorting() const
+SortingStyle ViewerManager::getSortingStyle() const
 {
-	return currentSortingStyle;
+	return sortingStyle;
+}
+
+bool ViewerManager::getSortingReversed() const
+{
+	return sortingReversed;
 }
 
 //////////////////////////////////////////////////////
@@ -571,7 +588,7 @@ const std::vector<ImageEntry> ViewerManager::getListSliceForBuffering(SizeType n
 	for (SizeType base = 0; base < numForward + 1; ++base)
 	{
 		SizeType index = (current.imageIndex + base) % fileListSize;
-		result.push_back(ImageEntry{ currentFileList[index], index, ImageEntry::Buffering_Forwards });
+		result.push_back(ImageEntry{ currentFileList[index].filepath, index, ImageEntry::Buffering_Forwards });
 
 		numEntries--;
 		if (numEntries == 0)
@@ -583,7 +600,7 @@ const std::vector<ImageEntry> ViewerManager::getListSliceForBuffering(SizeType n
 		for (SizeType base = 0; base < numBackward; ++base)
 		{
 			SizeType index = (current.imageIndex + (fileListSize - 1 - (PosType)base)) % fileListSize;
-			result.push_back(ImageEntry{ currentFileList[index], index, ImageEntry::Buffering_Backwards });
+			result.push_back(ImageEntry{ currentFileList[index].filepath, index, ImageEntry::Buffering_Backwards });
 		
 			numEntries--;
 			if (numEntries == 0)
@@ -649,11 +666,12 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 
 	ScopedStateSetter<decltype(scanningFiles), bool> scanningFilesSetter(&scanningFiles, true, false);
 
-	std::vector<String> templist;
+	std::vector<ViewerImageFile> templist;
 
 	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
 	uint32 flags = file::FileListFlags_LargeFetch
-		         | file::FileListFlags_ExcludeRootPath;
+		         | file::FileListFlags_ExcludeRootPath
+		         | file::FileListFlags_GetTypeStrings;
 
 	while (!quitting)
 	{
@@ -673,9 +691,11 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 
 			if (isExtensionAllowed(entry.getFilename()))
 			{
-				templist.push_back({
-					entry.getFilename()
-				});
+				ViewerImageFile file;
+				file.filepath = entry.getFilename();
+				file.lastModifiedTime = entry.getLastModified();
+				file.type = entry.getTypestring();
+				templist.push_back(file);
 			}
 		}
 
@@ -742,24 +762,74 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 	return true;
 }
 
-void ViewerManager::applySorting(std::vector<String> &filelist)
+void ViewerManager::applySorting(std::vector<ViewerImageFile> &filelist)
 {
 	TS_ZONE();
 
-	switch (currentSortingStyle)
+	typedef viewer::ViewerImageFile T;
+	typedef bool SortingPredicate(const T &, const T &);
+
+	struct Predicates
+	{
+		static bool byNameAscending(const T &lhs, const T &rhs)
+		{
+			return util::naturalSortFile(lhs, rhs);
+		}
+		static bool byNameDescending(const T &lhs, const T &rhs)
+		{
+			return !util::naturalSortFile(lhs, rhs);
+		}
+
+		static bool byTypeAscending(const T &lhs, const T &rhs)
+		{
+			return util::naturalSortFileByType(lhs, rhs);
+		}
+		static bool byTypeDescending(const T &lhs, const T &rhs)
+		{
+			return !util::naturalSortFileByType(lhs, rhs);
+		}
+
+		static bool byLastModifiedAscending(const T &lhs, const T &rhs)
+		{
+			return util::naturalSortFileByLastModified(lhs, rhs);
+		}
+		static bool byLastModifiedDescending(const T &lhs, const T &rhs)
+		{
+			return !util::naturalSortFileByLastModified(lhs, rhs);
+		}
+	};
+
+	SortingPredicate *predicate = nullptr;
+	switch (sortingStyle)
 	{
 		case SortingStyle_ByName:
-			std::sort(filelist.begin(), filelist.end(), util::naturalSort);
+			if (!sortingReversed)
+				predicate = &Predicates::byNameAscending;
+			else
+				predicate = &Predicates::byNameDescending;
 		break;
 
-		case SortingStyle_ByExtension:
-			std::sort(filelist.begin(), filelist.end(), util::naturalSortByExtension);
+		case SortingStyle_ByType:
+			if (!sortingReversed)
+				predicate = &Predicates::byTypeAscending;
+			else
+				predicate = &Predicates::byTypeDescending;
+		break;
+
+		case SortingStyle_ByLastModified:
+			if (!sortingReversed)
+				predicate = &Predicates::byLastModifiedAscending;
+			else
+				predicate = &Predicates::byLastModifiedDescending;
 		break;
 		
 		default:
-			TS_PRINTF("Sorting algorithm not set up for this style.\n");
+			TS_PRINTF("Sorting algorithm not defined for this option.\n");
 		break;
 	}
+
+	if (predicate != nullptr)
+		std::sort(filelist.begin(), filelist.end(), predicate);
 }
 
 void ViewerManager::ensureImageIndex()
@@ -775,8 +845,8 @@ void ViewerManager::ensureImageIndex()
 	if (pendingImageUpdate && pending.imageIndex != INVALID_IMAGE_INDEX)
 		state = &pending;
 
-	PosType updatedIndex = findFileIndexByName(state->filepath, currentFileList);
-	TS_WPRINTF("File: %s   Updated index: %lld\n", state->filepath, updatedIndex);
+	PosType updatedIndex = findFileIndexByName(state->viewerFile.filepath, currentFileList);
+	TS_WPRINTF("File: %s   Updated index: %lld\n", state->viewerFile.filepath, updatedIndex);
 	if (updatedIndex != state->imageIndex)
 	{
 		if (updatedIndex >= 0)
@@ -792,11 +862,14 @@ void ViewerManager::ensureImageIndex()
 	}
 }
 
-PosType ViewerManager::findFileIndexByName(const String &filepath, const std::vector<String> &filelist)
+PosType ViewerManager::findFileIndexByName(const String &filepath, const std::vector<ViewerImageFile> &filelist)
 {
 	PosType imageIndex = -1;
 
-	std::vector<String>::const_iterator it = std::find(filelist.begin(), filelist.end(), filepath);
+	std::vector<ViewerImageFile>::const_iterator it = std::find_if(
+		filelist.begin(), filelist.end(),
+		[&filepath](const ViewerImageFile &x) { return x.filepath == filepath; });
+
 	if (it != filelist.end())
 		imageIndex = std::distance(filelist.begin(), it);
 

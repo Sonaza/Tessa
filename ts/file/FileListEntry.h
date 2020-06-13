@@ -16,6 +16,8 @@ public:
 	const String &getFilename() const;
 	const String getFullPath() const;
 
+	const String &getTypestring() const;
+
 	FileTime getLastModified() const;
 	BigSizeType getSize() const;
 
@@ -27,8 +29,10 @@ private:
 
 	String m_filename;
 	String m_rootpath;
+	String m_typestring;
 	
 	FileTime m_lastModified = 0;
+
 	BigSizeType m_filesize = 0;
 	bool m_directory = false;
 };

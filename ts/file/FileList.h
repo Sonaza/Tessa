@@ -46,6 +46,10 @@ enum FileListFlags
 	// excluding the relative path section to scan root path.
 	// Only applies when using recursive scans.
 	FileListFlags_FileNameOnly       = (1 << 2),
+
+	// Windows only: Retrieves the shell type string used to describe
+	// a file type and used to sort by type in the explorer.
+	FileListFlags_GetTypeStrings     = (1 << 3),
 };
 
 struct FileListInfo;

@@ -11,6 +11,48 @@
 
 TS_PACKAGE2(app, image)
 
+static const std::map<FREE_IMAGE_FORMAT, bool> FormatAlphaSupport
+{
+	// TEEEECHNICALLY BMP does have alpha but I haven't ever seen it actually being used and now it's also causing problems.
+	{ FIF_BMP, false, }, 
+	{ FIF_CUT, true, },
+	{ FIF_DDS, true, },
+	{ FIF_EXR, true, },
+	{ FIF_FAXG3, true, },
+	{ FIF_GIF, true, },
+	{ FIF_HDR, true, },
+	{ FIF_ICO, true, },
+	{ FIF_J2K, true, },
+	{ FIF_JNG, false, },
+	{ FIF_JP2, true, },
+	{ FIF_JPEG, false, },
+	{ FIF_JXR, true, },
+	{ FIF_KOALA, true, },
+	{ FIF_LBM, true, },
+	{ FIF_MNG, true, },
+	{ FIF_PBM, true, },
+	{ FIF_PBMRAW, true, },
+	{ FIF_PCD, true, },
+	{ FIF_PCX, true, },
+	{ FIF_PFM, true, },
+	{ FIF_PGM, true, },
+	{ FIF_PGMRAW, true, },
+	{ FIF_PICT, true, },
+	{ FIF_PNG, true, },
+	{ FIF_PPM, true, },
+	{ FIF_PPMRAW, true, },
+	{ FIF_PSD, true, },
+	{ FIF_RAS, true, },
+	{ FIF_RAW, true, },
+	{ FIF_SGI, true, },
+	{ FIF_TARGA, true, },
+	{ FIF_TIFF, true, },
+	{ FIF_WBMP, true, },
+	{ FIF_WEBP, true, },
+	{ FIF_XBM, true, },
+	{ FIF_XPM, true, },
+};
+
 ImageBackgroundLoaderFreeImage::ImageBackgroundLoaderFreeImage(Image *ownerImage, const String &filepath)
 	: AbstractImageBackgroundLoader(ownerImage, filepath)
 {
@@ -110,7 +152,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 		}
 
 		case FIF_GIF:
-// 		case FIF_MNG:
+		case FIF_MNG:
 		{
 			loaderFormat = MultiBitmapFormat;
 
@@ -248,7 +290,10 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 		return false;
 	}
 
-	if (FreeImage_GetBPP(state.bitmap) != 32)
+	FREE_IMAGE_COLOR_TYPE originalColorType = FreeImage_GetColorType(state.bitmap);
+
+	uint32 bitdepth = FreeImage_GetBPP(state.bitmap);
+	if (bitdepth != 32)
 	{
 		FIBITMAP *temp = FreeImage_ConvertTo32Bits(state.bitmap);
 
@@ -266,7 +311,20 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 	}
 
 	imageData.size = imageSize;
-	imageData.hasAlpha = true;
+	
+	if (originalColorType != FIC_RGBALPHA)
+	{
+		imageData.hasAlpha = false;
+	}
+	else if (FormatAlphaSupport.count(state.format) > 0)
+	{
+		imageData.hasAlpha = FormatAlphaSupport.at(state.format);
+	}
+	else
+	{
+		imageData.hasAlpha = true;
+	}
+
 	imageData.numFramesTotal = 1;
 
 	bool success = false;
@@ -275,7 +333,19 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 	if (bufferStorage.texture != nullptr && bufferStorage.texture->create(imageSize.x, imageSize.y))
 	{
-// 		bufferStorage.texture->setSrgb(true);
+		if (!imageData.hasAlpha)
+		{
+			BYTE *pixel = bits;
+			for (SizeType y = 0; y < imageSize.y; ++y)
+			{
+				for (SizeType x = 0; x < imageSize.x; ++x)
+				{
+					pixel[FI_RGBA_ALPHA] = 255U;
+					pixel += 4;
+				}
+			}
+		}
+
 		bufferStorage.texture->update(bits, imageSize.x, imageSize.y, 0, 0, sf::Texture::BGRA);
 
 		if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))

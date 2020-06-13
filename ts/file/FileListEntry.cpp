@@ -34,6 +34,11 @@ const String FileListEntry::getFullPath() const
 	return joinPaths(m_rootpath, m_filename);
 }
 
+const String &FileListEntry::getTypestring() const
+{
+	return m_typestring;
+}
+
 FileTime FileListEntry::getLastModified() const
 {
 	return m_lastModified;

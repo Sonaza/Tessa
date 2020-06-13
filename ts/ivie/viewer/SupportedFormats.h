@@ -8,6 +8,7 @@ TS_PACKAGE2(app, viewer)
 struct FormatInfo
 {
 	bool animated;
+	bool supportsAlpha;
 };
 
 class SupportedFormats
@@ -15,7 +16,8 @@ class SupportedFormats
 public:
 	static const std::vector<String> &getSupportedFormatExtensions();
 
-	static bool isFormatAnimated(const String &extension);
+	static bool hasAnimationSupport(const String &extension);
+	static bool hasAlphaSupport(const String &extension);
 
 private:
 	static SupportedFormats instance;

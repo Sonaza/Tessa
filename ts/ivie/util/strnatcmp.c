@@ -30,11 +30,12 @@
  * negative chars in their default char type.
  */
 
+#pragma warning( disable : 4702 ) // unreachable code
+
 #include <stddef.h>	/* size_t */
 #include <ctype.h>
 
 #include "strnatcmp.h"
-
 
 /* These are defined as macros to make it easier to adapt this code to
  * different characters types or comparison functions. */

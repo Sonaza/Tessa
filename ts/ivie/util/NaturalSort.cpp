@@ -3,11 +3,7 @@
 
 #include "ts/file/FileUtils.h"
 
-// #pragma warning( push, 3 )
-// #include "ext/naturalorder.h"
-// #pragma warning( pop )
-
-#if TS_PLATFORM == TS_WINDOWS
+#if TS_PLATFORM == TS_WINDOWS && 0
 	#include <shlwapi.h>
 #else
 	#include "strnatcmp.h"
@@ -17,27 +13,40 @@ TS_PACKAGE2(app, util)
 
 extern bool naturalSort(const String &lhs, const String &rhs)
 {
-#if TS_PLATFORM == TS_WINDOWS
-	return StrCmpLogicalW(lhs.toWideString().c_str(), rhs.toWideString().c_str()) < 0;
+#if 0 && TS_PLATFORM == TS_WINDOWS
+	const std::wstring extl = lhs.toWideString();
+	const std::wstring extr = rhs.toWideString();
+	bool result = StrCmpLogicalW(extl.c_str(), extr.c_str()) < 0;
 #else
-	return strnatcmp(lhs.toUtf32().c_str(), rhs.toUtf32().c_str()) < 0;
+	const std::basic_string<char32_t> tmpl = lhs.toUtf32();
+	const std::basic_string<char32_t> tmpr = rhs.toUtf32();
+	bool result = strnatcmp(tmpl.c_str(), tmpr.c_str()) < 0;
 #endif
+
+// 	result = result || lhs.getSize() < rhs.getSize();
+
+	return result;
 }
 
-// extern bool naturalSort(const String &lhs, const String &rhs)
-// {
-// 	return natural_compare(lhs, rhs) < 0;
-// }
-
-extern bool naturalSortByExtension(const String &lhs, const String &rhs)
+extern bool naturalSortFile(const viewer::ViewerImageFile &lhs, const viewer::ViewerImageFile &rhs)
 {
-	String extl = file::getExtension(lhs);
-	String extr = file::getExtension(rhs);
+	return naturalSort(lhs.filepath, rhs.filepath);
+}
 
-	if (extl != extr)
-		return naturalSort(extl, extr);
+extern bool naturalSortFileByType(const viewer::ViewerImageFile &lhs, const viewer::ViewerImageFile &rhs)
+{
+	if (lhs.type != rhs.type)
+		return naturalSort(lhs.type, rhs.type);
 
-	return naturalSort(lhs, rhs);
+	return naturalSortFile(lhs, rhs);
+}
+
+extern bool naturalSortFileByLastModified(const viewer::ViewerImageFile &lhs, const viewer::ViewerImageFile &rhs)
+{
+	if (lhs.lastModifiedTime != rhs.lastModifiedTime)
+		return lhs.lastModifiedTime < rhs.lastModifiedTime;
+
+	return naturalSortFile(lhs, rhs);
 }
 
 TS_END_PACKAGE2()

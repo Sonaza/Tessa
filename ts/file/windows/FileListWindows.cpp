@@ -6,6 +6,7 @@
 #include "ts/file/FileUtils.h"
 
 #include "ts/lang/common/IncludeWindows.h"
+#include <shellapi.h>
 
 TS_PACKAGE1(file)
 
@@ -217,6 +218,12 @@ bool FileList::next(FileListEntry &entry)
 				findData.nFileSizeLow, findData.nFileSizeHigh);
 
 			entry.m_directory = isDir;
+
+			if ((m_listFlags & FileListFlags_GetTypeStrings) != 0)
+			{
+				entry.m_typestring = getShellFileType(findData.cFileName);
+			}
+
 			return true;
 		}
 

@@ -189,9 +189,15 @@
     <ClCompile Include="image\Image.cpp" />
     <ClCompile Include="image\ImageBackgroundLoaderFreeImage.cpp" />
     <ClCompile Include="image\ImageBackgroundLoaderWebm.cpp" />
+    <ClCompile Include="util\strnatcmp.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="viewer\SupportedFormats.cpp" />
     <ClCompile Include="viewer\ViewerEvent.cpp" />
     <ClCompile Include="viewer\ViewerEventManager.cpp" />
+    <ClCompile Include="viewer\ViewerImageFile.cpp" />
     <ClCompile Include="viewer\ViewerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -214,9 +220,11 @@
     <ClInclude Include="image\Image.h" />
     <ClInclude Include="image\ImageBackgroundLoaderFreeImage.h" />
     <ClInclude Include="image\ImageBackgroundLoaderWebm.h" />
+    <ClInclude Include="util\strnatcmp.h" />
     <ClInclude Include="viewer\SupportedFormats.h" />
     <ClInclude Include="viewer\ViewerEvent.h" />
     <ClInclude Include="viewer\ViewerEventManager.h" />
+    <ClInclude Include="viewer\ViewerImageFile.h" />
     <ClInclude Include="viewer\ViewerManager.h" />
   </ItemGroup>
   <ItemGroup>
