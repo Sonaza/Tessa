@@ -90,7 +90,7 @@ private:
 	std::vector<std::type_index> m_managerInstancingOrder;
 
 	bool m_applicationRunning = true;
-	bool m_showFramesPerSecond = true;
+	bool m_showFramesPerSecond = false;
 	
 	Gigaton &m_gigatonInstance;
 
