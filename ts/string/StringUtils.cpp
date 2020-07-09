@@ -111,4 +111,11 @@ extern String joinString(const std::vector<String> &arr, const String &glue)
 	return result;
 }
 
+extern String truncateString(const String &str, SizeType maxSize, const String &appendStr)
+{
+	if (str.getSize() > maxSize)
+		return str.substring(0, maxSize) + appendStr;
+	return str;
+}
+
 TS_END_PACKAGE1()

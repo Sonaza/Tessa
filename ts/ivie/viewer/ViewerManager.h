@@ -153,7 +153,7 @@ private:
 
 	std::vector<ViewerImageFile> currentFileList;
 
-	SortingStyle sortingStyle = SortingStyle_ByType;
+	SortingStyle sortingStyle = SortingStyle_ByName;
 	bool sortingReversed = false;
 
 	void updateCurrentImage(SizeType previousDirectoryHash, SizeType previousImageIndex);

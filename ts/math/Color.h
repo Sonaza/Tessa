@@ -2,6 +2,8 @@
 
 TS_PACKAGE1(math)
 
+enum class ComponentOrder { RGBA, ARGB, ABGR, BGRA };
+
 template <class T>
 class Color
 {
@@ -18,10 +20,15 @@ public:
 	
 	Color();
 	Color(T r, T g, T b, T a = 1);
-	explicit Color(const uint32 color);
-	explicit Color(const T v[4]);
 
-	uint32 getInteger() const;
+	explicit Color(const uint32 colorValue, const ComponentOrder order = ComponentOrder::RGBA);
+	explicit Color(const T c[4], const ComponentOrder order = ComponentOrder::RGBA);
+
+	uint32 getAsRGBA() const;
+	uint32 getAsARGB() const;
+	uint32 getAsABGR() const;
+	uint32 getAsBGRA() const;
+	uint32 getAsInteger(const ComponentOrder order) const;
 
 	// Vector components
 	union

@@ -409,6 +409,12 @@ String String::substring(BigSizeType position, BigSizeType length) const
 	return m_buffer.substr(position, length);
 }
 
+void String::truncate(BigSizeType maxSize, const String &appendStr)
+{
+	if (m_buffer.size() > maxSize)
+		m_buffer = m_buffer.substr(0, maxSize) + appendStr.toUtf32();
+}
+
 const char32_t *String::getPointer() const
 {
 	return m_buffer.c_str();

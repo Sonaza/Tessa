@@ -82,7 +82,7 @@ protected:
 	CurrentState current;
 
 	void updateEventNotifications(TimeSpan delta);
-	void drawEventNotifications(sf::RenderTarget &target, const engine::window::WindowView &view);
+	void drawEventNotifications(sf::RenderTarget &target, const engine::window::WindowView &view, const math::VC2 &drawOffset);
 	void addEventNotification(String text, math::COL color = math::COL::white);
 
 	struct EventNotification

@@ -179,6 +179,7 @@ public:
 	void replace(const String &searchFor, const String &replaceWith);
 
 	String substring(BigSizeType position, BigSizeType length = InvalidPos) const;
+	void truncate(BigSizeType maxSize, const String &appendStr);
 
 	const char32_t *getPointer() const;
 

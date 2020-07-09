@@ -27,4 +27,6 @@ extern std::vector<String> splitString(const String &str, const String &delimite
 
 extern String joinString(const std::vector<String> &arr, const String &glue);
 
+extern String truncateString(const String &str, SizeType maxSize, const String &appendStr);
+
 TS_END_PACKAGE1()

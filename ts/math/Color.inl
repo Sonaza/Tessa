@@ -15,18 +15,78 @@ TS_FORCEINLINE Color<T>::Color(T r, T g, T b, T a)
 }
 
 template <class T>
-Color<T>::Color(const uint32 color)
-	: r(((color >> 24) & 0xff) / T(255))
-	, g(((color >> 16) & 0xff) / T(255))
-	, b(((color >> 8)  & 0xff) / T(255))
-	, a(((color >> 0)  & 0xff) / T(255))
+Color<T>::Color(const uint32 color, const ComponentOrder order)
 {
+	switch (order)
+	{
+	case ComponentOrder::RGBA:
+		r = ((color >> 24) & 0xff) / T(255);
+		g = ((color >> 16) & 0xff) / T(255);
+		b = ((color >> 8)  & 0xff) / T(255);
+		a = ((color >> 0)  & 0xff) / T(255);
+	break;
+
+	case ComponentOrder::ARGB:
+		a = ((color >> 24) & 0xff) / T(255);
+		r = ((color >> 16) & 0xff) / T(255);
+		b = ((color >> 8)  & 0xff) / T(255);
+		g = ((color >> 0)  & 0xff) / T(255);
+	break;
+
+	case ComponentOrder::ABGR:
+		a = ((color >> 24) & 0xff) / T(255);
+		b = ((color >> 16) & 0xff) / T(255);
+		g = ((color >> 8)  & 0xff) / T(255);
+		r = ((color >> 0)  & 0xff) / T(255);
+	break;
+
+	case ComponentOrder::BGRA:
+		b = ((color >> 24) & 0xff) / T(255);
+		g = ((color >> 16) & 0xff) / T(255);
+		r = ((color >> 8)  & 0xff) / T(255);
+		a = ((color >> 0)  & 0xff) / T(255);
+	break;
+
+	default: TS_ASSERT(!"Unimplemented color component order."); break;
+	}
 }
 
 template <class T>
-Color<T>::Color(const T v[4])
-	: r(v[0]), g(v[1]), b(v[2]), a(v[3])
+Color<T>::Color(const T c[4], const ComponentOrder order)
 {
+	switch (order)
+	{
+	case ComponentOrder::RGBA:
+		r = c[0];
+		g = c[1];
+		b = c[2];
+		a = c[3];
+	break;
+
+	case ComponentOrder::ARGB:
+		a = c[0];
+		r = c[1];
+		g = c[2];
+		b = c[3];
+	break;
+
+	case ComponentOrder::ABGR:
+		a = c[0];
+		b = c[1];
+		g = c[2];
+		r = c[3];
+	break;
+
+	case ComponentOrder::BGRA:
+		b = c[0];
+		g = c[1];
+		r = c[2];
+		a = c[3];
+	break;
+
+	default: TS_ASSERT(!"Unimplemented color component order."); break;
+	}
+
 	TS_ASSERT(r >= 0.f && r <= 1.f);
 	TS_ASSERT(g >= 0.f && g <= 1.f);
 	TS_ASSERT(b >= 0.f && b <= 1.f);
@@ -34,12 +94,66 @@ Color<T>::Color(const T v[4])
 }
 
 template <class T>
-uint32 Color<T>::getInteger() const
+TS_FORCEINLINE uint32 Color<T>::getAsRGBA() const
 {
-	return ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 24)
-	     | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
-	     | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 8)
-	     | ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
+	return getAsInteger(math::ComponentOrder::RGBA);
+}
+
+template <class T>
+TS_FORCEINLINE uint32 Color<T>::getAsARGB() const
+{
+	return getAsInteger(math::ComponentOrder::ARGB);
+}
+
+template <class T>
+TS_FORCEINLINE uint32 Color<T>::getAsABGR() const
+{
+	return getAsInteger(math::ComponentOrder::ABGR);
+}
+
+template <class T>
+TS_FORCEINLINE uint32 Color<T>::getAsBGRA() const
+{
+	return getAsInteger(math::ComponentOrder::BGRA);
+}
+
+template <class T>
+uint32 Color<T>::getAsInteger(const ComponentOrder order) const
+{
+	switch (order)
+	{
+	case ComponentOrder::RGBA:
+		return ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
+	break;
+
+	case ComponentOrder::ARGB:
+		return ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 0);
+	break;
+
+	case ComponentOrder::ABGR:
+		return ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 0);
+	break;
+
+	case ComponentOrder::BGRA:
+		return ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
+	break;
+
+	default: TS_ASSERT(!"Unimplemented color component order."); break;
+	}
+
+	return 0;
 }
 
 // SFML conversions if using the library

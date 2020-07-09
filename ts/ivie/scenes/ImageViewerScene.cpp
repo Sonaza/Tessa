@@ -976,31 +976,56 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 			}
 		}
 
-		if (viewerInfoAlpha.other >= 0.03f)
+// 		if (viewerInfoAlpha.other >= 0.03f)
 		{
 			statusText.setFillColor(math::COL(1.f, 1.f, 1.f, viewerInfoAlpha.index));
 			statusText.setOutlineColor(math::COL(0.f, 0.f, 0.f, viewerInfoAlpha.index));
 
-			const String filename = viewerManager->getCurrentFilepath(false);
+			const String filename = viewerManager->getCurrentFilepath(true);
 			if (!filename.isEmpty())
 			{
-// 				String dirname = file::getDirname(filename);
-				String basename = file::getBasename(filename);
+				{
+					String basename = file::getBasename(filename);
 
-				statusText.setString(basename);
+					statusText.setString(basename);
+					statusText.setOrigin(statusText.getLocalBounds().width, 0.f);
 
-				statusText.setOrigin(statusText.getLocalBounds().width, 0.f);
+					float filenameScale = math::clamp(60.f / (float)basename.getSize(), 0.5f, 1.f) * 0.9f;
+					statusText.setScale(filenameScale, filenameScale);
 
-				float filenameScale = math::clamp(60.f / (float)basename.getSize(), 0.5f, 1.f) * 0.9f;
-				statusText.setScale(filenameScale, filenameScale);
+					statusText.setPosition(
+						view.size.x - 26.f,
+						view.size.y - 30.f * filenameScale - textBottomOffset
+					);
 
-				statusText.setPosition(
-					view.size.x - 16.f,
-					view.size.y - 30.f * filenameScale - textBottomOffset
-				);
+					renderTarget.draw(statusText);
+				}
 
-				renderTarget.draw(statusText);
+				{
+					String dirname = file::getBasename(file::getDirname(filename));
+					dirname.truncate(15, "...");
+
+					statusText.setString(dirname);
+					statusText.setOrigin(statusText.getLocalBounds().width, statusText.getLocalBounds().height);
+
+					float filenameScale = math::clamp(60.f / (float)dirname.getSize(), 0.5f, 1.f) * 0.6f;
+					statusText.setScale(filenameScale, filenameScale);
+
+					statusText.setPosition(
+						view.size.x - 26.f,
+						27.f + 14.f * filenameScale
+					);
+
+					math::COL statusColor(0xfffcc5ff);
+					statusColor.a = viewerInfoAlpha.index;
+					statusText.setFillColor(statusColor);
+
+					renderTarget.draw(statusText);
+				}
 			}
+
+			statusText.setFillColor(math::COL(1.f, 1.f, 1.f, viewerInfoAlpha.other));
+			statusText.setOutlineColor(math::COL(0.f, 0.f, 0.f, viewerInfoAlpha.other));
 
 			if (!hasError)
 			{
@@ -1167,7 +1192,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 		}
 	}
 
-	drawEventNotifications(renderTarget, view);
+	drawEventNotifications(renderTarget, view, math::VC2(0.f, 20.f));
 }
 
 void ImageViewerScene::drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width)
@@ -1228,13 +1253,13 @@ void ImageViewerScene::updateEventNotifications(TimeSpan delta)
 	}
 }
 
-void ImageViewerScene::drawEventNotifications(sf::RenderTarget &target, const engine::window::WindowView &view)
+void ImageViewerScene::drawEventNotifications(sf::RenderTarget &target, const engine::window::WindowView &view, const math::VC2 &drawOffset)
 {
 	sf::Text notificationText;
 	notificationText.setOutlineThickness(2.f);
 	notificationText.setFont(*font->getResource());
 
-	math::VC2 drawPosition(view.size.x - 30.f, 25.f);
+	math::VC2 drawPosition(view.size.x - 30.f + drawOffset.x, 25.f + drawOffset.y);
 	float rowOffset = 32.f;
 
 	for (std::vector<EventNotification>::iterator it = eventNotifications.begin(); it != eventNotifications.end(); ++it)
