@@ -95,6 +95,22 @@ std::vector<String> splitString(const String &str, const String &delimiters)
 	return tokens;
 }
 
+extern bool startsWith(const String &str, const String &needle)
+{
+	if (str.getSize() < needle.getSize())
+		return false;
+
+	return str.substring(0, needle.getSize()) == needle;
+}
+
+extern bool endsWith(const String &str, const String &needle)
+{
+	if (str.getSize() < needle.getSize())
+		return false;
+
+	return str.substring(str.getSize() - needle.getSize()) == needle;
+}
+
 extern String joinString(const std::vector<String> &arr, const String &glue)
 {
 	BigSizeType totalSize = 0;

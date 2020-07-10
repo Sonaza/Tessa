@@ -85,7 +85,7 @@ bool FontResource::loadResourceImpl()
 		{
 			for (uint32 codepoint = range.start; codepoint <= range.end; ++codepoint)
 			{
-				resource->getGlyph(codepoint, 30, false, 0.f);
+				resource->getGlyph(codepoint, 26, false, 0.f);
 			}
 		}
 	}

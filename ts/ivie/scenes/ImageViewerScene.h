@@ -53,18 +53,24 @@ protected:
 
 	float framePadding = 20.f;
 
-	math::FloatDamper temporaryRotation;
-	math::Quat temporaryRotationQuat;
+	enum class DisplayRotation { Top, Right, Bottom, Left };
+	struct DisplayRotationInfo
+	{
+		DisplayRotation rotation;
+		math::FloatDamper visualRotation;
+	} rotationInfo;
+	math::VC2 transformSizeByDisplayRotation(const math::VC2 &vec) const;
 	
 	SteadyTimer elapsedTimer;
 
 	SteadyTimer clickTimer;
 	SteadyTimer changeTimer;
 
+	void updateDefaultScale();
 	bool updateImageInfo();
 
 	void drawLoaderGadget(sf::RenderTarget &renderTarget,
-		const math::VC2 &centerPosition, float width = 12.f);
+		const math::VC2 &centerPosition, float width = 12.f, float size = 5.f);
 
 	resource::ShaderResource *backgroundShader = nullptr;
 	resource::ShaderResource *gaussianShader = nullptr;
@@ -78,6 +84,11 @@ protected:
 		image::ImageData data;
 
 		TimeSpan frameTime;
+
+		// Current dir display things
+		SizeType indexInDirectory = 0;
+		SizeType numImagesInDirectory = 0;
+		String currentDirname;
 	};
 	CurrentState current;
 
@@ -101,8 +112,10 @@ protected:
 
 	SteadyTimer frameTimer;
 
+	void updateViewport(const engine::window::WindowView &view);
 	void enforceOversizeLimits(float scale, bool enforceTarget = true);
 	math::VC2 positionOversizeLimit;
+	math::FloatRect viewport;
 
 	math::VC2 calculateMouseDiff(const engine::window::WindowView &view, 
 		const math::VC2 &mousePos, float currentScale, float targetScale);

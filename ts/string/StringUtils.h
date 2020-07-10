@@ -25,6 +25,9 @@ extern String replaceCharacterCopy(const String &str, Character search, Characte
 extern std::vector<String> splitString(const String &str, Character delimiter);
 extern std::vector<String> splitString(const String &str, const String &delimiters);
 
+extern bool startsWith(const String &str, const String &needle);
+extern bool endsWith(const String &str, const String &needle);
+
 extern String joinString(const std::vector<String> &arr, const String &glue);
 
 extern String truncateString(const String &str, SizeType maxSize, const String &appendStr);

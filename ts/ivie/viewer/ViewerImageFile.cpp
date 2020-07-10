@@ -11,6 +11,8 @@ extern ViewerImageFile getViewerImageFileDataForFile(const String &absolutePath,
 	ViewerImageFile result;
 	result.filepath = relativePath;
 
+	result.directoryHash = math::simpleHash32(file::getDirname(absolutePath));
+
 	result.lastModifiedTime = file::getFileModifiedTime(absolutePath);
 	result.type = file::getShellFileType(absolutePath);
 

@@ -33,6 +33,7 @@ public:
 	void close();
 
 	bool setWindowIcon(const String &filepath);
+	void setWindowTitle(const String &title);
 
 	bool pollEvent(sf::Event &eventParam);
 

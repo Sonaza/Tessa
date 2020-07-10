@@ -521,6 +521,42 @@ SizeType ViewerManager::getNumImages() const
 	return (SizeType)currentFileList.size();
 }
 
+const std::vector<ViewerImageFile> ViewerManager::getImagesInCurrentDirectory() const
+{
+	MutexGuard lock(mutex);
+
+	const String dirname = file::getDirname(file::joinPaths(currentDirectoryPath, current.viewerFile.filepath));
+	const uint32 currentDirectoryHash = math::simpleHash32(dirname);
+
+	std::vector<ViewerImageFile> entries;
+	for (const ViewerImageFile &entry : currentFileList)
+	{
+		if (entry.directoryHash == currentDirectoryHash)
+			entries.push_back(entry);
+	}
+	return entries;
+}
+
+bool ViewerManager::getImageIndexForCurrentDirectory(SizeType &currentIndexOut, SizeType &numImagesOut) const
+{
+	if (current.viewerFile.filepath.isEmpty())
+		return false;
+
+	const std::vector<ViewerImageFile> images = getImagesInCurrentDirectory();
+
+	numImagesOut = (SizeType)images.size();
+	for (SizeType i = 0; i < images.size(); ++i)
+	{
+		if (images[i].filepath == current.viewerFile.filepath)
+		{
+			currentIndexOut = i;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool ViewerManager::isScanningFiles() const
 {
 	return scanningFiles.load();
@@ -693,6 +729,10 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 			{
 				ViewerImageFile file;
 				file.filepath = entry.getFilename();
+
+				String dirpath = file::getDirname(file::joinPaths(directoryPath, entry.getFilename()));
+				file.directoryHash = math::simpleHash32(dirpath);
+
 				file.lastModifiedTime = entry.getLastModified();
 				file.type = entry.getTypestring();
 				templist.push_back(file);

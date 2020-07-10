@@ -422,6 +422,11 @@ bool WindowManager::setWindowIcon(const String &filepath)
 	return true;
 }
 
+void WindowManager::setWindowTitle(const String &title)
+{
+	renderWindow->setTitle(title);
+}
+
 sf::RenderWindow &WindowManager::getRenderWindow()
 {
 	TS_ZONE();

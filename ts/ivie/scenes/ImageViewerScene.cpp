@@ -28,8 +28,8 @@ namespace ts { namespace app { namespace scenes {
 static const math::COL ColorSuccess  (0.3f, 1.0f, 0.1f);
 static const math::COL ColorWarning  (1.0f, 0.9f, 0.1f);
 static const math::COL ColorError    (1.0f, 0.2f, 0.1f);
-static const math::COL ColorInfo     (0.1f, 0.9f, 1.0f);
-static const math::COL ColorInfoLight(0.6f, 0.9f, 1.0f);
+static const math::COL ColorInfo     (0.4f, 0.9f, 1.0f);
+static const math::COL ColorInfoLight(0.7f, 0.95f, 1.0f);
 
 ImageViewerScene::ImageViewerScene(engine::system::BaseApplication *application)
 	: AbstractSceneBase(application)
@@ -44,7 +44,7 @@ bool ImageViewerScene::start()
 {
 	TS_ZONE();
 
-	defaultScale.reset(1.f, 10.f);
+	defaultScale.reset(1.f, 20.f);
 	imageScale.reset(1.f, 20.f);
 	positionOffset.reset(math::VC2::zero, 30.f);
 
@@ -346,20 +346,20 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 		viewerManager->setSorting((viewer::SortingStyle)style, reversed);
 
-		String sortingStyle = "<UNSET>";
-		String sortingOrder = !reversed ? "(asc)" : "(desc)";
+		String sortingStyle = "not set";
+		String sortingOrder = !reversed ? "(ascending)" : "(descending)";
 
 		switch ((viewer::SortingStyle)style)
 
 		{
 			case viewer::SortingStyle_ByName:
-				sortingStyle = "Name";
+				sortingStyle = "name";
 			break;
 			case viewer::SortingStyle_ByType:
-				sortingStyle = "Type";
+				sortingStyle = "type";
 			break;
 			case viewer::SortingStyle_ByLastModified:
-				sortingStyle = "Last Modified";
+				sortingStyle = "last modified";
 			break;
 			default: break;
 		}
@@ -435,7 +435,10 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 				positionOffset.setTarget(math::VC2(0.f, 10000.f));
 				enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 
+				viewerManager->setSorting(viewer::SortingStyle_ByName, false);
+
 				addEventNotification("Manga mode", ColorInfo);
+				addEventNotification("Sorting by name", ColorInfo);
 			}
 			break;
 		}
@@ -473,12 +476,20 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		bool success = viewerManager->deleteCurrentImage();
 		if (success)
 		{
-			addEventNotification("Image deleted", ColorSuccess);
+			addEventNotification("Image deleted", ColorInfo);
 		}
 		else
 		{
 			addEventNotification("Delete failed", ColorError);
 		}
+	}
+
+	if (ctrlDown && shiftDown && input.wasKeyPressed(Keyboard::C))
+	{
+		const String filename = viewerManager->getCurrentFilepath(true);
+		sf::Clipboard::setString(filename.toUtf8().c_str());
+
+		addEventNotification("Image path copied", ColorInfo);
 	}
 	
 	if (current.image != nullptr && current.hasData && !current.hasError)
@@ -517,11 +528,14 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 	if (input.wasKeyPressed(Keyboard::Num1))
 	{
 		addEventNotification("Rotate LEFT");
-		temporaryRotation.setTarget(temporaryRotation.getTarget() -  90.f);
-		temporaryRotationQuat.makeFromAngleAxis(temporaryRotation.getTarget(), math::VC3(0.f, 0.f, 1.f));
+
+		rotationInfo.rotation = DisplayRotation(((int32)rotationInfo.rotation + 3) % 4);
+		rotationInfo.visualRotation.setTarget(rotationInfo.visualRotation.getTarget() - 90.f);
 
 		imageScale.setTarget(1.f);
 		positionOffset.setTarget(math::VC2::zero);
+
+		updateDefaultScale();
 
 		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 	}
@@ -531,10 +545,43 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		imageScale.setTarget(1.f);
 		positionOffset.setTarget(math::VC2::zero);
 
-		temporaryRotation.setTarget(temporaryRotation.getTarget() + 90.f);
-		temporaryRotationQuat.makeFromAngleAxis(temporaryRotation.getTarget(), math::VC3(0.f, 0.f, 1.f));
+		rotationInfo.rotation = DisplayRotation(((int32)rotationInfo.rotation + 1) % 4);
+		rotationInfo.visualRotation.setTarget(rotationInfo.visualRotation.getTarget() + 90.f);
+
+		updateDefaultScale();
 
 		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
+	}
+}
+
+math::VC2 ImageViewerScene::transformSizeByDisplayRotation(const math::VC2 &vec) const
+{
+	switch (rotationInfo.rotation)
+	{
+	case DisplayRotation::Top:
+	case DisplayRotation::Bottom:
+		return math::VC2(vec.x, vec.y);
+
+	case DisplayRotation::Right:
+	case DisplayRotation::Left:
+		return math::VC2(vec.y, vec.x);
+	}
+	return vec;
+}
+
+void ImageViewerScene::updateDefaultScale()
+{
+	if (current.hasData)
+	{
+		math::VC2 imageSize = static_cast<math::VC2>(current.data.size);
+		imageSize = transformSizeByDisplayRotation(imageSize);
+
+		const math::VC2 viewportSize = viewport.getSize();
+		float targetScale = math::min(
+			math::min(1.f, (viewportSize.x - framePadding) / imageSize.x),
+			math::min(1.f, (viewportSize.y - framePadding) / imageSize.y)
+		);
+		defaultScale.setTarget(targetScale);
 	}
 }
 
@@ -548,19 +595,13 @@ bool ImageViewerScene::updateImageInfo()
 	if (current.image->getImageData(imageData))
 	{
 		current.data = std::move(imageData);
-		current.hasData = true;
-
-		const engine::window::WindowView &view = windowManager->getApplicationView();
-
 		TS_ASSERT(current.data.size.x > 0 && current.data.size.y > 0);
 
-		// float previousDefaultScale = defaultScale.getValue();
+		current.hasData = true;
 
-		float targetScale = math::min(
-			math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
-			math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
-		);
-		defaultScale.setTarget(targetScale);
+// 		const engine::window::WindowView &view = windowManager->getApplicationView();
+
+		updateDefaultScale();
 		defaultScale.cutToTarget();
 
 		switch (displayMode)
@@ -583,6 +624,19 @@ bool ImageViewerScene::updateImageInfo()
 		break;
 		}
 
+		String filepath = current.image->getFilepath();
+		String filename = file::getBasename(filepath);
+
+		windowManager->setWindowTitle(TS_WFMT("%s | %s", filename, getApplicationDefaultWindowTitle()));
+
+		current.currentDirname = file::getBasename(file::getDirname(filepath));
+		current.currentDirname.truncate(40, "...");
+		if (!viewerManager->getImageIndexForCurrentDirectory(current.indexInDirectory, current.numImagesInDirectory))
+		{
+			current.indexInDirectory = 0;
+			current.numImagesInDirectory = 0;
+		}
+
 		frameTimer.restart();
 
 		return true;
@@ -599,6 +653,8 @@ bool ImageViewerScene::updateImageInfo()
 		
 		positionOffset.setTarget(math::VC2::zero);
 		positionOffset.cutToTarget();
+
+		windowManager->setWindowTitle(getApplicationDefaultWindowTitle());
 		
 		return true;
 	}
@@ -612,6 +668,7 @@ void ImageViewerScene::update(const TimeSpan deltaTime)
 	const engine::window::WindowView &view = windowManager->getApplicationView();
 
 	framePadding = math::max(20.f, view.size.x * 0.02f);
+	updateViewport(view);
 
 	if (current.image != nullptr && !current.hasError && !current.hasData)
 		updateImageInfo();
@@ -654,9 +711,7 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 {
 	TS_ZONE();
 
-	// const engine::window::WindowView &view = windowManager->getApplicationView();
-
-	temporaryRotation.update(deltaTime);
+	rotationInfo.visualRotation.update(deltaTime);
 
 	defaultScale.update(deltaTime);
 
@@ -681,20 +736,25 @@ void ImageViewerScene::updateFrequent(const TimeSpan deltaTime)
 	enforceOversizeLimits(defaultScale.getValue() * imageScale.getValue(), false);
 }
 
+void ImageViewerScene::updateViewport(const engine::window::WindowView &view)
+{
+	viewport.minbounds = math::VC2(0.f, 50.f);
+	viewport.maxbounds = math::VC2(view.size.x, view.size.y);
+}
+
 void ImageViewerScene::enforceOversizeLimits(float scale, bool enforceTarget)
 {
 	if (!current.hasData)
 		return;
 
-	const engine::window::WindowView &view = windowManager->getApplicationView();
-
 	math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
-	scaledSize = temporaryRotationQuat.getRotated(scaledSize);
+	scaledSize = transformSizeByDisplayRotation(scaledSize);
 
-	math::VC2 oversize = (scaledSize - view.size) / 2.f;
+	math::VC2 viewportSize = viewport.getSize();
+
+	math::VC2 oversize = (scaledSize - viewportSize) * 0.5f;
 	oversize.x = math::max(0.f, oversize.x);
 	oversize.y = math::max(0.f, oversize.y);
-	oversize = temporaryRotationQuat.getRotated(oversize);
 
 	positionOversizeLimit = oversize;
 
@@ -718,18 +778,25 @@ math::VC2 ImageViewerScene::calculateMouseDiff(const engine::window::WindowView 
 	if (!current.hasData)
 		return math::VC2::zero;
 
+	math::VC2 imageSize = static_cast<math::VC2>(current.data.size);
+	imageSize = transformSizeByDisplayRotation(imageSize);
+
 	math::VC2 converted = view.convertToViewCoordinate(mousePos);
-	math::VC2 imageCenter = static_cast<math::VC2>(current.data.size) / 2.f;
+	math::VC2 imageCenter = static_cast<math::VC2>(imageSize) * 0.5f;
+
+	math::VC2 viewportOffset = viewport.getCenter() - (view.size * 0.5f);
 
 	math::Transform currentTransform;
 	currentTransform
-		.translate(positionOffset.getValue())
+		.rotate(rotationInfo.visualRotation.getValue())
+		.translate(positionOffset.getValue() + viewportOffset)
 		.scale(currentScale, currentScale)
 		.translate(-imageCenter);
 
 	math::Transform targetTransform;
 	targetTransform
-		.translate(positionOffset.getValue())
+		.rotate(rotationInfo.visualRotation.getValue())
+		.translate(positionOffset.getValue() + viewportOffset)
 		.scale(targetScale, targetScale)
 		.translate(-imageCenter);
 
@@ -743,14 +810,14 @@ void ImageViewerScene::imageChanged(SharedPointer<image::Image> image)
 {
 	TS_ZONE();
 
+	rotationInfo.rotation = DisplayRotation::Top;
+	rotationInfo.visualRotation.reset(0.f, 30.f);
+
 	current = CurrentState();
 	current.image = image;
 
-	if (current.image != nullptr)
+	if (current.image != nullptr && !current.hasError && !current.hasData)
 		updateImageInfo();
-
-	temporaryRotation.reset(0.f, 50.f);
-	temporaryRotationQuat = math::Quat::identity;
 }
 
 void ImageViewerScene::filelistChanged(SizeType numFiles)
@@ -762,12 +829,8 @@ void ImageViewerScene::filelistChanged(SizeType numFiles)
 void ImageViewerScene::screenResized(const math::VC2U &size)
 {
 	const engine::window::WindowView &view = windowManager->getApplicationView();
-
-	float targetScale = math::min(
-		math::min(1.f, (view.size.x - framePadding) / (float)current.data.size.x),
-		math::min(1.f, (view.size.y - framePadding) / (float)current.data.size.y)
-	);
-	defaultScale.setTarget(targetScale);
+	updateViewport(view);
+	updateDefaultScale();
 }
 
 void ImageViewerScene::filesDropped(const std::vector<engine::window::DroppedFile> &files)
@@ -798,9 +861,9 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 
 	if (current.image != nullptr)
 	{
-		float scale = defaultScale.getValue() * imageScale.getValue();
-
-		math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
+		const float scale = defaultScale.getValue() * imageScale.getValue();
+		const math::VC2 scaledSize = static_cast<math::VC2>(current.data.size) * scale;
+		const math::VC2 viewportOffset = viewport.getCenter() - (view.size * 0.5f);
 
 		bool displayable = current.image->isDisplayable() && current.hasData;
 		if (displayable)
@@ -832,26 +895,21 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 				sf::RenderStates states;
 				states.texture = currentFrame.texture.get();
 
-				math::Transform rotationTransform;
-				rotationTransform.rotate(temporaryRotation.getValue());
+				const math::VC2 offset = positionOffset.getValue() + viewportOffset;
 
 				math::Transform transform;
-				
-				transform.combine(rotationTransform);
-
-				math::VC2 poffset = rotationTransform.transformPoint(positionOffset.getValue());
-
 				transform
-					.translate(scaledSize * -0.5f + poffset)
+					.translate(offset)
+					.rotate(rotationInfo.visualRotation.getValue())
+					.translate(scaledSize * -0.5f)
 					.scale(scale, scale);
-
 
 				states.transform = (sf::Transform)transform;
 
 				image::DisplayShaderParams params;
 				params.viewSize = view.size;
 				params.scale = scale;
-				params.offset = positionOffset.getValue();
+				params.offset = offset;
 				states.shader = current.image->getDisplayShader(&params);
 
 				renderTarget.draw(va, states);
@@ -867,7 +925,7 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 			SharedPointer<sf::Texture> thumbnail = current.image->getThumbnail();
 			if (thumbnail != nullptr)
 			{
-				math::VC2U thumbnailSize = thumbnail->getSize();
+				const math::VC2U thumbnailSize = thumbnail->getSize();
 
 				sf::VertexArray va = util::makeQuadVertexArrayScaled(
 					current.data.size.x, current.data.size.y,
@@ -877,9 +935,12 @@ void ImageViewerScene::renderApplication(sf::RenderTarget &renderTarget, const e
 				sf::RenderStates states;
 				states.texture = thumbnail.get();
 
+				const math::VC2 offset = positionOffset.getValue() + viewportOffset;
 				math::Transform transform;
 				transform
-					.translate(scaledSize / -2.f + positionOffset.getValue())
+					.translate(offset)
+					.rotate(rotationInfo.visualRotation.getValue())
+					.translate(scaledSize * -0.5f)
 					.scale(scale, scale);
 
 				states.transform = (sf::Transform)transform;
@@ -901,23 +962,19 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 	TS_ZONE();
 
 	const SizeType numImages = viewerManager->getNumImages();
-	bool hasError = false;
+	const bool hasImages = numImages > 0;
 
-	if (current.image != nullptr && numImages > 0)
+	const bool hasError = [&]()
 	{
-// 		SharedPointer<sf::Texture> thumbnail = current.image->getThumbnail();
-// 		if (thumbnail != nullptr)
-// 		{
-// 			sf::Sprite asd;
-// 			asd.setTexture(*thumbnail);
-// 			asd.setPosition(view.size.x - 180.f, 30.f);
-// 			asd.setScale(0.5f, 0.5f);
-// 			renderTarget.draw(asd);
-// 		}
+		if (current.image != nullptr && numImages > 0)
+			return current.image->hasError();
 
-		hasError = current.image->hasError();
+		return true;
+	}();
 
-		if (!hasError && !current.image->isDisplayable())
+	if (!hasError)
+	{
+		if (current.image != nullptr && numImages > 0 && !current.image->isDisplayable())
 		{
 			sf::Text loadingText;
 			loadingText.setOutlineThickness(2.f);
@@ -937,12 +994,53 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 	}
 	else
 	{
-		hasError = true;
+		sf::Text errorText("", *font->getResource());
+		errorText.setOutlineThickness(2.f);
+
+		if (hasImages && current.image != nullptr)
+		{
+			const String &errorStr = current.image->getErrorText();
+			errorText.setString(TS_WFMT(
+				"Error: %s", (!errorStr.isEmpty() ? errorStr : "Unknown error (not set).")
+			));
+		}
+		else if (!hasImages)
+		{
+			if (viewerManager->isFirstScanComplete())
+				errorText.setString("Directory has no displayable files.");
+			else
+				errorText.setString("Scanning files...");
+		}
+		else
+		{
+			errorText.setString("Image is null.");
+		}
+
+		sf::FloatRect bounds = errorText.getLocalBounds();
+		errorText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+		errorText.setPosition(view.size / 2.f);
+
+		renderTarget.draw(errorText);
+
+		if (numImages == 0)
+		{
+			errorText.setString(TS_WFMT(
+				"Path: %s",
+				viewerManager->getViewerPath()
+			));
+
+			bounds = errorText.getLocalBounds();
+			errorText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+			errorText.setPosition(view.size.x / 2.f, view.size.y / 2.f + 30.f);
+			errorText.setScale(0.55f, 0.55f);
+
+			renderTarget.draw(errorText);
+		}
 	}
 
 	if (viewerInfoAlpha.index >= 0.003f && numImages > 0)
 	{
-		sf::Text statusText("", *font->getResource());
+		sf::Text statusText("", *font->getResource(), 26);
 		statusText.setOutlineThickness(2.f);
 
 		float bottomOffset = (1.f - viewerInfoAlpha.other) * 60.f;
@@ -951,32 +1049,8 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 		statusText.setFillColor(math::COL(1.f, 1.f, 1.f, viewerInfoAlpha.index));
 		statusText.setOutlineColor(math::COL(0.f, 0.f, 0.f, viewerInfoAlpha.index));
 
-		{
-			statusText.setString(TS_WFMT("%u / %u",
-				viewerManager->getCurrentImageIndex() + 1,
-				viewerManager->getNumImages()
-			));
-
-			statusText.setOrigin(0.f, statusText.getLocalBounds().height);
-
-			statusText.setPosition(
-				16.f,
-				view.size.y - (!hasError ? 60.f : 0.f) - textBottomOffset
-			);
-			statusText.setScale(0.9f, 0.9f);
-
-			renderTarget.draw(statusText);
-
-			if (viewerManager->isScanningFiles() && !viewerManager->isFirstScanComplete())
-			{
-				math::FloatRect bounds = statusText.getGlobalBounds();
-
-				math::VC2 position(bounds.maxbounds.x + 30.f, bounds.getCenter().y - 5.f);
-				drawLoaderGadget(renderTarget, position);
-			}
-		}
-
-// 		if (viewerInfoAlpha.other >= 0.03f)
+		// Draw bottom status info
+		if (viewerInfoAlpha.other >= 0.03f)
 		{
 			statusText.setFillColor(math::COL(1.f, 1.f, 1.f, viewerInfoAlpha.index));
 			statusText.setOutlineColor(math::COL(0.f, 0.f, 0.f, viewerInfoAlpha.index));
@@ -990,35 +1064,13 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 					statusText.setString(basename);
 					statusText.setOrigin(statusText.getLocalBounds().width, 0.f);
 
-					float filenameScale = math::clamp(60.f / (float)basename.getSize(), 0.5f, 1.f) * 0.9f;
+					float filenameScale = math::clamp(50.f / (float)basename.getSize(), 0.75f, 1.f) * 0.8f;
 					statusText.setScale(filenameScale, filenameScale);
 
 					statusText.setPosition(
 						view.size.x - 26.f,
 						view.size.y - 30.f * filenameScale - textBottomOffset
 					);
-
-					renderTarget.draw(statusText);
-				}
-
-				{
-					String dirname = file::getBasename(file::getDirname(filename));
-					dirname.truncate(15, "...");
-
-					statusText.setString(dirname);
-					statusText.setOrigin(statusText.getLocalBounds().width, statusText.getLocalBounds().height);
-
-					float filenameScale = math::clamp(60.f / (float)dirname.getSize(), 0.5f, 1.f) * 0.6f;
-					statusText.setScale(filenameScale, filenameScale);
-
-					statusText.setPosition(
-						view.size.x - 26.f,
-						27.f + 14.f * filenameScale
-					);
-
-					math::COL statusColor(0xfffcc5ff);
-					statusColor.a = viewerInfoAlpha.index;
-					statusText.setFillColor(statusColor);
 
 					renderTarget.draw(statusText);
 				}
@@ -1033,24 +1085,10 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 
 				float scale = defaultScale.getValue() * imageScale.getValue();
 
-				if (math::abs(scale - 1.f) < 0.001f)
-				{
-					statusText.setString(TS_FMT("%.1f%%\n%u x %u",
-						scale * 100.f,
-						current.data.size.x, current.data.size.y
-					));
-				}
-				else
-				{
-					math::VC2U scaledSize = static_cast<math::VC2U>(
-						static_cast<math::VC2>(current.data.size) * scale + math::VC2(0.5f, 0.5f));
-
-					statusText.setString(TS_FMT("%.1f%%\n%u x %u (%u x %u)",
-						scale * 100.f,
-						current.data.size.x, current.data.size.y,
-						scaledSize.x, scaledSize.y
-					));
-				}
+				statusText.setString(TS_FMT("%.1f%%\n%u x %u",
+					scale * 100.f,
+					current.data.size.x, current.data.size.y
+				));
 
 				statusText.setPosition(
 					16.f,
@@ -1113,46 +1151,84 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 		}
 	}
 
-	if (hasError)
+	// TOP BAR
 	{
-		sf::Text errorText("", *font->getResource());
-		errorText.setOutlineThickness(2.f);
-
-		if (current.image != nullptr && numImages > 0)
 		{
-			const String &errorStr = current.image->getErrorText();
-			errorText.setString(TS_WFMT(
-				"Error: %s", (!errorStr.isEmpty() ? errorStr : "error has error.")
-			));
-		}
-		else if (numImages == 0)
-		{
-			errorText.setString("Directory has no displayable files.");
-		}
-		else
-		{
-			errorText.setString("Image is null.");
+			sf::RectangleShape topBar(math::VC2(view.size.x, 50.f));
+			topBar.setFillColor(math::COL(0.f, 0.f, 0.f, 0.5f));
+			topBar.setOutlineColor(math::COL(1.f, 1.f, 1.f, 0.4f));
+			topBar.setOutlineThickness(1.f);
+			topBar.setPosition(math::VC2::zero);
+			renderTarget.draw(topBar);
 		}
 
-		sf::FloatRect bounds = errorText.getLocalBounds();
-		errorText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-		errorText.setPosition(view.size / 2.f);
+		sf::Text statusText("", *font->getResource(), 26);
+		statusText.setOutlineThickness(2.f);
 
-		renderTarget.draw(errorText);
-
-		if (numImages == 0)
+		statusText.setFillColor(math::COL(1.f, 1.f, 1.f, 1.f));
+		statusText.setOutlineColor(math::COL(0.f, 0.f, 0.f, 1.f));
+		
+		// Draw image index
+		if (hasImages)
 		{
-			errorText.setString(TS_WFMT(
-				"Path: %s",
-				viewerManager->getViewerPath()
+			statusText.setString(TS_WFMT("%u / %u",
+				viewerManager->getCurrentImageIndex() + 1,
+				viewerManager->getNumImages()
 			));
 
-			bounds = errorText.getLocalBounds();
-			errorText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-			errorText.setPosition(view.size.x / 2.f, view.size.y / 2.f + 30.f);
-			errorText.setScale(0.55f, 0.55f);
+			statusText.setOrigin(0.f, statusText.getLocalBounds().height * 0.5f);
 
-			renderTarget.draw(errorText);
+			statusText.setPosition(
+				16.f,
+				23.f
+			);
+			statusText.setScale(0.8f, 0.8f);
+
+			renderTarget.draw(statusText);
+
+			if (viewerManager->isScanningFiles() && !viewerManager->isFirstScanComplete())
+			{
+				math::FloatRect bounds = statusText.getGlobalBounds();
+
+				math::VC2 position(bounds.maxbounds.x + 30.f, bounds.getCenter().y - 1.f);
+				drawLoaderGadget(renderTarget, position, 12.f, 4.f);
+			}
+		}
+
+		// Draw current dir name
+		if (hasImages)
+		{
+			const String filename = viewerManager->getCurrentFilepath(true);
+			if (!filename.isEmpty())
+			{
+				if (current.numImagesInDirectory > 0)
+				{
+					statusText.setString(TS_WFMT(
+						"%s (%u / %u)",
+						current.currentDirname, current.indexInDirectory + 1, current.numImagesInDirectory
+					));
+				}
+				else
+				{
+					statusText.setString(current.currentDirname);
+				}
+				statusText.setOrigin(statusText.getLocalBounds().width, statusText.getLocalBounds().height * 0.5f);
+
+// 				float filenameScale = math::clamp(45.f / (float)dirname.getSize(), 0.5f, 1.f) * 0.7f;
+				float filenameScale = 0.7f;
+				statusText.setScale(filenameScale, filenameScale);
+
+				statusText.setPosition(
+					view.size.x - 26.f,
+					23.f
+				);
+
+				math::COL statusColor(0xfffcc5ff);
+// 				statusColor.a = viewerInfoAlpha.index;
+				statusText.setFillColor(statusColor);
+
+				renderTarget.draw(statusText);
+			}
 		}
 	}
 
@@ -1192,24 +1268,55 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 		}
 	}
 
-	drawEventNotifications(renderTarget, view, math::VC2(0.f, 20.f));
+	drawEventNotifications(renderTarget, view, math::VC2(-30.f, 65.f));
 }
 
-void ImageViewerScene::drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width)
+void ImageViewerScene::drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width, float size)
 {
-	sf::CircleShape c(5.f);
+	const float t = elapsedTimer.getElapsedTime().getSecondsAsFloat();
 
-	float t = elapsedTimer.getElapsedTime().getSecondsAsFloat();
+	const float period = 1.5f;
 
 	math::VC2 position = centerPosition;
-	position.x += std::cos(t * 2.f) * width;
-	position.y += -math::abs(std::cos(t * 10.f) * 10.f) * ((std::cos(t * 4.f - math::PI) + 1.f) * 0.5f);
+	position.x += std::cos(t * math::PI / period) * width;
+	position.y += -math::abs(std::cos(t * 10.f) * 10.f) * ((std::cos(t * 2.f * math::PI / period - math::PI) + 1.f) * 0.5f);
 
-	c.setPosition(position);
-	c.setFillColor(math::COL::white);
-	c.setOutlineColor(math::COL::black);
+	const SizeType mode = (int32)std::fmod(t / period, 4.f);
 
-	renderTarget.draw(c);
+	struct { float r, g, b; } mc;
+	switch (mode)
+	{
+		case 0:  mc = { 0.f,  1.f,  1.f }; break; // red
+		case 1:  mc = { 0.f,  0.3f, 1.f }; break; // yellow
+		case 2:  mc = { 0.8f, 0.2f, 1.f }; break; // green
+		case 3:  mc = { 1.f,  0.4f, 0.f }; break; // blue
+		default: mc = { 1.f,  1.f,  1.f }; break;
+	}
+
+#define sawtooth(t, a) ( 2.f * ( ((t) / (a)) - math::floor(0.5f + ((t) / (a))) ) )
+	float modifier = sawtooth(t + period * 0.5f, -period) * 0.5f + 0.5f;
+	float r = 1.f - modifier * mc.r;
+	float g = 1.f - modifier * mc.g;
+	float b = 1.f - modifier * mc.b;
+#undef sawtooth
+
+	sf::CircleShape circle(size);
+	circle.setPosition(position);
+
+	{
+		math::COL c = math::COL(r, g, b, (modifier - 0.1f) * 0.8f);
+		circle.setOutlineColor(c);
+		circle.setOutlineThickness(10.f - modifier * 8.f);
+		renderTarget.draw(circle);
+	}
+
+	{
+		math::COL c = math::COL(r, g, b);
+		circle.setOutlineColor(c);
+		circle.setFillColor(c * 0.45f);
+		circle.setOutlineThickness(2.f);
+		renderTarget.draw(circle);
+	}
 }
 
 void ImageViewerScene::updateEventNotifications(TimeSpan delta)
@@ -1258,8 +1365,9 @@ void ImageViewerScene::drawEventNotifications(sf::RenderTarget &target, const en
 	sf::Text notificationText;
 	notificationText.setOutlineThickness(2.f);
 	notificationText.setFont(*font->getResource());
+	notificationText.setCharacterSize(24);
 
-	math::VC2 drawPosition(view.size.x - 30.f + drawOffset.x, 25.f + drawOffset.y);
+	math::VC2 drawPosition(view.size.x + drawOffset.x, drawOffset.y);
 	float rowOffset = 32.f;
 
 	for (std::vector<EventNotification>::iterator it = eventNotifications.begin(); it != eventNotifications.end(); ++it)

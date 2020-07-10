@@ -21,6 +21,13 @@ struct ImageEntry
 		Buffering_Backwards,
 	};
 	BufferingDirection buffering;
+
+	ImageEntry(const String &filepath, SizeType index, BufferingDirection buffering)
+		: filepath(filepath)
+		, index(index)
+		, buffering(buffering)
+	{
+	}
 };
 
 enum SortingStyle : uint16
@@ -71,6 +78,9 @@ public:
 
 	SizeType getCurrentImageIndex() const;
 	SizeType getNumImages() const;
+
+	const std::vector<ViewerImageFile> getImagesInCurrentDirectory() const;
+	bool getImageIndexForCurrentDirectory(SizeType &currentIndexOut, SizeType &numImagesOut) const;
 
 	bool isScanningFiles() const;
 	bool isFirstScanComplete() const;
