@@ -397,22 +397,16 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 	if (input.wasKeyPressed(Keyboard::G))
 	{
 #if TS_PLATFORM == TS_WINDOWS
-
 		windows::openExplorerToFile(viewerManager->getCurrentFilepath());
-
 #elif TS_PLATFORM == TS_LINUX
-
 		linux::openExplorerToFile(viewerManager->getCurrentFilepath());
-
 #endif
 	}
 
 	if (input.wasKeyPressed(Keyboard::D))
 	{
 #if TS_PLATFORM == TS_WINDOWS
-
 		windows::openFileWithDialog(viewerManager->getCurrentFilepath());
-
 #endif
 	}
 
@@ -431,14 +425,21 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 			case Manga:
 			{
-				imageScale.setTarget(1.f / defaultScale.getValue());
-				positionOffset.setTarget(math::VC2(0.f, 10000.f));
+				float scaleToFit = 1.f;
+				if (current.hasData)
+					scaleToFit = (viewport.getSize().x / (float)current.data.size.x) * 0.9f;
+
+				float scale = math::min(1.f, scaleToFit) / defaultScale.getValue();
+
+				imageScale.setTarget(scale);
+				positionOffset.setTarget(math::VC2(0.f, current.data.size.y * 2.f));
 				enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 
+				viewerInfoMode = ViewerInfo_HideAll;
 				viewerManager->setSorting(viewer::SortingStyle_ByName, false);
 
 				addEventNotification("Manga mode", ColorInfo);
-				addEventNotification("Sorting by name", ColorInfo);
+
 			}
 			break;
 		}
@@ -461,14 +462,7 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 	if (input.wasKeyPressed(Keyboard::H))
 	{
-		if (!shiftDown)
-		{
-			viewerInfoMode = viewerInfoMode == ViewerInfo_DisplayAll ? ViewerInfo_HideAll : ViewerInfo_DisplayAll;
-		}
-		else
-		{
-			viewerInfoMode = viewerInfoMode != ViewerInfo_IndexOnly ? ViewerInfo_IndexOnly : ViewerInfo_DisplayAll;
-		}
+		viewerInfoMode = viewerInfoMode == ViewerInfo_DisplayAll ? ViewerInfo_HideAll : ViewerInfo_DisplayAll;
 	}
 
 	if (input.wasKeyPressed(Keyboard::Delete) && shiftDown)
@@ -487,8 +481,7 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 	if (ctrlDown && shiftDown && input.wasKeyPressed(Keyboard::C))
 	{
 		const String filename = viewerManager->getCurrentFilepath(true);
-		sf::Clipboard::setString(filename.toUtf8().c_str());
-
+		sf::Clipboard::setString(filename);
 		addEventNotification("Image path copied", ColorInfo);
 	}
 	
@@ -525,10 +518,8 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		}
 	}
 
-	if (input.wasKeyPressed(Keyboard::Num1))
+	if (input.wasKeyPressed(Keyboard::Z))
 	{
-		addEventNotification("Rotate LEFT");
-
 		rotationInfo.rotation = DisplayRotation(((int32)rotationInfo.rotation + 3) % 4);
 		rotationInfo.visualRotation.setTarget(rotationInfo.visualRotation.getTarget() - 90.f);
 
@@ -536,20 +527,17 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		positionOffset.setTarget(math::VC2::zero);
 
 		updateDefaultScale();
-
 		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 	}
-	else if(input.wasKeyPressed(Keyboard::Num2))
+	else if(input.wasKeyPressed(Keyboard::X))
 	{
-		addEventNotification("Rotate RIGHT");
-		imageScale.setTarget(1.f);
-		positionOffset.setTarget(math::VC2::zero);
-
 		rotationInfo.rotation = DisplayRotation(((int32)rotationInfo.rotation + 1) % 4);
 		rotationInfo.visualRotation.setTarget(rotationInfo.visualRotation.getTarget() + 90.f);
 
-		updateDefaultScale();
+		imageScale.setTarget(1.f);
+		positionOffset.setTarget(math::VC2::zero);
 
+		updateDefaultScale();
 		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 	}
 }
@@ -1154,7 +1142,7 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 	// TOP BAR
 	{
 		{
-			sf::RectangleShape topBar(math::VC2(view.size.x, 50.f));
+			sf::RectangleShape topBar(math::VC2(view.size.x, 49.f));
 			topBar.setFillColor(math::COL(0.f, 0.f, 0.f, 0.5f));
 			topBar.setOutlineColor(math::COL(1.f, 1.f, 1.f, 0.4f));
 			topBar.setOutlineThickness(1.f);

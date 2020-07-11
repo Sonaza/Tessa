@@ -458,12 +458,12 @@ void ViewerManager::jumpToImageByDirectory(const String &filename)
 		jumpToImage(0);
 }
 
-void ViewerManager::nextImage()
+void ViewerManager::changeToNextImage()
 {
 	changeImage(1);
 }
 
-void ViewerManager::previousImage()
+void ViewerManager::changeToPreviousImage()
 {
 	changeImage(-1);
 }
@@ -935,8 +935,6 @@ String ViewerManager::getStats()
 SharedPointer<image::Image> ViewerManager::getCurrentImage() const
 {
 	TS_ZONE();
-
-	MutexGuard lock(mutex);
 	return currentImage;
 }
 
@@ -1030,10 +1028,7 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 
 		bool isCurrentImage = (entry.index == current.imageIndex);
 		if (isCurrentImage)
-		{
-			// currentImageHash = imageHash;
 			currentImage = image;
-		}
 
 		if (image->hasError())
 			continue;

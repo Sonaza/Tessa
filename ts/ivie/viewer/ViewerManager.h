@@ -69,8 +69,8 @@ public:
 	void jumpToImage(SizeType index);
 	void jumpToImageByFilename(const String &filename);
 	void jumpToImageByDirectory(const String &directory);
-	void nextImage();
-	void previousImage();
+	void changeToNextImage();
+	void changeToPreviousImage();
 	void changeImage(int32 direction);
 
 	bool deleteCurrentImage();
