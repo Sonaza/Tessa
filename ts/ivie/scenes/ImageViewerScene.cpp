@@ -615,7 +615,7 @@ bool ImageViewerScene::updateImageInfo()
 		String filepath = current.image->getFilepath();
 		String filename = file::getBasename(filepath);
 
-		windowManager->setWindowTitle(TS_WFMT("%s | %s", filename, getApplicationDefaultWindowTitle()));
+		windowManager->setWindowTitle(TS_WFMT("%s  |  %s", filename, getApplicationDefaultWindowTitle()));
 
 		current.currentDirname = file::getBasename(file::getDirname(filepath));
 		current.currentDirname.truncate(40, "...");

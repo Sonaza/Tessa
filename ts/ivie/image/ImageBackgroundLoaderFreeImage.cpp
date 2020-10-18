@@ -348,10 +348,9 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 		bufferStorage.texture->update(bits, imageSize.x, imageSize.y, 0, 0, sf::Texture::BGRA);
 
-		if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-			bufferStorage.texture->generateMipmap();
+		bufferStorage.texture->generateMipmap();
 
-// 		bufferStorage.texture->setSmooth(true);
+		bufferStorage.texture->setRepeated(false);
 
 		loaderIsComplete = true;
 
