@@ -34,8 +34,8 @@ public:
 	void setFramerateLimit(SizeType framerateLimit);
 	SizeType getCurrentFramerate() const;
 
-	template<class SceneType>
-	bool loadScene();
+	template<class SceneType, class... Args>
+	bool loadScene(Args&&... args);
 
 	template<class ManagerType>
 	ManagerType &getManager();
@@ -109,8 +109,8 @@ private:
 	resource::FontResource *m_debugFont = nullptr;
 };
 
-template<class SceneType>
-bool BaseApplication::loadScene()
+template<class SceneType, class... Args>
+bool BaseApplication::loadScene(Args&&... args)
 {
 	static_assert(std::is_base_of<AbstractSceneBase, SceneType>::value, "Registered scene must inherit from SceneBase");
 
@@ -121,7 +121,7 @@ bool BaseApplication::loadScene()
 		return false;
 	}
 
-	m_pendingScene.reset(new SceneType(this));
+	m_pendingScene.reset(new SceneType(this, std::forward<Args>(args)...));
 	if (m_pendingScene == nullptr)
 		return false;
 

@@ -18,7 +18,13 @@ class ImageViewerScene : public engine::system::AbstractSceneBase
 	TS_DECLARE_SCENE(ImageViewerScene);
 
 public:
-	ImageViewerScene(engine::system::BaseApplication *application);
+	enum DisplayMode
+	{
+		Normal,
+		Manga,
+	};
+
+	ImageViewerScene(engine::system::BaseApplication *application, DisplayMode defaultDisplayMode);
 	virtual ~ImageViewerScene();
 
 	virtual bool start() override;
@@ -35,6 +41,8 @@ public:
 
 	virtual void renderApplication(sf::RenderTarget &renderTarget, const engine::window::WindowView &view) override;
 	virtual void renderInterface(sf::RenderTarget &renderTarget, const engine::window::WindowView &view) override;
+
+	void setDisplayMode(const DisplayMode mode);
 
 protected:
 	void imageChanged(SharedPointer<image::Image> image);
@@ -120,12 +128,8 @@ protected:
 	math::VC2 calculateMouseDiff(const engine::window::WindowView &view, 
 		const math::VC2 &mousePos, float currentScale, float targetScale);
 
-	enum DisplayMode
-	{
-		Normal,
-		Manga,
-	};
 	DisplayMode displayMode = Normal;
+	DisplayMode pendingDisplayMode = Normal;
 
 	float dragged = 0.f;
 	bool deleteWasReleased = true;

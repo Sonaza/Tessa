@@ -76,6 +76,9 @@
     <ClCompile Include="viewer\ViewerImageFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="viewer\ViewerFileManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -130,6 +133,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="viewer\ViewerImageFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="viewer\ViewerFileManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

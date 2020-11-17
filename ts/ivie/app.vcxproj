@@ -197,6 +197,7 @@
     <ClCompile Include="viewer\SupportedFormats.cpp" />
     <ClCompile Include="viewer\ViewerEvent.cpp" />
     <ClCompile Include="viewer\ViewerEventManager.cpp" />
+    <ClCompile Include="viewer\ViewerFileManager.cpp" />
     <ClCompile Include="viewer\ViewerImageFile.cpp" />
     <ClCompile Include="viewer\ViewerManager.cpp" />
   </ItemGroup>
@@ -224,6 +225,7 @@
     <ClInclude Include="viewer\SupportedFormats.h" />
     <ClInclude Include="viewer\ViewerEvent.h" />
     <ClInclude Include="viewer\ViewerEventManager.h" />
+    <ClInclude Include="viewer\ViewerFileManager.h" />
     <ClInclude Include="viewer\ViewerImageFile.h" />
     <ClInclude Include="viewer\ViewerManager.h" />
   </ItemGroup>

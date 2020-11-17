@@ -31,8 +31,9 @@ static const math::COL ColorError    (1.0f, 0.2f, 0.1f);
 static const math::COL ColorInfo     (0.4f, 0.9f, 1.0f);
 static const math::COL ColorInfoLight(0.7f, 0.95f, 1.0f);
 
-ImageViewerScene::ImageViewerScene(engine::system::BaseApplication *application)
+ImageViewerScene::ImageViewerScene(engine::system::BaseApplication *application, DisplayMode defaultDisplayMode)
 	: AbstractSceneBase(application)
+	, pendingDisplayMode(defaultDisplayMode)
 {
 }
 
@@ -101,8 +102,6 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 // 		{
 // 			switch (event.key.code)
 // 			{
-// 				
-// 
 // 				default: /* bop */ break;
 // 			}
 // 		}
@@ -412,37 +411,7 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 
 	if (input.wasKeyPressed(Keyboard::M))
 	{
-		displayMode = displayMode == Normal ? Manga : Normal;
-		switch (displayMode)
-		{
-			case Normal:
-			{
-				imageScale.setTarget(1.f);
-
-				addEventNotification("Normal mode", ColorInfo);
-			}
-			break;
-
-			case Manga:
-			{
-				float scaleToFit = 1.f;
-				if (current.hasData)
-					scaleToFit = (viewport.getSize().x / (float)current.data.size.x) * 0.9f;
-
-				float scale = math::min(1.f, scaleToFit) / defaultScale.getValue();
-
-				imageScale.setTarget(scale);
-				positionOffset.setTarget(math::VC2(0.f, current.data.size.y * 2.f));
-				enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
-
-				viewerInfoMode = ViewerInfo_HideAll;
-				viewerManager->setSorting(viewer::SortingStyle_ByName, false);
-
-				addEventNotification("Manga mode", ColorInfo);
-
-			}
-			break;
-		}
+		setDisplayMode(displayMode == Normal ? Manga : Normal);
 	}
 
 	if (input.wasKeyPressed(Keyboard::R))
@@ -591,6 +560,11 @@ bool ImageViewerScene::updateImageInfo()
 
 		updateDefaultScale();
 		defaultScale.cutToTarget();
+
+		if (displayMode != pendingDisplayMode)
+		{
+			setDisplayMode(pendingDisplayMode);
+		}
 
 		switch (displayMode)
 		{
@@ -1257,6 +1231,45 @@ void ImageViewerScene::renderInterface(sf::RenderTarget &renderTarget, const eng
 	}
 
 	drawEventNotifications(renderTarget, view, math::VC2(-30.f, 65.f));
+}
+
+void ImageViewerScene::setDisplayMode(const DisplayMode modeParam)
+{
+	if (displayMode == modeParam)
+		return;
+
+	pendingDisplayMode = displayMode = modeParam;
+
+	switch (modeParam)
+	{
+	case Normal:
+	{
+		imageScale.setTarget(1.f);
+		addEventNotification("Normal mode", ColorInfo);
+	}
+	break;
+
+	case Manga:
+	{
+		float scaleToFit = 1.f;
+		if (current.hasData)
+			scaleToFit = (viewport.getSize().x / (float)current.data.size.x) * 0.9f;
+
+		float scale = math::min(1.f, scaleToFit) / defaultScale.getValue();
+
+		imageScale.setTarget(scale);
+		positionOffset.setTarget(math::VC2(0.f, current.data.size.y * 2.f));
+		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
+
+		viewerInfoMode = ViewerInfo_HideAll;
+		viewerManager->setSorting(viewer::SortingStyle_ByName, false);
+
+		addEventNotification("Manga mode", ColorInfo);
+	}
+	break;
+
+	default: TS_ASSERT(!"Displaymode not supported"); break;
+	}
 }
 
 void ImageViewerScene::drawLoaderGadget(sf::RenderTarget &renderTarget, const math::VC2 &centerPosition, float width, float size)

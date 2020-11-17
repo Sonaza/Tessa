@@ -84,7 +84,29 @@ void Application::initializeConfigDefaults(engine::system::ConfigReader &config)
 
 bool Application::initializeScene()
 {
-	return loadScene<scenes::ImageViewerScene>();
+	scenes::ImageViewerScene::DisplayMode displayMode = scenes::ImageViewerScene::DisplayMode::Normal;
+	String modeFlag;
+	if (getCommando().getFlagParameter("mode", modeFlag))
+	{
+		if (modeFlag == "normal" || modeFlag == "1")
+		{
+			displayMode = scenes::ImageViewerScene::DisplayMode::Normal;
+		}
+		else if (modeFlag == "manga" || modeFlag == "2")
+		{
+			displayMode = scenes::ImageViewerScene::DisplayMode::Manga;
+		}
+	}
+	else if (getCommando().hasFlag("normal-mode"))
+	{
+		displayMode = scenes::ImageViewerScene::DisplayMode::Normal;
+	}
+	else if (getCommando().hasFlag("manga-mode"))
+	{
+		displayMode = scenes::ImageViewerScene::DisplayMode::Manga;
+	}
+
+	return loadScene<scenes::ImageViewerScene>(displayMode);
 }
 
 bool Application::createWindow(engine::window::WindowManager &windowManager)
