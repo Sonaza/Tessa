@@ -50,6 +50,9 @@ public:
 
 	sf::Font &getDebugFont();
 
+	bool requestQuit();
+	void forceQuit();
+
 protected:
 	// Methods for derived Application to implement
 	virtual bool start() = 0;
@@ -63,6 +66,7 @@ protected:
 	virtual bool createWindow(window::WindowManager &windowManager) = 0;
 	virtual bool loadArchives(resource::archivist::ArchivistFilesystem &fileSystem) = 0;
 
+	// Return false to disallow quitting.
 	virtual bool customQuitHandler() = 0;
 
 	// For System and Application manager instantiation
@@ -71,7 +75,7 @@ protected:
 
 
 private:
-	bool quit();
+	bool quitImpl(bool force = false);
 	void fastExit();
 
 	bool initialize();

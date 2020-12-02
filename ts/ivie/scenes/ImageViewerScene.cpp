@@ -509,6 +509,11 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		updateDefaultScale();
 		enforceOversizeLimits(defaultScale.getValue() * imageScale.getTarget());
 	}
+
+	if (input.wasKeyPressed(Keyboard::Q))
+	{
+		application->requestQuit();
+	}
 }
 
 math::VC2 ImageViewerScene::transformSizeByDisplayRotation(const math::VC2 &vec) const

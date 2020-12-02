@@ -103,9 +103,10 @@ int32 BaseApplication::launch()
 	return 0;
 }
 
-bool BaseApplication::quit()
+bool BaseApplication::quitImpl(bool force)
 {
-	if (customQuitHandler())
+	bool quitHandlerResult = customQuitHandler();
+	if (force == false && quitHandlerResult == false) // Ignores quit handler if forced
 		return false;
 
 #if TS_BUILD != TS_DEBUG
@@ -208,6 +209,16 @@ const ConfigReader &BaseApplication::getConfig() const
 sf::Font &BaseApplication::getDebugFont()
 {
 	return *m_debugFont->getResource();
+}
+
+bool BaseApplication::requestQuit()
+{
+	return quitImpl();
+}
+
+void BaseApplication::forceQuit()
+{
+	quitImpl(true);
 }
 
 bool BaseApplication::createSystemManagers()
@@ -378,7 +389,7 @@ void BaseApplication::handleEvents()
 		{
 			case sf::Event::Closed:
 			{
-				if (quit())
+				if (quitImpl())
 					return;
 			}
 			break;
@@ -389,7 +400,7 @@ void BaseApplication::handleEvents()
 				{
 					case sf::Keyboard::Escape:
 					{
-						if (quit())
+						if (quitImpl())
 							return;
 					}
 					break;

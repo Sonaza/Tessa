@@ -161,7 +161,7 @@ bool Application::loadArchives(resource::archivist::ArchivistFilesystem &fileSys
 
 bool Application::customQuitHandler()
 {
-	return false;
+	return true;
 }
 
 TS_END_PACKAGE1()
