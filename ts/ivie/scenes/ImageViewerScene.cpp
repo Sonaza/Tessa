@@ -349,7 +349,6 @@ void ImageViewerScene::handleInput(const input::InputManager &input)
 		String sortingOrder = !reversed ? "(ascending)" : "(descending)";
 
 		switch ((viewer::SortingStyle)style)
-
 		{
 			case viewer::SortingStyle_ByName:
 				sortingStyle = "name";

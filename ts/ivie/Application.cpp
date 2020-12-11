@@ -75,7 +75,7 @@ void Application::initializeConfigDefaults(engine::system::ConfigReader &config)
 	config.setString("General.LogFile", "output.log");
 
 	config.setBoolean("Display.Fullscreen", false);
-	config.setBoolean("Display.Maximized", false);
+	config.setBoolean("Display.Maximized", true);
 	config.setBoolean("Display.VSync", false);
 
 	config.setUint32("Display.ScreenWidth", APP_DEFAULT_SCREEN_WIDTH);
@@ -116,7 +116,7 @@ bool Application::createWindow(engine::window::WindowManager &windowManager)
 	bool automaticResolution = true;
 
 	bool fullscreen = config.getBoolean("Display.Fullscreen", false);
-	bool maximized = config.getBoolean("Display.Maximized", false);
+	bool maximized = config.getBoolean("Display.Maximized", true);
 	bool vsyncEnabled = config.getBoolean("Display.VSync", false);
 
 	math::VC2U windowSize(APP_DEFAULT_SCREEN_WIDTH, APP_DEFAULT_SCREEN_HEIGHT);
