@@ -103,10 +103,15 @@ typedef Color<float>    COL;
 
 #if TS_COMPILER != TS_MSC
 
-template<> const Color<float> Color<float>::zero;
-template<> const Color<float> Color<float>::up;
-template<> const Color<float> Color<float>::forward;
-template<> const Color<float> Color<float>::right;
+template<> const Color<float> Color<float>::black;
+template<> const Color<float> Color<float>::white;
+template<> const Color<float> Color<float>::red;
+template<> const Color<float> Color<float>::green;
+template<> const Color<float> Color<float>::blue;
+template<> const Color<float> Color<float>::yellow;
+template<> const Color<float> Color<float>::cyan;
+template<> const Color<float> Color<float>::magenta;
+template<> const Color<float> Color<float>::transparent;
 
 #endif
 
