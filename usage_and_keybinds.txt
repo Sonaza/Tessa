@@ -45,8 +45,7 @@ M : Toggles "Manga" mode
 	
 R : Toggles recursive scanning, when enabled all subdirectories under current path will also be scanned for images.
 
-H 		: Toggles viewer info on screen.
-Shift-H	: Toggles viewer info on screen but leaves file number visible.
+H : Toggles viewer info on bottom of the screen.
 
 G : Opens Windows Explorer to current file.
 D : Opens Windows "Open With" dialog.
