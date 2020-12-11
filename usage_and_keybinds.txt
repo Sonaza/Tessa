@@ -8,23 +8,23 @@ Ivie has a handful of arguments that are usable to set the initial state. Argume
 Ivie.exe [-r] [-mode=<n>] file_or_folder_path
 
  -r (alternatively --recursive)
-	Enables recursive scanning mode 
+    Enables recursive scanning mode 
  
  -mode=<n> where <n> is 1 or 'normal' for normal mode (default) or 2 or 'manga' for manga mode (alternatively --normal-mode or --manga-mode)
- 	Sets the display mode between normal and manga.
+    Sets the display mode between normal and manga.
 
  file_or_folder_path
- 	The target file or folder. If a folder path is given it is scanned and the first supported image file based on the sorting mode is displayed.
+    The target file or folder. If a folder path is given it is scanned and the first supported image file based on the sorting mode is displayed.
 
 
    Ivie Keybinds
 -------------------------------
 
-Left mouse drag  	: Move image
-Left mouse click 	: Scale to 100%
-Right mouse click 	: Scale to fit
-Mouse wheel scroll	: Scale image
-Mouse wheel press and drag : Scale image (moving up/right scales up and vice versa)
+Left mouse drag           : Move image
+Left mouse click          : Scale to 100%
+Right mouse click         : Scale to fit
+Mouse wheel scroll        : Scale image
+Mouse wheel hold and drag : Scale image smoothly (moving mouse up/right scales up and vice versa)
 
 Left arrow  : Previous Image
 Right arrow : Next Image
@@ -32,20 +32,20 @@ Right arrow : Next Image
 Mouse button 4 (back button)    : Previous Image (hold ctrl to go back 10 images)
 Mouse button 5 (forward button) : Next Image (hold ctrl to go forward 10 images)
 
-Page Up 	: Go back 10 images
-Page Down 	: Go forward 10 images
+Page Up     : Go back 10 images
+Page Down   : Go forward 10 images
 
 Numpad Plus  : Zoom in.
 Numpad Minus : Zoom out.
 
 M : Toggles "Manga" mode
-	image is scaled to 100%, mouse wheel scrolling moves image vertically
-	instead of scaling and changing current image returns position to top.
-	Image can still be scaled by holding down mouse wheel and dragging.
-	
+    image is scaled to 100%, mouse wheel scrolling moves image vertically
+    instead of scaling and changing current image returns position to top.
+    Image can still be scaled by holding down mouse wheel and dragging.
+    
 R : Toggles recursive scanning, when enabled all subdirectories under current path will also be scanned for images.
 
-H : Toggles viewer info on bottom of the screen.
+H : Toggles viewer info at the bottom of the screen.
 
 G : Opens Windows Explorer to current file.
 D : Opens Windows "Open With" dialog.
