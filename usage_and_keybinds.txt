@@ -1,0 +1,90 @@
+
+
+   Ivie Usage
+-------------------------------
+
+Ivie has a handful of arguments that are usable to set the initial state. Arguments in square brackets are optional.
+
+Ivie.exe [-r][-mode=<n>] file_or_folder_path
+
+ -r (alternatively --recursive)
+	Enables recursive scanning mode 
+ 
+ -mode=<n> where <n> is 1 or 'normal' for normal mode (default) or 2 or 'manga' for manga mode (alternatively --normal-mode or --manga-mode)
+ 	Sets the display mode between normal and manga.
+
+ file_or_folder_path
+ 	The target file or folder. If a folder path is given it is scanned and the first supported image file based on the sorting mode is displayed.
+
+
+   Ivie Keybinds
+-------------------------------
+
+Left mouse drag  	: Move image
+Left mouse click 	: Scale to 100%
+Right mouse click 	: Scale to fit
+Mouse wheel scroll	: Scale image
+Mouse wheel press and drag : Scale image (moving up/right scales up and vice versa)
+
+Left arrow  : Previous Image
+Right arrow : Next Image
+
+Mouse button 4 (back button)    : Previous Image (hold ctrl to go back 10 images)
+Mouse button 5 (forward button) : Next Image (hold ctrl to go forward 10 images)
+
+Page Up 	: Go back 10 images
+Page Down 	: Go forward 10 images
+
+Numpad Plus  : Zoom in.
+Numpad Minus : Zoom out.
+
+M : Toggles "Manga" mode
+	image is scaled to 100%, mouse wheel scrolling moves image vertically
+	instead of scaling and changing current image returns position to top.
+	Image can still be scaled by holding down mouse wheel and dragging.
+	
+R : Toggles recursive scanning, when enabled all subdirectories under current path will also be scanned for images.
+
+H 		: Toggles viewer info on screen.
+Shift-H	: Toggles viewer info on screen but leaves file number visible.
+
+G : Opens Windows Explorer to current file.
+D : Opens Windows "Open With" dialog.
+
+S : Cycles through sorting options (sort by name, sort by type, sort by last modified) and ascending/descending
+Shift-S : Cycle sorting options in the other direction
+
+Q : Quits
+
+Shift-Delete: Deletes the current file WITHOUT ADDITIONAL PROMPTS.
+
+Ctrl-Shift-C: Copies current file path.
+
+Drag and Drop file on window : Opens the image file or first valid image of the directory that was dropped.
+                               Always changes working directory even if it doesn't have any viewable files.
+
+-- Probably broken or not advised to be used
+
+, (comma)  : Rotates image counter clockwise and OVERWRITES THE FILE WITH THE NEW ROTATION.
+. (period) : Rotates image clockwise and OVERWRITES THE FILE WITH THE NEW ROTATION.
+
+-- Debug binds
+
+P  : Toggles image filtering between linear and nearest (linear: smooth, nearest: blocky/pixelated)
+
+Z  : Rotates image counter clockwise.
+X  : Rotates image clockwise.
+
+F1 : Shows viewer manager status.
+F2 : Shows thread scheduler status.
+
+F5 : Reloads current image and its display shader.
+F6 : Reloads background shader.
+
+F9 : Toggle FPS value visibility.
+
+-- Debug stuff that might be disabled
+
+F10 : Pause/resume zone profiler.
+F11 : Write zone profiler data to profile.xml.
+Numpad Asterisk : Show zone profiler visualizer.
