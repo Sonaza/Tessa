@@ -5,7 +5,7 @@
 
 Ivie has a handful of arguments that are usable to set the initial state. Arguments in square brackets are optional.
 
-Ivie.exe [-r][-mode=<n>] file_or_folder_path
+Ivie.exe [-r] [-mode=<n>] file_or_folder_path
 
  -r (alternatively --recursive)
 	Enables recursive scanning mode 
@@ -63,10 +63,12 @@ Ctrl-Shift-C: Copies current file path.
 Drag and Drop file on window : Opens the image file or first valid image of the directory that was dropped.
                                Always changes working directory even if it doesn't have any viewable files.
 
+
 -- Probably broken or not advised to be used
 
 , (comma)  : Rotates image counter clockwise and OVERWRITES THE FILE WITH THE NEW ROTATION.
 . (period) : Rotates image clockwise and OVERWRITES THE FILE WITH THE NEW ROTATION.
+
 
 -- Debug binds
 
