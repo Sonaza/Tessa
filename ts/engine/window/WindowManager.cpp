@@ -101,6 +101,8 @@ void WindowManager::create(const math::VC2U &videomode, const String &windowTitl
 		style |= sf::Style::Resize;
 	}
 
+	currentFullscreenMode = fullscreen ? FullscreenMode_Fullscreen : FullscreenMode_Windowed;
+
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 4;
 	settings.majorVersion = 3;
@@ -148,7 +150,7 @@ void WindowManager::setWindowState(WindowState state)
 
 #if TS_PLATFORM == TS_WINDOWS
 
-	int32 flags = SW_NORMAL;
+	int32_t flags = SW_NORMAL;
 	switch (state)
 	{
 		case WindowState_Normal:    flags = SW_RESTORE;  break;
@@ -435,10 +437,59 @@ sf::RenderWindow &WindowManager::getRenderWindow()
 	return *renderWindow;
 }
 
+void WindowManager::setBorderlessFullscreen(const bool enabled)
+{
+	if (enabled && currentFullscreenMode != FullscreenMode_Borderless)
+	{
+#if TS_PLATFORM == TS_WINDOWS
+		WindowSettings settings;
+		settings.size = renderWindow->getSize();
+		settings.fullscreenMode = currentFullscreenMode;
+
+		HWND handle = renderWindow->getSystemHandle();
+		settings.w32style = (DWORD)GetWindowLongPtrW(handle, GWL_STYLE);
+		SetWindowLongPtrW(handle, GWL_STYLE, WS_VISIBLE); // Removes all window decorations
+
+		math::VC2U nativeSize = getNativeResolution();
+		renderWindow->setSize(nativeSize);
+
+		previousSettings.windowState = getWindowState();
+		setWindowState(WindowState_Maximized);
+
+		previousSettings = settings;
+		currentFullscreenMode = FullscreenMode_Borderless;
+#endif
+	}
+	else if (!enabled && currentFullscreenMode == FullscreenMode_Borderless)
+	{
+		TS_ASSERT(previousSettings.size.x > 0 && previousSettings.size.y > 0);
+
+#if TS_PLATFORM == TS_WINDOWS
+		TS_ASSERT(previousSettings.w32style != 0);
+
+		HWND handle = renderWindow->getSystemHandle();
+		SetWindowLongPtrW(handle, GWL_STYLE, previousSettings.w32style);
+#endif
+
+		renderWindow->setSize(previousSettings.size);
+
+		setWindowState(previousSettings.windowState);
+
+		previousSettings = WindowSettings();
+		currentFullscreenMode = previousSettings.fullscreenMode;
+	}
+}
+
+math::VC2U WindowManager::getNativeResolution()
+{
+	sf::VideoMode native = sf::VideoMode::getDesktopMode();
+	return math::VC2U(native.width, native.height);
+}
+
 std::vector<math::VC2U> WindowManager::getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize)
 {
 	sf::VideoMode native = sf::VideoMode::getDesktopMode();
-	uint32 nativeBits = native.bitsPerPixel;
+	uint32_t nativeBits = native.bitsPerPixel;
 
 	std::vector<math::VC2U> result;
 

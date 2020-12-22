@@ -22,6 +22,7 @@ public:
 	{
 		Normal,
 		Manga,
+		NoReset,
 	};
 
 	ImageViewerScene(engine::system::BaseApplication *application, DisplayMode defaultDisplayMode);
@@ -82,6 +83,7 @@ protected:
 
 	resource::ShaderResource *backgroundShader = nullptr;
 	resource::ShaderResource *gaussianShader = nullptr;
+	resource::TextureResource *topBarTexture = nullptr;
 
 	struct CurrentState
 	{
@@ -134,21 +136,23 @@ protected:
 	float dragged = 0.f;
 	bool deleteWasReleased = true;
 
+	bool borderlessFullscreen = false;
+
 	//////////////////////
 
-	enum ViewerInfoMode
+	struct ViewerInfoVisible
 	{
-		ViewerInfo_DisplayAll,
-		ViewerInfo_IndexOnly,
-		ViewerInfo_HideAll,
+		bool top : 1;
+		bool bottom : 1;
 	};
-	ViewerInfoMode viewerInfoMode = ViewerInfo_DisplayAll;
-	struct ViewerInfoAlpha
+	ViewerInfoVisible viewerInfoVisible;
+
+	struct ViewerInfoDampers
 	{
-		float index = 1.f;
-		float other = 1.f;
+		math::FloatDamper top;
+		math::FloatDamper bottom;
 	};
-	ViewerInfoAlpha viewerInfoAlpha;
+	ViewerInfoDampers viewerInfo;
 
 	bool displaySmooth = true;
 

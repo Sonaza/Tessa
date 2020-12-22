@@ -201,7 +201,7 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const String &filepat
 	TS_ASSERT(filesize > 0);
 	ByteBuffer srcBuffer(filesize);
 
-	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((int32)filesize);
+	const SizeType blockSizeMax = (SizeType)LZ4_compressBound((int32_t)filesize);
 	dstBuffer.resize(blockSizeMax);
 
 	PosType bytesRead = input.read(&srcBuffer[0], (SizeType)filesize);
@@ -220,7 +220,7 @@ PosType ArchivistWriter::lz4_compressFullBlockFileToBuffer(const String &filepat
 	SizeType *blockCRC = reinterpret_cast<SizeType*>(dstPtr);
 	dstPtr += sizeof(SizeType);
 
-	const int32 compressedBytes = LZ4_compress_fast(&srcBuffer[0], dstPtr, (SizeType)bytesRead, blockSizeMax, 1);
+	const int32_t compressedBytes = LZ4_compress_fast(&srcBuffer[0], dstPtr, (SizeType)bytesRead, blockSizeMax, 1);
 	if (compressedBytes < 0)
 	{
 		TS_LOG_ERROR("Compression encountered an error.\n");
@@ -249,7 +249,7 @@ PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const String &filepath
 	const SizeType blockSizeMax = LZ4_compressBound(ArchivistConstants::CompressionBlockSize);
 
 	SizeType numBlocks = (SizeType)math::ceil(filesize / (float)blockSizeMax) +1;
-	int32 dstBoundSize = numBlocks * (blockSizeMax + ArchivistConstants::OverheadPerBlock) + sizeof(SizeType);
+	int32_t dstBoundSize = numBlocks * (blockSizeMax + ArchivistConstants::OverheadPerBlock) + sizeof(SizeType);
 	dstBuffer.resize(dstBoundSize);
 
 	char *TS_RESTRICT dstPtrStart = &dstBuffer[0];
@@ -290,7 +290,7 @@ PosType ArchivistWriter::lz4_compressStreamedFileToBuffer(const String &filepath
 
 // 		TS_PRINTF("  data offset       : %lld\n", dstPtr - dstPtrStart);
 
-		const int32 compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (int32)srcBytesRead, (int32)dstBytesRemaining, 1);
+		const int32_t compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (int32_t)srcBytesRead, (int32_t)dstBytesRemaining, 1);
 		if (compressedBytes <= 0)
 		{
 			TS_LOG_ERROR("Compression encountered an error.\n");

@@ -29,7 +29,7 @@ public:
 	BaseApplication(system::Commando &commando);
 	~BaseApplication();
 
-	int32 launch();
+	int32_t launch();
 
 	void setFramerateLimit(SizeType framerateLimit);
 	SizeType getCurrentFramerate() const;

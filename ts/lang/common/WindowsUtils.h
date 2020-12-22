@@ -11,6 +11,6 @@ extern bool openFileWithDialog(const String &filepath);
 
 extern BigSizeType convertLargeIntegerTo64bit(SizeType lowPart, SizeType highPart);
 
-extern int32 getWindowsVersion();
+extern int32_t getWindowsVersion();
 
 TS_END_PACKAGE1()

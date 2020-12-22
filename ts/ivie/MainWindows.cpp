@@ -78,7 +78,7 @@ void zippy()
 						return;
 					}
 
-					out.write(buf, (uint32)bytesRead);
+					out.write(buf, (uint32_t)bytesRead);
 					bytesReadTotal += bytesRead;
 				}
 				out.close();
@@ -99,7 +99,7 @@ int __stdcall wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR cmdArgs, int window
 	
 	engine::system::Commando commando;
 	
-	int32 numArgs = 0;
+	int32_t numArgs = 0;
 	LPWSTR *argList = CommandLineToArgvW(cmdArgs, &numArgs);
 	if (argList != nullptr && numArgs > 0)
 	{

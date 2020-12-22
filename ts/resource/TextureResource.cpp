@@ -14,6 +14,39 @@ TextureResource::TextureResource(const String &filepath)
 {
 }
 
+TextureResource::TextureResource(const math::VC2U &size, const uint8_t *pixelData)
+{
+	TS_ASSERT(size.x > 0 && size.y > 0);
+	TS_ASSERT(pixelData != nullptr);
+
+	resourceLoaded = false;
+
+	resource = makeShared<InternalResourceType>();
+	if (resource == nullptr)
+	{
+		TS_LOG_ERROR("Failed to allocate memory for resource container.");
+		loadError = true;
+		return;
+	}
+
+	sf::Image image;
+	image.create(size.x, size.y, pixelData);
+
+	if (resource->loadFromImage(image))
+	{
+		resource->setSmooth(true);
+		resource->generateMipmap();
+
+		resourceLoaded = true;
+		loadError = false;
+	}
+	else
+	{
+		TS_LOG_ERROR("Failed to create a texture from pixels.");
+		loadError = true;
+	}
+}
+
 TextureResource::~TextureResource()
 {
 }

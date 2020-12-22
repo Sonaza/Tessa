@@ -6,10 +6,10 @@
 TS_PACKAGE1(file)
 
 // Offset from Jan 1, 1601 to January 1, 1970 (start of Unix epoch) (converting from 100ns ticks to milliseconds)
-static const int64 UNIX_TIME_OFFSET_MILLISECONDS = 11644473600000LL;
+static const int64_t UNIX_TIME_OFFSET_MILLISECONDS = 11644473600000LL;
 
 // a tick is 100ns
-static const int64 TICKS_PER_1KMILLISECONDS = 10000; 
+static const int64_t TICKS_PER_1KMILLISECONDS = 10000; 
 
 extern TimeStamp getTimestampFromFileTime(const FileTime filetime)
 {

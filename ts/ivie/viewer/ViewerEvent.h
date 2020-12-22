@@ -17,7 +17,6 @@ struct ViewerEvent
 	{
 		Unspecified,
 		ImageDeleted,
-		ModeChanged,
 	};
 
 	Type type = Unspecified;

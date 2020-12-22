@@ -21,14 +21,14 @@ public:
 	Color();
 	Color(T r, T g, T b, T a = 1);
 
-	explicit Color(const uint32 colorValue, const ComponentOrder order = ComponentOrder::RGBA);
+	explicit Color(const uint32_t colorValue, const ComponentOrder order = ComponentOrder::RGBA);
 	explicit Color(const T c[4], const ComponentOrder order = ComponentOrder::RGBA);
 
-	uint32 getAsRGBA() const;
-	uint32 getAsARGB() const;
-	uint32 getAsABGR() const;
-	uint32 getAsBGRA() const;
-	uint32 getAsInteger(const ComponentOrder order) const;
+	uint32_t getAsRGBA() const;
+	uint32_t getAsARGB() const;
+	uint32_t getAsABGR() const;
+	uint32_t getAsBGRA() const;
+	uint32_t getAsInteger(const ComponentOrder order) const;
 
 	// Vector components
 	union

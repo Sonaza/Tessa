@@ -73,8 +73,8 @@ bool FontResource::loadResourceImpl()
 
 		struct Range
 		{
-			uint32 start;
-			uint32 end;
+			uint32_t start;
+			uint32_t end;
 		};
 		std::vector<Range> preload = 
 		{
@@ -83,7 +83,7 @@ bool FontResource::loadResourceImpl()
 
 		for (const Range &range : preload)
 		{
-			for (uint32 codepoint = range.start; codepoint <= range.end; ++codepoint)
+			for (uint32_t codepoint = range.start; codepoint <= range.end; ++codepoint)
 			{
 				resource->getGlyph(codepoint, 26, false, 0.f);
 			}

@@ -4,16 +4,16 @@
 TS_PACKAGE2(app, util)
 
 extern sf::VertexArray makeQuadVertexArray(
-	uint32 width, uint32 height,
-	uint32 offsetX, uint32 offsetY)
+	uint32_t width, uint32_t height,
+	uint32_t offsetX, uint32_t offsetY)
 {
 	return makeQuadVertexArrayScaled(width, height, width, height, offsetX, offsetY);
 }
 
 extern sf::VertexArray makeQuadVertexArrayScaled(
-	uint32 width, uint32 height,
-	uint32 texWidth, uint32 texHeight,
-	uint32 offsetX, uint32 offsetY)
+	uint32_t width, uint32_t height,
+	uint32_t texWidth, uint32_t texHeight,
+	uint32_t offsetX, uint32_t offsetY)
 {
 	const math::VC2 size((float)width, (float)height);
 	const math::VC2 texsize((float)texWidth, (float)texHeight);
@@ -40,10 +40,10 @@ extern sf::VertexArray makeQuadVertexArrayScaled(
 }
 
 extern sf::VertexArray makeQuadVertexArrayScaledShadow(
-	uint32 width, uint32 height,
-	uint32 texWidth, uint32 texHeight,
+	uint32_t width, uint32_t height,
+	uint32_t texWidth, uint32_t texHeight,
 	float shadowOffset, const sf::Color &shadowColor,
-	uint32 offsetX, uint32 offsetY)
+	uint32_t offsetX, uint32_t offsetY)
 {
 	const math::VC2 size((float)width, (float)height);
 	const math::VC2 texsize((float)texWidth, (float)texHeight);

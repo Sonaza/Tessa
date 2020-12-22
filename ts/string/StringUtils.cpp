@@ -10,7 +10,7 @@ TS_PACKAGE1(string)
 // Removes whitespace on the left in place
 static void leftTrim(String &str)
 {
-	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](uint32 c)
+	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](uint32_t c)
 	{
 		return !std::isspace(c);
 	}));
@@ -19,7 +19,7 @@ static void leftTrim(String &str)
 // Removes whitespace on the right in place
 static void rightTrim(String &str)
 {
-	str.erase(std::find_if(str.rbegin(), str.rend(), [](int32 c)
+	str.erase(std::find_if(str.rbegin(), str.rend(), [](int32_t c)
 	{
 		return !std::isspace(c);
 	}).base(), str.end());

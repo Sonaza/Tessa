@@ -15,7 +15,7 @@ TS_FORCEINLINE Color<T>::Color(T r, T g, T b, T a)
 }
 
 template <class T>
-Color<T>::Color(const uint32 color, const ComponentOrder order)
+Color<T>::Color(const uint32_t color, const ComponentOrder order)
 {
 	switch (order)
 	{
@@ -94,60 +94,60 @@ Color<T>::Color(const T c[4], const ComponentOrder order)
 }
 
 template <class T>
-TS_FORCEINLINE uint32 Color<T>::getAsRGBA() const
+TS_FORCEINLINE uint32_t Color<T>::getAsRGBA() const
 {
 	return getAsInteger(math::ComponentOrder::RGBA);
 }
 
 template <class T>
-TS_FORCEINLINE uint32 Color<T>::getAsARGB() const
+TS_FORCEINLINE uint32_t Color<T>::getAsARGB() const
 {
 	return getAsInteger(math::ComponentOrder::ARGB);
 }
 
 template <class T>
-TS_FORCEINLINE uint32 Color<T>::getAsABGR() const
+TS_FORCEINLINE uint32_t Color<T>::getAsABGR() const
 {
 	return getAsInteger(math::ComponentOrder::ABGR);
 }
 
 template <class T>
-TS_FORCEINLINE uint32 Color<T>::getAsBGRA() const
+TS_FORCEINLINE uint32_t Color<T>::getAsBGRA() const
 {
 	return getAsInteger(math::ComponentOrder::BGRA);
 }
 
 template <class T>
-uint32 Color<T>::getAsInteger(const ComponentOrder order) const
+uint32_t Color<T>::getAsInteger(const ComponentOrder order) const
 {
 	switch (order)
 	{
 	case ComponentOrder::RGBA:
-		return ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 24)
-			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
-			 | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 8)
-			 | ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
+		return ((uint8_t)(math::clamp(r, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8_t)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8_t)(math::clamp(b, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8_t)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
 	break;
 
 	case ComponentOrder::ARGB:
-		return ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 24)
-			 | ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 16)
-			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 8)
-			 | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 0);
+		return ((uint8_t)(math::clamp(a, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8_t)(math::clamp(r, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8_t)(math::clamp(g, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8_t)(math::clamp(b, T(0), T(1)) * T(255)) << 0);
 	break;
 
 	case ComponentOrder::ABGR:
-		return ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 24)
-			 | ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 16)
-			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 8)
-			 | ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 0);
+		return ((uint8_t)(math::clamp(a, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8_t)(math::clamp(b, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8_t)(math::clamp(g, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8_t)(math::clamp(r, T(0), T(1)) * T(255)) << 0);
 	break;
 
 	case ComponentOrder::BGRA:
-		return ((uint8)(math::clamp(b, T(0), T(1)) * T(255)) << 24)
-			 | ((uint8)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
-			 | ((uint8)(math::clamp(r, T(0), T(1)) * T(255)) << 8)
-			 | ((uint8)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
+		return ((uint8_t)(math::clamp(b, T(0), T(1)) * T(255)) << 24)
+			 | ((uint8_t)(math::clamp(g, T(0), T(1)) * T(255)) << 16)
+			 | ((uint8_t)(math::clamp(r, T(0), T(1)) * T(255)) << 8)
+			 | ((uint8_t)(math::clamp(a, T(0), T(1)) * T(255)) << 0);
 	break;
 
 	default: TS_ASSERT(!"Unimplemented color component order."); break;
@@ -172,10 +172,10 @@ template <class T>
 inline Color<T>::operator sf::Color() const
 {
 	return sf::Color(
-		(uint8)(math::clamp(r, T(0), T(1)) * T(255)),
-		(uint8)(math::clamp(g, T(0), T(1)) * T(255)),
-		(uint8)(math::clamp(b, T(0), T(1)) * T(255)),
-		(uint8)(math::clamp(a, T(0), T(1)) * T(255))
+		(uint8_t)(math::clamp(r, T(0), T(1)) * T(255)),
+		(uint8_t)(math::clamp(g, T(0), T(1)) * T(255)),
+		(uint8_t)(math::clamp(b, T(0), T(1)) * T(255)),
+		(uint8_t)(math::clamp(a, T(0), T(1)) * T(255))
 	);
 }
 

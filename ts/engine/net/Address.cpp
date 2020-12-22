@@ -16,7 +16,7 @@
 	#define SOCKADDR_IN sockaddr_in
 	#define SOCKADDR_IN6 sockaddr_in6
 
-	#define DWORD int32
+	#define DWORD int32_t
 #else
 	#error "Address class not implemented on this platform"
 #endif

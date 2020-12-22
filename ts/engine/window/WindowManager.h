@@ -37,6 +37,13 @@ public:
 
 	bool pollEvent(sf::Event &eventParam);
 
+	enum FullscreenMode
+	{
+		FullscreenMode_Windowed,
+		FullscreenMode_Borderless,
+		FullscreenMode_Fullscreen,
+	};
+
 	enum WindowState
 	{
 		WindowState_Normal,
@@ -64,7 +71,10 @@ public:
 
 	sf::RenderWindow &getRenderWindow();
 
-	std::vector<math::VC2U> getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize = math::VC2U::zero);
+	void setBorderlessFullscreen(const bool enabled);
+
+	static math::VC2U getNativeResolution();
+	static std::vector<math::VC2U> getSupportedResolutions(const bool fullscreen, const math::VC2U &minimumSize = math::VC2U::zero);
 
 	lang::Signal<const math::VC2U &> screenSizeChangedSignal;
 	lang::Signal<WindowState> windowStateChangedSignal;
@@ -80,6 +90,16 @@ private:
 
 	math::VC2U minSize = math::VC2U(800, 600);
 	math::VC2U maxSize = math::VC2U(50000, 50000);
+
+	struct WindowSettings
+	{
+		math::VC2U size;
+		FullscreenMode fullscreenMode = FullscreenMode_Windowed;
+		WindowState windowState = WindowState_Maximized;
+		uint32_t w32style = 0;
+	};
+	WindowSettings previousSettings;
+	FullscreenMode currentFullscreenMode = FullscreenMode_Windowed;
 
 	ScopedPointer<sf::RenderWindow> renderWindow;
 	WindowViewManager::ViewType currentViewType;

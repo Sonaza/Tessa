@@ -10,7 +10,7 @@ TS_PACKAGE0()
 
 const GUID GUID::none = GUID(0xDEADBEEF);
 
-GUID::GUID(uint32 guid)
+GUID::GUID(uint32_t guid)
 	: guid(guid)
 {
 
@@ -27,7 +27,7 @@ GUID::GUID(const GUID &guid)
 
 }
 
-uint32 GUID::getUint32() const
+uint32_t GUID::getUint32() const
 {
 	return guid;
 }
@@ -40,7 +40,7 @@ const String GUID::getString() const
 	);
 }
 
-void GUID::offset(uint32 value)
+void GUID::offset(uint32_t value)
 {
 	guid += value;
 }

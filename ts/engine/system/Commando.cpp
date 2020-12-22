@@ -93,22 +93,22 @@ bool Commando::parse(const wchar_t *args)
 	return parse(compiledArgs);
 }
 
-bool Commando::parse(int32 argc, const char **argv)
+bool Commando::parse(int32_t argc, const char **argv)
 {
 	std::vector<String> args;
 	args.reserve(argc);
-	for (int32 index = 0; index < argc; ++index)
+	for (int32_t index = 0; index < argc; ++index)
 	{
 		args.push_back(String(argv[index]));
 	}
 	return parse(args);
 }
 
-bool Commando::parse(int32 argc, const wchar_t **argv)
+bool Commando::parse(int32_t argc, const wchar_t **argv)
 {
 	std::vector<String> args;
 	args.reserve(argc);
-	for (int32 index = 0; index < argc; ++index)
+	for (int32_t index = 0; index < argc; ++index)
 	{
 		args.push_back(String(argv[index]));
 	}
@@ -123,7 +123,7 @@ bool Commando::parse(const std::vector<String> &args)
 	if (args.empty())
 		return true;
 
-	for (uint32 index = 0; index < args.size(); ++index)
+	for (uint32_t index = 0; index < args.size(); ++index)
 	{
 		String arg = args[index];
 
@@ -147,7 +147,7 @@ bool Commando::parse(const std::vector<String> &args)
 				++index;
 			}
 			
-			uint32 flagHash = math::simpleHash32(arg);
+			uint32_t flagHash = math::simpleHash32(arg);
 			m_flags.emplace(flagHash, std::move(parameter));
 		}
 		else
@@ -161,13 +161,13 @@ bool Commando::parse(const std::vector<String> &args)
 
 bool Commando::hasFlag(const String &flag) const
 {
-	uint32 flagHash = math::simpleHash32(flag);
+	uint32_t flagHash = math::simpleHash32(flag);
 	return m_flags.find(flagHash) != m_flags.end();
 }
 
 bool Commando::hasFlagParameter(const String &flag) const
 {
-	uint32 flagHash = math::simpleHash32(flag);
+	uint32_t flagHash = math::simpleHash32(flag);
 	FlagsList::const_iterator iter = m_flags.find(flagHash);
 	if (iter == m_flags.end())
 		return 0;
@@ -176,7 +176,7 @@ bool Commando::hasFlagParameter(const String &flag) const
 
 bool Commando::getFlagParameter(const String &flag, String &outParam) const
 {
-	uint32 flagHash = math::simpleHash32(flag);
+	uint32_t flagHash = math::simpleHash32(flag);
 	FlagsList::const_iterator iter = m_flags.find(flagHash);
 	if (iter == m_flags.end() && !iter->second.isEmpty())
 		return false;

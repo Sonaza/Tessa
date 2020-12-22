@@ -79,6 +79,17 @@ bool Image::startLoading(bool suspendAfterBufferFull)
 			return false;
 		}
 		break;
+
+		case LoaderErrorFileMissing:
+		{
+			loaderState = Error;
+			TS_WLOG_ERROR("Unable to load file, not found. File: %s", filepath);
+
+			errorText = "File not found.";
+
+			return false;
+		}
+		break;
 	}
 
 	currentLoaderType = type;
@@ -362,7 +373,7 @@ bool Image::rotate(RotateDirection directionParam, bool saveToDisk)
 {
 	TS_PRINTF("Can be rotated? %s\n", imageData.canBeRotated ? "yes" : "no");
 
-	int32 direction = (directionParam == Rotation_Clockwise ? 1 : -1);
+	int32_t direction = (directionParam == Rotation_Clockwise ? 1 : -1);
 
 	switch (currentLoaderType)
 	{
@@ -403,6 +414,9 @@ void Image::setImageData(const ImageData &dataParam)
 
 Image::LoaderType Image::sniffLoaderType()
 {
+	if (!file::exists(filepath))
+		return LoaderErrorFileMissing;
+
 	// Test FreeImage formats
 	if (ImageBackgroundLoaderFreeImage::isValidFreeImageFile(filepath))
 		return LoaderFreeImage;
@@ -526,13 +540,13 @@ bool Image::makeThumbnail(SharedPointer<sf::Texture> frameTexture, SizeType maxS
 	{
 		scaleFactor = maxSize / (float)textureSize.x;
 		scaledSize.x = maxSize;
-		scaledSize.y = (uint32)(textureSize.y * scaleFactor);
+		scaledSize.y = (uint32_t)(textureSize.y * scaleFactor);
 	}
 	else
 	{
 		scaleFactor = maxSize / (float)textureSize.y;
 		scaledSize.y = maxSize;
-		scaledSize.x = (uint32)(textureSize.x * scaleFactor);
+		scaledSize.x = (uint32_t)(textureSize.x * scaleFactor);
 	}
 
 	sf::RenderTexture rt;

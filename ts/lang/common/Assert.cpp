@@ -43,7 +43,7 @@ DialogAction dialog(const String &expression, const String &message, const Strin
 		<< "Line: " << line << "\n"
 		<< "\n(Press 'Retry' for debug break)\n";
 
-	int32 button = MessageBoxW(nullptr, msg.str().c_str(), L"Assertion failure", MB_ABORTRETRYIGNORE | MB_ICONERROR);
+	int32_t button = MessageBoxW(nullptr, msg.str().c_str(), L"Assertion failure", MB_ABORTRETRYIGNORE | MB_ICONERROR);
 	switch (button)
 	{
 		case IDABORT: return Abort;

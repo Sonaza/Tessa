@@ -77,7 +77,7 @@ protected:
 	 * In case >0 a restart was necessary.
 	 * If return is <0 there was an error.
 	 */
-	virtual int32 restartImpl() = 0;
+	virtual int32_t restartImpl() = 0;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) = 0;
 	virtual bool wasLoadingCompleted() const = 0;

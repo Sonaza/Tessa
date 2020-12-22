@@ -34,7 +34,7 @@ FileList::FileList()
 {
 }
 
-FileList::FileList(const String &path, FileListStyle listStyle, uint32 listFlags)
+FileList::FileList(const String &path, FileListStyle listStyle, uint32_t listFlags)
 {
 	open(path, listStyle, listFlags);
 }
@@ -44,7 +44,7 @@ FileList::~FileList()
 	close();
 }
 
-bool FileList::open(const String &path, FileListStyle listStyle, uint32 listFlags)
+bool FileList::open(const String &path, FileListStyle listStyle, uint32_t listFlags)
 {
 	TS_ASSERT(!path.isEmpty());
 

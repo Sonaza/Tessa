@@ -38,7 +38,7 @@ protected:
 	virtual void onResume() override;
 	virtual void onSuspend() override;
 
-	virtual int32 restartImpl() override;
+	virtual int32_t restartImpl() override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
 	virtual bool wasLoadingCompleted() const override;
@@ -59,12 +59,12 @@ private:
 		nestegg *context = nullptr;
 		vpx_codec_iface_t *interface = nullptr;
 		vpx_codec_ctx_t *codec = nullptr;
-		uint32 trackIndex = 0;
+		uint32_t trackIndex = 0;
 	};
 	DecoderState state;
 
-	uint32 numFrames = 0;
-	uint32 numTotalFrames = 0;
+	uint32_t numFrames = 0;
+	uint32_t numTotalFrames = 0;
 
 	TimeSpan frameTime;
 	TimeSpan totalDuration;

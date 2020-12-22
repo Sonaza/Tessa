@@ -107,8 +107,8 @@ bool operator!=(const Vec2<T> &lhs, const Vec2<T> &rhs);
 
 typedef Vec2<float>     VC2;
 typedef Vec2<double>    VC2D;
-typedef Vec2<int32>     VC2I;
-typedef Vec2<uint32>    VC2U;
+typedef Vec2<int32_t>     VC2I;
+typedef Vec2<uint32_t>    VC2U;
 
 #if TS_COMPILER != TS_MSC
 
@@ -120,19 +120,19 @@ template<> const Vec2<double> Vec2<double>::zero;
 template<> const Vec2<double> Vec2<double>::up;
 template<> const Vec2<double> Vec2<double>::right;
 
-template<> const Vec2<int32> Vec2<int32>::zero;
-template<> const Vec2<int32> Vec2<int32>::up;
-template<> const Vec2<int32> Vec2<int32>::right;
+template<> const Vec2<int32_t> Vec2<int32_t>::zero;
+template<> const Vec2<int32_t> Vec2<int32_t>::up;
+template<> const Vec2<int32_t> Vec2<int32_t>::right;
 
-template<> const Vec2<uint32> Vec2<uint32>::zero;
-template<> const Vec2<uint32> Vec2<uint32>::up;
-template<> const Vec2<uint32> Vec2<uint32>::right;
+template<> const Vec2<uint32_t> Vec2<uint32_t>::zero;
+template<> const Vec2<uint32_t> Vec2<uint32_t>::up;
+template<> const Vec2<uint32_t> Vec2<uint32_t>::right;
 
 #endif
 
 extern template class Vec2<float>;
 extern template class Vec2<double>;
-extern template class Vec2<int32>;
-extern template class Vec2<uint32>;
+extern template class Vec2<int32_t>;
+extern template class Vec2<uint32_t>;
 
 TS_END_PACKAGE1()

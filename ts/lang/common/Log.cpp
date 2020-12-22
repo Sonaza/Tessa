@@ -40,7 +40,7 @@ public:
 	}
 
 protected:
-	virtual int32 overflow(int32 ch) override
+	virtual int32_t overflow(int32_t ch) override
 	{
 		if (ch != traits_type::eof())
 		{
@@ -50,7 +50,7 @@ protected:
 		return traits_type::eof();
 	}
 
-	int32 sync() override
+	int32_t sync() override
 	{
 		if (pbase() != pptr())
 		{

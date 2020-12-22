@@ -43,10 +43,10 @@ class Utf<8>
 public:
 
 	template <typename In>
-	static In decode(In begin, In end, uint32 &output, uint32 replacement = 0);
+	static In decode(In begin, In end, uint32_t &output, uint32_t replacement = 0);
 
 	template <typename Out>
-	static Out encode(uint32 input, Out output, uint8 replacement = 0);
+	static Out encode(uint32_t input, Out output, uint8_t replacement = 0);
 
 	template <typename In>
 	static In next(In begin, In end);
@@ -88,10 +88,10 @@ class Utf<16>
 public:
 
 	template <typename In>
-	static In decode(In begin, In end, uint32 &output, uint32 replacement = 0);
+	static In decode(In begin, In end, uint32_t &output, uint32_t replacement = 0);
 
 	template <typename Out>
-	static Out encode(uint32 input, Out output, uint16 replacement = 0);
+	static Out encode(uint32_t input, Out output, uint16_t replacement = 0);
 
 	template <typename In>
 	static In next(In begin, In end);
@@ -133,10 +133,10 @@ class Utf<32>
 public:
 
 	template <typename In>
-	static In decode(In begin, In end, uint32 &output, uint32 replacement = 0);
+	static In decode(In begin, In end, uint32_t &output, uint32_t replacement = 0);
 
 	template <typename Out>
-	static Out encode(uint32 input, Out output, uint32 replacement = 0);
+	static Out encode(uint32_t input, Out output, uint32_t replacement = 0);
 
 	template <typename In>
 	static In next(In begin, In end);
@@ -172,16 +172,16 @@ public:
 	static Out toUtf32(In begin, In end, Out output);
 
 	template <typename In>
-	static uint32 decodeAnsi(In input, const std::locale &locale = std::locale());
+	static uint32_t decodeAnsi(In input, const std::locale &locale = std::locale());
 
 	template <typename In>
-	static uint32 decodeWide(In input);
+	static uint32_t decodeWide(In input);
 
 	template <typename Out>
-	static Out encodeAnsi(uint32 codepoint, Out output, char replacement = 0, const std::locale &locale = std::locale());
+	static Out encodeAnsi(uint32_t codepoint, Out output, char replacement = 0, const std::locale &locale = std::locale());
 
 	template <typename Out>
-	static Out encodeWide(uint32 codepoint, Out output, wchar_t replacement = 0);
+	static Out encodeWide(uint32_t codepoint, Out output, wchar_t replacement = 0);
 };
 
 #include "Utf.inl"

@@ -21,7 +21,7 @@ SizeType CurrentThread::getThreadId()
 	return Thread::getCurrentThread().getThreadId();
 }
 
-uint32 CurrentThread::getNativeThreadId()
+uint32_t CurrentThread::getNativeThreadId()
 {
 #if TS_PLATFORM == TS_WINDOWS
 	return GetCurrentThreadId();

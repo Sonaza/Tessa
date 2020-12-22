@@ -273,7 +273,7 @@ void AbstractImageBackgroundLoader::requestNextFrame()
 
 bool AbstractImageBackgroundLoader::restart(bool suspendAfterBufferFullParam)
 {
-	int32 status = restartImpl();
+	int32_t status = restartImpl();
 	if (status < 0)
 	{
 		TS_ASSERT(!false);

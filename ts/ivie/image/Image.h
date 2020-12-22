@@ -16,7 +16,7 @@ struct ImageData
 {
 	math::VC2U size;
 	bool hasAlpha = false;
-	uint32 numFramesTotal = 0;
+	uint32_t numFramesTotal = 0;
 	bool canBeRotated = false;
 };
 
@@ -136,6 +136,8 @@ private:
 		LoaderUnknown,
 		LoaderFreeImage,
 		LoaderWebm,
+
+		LoaderErrorFileMissing,
 	};
 	LoaderType sniffLoaderType();
 	LoaderType currentLoaderType = LoaderUnknown;

@@ -116,7 +116,7 @@ public:
 	float timescale = 8.0f;
 	math::VC2 displayOffset;
 
-	int64 baseStartTime = 0;
+	int64_t baseStartTime = 0;
 
 	void render(sf::RenderTarget &renderTarget, const engine::window::WindowView &view)
 	{
@@ -151,7 +151,7 @@ public:
 
 		float offsetAccumulator = 0;
 		
-		int64 startTimeLimit = 0;
+		int64_t startTimeLimit = 0;
 		float timeDisplayOffset = 0.f;
 		
 		TS_UNUSED_VARIABLE(startTimeLimit);
@@ -162,7 +162,7 @@ public:
 		struct HoverInfo
 		{
 			HoverInfo() = default;
-			HoverInfo(SizeType threadId, String threadName, int64 frameIndex, const ZoneFrame *frame, const ZoneEvent *event)
+			HoverInfo(SizeType threadId, String threadName, int64_t frameIndex, const ZoneFrame *frame, const ZoneEvent *event)
 				: threadId(threadId)
 				, threadName(threadName)
 				, frameIndex(frameIndex)
@@ -173,7 +173,7 @@ public:
 
 			SizeType threadId = 0;
 			String threadName;
-			int64 frameIndex = 0;
+			int64_t frameIndex = 0;
 			const ZoneFrame *frame = nullptr;
 			const ZoneEvent *event = nullptr;
 
@@ -230,9 +230,9 @@ public:
 				PosType frameIndex = std::distance(collection.begin(), frameIter.base());
 				// PosType frameIndexInverted = std::distance(collection.rbegin(), frameIter);
 
-				int64 startTime = math::max<int64>(0, frame.front().start);
+				int64_t startTime = math::max<int64_t>(0, frame.front().start);
 
-				int64 absoluteTimeDiff = baseStartTime - startTime;
+				int64_t absoluteTimeDiff = baseStartTime - startTime;
 				float absoluteOffsetX = -(absoluteTimeDiff / timescale) + displayOffset.x;
 
 				if (absoluteOffsetX > 0.f)
@@ -267,7 +267,7 @@ public:
 
 					math::FloatRect rect(pos, size, math::Rect_PositionAndSize);
 
-					sf::Color color = event.level < (int32)colors.size() ? colors[event.level] : sf::Color::Magenta;
+					sf::Color color = event.level < (int32_t)colors.size() ? colors[event.level] : sf::Color::Magenta;
 					if (rect.isPointWithin(mousePosition))
 					{
 						color += sf::Color(30, 30, 30);
@@ -309,7 +309,7 @@ public:
 
 		if (hoverInfo.isValid())
 		{
-			int64 startTime = hoverInfo.event->start + (hoverInfo.event->level > 0 ? hoverInfo.frame->front().start : 0);
+			int64_t startTime = hoverInfo.event->start + (hoverInfo.event->level > 0 ? hoverInfo.frame->front().start : 0);
 			TimeSpan start = TimeSpan::fromMicroseconds(startTime);
 			TimeSpan elapsed = TimeSpan::fromMicroseconds(hoverInfo.event->elapsed);
 
@@ -352,9 +352,9 @@ public:
 		dst.resize(dst.getVertexCount() + 4);
 
 		const sf::Color topcolor(
-			(uint8)math::min(255.f, (float)color.r + (color.r / 255.f) * 60.f),
-			(uint8)math::min(255.f, (float)color.g + (color.g / 255.f) * 60.f),
-			(uint8)math::min(255.f, (float)color.b + (color.b / 255.f) * 60.f),
+			(uint8_t)math::min(255.f, (float)color.r + (color.r / 255.f) * 60.f),
+			(uint8_t)math::min(255.f, (float)color.g + (color.g / 255.f) * 60.f),
+			(uint8_t)math::min(255.f, (float)color.b + (color.b / 255.f) * 60.f),
 			color.a
 		);
 
@@ -449,16 +449,16 @@ void ZoneProfiler::save(const String &filepath)
 
 	lock.unlock();
 
-	int32 indent = 0;
+	int32_t indent = 0;
 
 	file::OutputFile output(filepath, file::OutputFileMode_WriteBinaryTruncate);
 
 	output.writeString("<root>\n");
 	indent++;
 
-	int64 numThreads = storage.size();
-	int64 numFrames = 0;
-	int64 numEvents = 0;
+	int64_t numThreads = storage.size();
+	int64_t numFrames = 0;
+	int64_t numEvents = 0;
 
 	for (auto storageIter = storage.begin(); storageIter != storage.end(); ++storageIter)
 	{
@@ -481,15 +481,15 @@ void ZoneProfiler::save(const String &filepath)
 
 			numEvents += frame.size();
 
-			int32 openings = 0;
+			int32_t openings = 0;
 			for (auto eventsIter = frame.begin(); eventsIter != frame.end(); ++eventsIter)
 			{
 				const ZoneEvent &event = *eventsIter;
 
-				int32 level = event.level;
+				int32_t level = event.level;
 
 				auto nextIter = std::next(eventsIter);
-				int32 nextLevel = nextIter == frame.end() ? 0 : nextIter->level;
+				int32_t nextLevel = nextIter == frame.end() ? 0 : nextIter->level;
 
 				bool closedTag = (nextLevel <= level);
 
@@ -530,8 +530,8 @@ void ZoneProfiler::save(const String &filepath)
 				}
 				else if (nextLevel < level)
 				{
-					int32 diff = (level - nextLevel);
-					for (int32 i = 0; i < diff; ++i)
+					int32_t diff = (level - nextLevel);
+					for (int32_t i = 0; i < diff; ++i)
 					{
 						indent--;
 						WRITE("</event>\n");
@@ -649,9 +649,9 @@ void ZoneProfiler::render(sf::RenderTarget &renderTarget, const engine::window::
 }
 
 #if TS_PROFILER_ENABLED == TS_TRUE
-int64 ScopedZoneTimer::absoluteStartTime = -1;
+int64_t ScopedZoneTimer::absoluteStartTime = -1;
 
-thread_local int64 ScopedZoneTimer::frameStartTime = 0;
+thread_local int64_t ScopedZoneTimer::frameStartTime = 0;
 thread_local ZoneFrame ScopedZoneTimer::currentFrame;
 thread_local SizeType ScopedZoneTimer::eventLevel = 0;
 #endif
@@ -664,7 +664,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 	if (absoluteStartTime == -1)
 		absoluteStartTime = Time::now().fromEpoch().getMicroseconds();
 
-	const int64 startTime = start.fromEpoch().getMicroseconds();
+	const int64_t startTime = start.fromEpoch().getMicroseconds();
 	if (eventLevel == 0)
 		frameStartTime = startTime;
 
@@ -672,7 +672,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 		name,
 		eventLevel == 0 ? frameStartTime - absoluteStartTime : startTime - frameStartTime,
 		-1,
-		(int32)eventLevel,
+		(int32_t)eventLevel,
 		0, false, false
 	};
 
@@ -686,7 +686,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *functionName, const char *zoneName)
 #endif
 }
 
-ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool blocked)
+ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32_t mutexOwner, bool blocked)
 	: start(Time::now())
 	, name(zoneName)
 {
@@ -694,7 +694,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool b
 	if (absoluteStartTime == -1)
 		absoluteStartTime = Time::now().fromEpoch().getMicroseconds();
 
-	const int64 startTime = start.fromEpoch().getMicroseconds();
+	const int64_t startTime = start.fromEpoch().getMicroseconds();
 	if (eventLevel == 0)
 		frameStartTime = startTime;
 
@@ -702,7 +702,7 @@ ScopedZoneTimer::ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool b
 		name,
 		eventLevel == 0 ? frameStartTime - absoluteStartTime : startTime - frameStartTime,
 		-1,
-		(int32)eventLevel,
+		(int32_t)eventLevel,
 		mutexOwner, true, blocked
 	};
 

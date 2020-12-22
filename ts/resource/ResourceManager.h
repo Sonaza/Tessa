@@ -65,6 +65,10 @@ public:
 	MusicResource *getMusic(const String &uniqueResourceHandle) const;
 	SoundResource *getSound(const String &uniqueResourceHandle) const;
 
+	// Expects RGBA 32-bit per pixel data
+	ImageResource *makeImageFromPixelData(const String &uniqueResourceHandle, const math::VC2U &size, const uint8_t *pixelData);
+	TextureResource *makeTextureFromPixelData(const String &uniqueResourceHandle, const math::VC2U &size, const uint8_t *pixelData);
+
 	void unloadAll();
 
 	bool unloadResource(const String &uniqueResourceHandle);
@@ -81,6 +85,9 @@ public:
 	static String getAbsoluteResourcePath(const String &filepath);
 
 private:
+	template<class ResourceType>
+	ResourceType *makeFromPixelData(const String &uniqueResourceHandle, const math::VC2U &size, const uint8_t *pixelData);
+
 	static std::atomic_bool stop_flag;
 	static String resourceRootDirectory;
 
@@ -115,7 +122,7 @@ private:
 template<class ResourceType>
 ResourceType *ResourceManager::loadResource(const String &filepath, const bool immediate)
 {
-	static int32 counter = 0;
+	static int32_t counter = 0;
 	String anonymousHandle = TS_FMT("__anonymous_%x", counter++);
 	return loadResource<ResourceType>(anonymousHandle, filepath, immediate);
 }
@@ -168,7 +175,7 @@ ResourceType *ResourceManager::loadResource(const String &uniqueResourceHandle, 
 	debugResourceTypeNames[ResourceType::TypeId] = ResourceType::TypeName;
 #endif
 
-	// Add to threaded load queue or load immediately based on user flag
+	// Add to threaded load queue or load immediately based on the param
 	if (immediate == false)
 	{
 		addResourceToLoadQueue(rc->resource);
@@ -180,6 +187,45 @@ ResourceType *ResourceManager::loadResource(const String &uniqueResourceHandle, 
 
 	resourceGuids.emplace(resourceGuid, fileGuid);
 	resources.emplace(fileGuid, std::move(rc));
+
+	return resource;
+}
+
+template<class ResourceType>
+ResourceType *ResourceManager::makeFromPixelData(const String &uniqueResourceHandle, const math::VC2U &size, const uint8_t *pixelData)
+{
+	static_assert(std::is_same_v<ResourceType, ImageResource> || std::is_same_v<ResourceType, TextureResource>, "Only images and textures can be created from pixels.");
+
+	ResourceType *resource = nullptr;
+
+	GUID resourceGuid(uniqueResourceHandle);
+	resource = getResource<ResourceType>(resourceGuid);
+	if (resource != nullptr)
+		return resource;
+
+	resource = new(std::nothrow) ResourceType(size, pixelData);
+	if (resource == nullptr)
+	{
+		TS_LOG_ERROR("Allocating resource failed.");
+		return nullptr;
+	}
+	
+	UniquePointer<AbstractResourceContainer> rc = makeUnique<AbstractResourceContainer>(resource, ResourceType::TypeId);
+	if (rc == nullptr)
+	{
+		TS_LOG_ERROR("Allocating AbstractResourceContainer failed.");
+		return nullptr;
+	}
+
+	GUID generatedGuid = resource->getGuid();
+
+#if TS_BUILD != TS_FINALRELEASE
+	debugResourceHandles[generatedGuid] = uniqueResourceHandle;
+	debugResourceTypeNames[ResourceType::TypeId] = ResourceType::TypeName;
+#endif
+
+	resourceGuids.emplace(resourceGuid, generatedGuid);
+	resources.emplace(generatedGuid, std::move(rc));
 
 	return resource;
 }

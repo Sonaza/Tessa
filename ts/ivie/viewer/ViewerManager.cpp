@@ -28,7 +28,7 @@ class ViewerManager::BackgroundImageUnloader : public thread::AbstractThreadEntr
 
 	ConditionVariable condition;
 
-	std::map<uint32, Time> unloadQueue;
+	std::map<uint32_t, Time> unloadQueue;
 
 public:
 	Mutex mutex;
@@ -49,7 +49,7 @@ public:
 			Thread::joinThread(thread);
 	}
 
-	void addToQueue(uint32 imageHash, TimeSpan delay)
+	void addToQueue(uint32_t imageHash, TimeSpan delay)
 	{
 		TS_ASSERT(viewerManager->imageStorage.find(imageHash) != viewerManager->imageStorage.end() &&
 			"Image hash not found in storage, don't try to unload images that aren't even loaded.");
@@ -57,7 +57,7 @@ public:
 		unloadQueue[imageHash] = Time::now() + delay;
 	}
 
-	void removeFromQueue(uint32 imageHash)
+	void removeFromQueue(uint32_t imageHash)
 	{
 // 		TS_ASSERT(unloadQueue.find(imageHash) != unloadQueue.end() &&
 // 			"Image hash not found in unload queue, don't try to cancel unloads.");
@@ -172,7 +172,7 @@ void ViewerManager::update(const TimeSpan deltaTime)
 			MutexGuard lock(mutex);
 
 			SizeType previousImageIndex = current.imageIndex;
-			uint32 previousDirectoryHash = current.directoryHash;
+			uint32_t previousDirectoryHash = current.directoryHash;
 
 			if (pending.imageIndex != INVALID_IMAGE_INDEX)
 			{
@@ -235,6 +235,8 @@ void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notify
 				String fullpath = file::joinPaths(currentDirectoryPath, notifyEvent.name);
 				ViewerImageFile file = getViewerImageFileDataForFile(fullpath, notifyEvent.name);
 				currentFileList.push_back(file);
+
+				filelistChangedSignal((SizeType)currentFileList.size());
 			}
 			break;
 
@@ -257,6 +259,8 @@ void ViewerManager::watchNotify(const std::vector<file::FileNotifyEvent> &notify
 					else
 						ensureImageIndexNeeded = true;
 				}
+
+				filelistChangedSignal((SizeType)currentFileList.size());
 			}
 			break;
 
@@ -468,7 +472,7 @@ void ViewerManager::changeToPreviousImage()
 	changeImage(-1);
 }
 
-void ViewerManager::changeImage(int32 amount)
+void ViewerManager::changeImage(int32_t amount)
 {
 	if (amount == 0)
 		return;
@@ -526,7 +530,7 @@ const std::vector<ViewerImageFile> ViewerManager::getImagesInCurrentDirectory() 
 	MutexGuard lock(mutex);
 
 	const String dirname = file::getDirname(file::joinPaths(currentDirectoryPath, current.viewerFile.filepath));
-	const uint32 currentDirectoryHash = math::simpleHash32(dirname);
+	const uint32_t currentDirectoryHash = math::simpleHash32(dirname);
 
 	std::vector<ViewerImageFile> entries;
 	for (const ViewerImageFile &entry : currentFileList)
@@ -705,7 +709,7 @@ bool ViewerManager::updateFilelist(const String directoryPath,
 	std::vector<ViewerImageFile> templist;
 
 	file::FileListStyle listScanStyle = allowFullRecursive ? scanStyle : file::FileListStyle_Files;
-	uint32 flags = file::FileListFlags_LargeFetch
+	uint32_t flags = file::FileListFlags_LargeFetch
 		         | file::FileListFlags_ExcludeRootPath
 		         | file::FileListFlags_GetTypeStrings;
 
@@ -947,7 +951,7 @@ void ViewerManager::prepareShaders()
 		// Generate array space for a checker pattern, something like this
 		//   XX..
 		//   ..XX
-		std::vector<uint8> patternTexture(size * size * 4,  255);
+		std::vector<uint8_t> patternTexture(size * size * 4,  255);
 		for (SizeType y = 0; y < size; ++y)
 		{
 			for (SizeType x = 0; x < size; ++x)
@@ -1005,17 +1009,17 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 	const PosType numForwardBuffered = 2;
 	const PosType numBackwardBuffered = 2;
 
-	std::vector<uint32> activeImages;
+	std::vector<uint32_t> activeImages;
 	std::vector<ImageEntry> imagesToLoad = getListSliceForBuffering(numForwardBuffered, numBackwardBuffered);
 
 	if (imagesToLoad.empty())
 		currentImage = nullptr;
 
-	// uint32 currentImageHash = 0;
+	// uint32_t currentImageHash = 0;
 
 	for (const ImageEntry &entry : imagesToLoad)
 	{
-		uint32 imageHash = math::hashCombine(currentDirectoryPathHash, entry.filepath);
+		uint32_t imageHash = math::hashCombine(currentDirectoryPathHash, entry.filepath);
 
 		activeImages.push_back(imageHash);
 
@@ -1055,15 +1059,15 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 		image->setActive(isCurrentImage);
 	}
 
-	std::vector<uint32> newlyActiveImages;
-	for (uint32 imageHash : activeImages)
+	std::vector<uint32_t> newlyActiveImages;
+	for (uint32_t imageHash : activeImages)
 	{
 		if (!ts::util::findIfContains(lastActiveImages, imageHash))
 			newlyActiveImages.push_back(imageHash);
 	}
 
-	std::vector<uint32> newlyInactiveImages;
-	for (uint32 imageHash : lastActiveImages)
+	std::vector<uint32_t> newlyInactiveImages;
+	for (uint32_t imageHash : lastActiveImages)
 	{
 		if (!ts::util::findIfContains(activeImages, imageHash))
 			newlyInactiveImages.push_back(imageHash);
@@ -1074,7 +1078,7 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 	{
 		MutexGuard lock(backgroundUnloader->mutex);
 
-		for (const uint32 imageHash : newlyActiveImages)
+		for (const uint32_t imageHash : newlyActiveImages)
 		{
 	 		SharedPointer<image::Image> &image = imageStorage[imageHash];
 			
@@ -1085,7 +1089,7 @@ void ViewerManager::updateCurrentImage(SizeType previousDirectoryHash, SizeType 
 			backgroundUnloader->removeFromQueue(imageHash);
 		}
 
-		for (const uint32 imageHash : newlyInactiveImages)
+		for (const uint32_t imageHash : newlyInactiveImages)
 		{
 			SharedPointer<image::Image> &image = imageStorage[imageHash];
 

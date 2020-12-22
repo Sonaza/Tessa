@@ -28,14 +28,14 @@ public:
 	const String &getString(const String &section_dot_key, const String &defaultValue) const;
 	void setString(const String &section_dot_key, const String &value);
 
-	int32 getInt32(const String &section_dot_key, const int32 defaultValue) const;
-	void setInt32(const String &section_dot_key, const int32 value);
+	int32_t getInt32(const String &section_dot_key, const int32_t defaultValue) const;
+	void setInt32(const String &section_dot_key, const int32_t value);
 
-	uint32 getUint32(const String &section_dot_key, const uint32 defaultValue) const;
-	void setUint32(const String &section_dot_key, const uint32 value);
+	uint32_t getUint32(const String &section_dot_key, const uint32_t defaultValue) const;
+	void setUint32(const String &section_dot_key, const uint32_t value);
 
 	float getFloat(const String &section_dot_key, const float defaultValue) const;
-	void setFloat(const String &section_dot_key, const float value, int32 precision = 3);
+	void setFloat(const String &section_dot_key, const float value, int32_t precision = 3);
 
 	bool getBoolean(const String &section_dot_key, const bool defaultValue) const;
 	void setBoolean(const String &section_dot_key, const bool value);
@@ -43,15 +43,15 @@ public:
 protected:
 	static char *customIniReader(char *str, int count, void *stream);
 	static int parserHandler(void *userdata, const char *section, const char *key, const char *value);
-	static uint32 makeHash(const String &token);
+	static uint32_t makeHash(const String &token);
 
 	void setValue(const String &section_dot_key, const String &value);
 
 	bool parseSectionAndKey(const String &section_dot_key, String &outSection, String &outKey);
 
 	std::set<String> sections;
-	std::unordered_map<uint32, std::set<String>> sectionKeys;
-	std::unordered_map<uint32, String> values;
+	std::unordered_map<uint32_t, std::set<String>> sectionKeys;
+	std::unordered_map<uint32_t, String> values;
 
 	static const std::set<String> emptySet;
 

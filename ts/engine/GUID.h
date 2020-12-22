@@ -5,19 +5,19 @@ TS_PACKAGE0()
 class GUID
 {
 public:
-	GUID(uint32 guid);
+	GUID(uint32_t guid);
 	GUID(const String &str);
 	GUID(const GUID &guid);
 
-	uint32 getUint32() const;
+	uint32_t getUint32() const;
 	const String getString() const;
 
-	void offset(uint32 value);
+	void offset(uint32_t value);
 
 	static const GUID none;
 
 private:
-	uint32 guid = 0xDEADBEEF;
+	uint32_t guid = 0xDEADBEEF;
 };
 
 struct GuidHash

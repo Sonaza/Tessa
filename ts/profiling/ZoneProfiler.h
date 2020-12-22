@@ -51,10 +51,10 @@ TS_PACKAGE1(profiling)
 struct ZoneEvent
 {
 	const char *name;
-	int64 start;
-	int64 elapsed;
-	int32 level;
-	uint32 mutexOwner;
+	int64_t start;
+	int64_t elapsed;
+	int32_t level;
+	uint32_t mutexOwner;
 	bool isMutexEvent;
 	bool wasBlocked;
 };
@@ -101,7 +101,7 @@ class ScopedZoneTimer
 
 public:
 	ScopedZoneTimer(const char *functionName, const char *zoneName = nullptr);
-	ScopedZoneTimer(const char *zoneName, uint32 mutexOwner, bool blocked);
+	ScopedZoneTimer(const char *zoneName, uint32_t mutexOwner, bool blocked);
 	~ScopedZoneTimer();
 
 	void commit() const;
@@ -115,9 +115,9 @@ private:
 
 	BigSizeType frameIndex = 0;
 	
-	static int64 absoluteStartTime;
+	static int64_t absoluteStartTime;
 
-	static thread_local int64 frameStartTime;
+	static thread_local int64_t frameStartTime;
 	static thread_local ZoneFrame currentFrame;
 	static thread_local SizeType eventLevel;
 };

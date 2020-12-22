@@ -30,7 +30,7 @@ BaseApplication::~BaseApplication()
 	m_gigatonInstance.unregisterClass(this);
 }
 
-int32 BaseApplication::launch()
+int32_t BaseApplication::launch()
 {
 	printf("HELLO WORLD\n");
 	

@@ -113,29 +113,57 @@
 
 TS_PACKAGE0()
 
-typedef signed   char  int8;
-typedef unsigned char  uint8;
+using std::int8_t;
+using std::uint8_t;
 
-typedef signed   short int16;
-typedef unsigned short uint16;
+using std::int16_t;
+using std::uint16_t;
 
-typedef signed   int   int32;
-typedef unsigned int   uint32;
+using std::int32_t;
+using std::uint32_t;
+
+using std::int64_t;
+using std::uint64_t;
+
+/*
+using int8_t    = std::int8_t;
+using uint8_t   = std::uint8_t;
+
+using int16_t   = std::int16_t;
+using uint16_t  = std::uint16_t;
+
+using int32_t   = std::int32_t;
+using uint32_t  = std::uint32_t;
+
+using int64_t   = std::int64_t;
+using uint64_t  = std::uint64_t;
+*/
+
+/*
+typedef signed   char  int8_t;
+typedef unsigned char  uint8_t;
+
+typedef signed   short int16_t;
+typedef unsigned short uint16_t;
+
+typedef signed   int   int32_t;
+typedef unsigned int   uint32_t;
 
 #if TS_COMPILER == TS_MSC
-    typedef signed   __int64 int64;
-    typedef unsigned __int64 uint64;
+	typedef signed   __int64 int64_t;
+	typedef unsigned __int64 uint64_t;
 #else
-    typedef signed   long long int64;
-    typedef unsigned long long uint64;
+	typedef signed   long long int64_t;
+	typedef unsigned long long uint64_t;
 #endif
+*/
 
-typedef uint8 Byte;
+typedef uint8_t Byte;
 
-typedef uint32 SizeType;
-typedef uint64 BigSizeType;
+typedef uint32_t SizeType;
+typedef uint64_t BigSizeType;
 
-typedef int64 PosType;
+typedef int64_t PosType;
 
 // Template hack to get readable type names for classes
 template<typename T>

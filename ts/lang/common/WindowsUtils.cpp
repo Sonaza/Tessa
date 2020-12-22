@@ -86,18 +86,24 @@ extern bool openFileWithDialog(const String &filepath)
 	if (!file::isAbsolutePath(filepath) || !file::isFile(filepath))
 		return false;
 
-	std::wstring normalizedPath = file::normalizePath(filepath).toWideString();
-
-	OPENASINFO info;
-	info.pcszFile = normalizedPath.c_str();
-	info.pcszClass = nullptr;
-	info.oaifInFlags = OAIF_EXEC | OAIF_HIDE_REGISTRATION;
-
-	if (SHOpenWithDialog(nullptr, &info) != S_OK)
+	auto callback = [](const String &filepath)
 	{
-		TS_LOG_ERROR("SHOpenWithDialog failed.");
-		return false;
-	}
+		std::wstring normalizedPath = file::normalizePath(filepath).toWideString();
+
+		OPENASINFO info;
+		info.pcszFile = normalizedPath.c_str();
+		info.pcszClass = nullptr;
+		info.oaifInFlags = OAIF_EXEC | OAIF_HIDE_REGISTRATION;
+
+		HRESULT hr = SHOpenWithDialog(nullptr, &info);
+		if (!SUCCEEDED(hr))
+		{
+			TS_LOG_ERROR("SHOpenWithDialog failed.");
+		}
+	};
+
+	std::thread backgroundThread = std::thread(callback, std::ref(filepath));
+	backgroundThread.detach();
 
 	return true;
 }
@@ -110,11 +116,11 @@ extern BigSizeType convertLargeIntegerTo64bit(SizeType lowPart, SizeType highPar
 	return li.QuadPart;
 }
 
-extern int32 getWindowsVersion()
+extern int32_t getWindowsVersion()
 {
 	typedef LONG NTSTATUS;
 
-	int32 ret = 0;
+	int32_t ret = 0;
 	
 	NTSTATUS(WINAPI *RtlGetVersion)(OSVERSIONINFOEXW*);
 

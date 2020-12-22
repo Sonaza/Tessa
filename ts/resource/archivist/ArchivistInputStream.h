@@ -15,7 +15,7 @@ public:
 	void close();
 
 	virtual PosType read(void* data, PosType size);
-	virtual PosType seek(int64 position);
+	virtual PosType seek(int64_t position);
 	virtual PosType tell();
 	virtual PosType getSize();
 

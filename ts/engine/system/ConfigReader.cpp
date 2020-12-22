@@ -91,11 +91,11 @@ bool ConfigReader::save()
 	{
 		output.writeString(TS_FMT("[%s]\n", section));
 
-		const uint32 sectionHash = makeHash(section);
+		const uint32_t sectionHash = makeHash(section);
 		for (const String &key : sectionKeys[sectionHash])
 		{
 			String section_dot_key = section + "." + key;
-			const uint32 hash = makeHash(section_dot_key);
+			const uint32_t hash = makeHash(section_dot_key);
 			output.writeString(TS_FMT("%s = %s\n", key, values[hash]));
 		}
 
@@ -148,28 +148,28 @@ void ConfigReader::setString(const String &section_dot_key, const String &value)
 	setValue(section_dot_key, value);
 }
 
-int32 ConfigReader::getInt32(const String &section_dot_key, const int32 defaultValue) const
+int32_t ConfigReader::getInt32(const String &section_dot_key, const int32_t defaultValue) const
 {
 	auto it = values.find(makeHash(section_dot_key));
 	if (it == values.end())
 		return defaultValue;
-	return convert<int32>(it->second);
+	return convert<int32_t>(it->second);
 }
 
-void ConfigReader::setInt32(const String &section_dot_key, const int32 value)
+void ConfigReader::setInt32(const String &section_dot_key, const int32_t value)
 {
 	setValue(section_dot_key, TS_FMT("%d", value));
 }
 
-uint32 ConfigReader::getUint32(const String &section_dot_key, const uint32 defaultValue) const
+uint32_t ConfigReader::getUint32(const String &section_dot_key, const uint32_t defaultValue) const
 {
 	auto it = values.find(makeHash(section_dot_key));
 	if (it == values.end())
 		return defaultValue;
-	return convert<uint32>(it->second);
+	return convert<uint32_t>(it->second);
 }
 
-void ConfigReader::setUint32(const String &section_dot_key, const uint32 value)
+void ConfigReader::setUint32(const String &section_dot_key, const uint32_t value)
 {
 	setValue(section_dot_key, TS_FMT("%u", value));
 }
@@ -182,7 +182,7 @@ float ConfigReader::getFloat(const String &section_dot_key, const float defaultV
 	return convert<float>(it->second);
 }
 
-void ConfigReader::setFloat(const String &section_dot_key, const float value, int32 precision)
+void ConfigReader::setFloat(const String &section_dot_key, const float value, int32_t precision)
 {
 	setValue(section_dot_key, TS_FMT("%.*f", math::max(0, precision), value));
 }
@@ -215,17 +215,17 @@ int ConfigReader::parserHandler(void *userdata, const char *sectionParam, const 
 
 	cfg.sections.emplace(section);
 
-	const uint32 sectionHash = makeHash(section);
+	const uint32_t sectionHash = makeHash(section);
 	cfg.sectionKeys[sectionHash].emplace(key);
 
 	String section_dot_key = section + "." + key;
-	const uint32 hash = makeHash(section_dot_key);
+	const uint32_t hash = makeHash(section_dot_key);
 	cfg.values[hash] = value;
 
 	return 1;
 }
 
-uint32 ConfigReader::makeHash(const String &tokenParam)
+uint32_t ConfigReader::makeHash(const String &tokenParam)
 {
 	String token = tokenParam;
 	std::transform(token.begin(), token.end(), token.begin(), ::tolower);
@@ -241,10 +241,10 @@ void ConfigReader::setValue(const String &section_dot_key, const String &value)
 
 	sections.emplace(section);
 
-	const uint32 sectionHash = makeHash(section);
+	const uint32_t sectionHash = makeHash(section);
 	sectionKeys[sectionHash].emplace(key);
 
-	const uint32 hash = makeHash(section_dot_key);
+	const uint32_t hash = makeHash(section_dot_key);
 	values[hash] = value;
 }
 

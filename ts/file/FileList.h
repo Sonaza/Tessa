@@ -21,7 +21,7 @@ enum FileListStyleBits
 
 }
 
-enum FileListStyle : uint8
+enum FileListStyle : uint8_t
 {
 	FileListStyle_Directories           = priv::ListStyleBits_Directories,
 	FileListStyle_Directories_Recursive = FileListStyle_Directories | priv::ListStyleBits_Recursive,
@@ -58,10 +58,10 @@ class FileList : public lang::Noncopyable
 {
 public:
 	FileList();
-	FileList(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, uint32 listFlags = 0);
+	FileList(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, uint32_t listFlags = 0);
 	~FileList();
 
-	bool open(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, uint32 listFlags = 0);
+	bool open(const String &directoryPath, FileListStyle listStyle = FileListStyle_All, uint32_t listFlags = 0);
 	void close();
 
 	bool next(FileListEntry &entry);

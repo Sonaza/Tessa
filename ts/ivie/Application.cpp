@@ -96,6 +96,10 @@ bool Application::initializeScene()
 		{
 			displayMode = scenes::ImageViewerScene::DisplayMode::Manga;
 		}
+		else if (modeFlag == "noreset" || modeFlag == "3")
+		{
+			displayMode = scenes::ImageViewerScene::DisplayMode::NoReset;
+		}
 	}
 	else if (getCommando().hasFlag("normal-mode"))
 	{
@@ -104,6 +108,10 @@ bool Application::initializeScene()
 	else if (getCommando().hasFlag("manga-mode"))
 	{
 		displayMode = scenes::ImageViewerScene::DisplayMode::Manga;
+	}
+	else if (getCommando().hasFlag("noreset-mode"))
+	{
+		displayMode = scenes::ImageViewerScene::DisplayMode::NoReset;
 	}
 
 	return loadScene<scenes::ImageViewerScene>(displayMode);

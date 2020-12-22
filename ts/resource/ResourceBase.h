@@ -20,8 +20,10 @@ template <class ResourceType, SizeType ResourceTypeIndex>
 class ResourceBase : public AbstractResourceBase
 {
 public:
+	typedef ResourceType InternalResourceType;
 	enum { TypeId = ResourceTypeIndex };
 
+	explicit ResourceBase();
 	explicit ResourceBase(const String &filepath);
 	virtual ~ResourceBase();
 
@@ -42,6 +44,8 @@ public:
 
 	SharedPointer<ResourceType> getResource() const;
 
+	operator ResourceType*() const;
+
 protected:
 	virtual bool loadResourceImpl() = 0;
 
@@ -54,6 +58,12 @@ protected:
 
 	mutable Mutex resourceMutex;
 };
+
+template <class ResourceType, SizeType ResourceTypeIndex>
+ResourceBase<ResourceType, ResourceTypeIndex>::operator ResourceType*() const
+{
+	return resource.get();
+}
 
 #include "ResourceBase.inl"
 

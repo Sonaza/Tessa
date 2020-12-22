@@ -68,7 +68,7 @@
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(RootDir);$(ProjectDir)</IncludePath>
     <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -76,14 +76,14 @@
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(RootDir);$(ProjectDir)</IncludePath>
     <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
     <CustomBuildBeforeTargets />
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(RootDir);$(ProjectDir)</IncludePath>
     <TargetName>Ivie</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

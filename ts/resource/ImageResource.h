@@ -12,6 +12,7 @@ class ImageResource : public resource::ResourceBase<sf::Image, TS_FOURCC('i','m'
 
 public:
 	ImageResource(const String &filepath);
+	ImageResource(const math::VC2U &size, const uint8_t *pixelData);
 	~ImageResource();
 
 protected:

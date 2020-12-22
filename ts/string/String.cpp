@@ -205,7 +205,7 @@ String::operator std::wstring() const
 
 String::operator sf::String() const
 {
-	return sf::String(reinterpret_cast<const uint32 *>(getPointer()));
+	return sf::String(reinterpret_cast<const uint32_t *>(getPointer()));
 }
 
 #endif

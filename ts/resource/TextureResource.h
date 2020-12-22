@@ -12,6 +12,7 @@ class TextureResource : public resource::ResourceBase<sf::Texture, TS_FOURCC('t'
 
 public:
 	TextureResource(const String &filepath);
+	TextureResource(const math::VC2U &size, const uint8_t *pixelData);
 	~TextureResource();
 
 	void setSmooth(const bool enabledParam);

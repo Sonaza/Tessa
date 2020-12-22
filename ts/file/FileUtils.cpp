@@ -8,7 +8,7 @@
 
 TS_PACKAGE1(file)
 
-static bool isSlash(int32 c)
+static bool isSlash(int32_t c)
 {
 	return c == '/' || c == '\\';
 }
@@ -28,7 +28,7 @@ extern void removeTrailingSlash(String &path)
 	if (hasTrailingSlash(path))
 		path.erase(path.end() - 1);
 
-// 	path.erase(std::find_if(path.rbegin(), path.rbegin() + 1, [](int32 c)
+// 	path.erase(std::find_if(path.rbegin(), path.rbegin() + 1, [](int32_t c)
 // 	{
 // 		return !isSlash(c);
 // 	}).base(), path.end());

@@ -85,6 +85,7 @@ void CALLBACK completionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfer
 			break;
 
 			case FILE_ACTION_RENAMED_NEW_NAME:
+				TS_ASSERT(!notifyEvent.lastName.isEmpty()); // should be right after FILE_ACTION_RENAMED_OLD_NAME
 				notifyEvent.flag = FileNotify_FileRenamed;
 				notifyEvent.name = std::move(filename);
 			break;
@@ -92,12 +93,15 @@ void CALLBACK completionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfer
 			default: return;
 		}
 
+		if (record->Action != FILE_ACTION_RENAMED_OLD_NAME)
+		{
+			TS_ASSERT(!notifyEvent.name.isEmpty());
+			TS_ASSERT(notifyEvent.flag != FileNotify_FileRenamed || !notifyEvent.lastName.isEmpty());
+
+			watchData->watcherInst->addEvent(std::move(notifyEvent));
+		}
+
 	} while (record->NextEntryOffset != 0);
-
-	TS_ASSERT(!notifyEvent.name.isEmpty());
-	TS_ASSERT(notifyEvent.flag != FileNotify_FileRenamed || !notifyEvent.lastName.isEmpty());
-
-	watchData->watcherInst->addEvent(std::move(notifyEvent));
 
 	if (!watchData->stopped)
 		refreshWatch(watchData, false);
@@ -229,6 +233,8 @@ bool FileWatcherWindows::hasError() const
 
 void FileWatcherWindows::addEvent(FileNotifyEvent &&notifyEvent)
 {
+
+
 	notifyEvents.push_back(std::move(notifyEvent));
 }
 

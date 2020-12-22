@@ -35,7 +35,7 @@ extern String normalizePath(const String &path, string::Character delimiter)
 	
 	const bool absolute = isAbsolutePath(path);
 
-	int32 ignore = 0;
+	int32_t ignore = 0;
 	std::stack<String*> pathTokens;
 	for (auto it = splitPath.rbegin(); it != splitPath.rend(); ++it)
 	{
@@ -107,7 +107,7 @@ extern bool removeFile(const String &path)
 	return false;
 }
 
-extern bool getFileModifiedTime(const String &path, int64 &modifiedTime)
+extern bool getFileModifiedTime(const String &path, int64_t &modifiedTime)
 {
 	
 	return false;

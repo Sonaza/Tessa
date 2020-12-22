@@ -21,17 +21,17 @@ public:
 	TimeSpan(TimeSpan &&other) = default;
 	TimeSpan &operator=(TimeSpan &&other) = default;
 
-	int64 getSeconds() const;
+	int64_t getSeconds() const;
 	float getSecondsAsFloat() const;
-	int64 getMilliseconds() const;
-	int64 getMicroseconds() const;
-	int64 getNanoseconds() const;
+	int64_t getMilliseconds() const;
+	int64_t getMicroseconds() const;
+	int64_t getNanoseconds() const;
 
-	static TimeSpan fromSeconds(int64 seconds);
+	static TimeSpan fromSeconds(int64_t seconds);
 	static TimeSpan fromSecondsFloat(float seconds);
-	static TimeSpan fromMilliseconds(int64 milliseconds);
-	static TimeSpan fromMicroseconds(int64 microseconds);
-	static TimeSpan fromNanoseconds(int64 microseconds);
+	static TimeSpan fromMilliseconds(int64_t milliseconds);
+	static TimeSpan fromMicroseconds(int64_t microseconds);
+	static TimeSpan fromNanoseconds(int64_t microseconds);
 
 	const String getAsString() const;
 

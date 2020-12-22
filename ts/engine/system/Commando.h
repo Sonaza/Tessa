@@ -28,8 +28,8 @@ public:
 	 *       and argc subtracted by 1. The first value (execution path) isn't always useful
 	 *       or reliable, and isn't present on all platforms when using different entry point.
 	 */
-	bool parse(int32 argc, const char **argv);
-	bool parse(int32 argc, const wchar_t **argv);
+	bool parse(int32_t argc, const char **argv);
+	bool parse(int32_t argc, const wchar_t **argv);
 
 	/* Parses argument list in a way where:
 	 * 1) all segments without preceding dash(es) are considered raw parameters.
@@ -68,7 +68,7 @@ public:
 	bool getNthParameter(SizeType index, String &outParam) const;
 
 protected:
-	typedef std::unordered_map<uint32, String> FlagsList;
+	typedef std::unordered_map<uint32_t, String> FlagsList;
 	FlagsList m_flags;
 
 	typedef std::vector<String> ParameterList;
@@ -80,7 +80,7 @@ bool Commando::getFlagParameter(const String &flag, Type &outParam) const
 {
 	static_assert(std::is_integral<Type>::value || std::is_floating_point<Type>::value, "Commando::getParameter can only handle strings, integers and floating point values.");
 
-	uint32 flagHash = math::simpleHash32(flag);
+	uint32_t flagHash = math::simpleHash32(flag);
 	FlagsList::const_iterator iter = m_flags.find(flagHash);
 	if (iter == m_flags.end() || iter->second.isEmpty())
 		return false;

@@ -69,7 +69,7 @@ bool operator!=(const Rect<T> &lhs, const Rect<T> &rhs);
 #include "Rect.inl"
 
 typedef Rect<float>		FloatRect;
-typedef Rect<int32>		IntRect;
-typedef Rect<uint32>	UintRect;
+typedef Rect<int32_t>		IntRect;
+typedef Rect<uint32_t>	UintRect;
 
 TS_END_PACKAGE1()

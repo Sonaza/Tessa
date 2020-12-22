@@ -1,7 +1,15 @@
 
+
+template <class ResourceType, SizeType ResourceTypeIndex>
+ts::resource::ResourceBase<ResourceType, ResourceTypeIndex>::ResourceBase()
+	: AbstractResourceBase(DataSourceGenerated)
+	, resourceGuid(generateRandomGuid())
+{
+}
+
 template <class ResourceType, SizeType ResourceTypeIndex>
 ts::resource::ResourceBase<ResourceType, ResourceTypeIndex>::ResourceBase(const String &filepath)
-	: AbstractResourceBase(filepath)
+	: AbstractResourceBase(DataSourceFile, filepath)
 	, resourceGuid(filepath)
 {
 	TS_ASSERT(!filepath.isEmpty() && "Resource filepath is not set.");
@@ -38,8 +46,6 @@ bool ResourceBase<ResourceType, ResourceTypeIndex>::loadResource()
 		loadError = true;
 		return false;
 	}
-
-// 	TS_LOG_DEBUG("Resource '%s' has been loaded.", filepath);
 
 	resourceLoaded = true;
 	loadError = false;

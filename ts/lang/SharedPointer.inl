@@ -238,7 +238,7 @@ void SharedPointer<T>::decreaseReferenceCounter()
 {
 	if (impl != nullptr)
 	{
-		const int32 oldRefCount = impl->refcount.fetch_sub(1, std::memory_order_release);
+		const int32_t oldRefCount = impl->refcount.fetch_sub(1, std::memory_order_release);
 
 		// Reached zero references
 		if (oldRefCount == 1)

@@ -87,7 +87,7 @@ void OutputFile::close()
 	m_bad = false;
 }
 
-bool OutputFile::write(const char *inBuffer, uint32 size)
+bool OutputFile::write(const char *inBuffer, uint32_t size)
 {
 	TS_ASSERT(inBuffer != nullptr);
 
@@ -96,7 +96,7 @@ bool OutputFile::write(const char *inBuffer, uint32 size)
 		return false;
 
 	FileHandle file = static_cast<FileHandle>(m_handle);
-	uint32 bytesWritten = (uint32)fwrite(inBuffer, sizeof(inBuffer[0]), size, file);
+	uint32_t bytesWritten = (uint32_t)fwrite(inBuffer, sizeof(inBuffer[0]), size, file);
 	TS_ASSERT(bytesWritten == size);
 	
 	if (ferror(file))
@@ -108,7 +108,7 @@ bool OutputFile::write(const char *inBuffer, uint32 size)
 	return true;
 }
 
-bool OutputFile::write(const unsigned char *inBuffer, uint32 size)
+bool OutputFile::write(const unsigned char *inBuffer, uint32_t size)
 {
 	return write(reinterpret_cast<const char*>(inBuffer), size);
 }
@@ -139,7 +139,7 @@ PosType OutputFile::seek(PosType pos, SeekOrigin seekOrigin)
 	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
-	int32 origin;
+	int32_t origin;
 	switch (seekOrigin)
 	{
 		default:

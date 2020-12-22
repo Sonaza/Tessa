@@ -3,10 +3,10 @@
 TS_PACKAGE1(file)
 
 // Unix timestamp format (milliseconds)
-typedef uint64 TimeStamp;
+typedef uint64_t TimeStamp;
 
 // Windows filetime format (100ns ticks since Jan 1st 1601)
-typedef int64 FileTime;
+typedef int64_t FileTime;
 
 /* Retrieves the file modified time in Windows filetime format.
  * Returns -1 on failure (file not found or unreadable).

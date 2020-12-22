@@ -83,7 +83,7 @@ void InputFile::close()
 	m_filesize = -1;
 }
 
-PosType InputFile::read(char *outBuffer, uint32 numBytesToRead)
+PosType InputFile::read(char *outBuffer, uint32_t numBytesToRead)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
@@ -105,12 +105,12 @@ PosType InputFile::read(char *outBuffer, uint32 numBytesToRead)
 	return numBytesRead;
 }
 
-PosType InputFile::read(unsigned char *outBuffer, uint32 numBytesToRead)
+PosType InputFile::read(unsigned char *outBuffer, uint32_t numBytesToRead)
 {
 	return read(reinterpret_cast<char*>(outBuffer), numBytesToRead);
 }
 
-PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
+PosType InputFile::readLine(char *outBuffer, uint32_t size, const char linebreak)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
@@ -149,7 +149,7 @@ PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 	return (ptr - outBuffer);
 }
 
-PosType InputFile::readLine(unsigned char *outBuffer, uint32 numBytesToRead, const char linebreak)
+PosType InputFile::readLine(unsigned char *outBuffer, uint32_t numBytesToRead, const char linebreak)
 {
 	return readLine(reinterpret_cast<char*>(outBuffer), numBytesToRead, linebreak);
 }

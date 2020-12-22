@@ -77,7 +77,7 @@ void InputFile::close()
 	m_filesize = -1;
 }
 
-PosType InputFile::read(char *outBuffer, uint32 size)
+PosType InputFile::read(char *outBuffer, uint32_t size)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
@@ -102,12 +102,12 @@ PosType InputFile::read(char *outBuffer, uint32 size)
 	return numBytesRead;
 }
 
-PosType InputFile::read(unsigned char *outBuffer, uint32 size)
+PosType InputFile::read(unsigned char *outBuffer, uint32_t size)
 {
 	return read(reinterpret_cast<char*>(outBuffer), size);
 }
 
-PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
+PosType InputFile::readLine(char *outBuffer, uint32_t size, const char linebreak)
 {
 	TS_ASSERT(outBuffer != nullptr);
 	TS_ASSERT(m_handle != nullptr && "InputFile is not opened.");
@@ -140,7 +140,7 @@ PosType InputFile::readLine(char *outBuffer, uint32 size, const char linebreak)
 	return (ptr - outBuffer);
 }
 
-PosType InputFile::readLine(unsigned char *outBuffer, uint32 size, const char linebreak)
+PosType InputFile::readLine(unsigned char *outBuffer, uint32_t size, const char linebreak)
 {
 	return readLine(reinterpret_cast<char*>(outBuffer), size, linebreak);
 }
@@ -156,7 +156,7 @@ PosType InputFile::seek(PosType pos, SeekOrigin seekOrigin)
 	if (m_handle == nullptr || m_bad == true)
 		return -1;
 
-	int32 origin;
+	int32_t origin;
 	switch (seekOrigin)
 	{
 		default:

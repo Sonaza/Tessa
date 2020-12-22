@@ -20,7 +20,7 @@ namespace
 
 #if TS_PLATFORM == TS_WINDOWS
 
-int32 convertToSystemThreadPriority(ThreadPriority priority)
+int32_t convertToSystemThreadPriority(ThreadPriority priority)
 {
 	switch(priority)
 	{
@@ -130,9 +130,9 @@ extern void setThreadPriority(std::thread &thread, ThreadPriority priority)
 	// pthread_t threadId = thread.native_handle();
 	// pthread_attr_t threadAttr;
 
-	// int32 policy = 0;
-	// int32 min_prio_for_policy = 0;
-	// int32 max_prio_for_policy = 0;
+	// int32_t policy = 0;
+	// int32_t min_prio_for_policy = 0;
+	// int32_t max_prio_for_policy = 0;
 
 	// pthread_attr_init(&threadAttr);
 	// pthread_attr_getschedpolicy(&threadAttr, &policy);

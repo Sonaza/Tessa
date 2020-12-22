@@ -7,7 +7,7 @@ TS_PACKAGE2(app, viewer)
 struct ViewerImageFile
 {
 	String filepath;
-	uint32 directoryHash;
+	uint32_t directoryHash;
 	String type;
 	file::FileTime lastModifiedTime;
 };

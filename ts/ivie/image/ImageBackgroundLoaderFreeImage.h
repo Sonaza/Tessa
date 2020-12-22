@@ -25,7 +25,7 @@ public:
 	static bool isValidFreeImageFile(const String &filepath);
 
 	static bool canImageBeRotated(const String &filepath);
-	static bool rotate(const String &filepath, int32 direction);
+	static bool rotate(const String &filepath, int32_t direction);
 
 protected:
 	virtual bool initialize() override;
@@ -34,7 +34,7 @@ protected:
 	virtual void onResume() override;
 	virtual void onSuspend() override;
 
-	virtual int32 restartImpl() override;
+	virtual int32_t restartImpl() override;
 
 	virtual bool loadNextFrame(FrameStorage &bufferStorage) override;
 	virtual bool wasLoadingCompleted() const override;
@@ -69,7 +69,7 @@ private:
 	sf::VertexArray imageVertexArray;
 	SharedPointer<sf::Texture> previousFrame;
 	UniquePointer<sf::RenderTexture> stackingRenderTexture;
-	int32 stackingRenderTextureThreadId = -1;
+	int32_t stackingRenderTextureThreadId = -1;
 
 	// Storage for render texture before suspension since its GL context requires that the 
 	// creation and deletion happen in the same thread. Gotta deinit before suspending.

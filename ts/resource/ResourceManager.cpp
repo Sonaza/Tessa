@@ -107,6 +107,16 @@ SoundResource *ResourceManager::getSound(const String &uniqueResourceHandle) con
 	return getResource<SoundResource>(uniqueResourceHandle);
 }
 
+ImageResource *ResourceManager::makeImageFromPixelData(const String &uniqueResourceHandle, const math::VC2U &size, const uint8_t *pixelData)
+{
+	return makeFromPixelData<ImageResource>(uniqueResourceHandle, size, pixelData);
+}
+
+TextureResource *ResourceManager::makeTextureFromPixelData(const String &uniqueResourceHandle, const math::VC2U &size, const uint8_t *pixelData)
+{
+	return makeFromPixelData<TextureResource>(uniqueResourceHandle, size, pixelData);
+}
+
 void ResourceManager::unloadAll()
 {
 	resources.clear();

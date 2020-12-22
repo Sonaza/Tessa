@@ -10,7 +10,7 @@ public:
 	static const std::string &getThreadName();
 	static SizeType getThreadId();
 
-	static uint32 getNativeThreadId();
+	static uint32_t getNativeThreadId();
 };
 
 TS_END_PACKAGE1()

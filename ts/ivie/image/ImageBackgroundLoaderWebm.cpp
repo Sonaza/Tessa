@@ -160,11 +160,11 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 		return false;
 	}
 
-	totalDuration = TimeSpan::fromNanoseconds((uint64)streamTotalDuration);
+	totalDuration = TimeSpan::fromNanoseconds((uint64_t)streamTotalDuration);
 
 // 	TS_PRINTF("  Duration %llu milliseconds\n", totalDuration.getMilliseconds());
 
-	uint32 numTracks = 0;
+	uint32_t numTracks = 0;
 	if (nestegg_track_count(state.context, &numTracks) == -1)
 	{
 		errorText = "Failed to retrieve track count.";
@@ -176,14 +176,14 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 
 	bool hasVideoTrack = false;
 
-	for (uint32 track = 0; track < numTracks; ++track)
+	for (uint32_t track = 0; track < numTracks; ++track)
 	{
-		int32 trackType = nestegg_track_type(state.context, track);
+		int32_t trackType = nestegg_track_type(state.context, track);
 		if (trackType == NESTEGG_TRACK_VIDEO)
 		{
 			state.trackIndex = track;
 
-			int32 codec_id = nestegg_track_codec_id(state.context, track);
+			int32_t codec_id = nestegg_track_codec_id(state.context, track);
 			TS_ASSERT(codec_id >= 0);
 
 			switch (codec_id)
@@ -214,10 +214,10 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 			}
 			else
 			{
-				frameTime = TimeSpan::fromNanoseconds((uint64)defaultDuration);
+				frameTime = TimeSpan::fromNanoseconds((uint64_t)defaultDuration);
 			}
 			
-			numTotalFrames = (uint32)(totalDuration / frameTime);
+			numTotalFrames = (uint32_t)(totalDuration / frameTime);
 
 // 			TS_PRINTF("Video has about %u frames\n", numTotalFrames);
 
@@ -258,7 +258,7 @@ bool ImageBackgroundLoaderWebm::prepareForLoading()
 // 	memset(&cfg, 0, sizeof(cfg));
 // 	cfg.threads = 4;
 
-	int32 flags = 0;
+	int32_t flags = 0;
 	vpx_codec_err_t error = vpx_codec_dec_init(state.codec, state.interface, nullptr, flags);
 	if (error != VPX_CODEC_OK)
 	{
@@ -297,7 +297,7 @@ void ImageBackgroundLoaderWebm::cleanup()
 
 bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 {
-	int32 result = 0;
+	int32_t result = 0;
 
 	enum ProcessingResult
 	{
@@ -356,7 +356,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 			break;
 		}
 
-		uint32 trackIndex = 0;
+		uint32_t trackIndex = 0;
 		result = nestegg_packet_track(packet, &trackIndex);
 		TS_ASSERT(result == 0);
 
@@ -372,12 +372,12 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 		{
 // 			if (numFrames == 0)
 // 			{
-// 				uint64 scale = 0;
+// 				uint64_t scale = 0;
 // 				result = nestegg_tstamp_scale(state.context, &scale);
 // 				TS_ASSERT(result == 0);
 // 				TS_PRINTF("Tstamp scale %llu\n", scale);
 // 
-// 				uint64 tstamp = 0;
+// 				uint64_t tstamp = 0;
 // 				nestegg_packet_tstamp(packet, &tstamp);
 // 				TS_ASSERT(result == 0);
 // 
@@ -385,11 +385,11 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 // 			}
 
 			//TS_PRINTF("video frame: " << video_count << " ";
-			uint32 packetCount = 0;
+			uint32_t packetCount = 0;
 			result = nestegg_packet_count(packet, &packetCount);
 			TS_ASSERT(result == 0);
 
-			for (uint32 packetIndex = 0; packetIndex < packetCount; ++packetIndex)
+			for (uint32_t packetIndex = 0; packetIndex < packetCount; ++packetIndex)
 			{
 				uint8_t *data = nullptr;
 				size_t length = 0;
@@ -413,7 +413,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 					TS_PRINTF("vpx_codec_get_stream_info failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
 				}
 
-				error = vpx_codec_peek_stream_info(state.interface, data, (uint32)length, &streamInfo);
+				error = vpx_codec_peek_stream_info(state.interface, data, (uint32_t)length, &streamInfo);
 				if (error != VPX_CODEC_OK)
 				{
 // 					TS_PRINTF("vpx_codec_peek_stream_info failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
@@ -422,7 +422,7 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 				}
 
 				// Decode the frame
-				error = vpx_codec_decode(state.codec, data, (uint32)length, nullptr, 0);
+				error = vpx_codec_decode(state.codec, data, (uint32_t)length, nullptr, 0);
 				if (error != VPX_CODEC_OK)
 				{
 					TS_PRINTF("vpx_codec_decode failed. error: %s (%d)\n", vpx_codec_err_to_string(error), error);
@@ -439,10 +439,10 @@ bool ImageBackgroundLoaderWebm::processNextFrame(FrameStorage &bufferStorage)
 					std::vector<Byte> framedata;
 					framedata.resize(image->d_w * image->d_h * 4, 255);
 
-					uint32 i = 0;
-					for (uint32 y = 0; y < image->d_h; ++y)
+					uint32_t i = 0;
+					for (uint32_t y = 0; y < image->d_h; ++y)
 					{
-						for (uint32 x = 0; x < image->d_w; ++x)
+						for (uint32_t x = 0; x < image->d_w; ++x)
 						{
 							framedata[i + 0] = image->planes[VPX_PLANE_Y][y       * image->stride[VPX_PLANE_Y] + x];
 
@@ -545,7 +545,7 @@ bool ImageBackgroundLoaderWebm::isValidWebmFile(const String &filepath)
 	return nestegg_sniff(&buffer[0], nesteggSniffBytesAmount) == 1;
 }
 
-int32 ImageBackgroundLoaderWebm::restartImpl()
+int32_t ImageBackgroundLoaderWebm::restartImpl()
 {
 	if (nestegg_track_seek(state.context, state.trackIndex, 0) == -1)
 	{

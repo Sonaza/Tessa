@@ -88,7 +88,7 @@ void ImageBackgroundLoaderFreeImage::onResume()
 		stackingRenderTexture->draw(imageVertexArray, savedRenderTexture.get());
 		savedRenderTexture.reset();
 
-		stackingRenderTextureThreadId = (int32)Thread::getCurrentThread().getThreadId();
+		stackingRenderTextureThreadId = (int32_t)Thread::getCurrentThread().getThreadId();
 	}
 }
 
@@ -96,7 +96,7 @@ void ImageBackgroundLoaderFreeImage::onSuspend()
 {
 	if (stackingRenderTexture != nullptr)
 	{
-		int32 threadId = (int32)Thread::getCurrentThread().getThreadId();
+		int32_t threadId = (int32_t)Thread::getCurrentThread().getThreadId();
 		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
 			"Thread ID mismatch. Got: %d  Expected: %d", threadId, stackingRenderTextureThreadId);
 
@@ -141,7 +141,7 @@ bool ImageBackgroundLoaderFreeImage::prepareForLoading()
 
 	imageData.canBeRotated = isValidRotateFormat(state.format);
 
-	int32 flags = 0;
+	int32_t flags = 0;
 
 	switch (state.format)
 	{
@@ -247,7 +247,7 @@ void ImageBackgroundLoaderFreeImage::cleanup(bool soft)
 
 	if (stackingRenderTexture)
 	{
-		int32 threadId = (int32)Thread::getCurrentThread().getThreadId();
+		int32_t threadId = (int32_t)Thread::getCurrentThread().getThreadId();
 		TS_ASSERTF(stackingRenderTextureThreadId == threadId,
 			"Thread ID mismatch. Got: %d  Expected: %d", threadId, stackingRenderTextureThreadId);
 
@@ -282,7 +282,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 // 		TS_WPRINTF("%s does not have profile?\n", filepath);
 // 	}
 
-	uint32 maxSize = sf::Texture::getMaximumSize();
+	uint32_t maxSize = sf::Texture::getMaximumSize();
 	if (imageSize.x > maxSize || imageSize.y > maxSize)
 	{
 		TS_LOG_ERROR("Image is too large.");
@@ -292,7 +292,7 @@ bool ImageBackgroundLoaderFreeImage::processNextStill(FrameStorage &bufferStorag
 
 	FREE_IMAGE_COLOR_TYPE originalColorType = FreeImage_GetColorType(state.bitmap);
 
-	uint32 bitdepth = FreeImage_GetBPP(state.bitmap);
+	uint32_t bitdepth = FreeImage_GetBPP(state.bitmap);
 	if (bitdepth != 32)
 	{
 		FIBITMAP *temp = FreeImage_ConvertTo32Bits(state.bitmap);
@@ -391,7 +391,7 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 
 			stackingRenderTexture = makeUnique<sf::RenderTexture>();
 			stackingRenderTexture->create(imageSize.x, imageSize.y);
-			stackingRenderTextureThreadId = (int32)Thread::getCurrentThread().getThreadId();
+			stackingRenderTextureThreadId = (int32_t)Thread::getCurrentThread().getThreadId();
 
 			imageVertexArray = util::makeQuadVertexArray(imageSize.x, imageSize.y);
 
@@ -405,10 +405,10 @@ bool ImageBackgroundLoaderFreeImage::processNextMultiBitmap(FrameStorage &buffer
 
 	FITAG *tag = nullptr;
 
-	uint32 frametime = 100;
+	uint32_t frametime = 100;
 	if (FreeImage_GetMetadata(FIMD_ANIMATION, lockedPage, "FrameTime", &tag))
 	{
-		frametime = *(uint32*)FreeImage_GetTagValue(tag);
+		frametime = *(uint32_t*)FreeImage_GetTagValue(tag);
 
 		// Use 100ms as a default if a proper value wasn't stored
 		if (frametime == 0)
@@ -539,7 +539,7 @@ static bool transformJPEG(const String &srcFile, const String &dstFile, FREE_IMA
 #endif
 }
 
-bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32 direction)
+bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32_t direction)
 {
 	TS_ASSERTF(direction == 1 || direction == -1, "Invalid direction, must be 1 or -1");
 	if (direction != 1 && direction != -1)
@@ -571,7 +571,7 @@ bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32 direct
 	return true;
 }
 
-int32 ImageBackgroundLoaderFreeImage::restartImpl()
+int32_t ImageBackgroundLoaderFreeImage::restartImpl()
 {
 	// Only restart for multibitmaps
 	if (loaderFormat == MultiBitmapFormat)

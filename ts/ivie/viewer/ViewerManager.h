@@ -30,7 +30,7 @@ struct ImageEntry
 	}
 };
 
-enum SortingStyle : uint16
+enum SortingStyle : uint16_t
 {
 	SortingStyle_ByName           = 0,
 	SortingStyle_ByType           = 1,
@@ -71,7 +71,7 @@ public:
 	void jumpToImageByDirectory(const String &directory);
 	void changeToNextImage();
 	void changeToPreviousImage();
-	void changeImage(int32 direction);
+	void changeImage(int32_t direction);
 
 	bool deleteCurrentImage();
 	bool rotateCurrentImage(image::Image::RotateDirection direction);
@@ -106,7 +106,7 @@ public:
 
 private:
 	static std::atomic_bool quitting;
-	mutable Mutex mutex;
+	mutable RecursiveMutex mutex;
 
 	void prepareShaders();
 	std::map<DisplayShaderTypes, String> displayShaderFiles;
@@ -136,7 +136,7 @@ private:
 	file::FileListStyle scanStyle = file::FileListStyle_Files_Recursive;
 
 	String currentDirectoryPath;
-	uint32 currentDirectoryPathHash = 0;
+	uint32_t currentDirectoryPathHash = 0;
 
 	void resetFileWatcher(bool recursive);
 	void watchNotify(const std::vector<file::FileNotifyEvent> &notifyEvent);
@@ -147,7 +147,7 @@ private:
 	struct DisplayState
 	{
 		SizeType imageIndex = INVALID_IMAGE_INDEX;
-		uint32 directoryHash = 0;
+		uint32_t directoryHash = 0;
 		ViewerImageFile viewerFile;
 	};
 	DisplayState current;
@@ -168,9 +168,9 @@ private:
 
 	void updateCurrentImage(SizeType previousDirectoryHash, SizeType previousImageIndex);
 
-	typedef std::map<uint32, SharedPointer<image::Image>> ImageStorageList;
+	typedef std::map<uint32_t, SharedPointer<image::Image>> ImageStorageList;
 	ImageStorageList imageStorage;
-	std::vector<uint32> lastActiveImages;
+	std::vector<uint32_t> lastActiveImages;
 
 	class BackgroundImageUnloader;
 	ScopedPointer<BackgroundImageUnloader> backgroundUnloader;

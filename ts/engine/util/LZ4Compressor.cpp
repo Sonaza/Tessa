@@ -112,7 +112,7 @@ PosType LZ4Compressor::compressFullStream(const char *TS_RESTRICT src, SizeType 
 		PosType dstBytesRemaining = dstSize - (dstPtr - dst);
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
 
-		const int32 compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (int32)srcBytesRemaining, (int32)dstBytesRemaining, 1);
+		const int32_t compressedBytes = LZ4_compress_fast_continue(lz4Stream, srcPtr, dstPtr, (int32_t)srcBytesRemaining, (int32_t)dstBytesRemaining, 1);
 		if (compressedBytes <= 0)
 		{
 			TS_PRINTF("Compression encountered an error.\n");
@@ -157,7 +157,7 @@ PosType LZ4Compressor::decompressFullStream(const char *TS_RESTRICT srcPtrStart,
 		PosType dstBytesRemaining = dstSize - (dstPtr - dstPtrStart);
 		TS_ASSERT(dstBytesRemaining > 0 && "dst buffer is out of space");
 
-		const int32 decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, srcPtr, dstPtr, (int32)blockCompressedSize, (int32)dstBytesRemaining);
+		const int32_t decompressedBytes = LZ4_decompress_safe_continue(lz4Stream, srcPtr, dstPtr, (int32_t)blockCompressedSize, (int32_t)dstBytesRemaining);
 		if (decompressedBytes <= 0)
 		{
 			TS_PRINTF("Decompression encountered an error.\n");

@@ -104,8 +104,8 @@ bool operator!=(const Vec4<T> &lhs, const Vec4<T> &rhs);
 
 typedef Vec4<float>    VC4;
 typedef Vec4<double>   VC4D;
-typedef Vec4<int32>    VC4I;
-typedef Vec4<uint32>   VC4U;
+typedef Vec4<int32_t>    VC4I;
+typedef Vec4<uint32_t>   VC4U;
 
 #if TS_COMPILER != TS_MSC
 
@@ -119,21 +119,21 @@ template<> const Vec4<double> Vec4<double>::up;
 template<> const Vec4<double> Vec4<double>::forward;
 template<> const Vec4<double> Vec4<double>::right;
 
-template<> const Vec4<int32> Vec4<int32>::zero;
-template<> const Vec4<int32> Vec4<int32>::up;
-template<> const Vec4<int32> Vec4<int32>::forward;
-template<> const Vec4<int32> Vec4<int32>::right;
+template<> const Vec4<int32_t> Vec4<int32_t>::zero;
+template<> const Vec4<int32_t> Vec4<int32_t>::up;
+template<> const Vec4<int32_t> Vec4<int32_t>::forward;
+template<> const Vec4<int32_t> Vec4<int32_t>::right;
 
-template<> const Vec4<uint32> Vec4<uint32>::zero;
-template<> const Vec4<uint32> Vec4<uint32>::up;
-template<> const Vec4<uint32> Vec4<uint32>::forward;
-template<> const Vec4<uint32> Vec4<uint32>::right;
+template<> const Vec4<uint32_t> Vec4<uint32_t>::zero;
+template<> const Vec4<uint32_t> Vec4<uint32_t>::up;
+template<> const Vec4<uint32_t> Vec4<uint32_t>::forward;
+template<> const Vec4<uint32_t> Vec4<uint32_t>::right;
 
 #endif
 
 extern template class Vec4<float>;
 extern template class Vec4<double>;
-extern template class Vec4<int32>;
-extern template class Vec4<uint32>;
+extern template class Vec4<int32_t>;
+extern template class Vec4<uint32_t>;
 
 TS_END_PACKAGE1()

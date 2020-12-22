@@ -68,7 +68,7 @@
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(RootDir);$(ProjectDir)</IncludePath>
     <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -76,14 +76,14 @@
     </CustomBuildBeforeTargets>
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(RootDir);$(ProjectDir)</IncludePath>
     <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FinalRelease|x64'">
     <CustomBuildBeforeTargets />
     <OutDir>$(RootDir)builds\$(Configuration)\</OutDir>
     <IntDir>$(RootDir)obj\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <IncludePath>$(RootDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(RootDir);$(ProjectDir)</IncludePath>
     <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -166,6 +166,7 @@
     <ClCompile Include="CommonMath.cpp" />
     <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="Quaternion.cpp" />
+    <ClCompile Include="RandomGenerator.cpp" />
     <ClCompile Include="Vec2.cpp" />
     <ClCompile Include="Vec3.cpp" />
     <ClCompile Include="Vec4.cpp" />
@@ -189,6 +190,7 @@
     </ClCompile>
     <ClInclude Include="Damper.h" />
     <ClInclude Include="Quaternion.h" />
+    <ClInclude Include="RandomGenerator.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="VectorStringConversion.h" />
     <ClInclude Include="CRC.h" />
