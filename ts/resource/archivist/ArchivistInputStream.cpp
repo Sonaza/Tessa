@@ -19,13 +19,13 @@ void ArchivistInputStream::close()
 	extractor.close();
 }
 
-PosType ArchivistInputStream::read(void* data, PosType size)
+PosType ArchivistInputStream::read(void* data, sf::Int64 size)
 {
 	TS_ASSERT(extractor.isGood());
 	return extractor.read((char*)data, size);
 }
 
-PosType ArchivistInputStream::seek(PosType position)
+PosType ArchivistInputStream::seek(sf::Int64 position)
 {
 	TS_ASSERT(extractor.isGood());
 	return extractor.seek(position);

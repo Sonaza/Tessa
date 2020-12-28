@@ -178,7 +178,7 @@ bool Commando::getFlagParameter(const String &flag, String &outParam) const
 {
 	uint32_t flagHash = math::simpleHash32(flag);
 	FlagsList::const_iterator iter = m_flags.find(flagHash);
-	if (iter == m_flags.end() && !iter->second.isEmpty())
+	if (iter == m_flags.end() || !iter->second.isEmpty())
 		return false;
 
 	outParam = iter->second;

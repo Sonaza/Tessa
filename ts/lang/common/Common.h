@@ -163,7 +163,8 @@ typedef uint8_t Byte;
 typedef uint32_t SizeType;
 typedef uint64_t BigSizeType;
 
-typedef int64_t PosType;
+typedef signed   long long int64sfml_t;
+typedef int64sfml_t PosType;
 
 // Template hack to get readable type names for classes
 template<typename T>

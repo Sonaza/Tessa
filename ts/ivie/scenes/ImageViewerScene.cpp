@@ -125,6 +125,8 @@ bool ImageViewerScene::handleEvent(const sf::Event event)
 
 	const bool ctrlDown = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl);
 	const bool shiftDown = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) || sf::Keyboard::isKeyPressed(sf::Keyboard::RShift);
+	TS_UNUSED_VARIABLE(ctrlDown);
+	TS_UNUSED_VARIABLE(shiftDown);
 
 	switch (event.type)
 	{

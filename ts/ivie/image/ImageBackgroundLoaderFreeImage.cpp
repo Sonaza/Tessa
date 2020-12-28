@@ -530,6 +530,9 @@ bool ImageBackgroundLoaderFreeImage::isValidRotateFormat(FREE_IMAGE_FORMAT forma
 	return validRotateFormats.count(format) > 0;
 }
 
+
+#if TS_PLATFORM == TS_WINDOWS
+
 static bool transformJPEG(const String &srcFile, const String &dstFile, FREE_IMAGE_JPEG_OPERATION operation)
 {
 #if TS_PLATFORM == TS_WINDOWS
@@ -539,8 +542,13 @@ static bool transformJPEG(const String &srcFile, const String &dstFile, FREE_IMA
 #endif
 }
 
+#endif
+
 bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32_t direction)
 {
+	
+#if TS_PLATFORM == TS_WINDOWS
+	
 	TS_ASSERTF(direction == 1 || direction == -1, "Invalid direction, must be 1 or -1");
 	if (direction != 1 && direction != -1)
 		return false;
@@ -569,6 +577,9 @@ bool ImageBackgroundLoaderFreeImage::rotate(const String &filepath, int32_t dire
 	}
 
 	return true;
+#else	
+	return false;
+#endif
 }
 
 int32_t ImageBackgroundLoaderFreeImage::restartImpl()

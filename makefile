@@ -50,6 +50,7 @@ LDFLAGS :=
 LDFLAGS += $(LIB_PATH)
 LDFLAGS += $(MODULES)
 LDFLAGS += -lstdc++fs
+LDFLAGS +=  -lX11 -lXcursor -lXrandr
 LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-system 
 LDFLAGS += -lfreeimage
 LDFLAGS += -lfmt -lvpx -lnestegg -lsiphash -llz4 
