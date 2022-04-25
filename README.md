@@ -1,5 +1,5 @@
-## Tessa
-Game and application boilerplate stuff for making things!
+## Tessa Engine
+Boilerplate stuff for making things like games or applications, maybe!
 
 ### And making things!
 Ivie - Image Viewer Enhanced (the third attempt)
